@@ -1,0 +1,11 @@
+# This is an override file which changes certain things for the production
+# environment.
+
+version: "2"
+services:
+  proxy:
+    ports:
+      - "443:443"
+    environment:
+      # A fake configuration option.
+      ENABLE_SSL: "true"

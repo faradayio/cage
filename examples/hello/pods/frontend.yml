@@ -1,0 +1,18 @@
+version: '2'
+services:
+  web:
+    image: "dockercloud/hello-world"
+    build: "https://github.com/docker/dockercloud-hello-world.git"
+    ports:
+      - "3000"
+    hostname: "hello-world"
+      
+  proxy:
+    image: "dockercloud/haproxy"
+    build: "https://github.com/docker/dockercloud-haproxy.git"
+    ports:
+      - "8080:80"
+    links:
+      - "web"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
