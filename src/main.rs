@@ -9,48 +9,15 @@ extern crate docker_compose;
 extern crate regex;
 
 use docker_compose::v2 as dc;
-use regex::Regex;
 use std::env;
 use std::io::{self, Write};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::process;
 
-/// Create an error using a format string and arguments.
-macro_rules! err {
-    ($( $e:expr ),*) => (From::from(format!($( $e ),*)));
-}
+use ext::service::ServiceExt;
 
-// Given a build context, ensure that it points to a local directory.
-fn git_to_local(ctx: &dc::Context) -> Result<PathBuf, dc::Error> {
-    match ctx {
-        &dc::Context::GitUrl(ref url) => {
-            // Simulate a local checkout of the remote Git repository
-            // mentioned in `build`.
-            let re = Regex::new(r#"/([^./]+)(?:\.git)?"#).unwrap();
-            match re.captures(url) {
-                None => Err(err!("Can't get dir name from Git URL: {}", url)),
-                Some(caps) => {
-                    let path = Path::new(caps.at(1).unwrap());
-                    Ok(path.to_owned())
-                }
-            }
-        }
-        &dc::Context::Dir(ref dir) => Ok(dir.clone()),
-    }
-}
-
-/// Get the local build directory that we'll use for a service.
-fn service_build_dir(service: &dc::Service) ->
-    Result<Option<PathBuf>, dc::Error>
-{
-    if let Some(ref build) = service.build {
-        let mut path = Path::new("src").to_owned();
-        path.push(try!(git_to_local(try!(build.context.value()))));
-        Ok(Some(path))
-    } else {
-        Ok(None)
-    }
-}
+#[macro_use] mod util;
+mod ext;
 
 /// Update a `docker-compose.yml` file in place.
 fn update(file: &mut dc::File) -> Result<(), dc::Error> {
@@ -62,7 +29,7 @@ fn update(file: &mut dc::File) -> Result<(), dc::Error> {
         service.env_files.insert(1, try!(dc::raw("pods/overrides/$ENV/common.env")));
 
         // Figure out where we'll keep the local checkout, if any.
-        let build_dir = try!(service_build_dir(service));
+        let build_dir = try!(service.local_build_dir());
 
         // If we have a local build directory, update the service to use it.
         if let Some(ref dir) = build_dir {
