@@ -25,3 +25,19 @@ impl ServiceExt for dc::Service {
         }
     }
 }
+
+#[test]
+fn local_build_dir_transforms_git_urls_if_present() {
+    use std::path::Path;
+
+    let service: dc::Service = Default::default();
+    assert_eq!(service.local_build_dir().unwrap(), None);
+
+    let ctx = dc::Context::new("git://github.com/docker/docker");
+    let buildable_service = dc::Service {
+        build: Some(dc::Build::new(ctx)),
+        ..Default::default()
+    };
+    assert_eq!(buildable_service.local_build_dir().unwrap(),
+               Some(Path::new("src/docker").to_owned()));
+}

@@ -34,11 +34,7 @@ fn update(file: &mut dc::File) -> Result<(), dc::Error> {
         // If we have a local build directory, update the service to use it.
         if let Some(ref dir) = build_dir {
             // Mount the local build directory as `/app` inside the container.
-            service.volumes.push(dc::value(dc::VolumeMount {
-                host: Some(dc::HostVolume::Path(dir.clone())),
-                container: Path::new("/app").to_owned(),
-                permissions: Default::default(),
-            }));
+            service.volumes.push(dc::value(dc::VolumeMount::host(dir, "/app")));
             // Update the `build` field if present.
             if let Some(ref mut build) = service.build {
                 build.context = dc::value(dc::Context::Dir(dir.clone()));
