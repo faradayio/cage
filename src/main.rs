@@ -31,14 +31,18 @@ fn update(file: &mut dc::File, path: &Path) -> Result<(), dc::Error> {
     let dir = try!(path.parent().ok_or_else(|| {
         err!("Can't get parent of {}", path.display())
     }));
-    let env_file = try!(dir.strip_prefix("pods")).join("common.env");
+    let env_file = dir.join("common.env");
 
     // Iterate over each name/server pair in the file using `iter_mut`, so
     // we can modify the services.
     for (_name, service) in file.services.iter_mut() {
         // Insert standard `env_file` entry (if the file actually exists).
         if env_file.exists() {
-            service.env_files.insert(0, dc::value(env_file.clone()));
+            // Make our env file path relative to our top-level
+            // `docker-compose.yml` file by removing `pods`, so
+            // `docker-compose` doesn't get confused.
+            let dc_rel = try!(env_file.strip_prefix("pods")).to_owned();
+            service.env_files.insert(0, dc::value(dc_rel));
         }
 
         // Figure out where we'll keep the local checkout, if any.
