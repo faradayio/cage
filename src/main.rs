@@ -5,15 +5,20 @@
 //! conductor docker-compose.in.yml docker-compose.yml
 //! ```
 
+extern crate clap;
+extern crate conductor;
 extern crate docker_compose;
 extern crate regex;
 
+use clap::{App, Arg, ArgMatches, SubCommand};
 use docker_compose::v2 as dc;
 use regex::Regex;
 use std::env;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 use std::process;
+
+use conductor::commands::new;
 
 /// Create an error using a format string and arguments.
 macro_rules! err {
@@ -103,11 +108,31 @@ fn run() -> Result<(), dc::Error> {
 }
 
 fn main() {
-    if let Err(ref err) = run() {
-        // We use `unwrap` here to turn I/O errors into application panics.
-        // If we can't print a message to stderr without an I/O error,
-        // the situation is hopeless.
-        write!(io::stderr(), "Error: {}", err).unwrap();
-        process::exit(1);
+    let version = "0.1";
+    let app = App::new("conductor")
+        .subcommand(SubCommand::with_name("new")
+            .about("Create a new conductor project")
+            .version(version)
+            .author("Derek K.")
+            .arg(Arg::with_name("name")
+                .help("the name of the project")
+                .index(1)
+                .required(true)
+            )
+        )
+    ;
+    let matches = app.get_matches();
+
+    match matches.subcommand_name() {
+        Some("new") => cmd_new(matches.subcommand_matches("new").unwrap()),
+        None        => println!("No command was used"),
+        _           => println!("Unknown command"),
     }
 }
+
+fn cmd_new(matches: &ArgMatches) {
+    let mut name = matches.value_of("name").unwrap().to_string();
+
+    new::run(&name);
+}
+

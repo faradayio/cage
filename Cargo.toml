@@ -1,14 +1,23 @@
 [package]
 name = "conductor"
 version = "0.0.1"
-authors = ["Eric Kidd <git@randomhacks.net>"]
+authors = ["Eric Kidd <git@randomhacks.net>", "Derek Kastner <dkastner@gmail.com>"]
 
 description = "Faraday Conductor: Develop and orchestrate multi-pod docker-compose apps"
 license = "MIT/Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/faradayio/conductor"
+keywords = ["microservice", "docker", "command"]
+
+[[bin]]
+name = "conductor"
+test = false
+bench = false
+doctest = false
+doc = false
 
 [dependencies]
+clap = "2.6.0"
 docker_compose = "0.2.0"
 lazy_static = "0.2.1"
 regex = "0.1.73"
