@@ -9,6 +9,7 @@ readme = "README.md"
 repository = "https://github.com/faradayio/conductor"
 
 [dependencies]
-docker_compose = "0.3.0"
+docker_compose = "0.3.2"
 lazy_static = "0.2.1"
 regex = "0.1.73"
+walkdir = "0.1.6"

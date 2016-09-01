@@ -2,5 +2,5 @@
 
 /// Create an error using a format string and arguments.
 macro_rules! err {
-    ($( $e:expr ),*) => (From::from(format!($( $e ),*)));
+    ($( $e:expr ),*) => (dc::Error::from(format!($( $e ),*)));
 }
