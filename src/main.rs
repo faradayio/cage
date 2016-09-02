@@ -3,6 +3,9 @@
 extern crate conductor;
 extern crate docker_compose;
 extern crate docopt;
+extern crate env_logger;
+#[macro_use]
+extern crate log;
 extern crate rustc_serialize;
 
 use docker_compose::v2 as dc;
@@ -47,10 +50,14 @@ fn run(_: &Args) -> Result<(), dc::Error> {
 
 /// Our main entry point.
 fn main() {
+    // Boot up logging.
+    env_logger::init().unwrap();
+
     // Parse our args using docopt.rs.
     let args: Args = Docopt::new(USAGE)
         .and_then(|d| d.decode())
         .unwrap_or_else(|e| e.exit());
+    debug!("Arguments: {:?}", &args);
 
     // Display our version if we were asked to do so.
     if args.flag_version {

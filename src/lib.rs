@@ -1,9 +1,10 @@
 extern crate docker_compose;
 extern crate glob;
+#[macro_use]
+extern crate log;
 extern crate regex;
 
 use docker_compose::v2 as dc;
-use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -93,6 +94,7 @@ pub fn generate() -> Result<(), dc::Error> {
     for glob_result in try!(glob::glob_with("pods/**/*.env", &glob_opts)) {
         let in_path = try!(glob_result);
         let out_path = try!(get_out_path(&in_path));
+        debug!("Copy {} to {}", in_path.display(), out_path.display());
         try!(fs::copy(in_path, out_path));
     }
 
@@ -105,6 +107,8 @@ pub fn generate() -> Result<(), dc::Error> {
         let out_path = try!(get_out_path(&in_path));
 
         // Munge our top-level file.
+        debug!("Expand base {} as {}", in_path.display(),
+               out_path.display());
         let mut file = try!(dc::File::read_from_path(&in_path));
         try!(update(&mut file, &in_path));
         try!(file.write_to_path(out_path));
@@ -124,6 +128,8 @@ pub fn generate() -> Result<(), dc::Error> {
             let in_path = try!(glob_result);
             let out_path = try!(get_out_path(&in_path));
 
+            debug!("Expand override {} as {}", in_path.display(),
+                   out_path.display());
             let mut file = try!(dc::File::read_from_path(&in_path));
             for name in &service_names {
                 // If this services does exist, create it so that we can
