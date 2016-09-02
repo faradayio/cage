@@ -1,17 +1,17 @@
 //! Our main CLI tool.
 
 extern crate conductor;
-extern crate docker_compose;
 extern crate docopt;
 extern crate env_logger;
 #[macro_use]
 extern crate log;
 extern crate rustc_serialize;
 
-use docker_compose::v2 as dc;
 use docopt::Docopt;
 use std::io::{self, Write};
 use std::process;
+
+use conductor::Error;
 
 /// Our version number, set by Cargo at compile time.
 const VERSION: &'static str = env!("CARGO_PKG_VERSION");
@@ -43,7 +43,7 @@ struct Args {
 
 /// The function which does the real work.  Unlike `main`, we have a return
 /// type of `Result` and may therefore use `try!` to handle errors.
-fn run(_: &Args) -> Result<(), dc::Error> {
+fn run(_: &Args) -> Result<(), Error> {
     try!(conductor::generate());
     Ok(())
 }

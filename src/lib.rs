@@ -9,6 +9,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use ext::service::ServiceExt;
+pub use util::Error;
 
 #[macro_use] mod util;
 mod ext;
@@ -16,7 +17,7 @@ mod ext;
 /// Update a `docker-compose.yml` file in place.  `path` is a relative path
 /// to this file from the conductor working directory, which we use to
 /// resolve things.
-pub fn update(file: &mut dc::File, path: &Path) -> Result<(), dc::Error> {
+pub fn update(file: &mut dc::File, path: &Path) -> Result<(), Error> {
     // Get the directory from which we read this file, and use it to
     // construct some useful paths.
     let dir = try!(path.parent().ok_or_else(|| {
@@ -62,7 +63,7 @@ pub fn update(file: &mut dc::File, path: &Path) -> Result<(), dc::Error> {
 
 /// Generate `.compose/pods` from `pods`, transforming `*.yml` files as
 /// necessary and copying `*.env` files.
-pub fn generate() -> Result<(), dc::Error> {
+pub fn generate() -> Result<(), Error> {
     // We want to copy from "pods/" to ".conductor/".
     let dotdir = Path::new(".conductor");
 
@@ -75,7 +76,7 @@ pub fn generate() -> Result<(), dc::Error> {
     // Get the output directory corresponding `in_dir`, and make sure that
     // the containing directory exists.  We use a closure instead of a
     // local function here so that we can capture variables.
-    let get_out_path = |in_path: &Path| -> Result<PathBuf, dc::Error> {
+    let get_out_path = |in_path: &Path| -> Result<PathBuf, Error> {
         let out_path = dotdir.join(in_path);
         try!(fs::create_dir_all(try!(out_path.parent().ok_or_else(|| {
             err!("can't find parent of {}", out_path.display())
