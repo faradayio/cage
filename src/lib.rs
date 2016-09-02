@@ -12,6 +12,7 @@ use ext::service::ServiceExt;
 pub use util::Error;
 
 #[macro_use] mod util;
+pub mod dir;
 mod ext;
 
 /// Update a `docker-compose.yml` file in place.  `path` is a relative path
