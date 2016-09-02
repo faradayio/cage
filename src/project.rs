@@ -4,9 +4,9 @@ use std::env;
 use std::fs;
 use std::path::Path;
 use std::path::PathBuf;
-use std::marker::PhantomData;
 
 use dir;
+use overrides::Override;
 use pod::Pod;
 use util::{ConductorPathExt, Error, ToStrOrErr};
 
@@ -16,21 +16,17 @@ use util::{ConductorPathExt, Error, ToStrOrErr};
 pub struct Project {
     /// The directory which contains our `project`.  Must have a
     /// subdirectory named `pods`.
-    pub root_dir: PathBuf,
+    root_dir: PathBuf,
 
     /// The directory to which we'll write our transformed pods.  Defaults
     /// to `root_dir.join(".conductor")`.
-    pub output_dir: PathBuf,
+    output_dir: PathBuf,
 
     /// All the pods associated with this project.
-    pub pods: Vec<Pod>,
+    pods: Vec<Pod>,
 
-    /// PRIVATE.  Mark this struct as having unknown fields for future
-    /// compatibility.  This prevents direct construction and exhaustive
-    /// matching.  This needs to be be public because of
-    /// http://stackoverflow.com/q/39277157/12089
-    #[doc(hidden)]
-    pub _phantom: PhantomData<()>,
+    /// All the overrides associated with this project.
+    overrides: Vec<Override>,
 }
 
 impl Project {
@@ -45,8 +41,8 @@ impl Project {
     /// env::set_current_dir("examples/hello/pods").unwrap();
     ///
     /// let proj = Project::from_current_dir().unwrap();
-    /// assert_eq!(proj.root_dir, saved.join("examples/hello"));
-    /// assert_eq!(proj.output_dir, saved.join("examples/hello/.conductor"));
+    /// assert_eq!(proj.root_dir(), saved.join("examples/hello"));
+    /// assert_eq!(proj.output_dir(), saved.join("examples/hello/.conductor"));
     ///
     /// env::set_current_dir(saved).unwrap();
     /// ```
@@ -60,7 +56,7 @@ impl Project {
             root_dir: root_dir.clone(),
             output_dir: root_dir.join(".conductor"),
             pods: try!(Project::find_pods(&root_dir)),
-            _phantom: PhantomData,
+            overrides: try!(Project::find_overrides(&root_dir)),
         })
     }
 
@@ -74,27 +70,53 @@ impl Project {
             root_dir: root_dir.clone(),
             output_dir: Path::new("target/test_output").join(name),
             pods: try!(Project::find_pods(&root_dir)),
-            _phantom: PhantomData,
+            overrides: try!(Project::find_overrides(&root_dir)),
         })
     }
 
     /// Find all the pods defined in this project.
     fn find_pods(root_dir: &Path) -> Result<Vec<Pod>, Error> {
+        let pods_dir = root_dir.join("pods");
         let mut pods = vec!();
-        for glob_result in try!(root_dir.glob("pods/*.yml")) {
+        for glob_result in try!(pods_dir.glob("*.yml")) {
             let path = try!(glob_result);
             // It's safe to unwrap the file_stem because we know it matched
             // our glob.
             let name =
                 try!(path.file_stem().unwrap().to_str_or_err()).to_owned();
-            pods.push(Pod {
-                name: name,
-                _phantom: PhantomData,
-            });
+            pods.push(Pod::new(pods_dir.clone(), name));
         }
         Ok(pods)
     }
+
+    /// Find all the overrides defined in this project.
+    fn find_overrides(root_dir: &Path) -> Result<Vec<Override>, Error> {
+        let overrides_dir = root_dir.join("pods/overrides");
+        let mut overrides = vec!();
+        for glob_result in try!(overrides_dir.glob("*")) {
+            let path = try!(glob_result);
+            if path.is_dir() {
+                // It's safe to unwrap file_name because we know it matched
+                // our glob.
+                let name =
+                    try!(path.file_name().unwrap().to_str_or_err()).to_owned();
+                overrides.push(Override::new(name));
+            }
+        }
+        Ok(overrides)
+    }
     
+    /// The root directory of this project.
+    pub fn root_dir(&self) -> &Path {
+        &self.root_dir
+    }
+
+    /// The output directory of this project.  Normally `.conductor` inside
+    /// the `root_dir`, but it may be overriden.
+    pub fn output_dir(&self) -> &Path {
+        &self.output_dir
+    }
+
     /// Delete our existing output and replace it with a processed and
     /// expanded version of our pod definitions.
     pub fn output(&self) -> Result<(), Error> {
@@ -138,6 +160,13 @@ fn output_copies_env_files() {
 #[test]
 fn pods_are_loaded() {
     let proj = Project::from_example("hello").unwrap();
-    let names: Vec<_> = proj.pods.iter().map(|pod| &pod.name).collect();
+    let names: Vec<_> = proj.pods.iter().map(|pod| pod.name()).collect();
     assert_eq!(names, ["frontend"]);
+}
+
+#[test]
+fn overrides_are_loaded() {
+    let proj = Project::from_example("hello").unwrap();
+    let names: Vec<_> = proj.overrides.iter().map(|o| o.name()).collect();
+    assert_eq!(names, ["development", "production", "test"]);
 }

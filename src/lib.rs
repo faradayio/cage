@@ -10,12 +10,14 @@ use std::path::{Path, PathBuf};
 
 use ext::service::ServiceExt;
 pub use util::Error;
+pub use overrides::Override;
 pub use project::Project;
 pub use pod::Pod;
 
 #[macro_use] mod util;
 pub mod dir;
 mod ext;
+mod overrides;
 mod pod;
 mod project;
 
