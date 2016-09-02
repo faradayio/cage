@@ -6,16 +6,15 @@
 //! ```
 
 extern crate docker_compose;
+extern crate glob;
 extern crate regex;
-extern crate walkdir;
 
 use docker_compose::v2 as dc;
 use std::env;
 use std::fs;
 use std::io::{self, Write};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process;
-use walkdir::{DirEntry, WalkDir};
 
 use ext::service::ServiceExt;
 
@@ -69,19 +68,6 @@ fn update(file: &mut dc::File, path: &Path) -> Result<(), dc::Error> {
     Ok(())
 }
 
-/// Should we copy this directory entry?
-fn should_copy(entry: &DirEntry) -> bool {
-    if !entry.file_type().is_file() {
-        return false;
-    }
-    entry.file_name()
-        .to_str()
-        .map(|s| {
-            !s.starts_with(".") && (s.ends_with(".yml") || s.ends_with(".env"))
-        })
-        .unwrap_or(false)
-}
-
 /// Our real `main` function.  This is a standard wrapper pattern: we put
 /// all the real logic in a function that returns `Result` so that we can
 /// use `try!` to handle errors, and we reserve `main` just for error
@@ -102,36 +88,67 @@ fn run() -> Result<(), dc::Error> {
         try!(fs::remove_dir_all(dotdir_pods));
     }
 
-    // Walk over "pods/" recursively.
-    for entry in WalkDir::new("pods") {
-        let entry = try!(entry);
-        if should_copy(&entry) {
-            // Prefix "pods/" with ".conductor/" to get the output path.
-            let in_path = entry.path();
-            let out_path = dotdir.join(in_path);
-            println!("Copying {} to {}", in_path.display(), out_path.display());
+    // Get the output directory corresponding `in_dir`, and make sure that
+    // the containing directory exists.  We use a closure instead of a
+    // local function here so that we can capture variables.
+    let get_out_path = |in_path: &Path| -> Result<PathBuf, dc::Error> {
+        let out_path = dotdir.join(in_path);
+        try!(fs::create_dir_all(try!(out_path.parent().ok_or_else(|| {
+            err!("can't find parent of {}", out_path.display())
+        }))));
+        Ok(out_path)
+    };
 
-            // Make sure the destination directory exists.  It's OK to use
-            // `unwrap` here because we know that `out_path` is not a file
-            // system root because of how we constructed it above.
-            try!(fs::create_dir_all(out_path.parent().unwrap()));
+    // Set up some standard glob options we'll use repeatedly.
+    let glob_opts = glob::MatchOptions {
+        case_sensitive: true,
+        require_literal_separator: true,
+        require_literal_leading_dot: true,
+    };
 
-            // Make sure the destination file does not exist.  This is
-            // reasonably safe because we do it under `.conductor`, which
-            // is fair game.
-            if out_path.exists() {
-                try!(fs::remove_file(&out_path));
+    // Copy over all our simple files by walking pods/ recursively.
+    for glob_result in try!(glob::glob_with("pods/**/*.env", &glob_opts)) {
+        let in_path = try!(glob_result);
+        let out_path = try!(get_out_path(&in_path));
+        try!(fs::copy(in_path, out_path));
+    }
+
+    // For *.yaml files, we need to do this in several tiers, because we
+    // need to figure out which services a given pod is supposed to
+    // contain, and make sure that those services appear in all override
+    // pods.
+    for glob_result in try!(glob::glob_with("pods/*.yml", &glob_opts)) {
+        let in_path = try!(glob_result);
+        let out_path = try!(get_out_path(&in_path));
+
+        // Munge our top-level file.
+        let mut file = try!(dc::File::read_from_path(&in_path));
+        try!(update(&mut file, &in_path));
+        try!(file.write_to_path(out_path));
+
+        // Extract the service names from our top-level file, and get the
+        // filename as string.
+        let service_names = file.services.keys().cloned().collect::<Vec<_>>();
+        let filename = try!(in_path.file_name().and_then(|s| {
+            s.to_str()
+        }).ok_or_else(|| {
+            err!("can't get file name for {}", in_path.display())
+        }));
+
+        // Find all overrides matching this top-level file.
+        let overrides = format!("pods/overrides/*/{}", filename);
+        for glob_result in try!(glob::glob_with(&overrides, &glob_opts)) {
+            let in_path = try!(glob_result);
+            let out_path = try!(get_out_path(&in_path));
+
+            let mut file = try!(dc::File::read_from_path(&in_path));
+            for name in &service_names {
+                // If this services does exist, create it so that we can
+                // set `env_file` on it.
+                file.services.entry(name.to_owned()).or_insert_with(Default::default);
             }
-
-            // Transform our file.  `unwrap` is safe because we know that
-            // we have a real file extension thanks to `should_copy`.
-            if in_path.extension().unwrap() == "yml" {
-                let mut file = try!(dc::File::read_from_path(in_path));
-                try!(update(&mut file, &in_path));
-                try!(file.write_to_path(out_path));
-            } else {
-                try!(fs::copy(in_path, out_path));
-            }
+            try!(update(&mut file, &in_path));
+            try!(file.write_to_path(out_path));
         }
     }
 
