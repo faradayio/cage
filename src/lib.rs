@@ -10,10 +10,14 @@ use std::path::{Path, PathBuf};
 
 use ext::service::ServiceExt;
 pub use util::Error;
+pub use project::Project;
+pub use pod::Pod;
 
 #[macro_use] mod util;
 pub mod dir;
 mod ext;
+mod pod;
+mod project;
 
 /// Update a `docker-compose.yml` file in place.  `path` is a relative path
 /// to this file from the conductor working directory, which we use to
