@@ -10,6 +10,8 @@ repository = "https://github.com/faradayio/conductor"
 
 [dependencies]
 docker_compose = "0.3.2"
+docopt = "0.6.83"
 glob = "0.2.11"
 lazy_static = "0.2.1"
 regex = "0.1.73"
+rustc-serialize = "0.3.19"
