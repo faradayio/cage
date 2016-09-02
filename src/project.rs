@@ -2,14 +2,16 @@
 
 use std::env;
 use std::fs;
-#[cfg(test)] use std::path::Path;
+use std::path::Path;
 use std::path::PathBuf;
 use std::marker::PhantomData;
 
 use dir;
-use util::{ConductorPathExt, Error};
+use pod::Pod;
+use util::{ConductorPathExt, Error, ToStrOrErr};
 
-/// A `conductor` project
+/// A `conductor` project, which is represented as a directory containing a
+/// `pods` subdirectory.
 #[derive(Debug)]
 pub struct Project {
     /// The directory which contains our `project`.  Must have a
@@ -19,6 +21,9 @@ pub struct Project {
     /// The directory to which we'll write our transformed pods.  Defaults
     /// to `root_dir.join(".conductor")`.
     pub output_dir: PathBuf,
+
+    /// All the pods associated with this project.
+    pub pods: Vec<Pod>,
 
     /// PRIVATE.  Mark this struct as having unknown fields for future
     /// compatibility.  This prevents direct construction and exhaustive
@@ -52,8 +57,9 @@ impl Project {
         let current = try!(env::current_dir());
         let root_dir = try!(dir::find_project(&current));
         Ok(Project {
-            root_dir: root_dir.to_owned(),
+            root_dir: root_dir.clone(),
             output_dir: root_dir.join(".conductor"),
+            pods: try!(Project::find_pods(&root_dir)),
             _phantom: PhantomData,
         })
     }
@@ -65,12 +71,30 @@ impl Project {
         let example_dir = Path::new("examples").join(name);
         let root_dir = try!(dir::find_project(&example_dir));
         Ok(Project {
-            root_dir: root_dir,
+            root_dir: root_dir.clone(),
             output_dir: Path::new("target/test_output").join(name),
+            pods: try!(Project::find_pods(&root_dir)),
             _phantom: PhantomData,
         })
     }
 
+    /// Find all the pods defined in this project.
+    fn find_pods(root_dir: &Path) -> Result<Vec<Pod>, Error> {
+        let mut pods = vec!();
+        for glob_result in try!(root_dir.glob("pods/*.yml")) {
+            let path = try!(glob_result);
+            // It's safe to unwrap the file_stem because we know it matched
+            // our glob.
+            let name =
+                try!(path.file_stem().unwrap().to_str_or_err()).to_owned();
+            pods.push(Pod {
+                name: name,
+                _phantom: PhantomData,
+            });
+        }
+        Ok(pods)
+    }
+    
     /// Delete our existing output and replace it with a processed and
     /// expanded version of our pod definitions.
     pub fn output(&self) -> Result<(), Error> {
@@ -109,4 +133,11 @@ fn output_copies_env_files() {
     proj.output().unwrap();
     assert!(proj.output_dir.join("pods/common.env").exists());
     assert!(proj.output_dir.join("pods/overrides/test/common.env").exists());
+}
+
+#[test]
+fn pods_are_loaded() {
+    let proj = Project::from_example("hello").unwrap();
+    let names: Vec<_> = proj.pods.iter().map(|pod| &pod.name).collect();
+    assert_eq!(names, ["frontend"]);
 }

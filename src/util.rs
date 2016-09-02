@@ -2,6 +2,7 @@
 
 use docker_compose::v2 as dc;
 use glob;
+use std::ffi::OsStr;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -13,11 +14,32 @@ macro_rules! err {
     ($( $e:expr ),*) => ($crate::Error::from(format!($( $e ),*)));
 }
 
-/// Custom methods which we add to `Path` to support common operations.
-pub trait ConductorPathExt {
-    /// Convert to a Rust string as per `as_str`, or return an error;
-    fn as_str_or_err(&self) -> Result<&str, Error>;
+pub trait ToStrOrErr {
+    /// Convert to a Rust string as per `OsStr::to_str`, or return an
+    /// error;
+    fn to_str_or_err(&self) -> Result<&str, Error>;
+}
 
+impl ToStrOrErr for OsStr {
+    fn to_str_or_err(&self) -> Result<&str, Error> {
+        self.to_str().ok_or_else(|| {
+            err!("the string {:?} contains non-Unicode characters",
+                 self)
+        })
+    }
+}
+
+impl ToStrOrErr for Path {
+    fn to_str_or_err(&self) -> Result<&str, Error> {
+        self.to_str().ok_or_else(|| {
+            err!("the path {} contains non-Unicode characters",
+                 self.display())
+        })
+    }
+}
+
+/// Custom methods which we add to `Path` to support common operations.
+pub trait ConductorPathExt: ToStrOrErr {
     /// Glob relative to this path.
     fn glob(&self, pattern: &str) -> Result<glob::Paths, Error>;
 
@@ -29,13 +51,6 @@ pub trait ConductorPathExt {
 }
 
 impl ConductorPathExt for Path {
-    fn as_str_or_err(&self) -> Result<&str, Error> {
-        self.to_str().ok_or_else(|| {
-            err!("the path {} contains non-Unicode characters",
-                 self.display())
-        })
-    }
-
     fn glob(&self, pattern: &str) -> Result<glob::Paths, Error> {
         // We always use the same options.
         let opts = glob::MatchOptions {
@@ -45,7 +60,7 @@ impl ConductorPathExt for Path {
         };
 
         // Construct a full glob and run it.
-        let pat = format!("{}/{}", try!(self.as_str_or_err()), pattern);
+        let pat = format!("{}/{}", try!(self.to_str_or_err()), pattern);
         Ok(try!(glob::glob_with(&pat, &opts)))
     }
 

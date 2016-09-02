@@ -4,6 +4,7 @@ use std::marker::PhantomData;
 
 /// A pod, specified by `pods/$NAME.yml` and zero or more
 /// `pods/overrides/*/*.yml` overrides that we can apply to it.
+#[derive(Debug)]
 pub struct Pod {
     /// The name of this pod, based on the file `pods/$NAME.yml`.
     pub name: String,
