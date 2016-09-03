@@ -180,6 +180,7 @@ fn new_from_example_uses_example_and_target() {
     assert_eq!(proj.root_dir, Path::new("examples/hello"));
     let output_dir = proj.output_dir.to_str_or_err().unwrap();
     assert!(output_dir.starts_with("target/test_output/hello-"));
+    proj.remove_test_output().unwrap();
 }
 
 #[test]
@@ -188,6 +189,7 @@ fn output_copies_env_files() {
     proj.output().unwrap();
     assert!(proj.output_dir.join("pods/common.env").exists());
     assert!(proj.output_dir.join("pods/overrides/test/common.env").exists());
+    proj.remove_test_output().unwrap();
 }
 
 #[test]
@@ -201,6 +203,8 @@ fn output_processes_pods_and_overrides() {
     assert!(proj.output_dir.join("pods/overrides/test/frontend.yml").exists());
 
     //dc::File::
+
+    proj.remove_test_output().unwrap();
 }
 
 #[test]
@@ -208,6 +212,7 @@ fn pods_are_loaded() {
     let proj = Project::from_example("hello").unwrap();
     let names: Vec<_> = proj.pods.iter().map(|pod| pod.name()).collect();
     assert_eq!(names, ["frontend"]);
+    proj.remove_test_output().unwrap();
 }
 
 #[test]
@@ -215,4 +220,5 @@ fn overrides_are_loaded() {
     let proj = Project::from_example("hello").unwrap();
     let names: Vec<_> = proj.overrides.iter().map(|o| o.name()).collect();
     assert_eq!(names, ["development", "production", "test"]);
+    proj.remove_test_output().unwrap();
 }
