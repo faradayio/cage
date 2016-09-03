@@ -132,6 +132,12 @@ impl Project {
         &self.output_dir
     }
 
+    /// Look up the named pod.
+    pub fn pod(&self, name: &str) -> Option<&Pod> {
+        // TODO LOW: Do we want to store pods in a BTreeMap by name?
+        self.pods.iter().find(|pod| pod.name() == name)
+    }
+
     /// Delete our existing output and replace it with a processed and
     /// expanded version of our pod definitions.
     pub fn output(&self) -> Result<(), Error> {
@@ -184,7 +190,20 @@ fn new_from_example_uses_example_and_target() {
     assert_eq!(proj.root_dir, Path::new("examples/hello"));
     let output_dir = proj.output_dir.to_str_or_err().unwrap();
     assert!(output_dir.starts_with("target/test_output/hello-"));
-    proj.remove_test_output().unwrap();
+}
+
+#[test]
+fn pods_are_loaded() {
+    let proj = Project::from_example("hello").unwrap();
+    let names: Vec<_> = proj.pods.iter().map(|pod| pod.name()).collect();
+    assert_eq!(names, ["frontend"]);
+}
+
+#[test]
+fn overrides_are_loaded() {
+    let proj = Project::from_example("hello").unwrap();
+    let names: Vec<_> = proj.overrides.iter().map(|o| o.name()).collect();
+    assert_eq!(names, ["development", "production", "test"]);
 }
 
 #[test]
@@ -198,31 +217,10 @@ fn output_copies_env_files() {
 
 #[test]
 fn output_processes_pods_and_overrides() {
-    //use docker_compose::v2 as dc;
-
     let proj = Project::from_example("hello").unwrap();
     proj.output().unwrap();
     assert!(proj.output_dir.join("pods/frontend.yml").exists());
     assert!(proj.output_dir.join("pods/overrides/production/frontend.yml").exists());
     assert!(proj.output_dir.join("pods/overrides/test/frontend.yml").exists());
-
-    //dc::File::
-
-    proj.remove_test_output().unwrap();
-}
-
-#[test]
-fn pods_are_loaded() {
-    let proj = Project::from_example("hello").unwrap();
-    let names: Vec<_> = proj.pods.iter().map(|pod| pod.name()).collect();
-    assert_eq!(names, ["frontend"]);
-    proj.remove_test_output().unwrap();
-}
-
-#[test]
-fn overrides_are_loaded() {
-    let proj = Project::from_example("hello").unwrap();
-    let names: Vec<_> = proj.overrides.iter().map(|o| o.name()).collect();
-    assert_eq!(names, ["development", "production", "test"]);
     proj.remove_test_output().unwrap();
 }

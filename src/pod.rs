@@ -9,7 +9,7 @@ use util::Error;
 
 /// Information about a `docker-compose.yml` file, including its path
 /// relative to `base_dir` (`base_dir` is normally `$PROJECT/pods`), and
-/// the lightly expanded version of its contents:
+/// the normalized version of its contents:
 ///
 /// 1. Any missing services will be explicitly added to an override file.
 /// 2. The `env_file` list will be updated to contain the appropriate
@@ -28,7 +28,7 @@ struct FileInfo {
 
 impl FileInfo {
     /// Create a `FileInfo` by either loading `base_dir.join(rel_path)` or
-    /// by creating an empty file in its place.  Do not perform
+    /// by creating an empty `dc::File` in its place.  Do not perform
     /// normalization.
     fn unnormalized(base_dir: &Path, rel_path: &Path) -> Result<FileInfo, Error> {
         let path = base_dir.join(rel_path);
@@ -40,6 +40,23 @@ impl FileInfo {
                 Default::default()
             },
         })
+    }
+
+    /// Make sure that all services from `base` are also present in this
+    /// file.  If you're going tp call this, it must be called after
+    /// `finish_normalization`
+    fn ensure_all_services_from(&mut self, base: &dc::File) {
+    }
+
+    /// Finish normalizing this file by inserting things like `env_file`
+    /// entries.
+    fn finish_normalization(&mut self) {
+        // It's safe to call `unwrap` here because we know `rel_path` should
+        // have a parent directory.
+        let env_path = self.rel_path.parent().unwrap().join("common.env");
+        for (_name, service) in self.file.services.iter_mut() {
+            service.env_files.insert(0, dc::value(env_path.clone()));
+        }
     }
 }
 
@@ -76,7 +93,8 @@ impl Pod {
 
         // Load our main `*.yml` file.
         let rel_path = Path::new(&format!("{}.yml", &name)).to_owned();
-        let file_info = try!(FileInfo::unnormalized(&base_dir, &rel_path));
+        let mut file_info = try!(FileInfo::unnormalized(&base_dir, &rel_path));
+        file_info.finish_normalization();
 
         // Load our override `*.yml` files.
         let mut ovr_infos = BTreeMap::new();
@@ -84,8 +102,10 @@ impl Pod {
             let ovr_rel_path =
                 Path::new(&format!("overrides/{}/{}.yml", ovr.name(), &name))
                     .to_owned();
-            let ovr_info =
+            let mut ovr_info =
                 try!(FileInfo::unnormalized(&base_dir, &ovr_rel_path));
+            ovr_info.ensure_all_services_from(&file_info.file);
+            ovr_info.finish_normalization();
             ovr_infos.insert(ovr.name().to_owned(), ovr_info);
         }
 
@@ -133,4 +153,17 @@ impl Pod {
     pub fn override_file(&self, ovr: &Override) -> Result<&dc::File, Error> {
         Ok(&(try!(self.override_file_info(ovr)).file))
     }
+}
+
+#[test]
+fn pods_are_normalized_on_load() {
+    use project::Project;
+
+    let proj = Project::from_example("hello").unwrap();
+    let frontend = proj.pod("frontend").unwrap();
+
+    let web = frontend.file().services.get("web").unwrap();
+    assert_eq!(web.env_files.len(), 1);
+    assert_eq!(web.env_files[0].value().unwrap(),
+               Path::new("common.env"));
 }
