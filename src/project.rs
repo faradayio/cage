@@ -4,6 +4,7 @@ use std::env;
 use std::fs;
 use std::path::Path;
 use std::path::PathBuf;
+use std::slice;
 
 use dir;
 use overrides::Override;
@@ -132,16 +133,26 @@ impl Project {
         &self.output_dir
     }
 
+    /// Iterate over all pods in this project.
+    pub fn pods(&self) -> Pods {
+        Pods { iter: self.pods.iter() }
+    }
+
     /// Look up the named pod.
     pub fn pod(&self, name: &str) -> Option<&Pod> {
         // TODO LOW: Do we want to store pods in a BTreeMap by name?
-        self.pods.iter().find(|pod| pod.name() == name)
+        self.pods().find(|pod| pod.name() == name)
+    }
+
+    /// Iterate over all overlays in this project.
+    pub fn overrides(&self) -> Overrides {
+        Overrides { iter: self.overrides.iter() }
     }
 
     /// Look up the named override.  We name this function `ovr` instead of
     /// `override` to avoid a keyword clash.
     pub fn ovr(&self, name: &str) -> Option<&Override> {
-        self.overrides.iter().find(|ovr| ovr.name() == name)
+        self.overrides().find(|ovr| ovr.name() == name)
     }
 
     /// Delete our existing output and replace it with a processed and
@@ -187,6 +198,34 @@ impl Project {
         }
 
         Ok(())
+    }
+}
+
+/// An iterator over the pods in a project.
+#[derive(Debug, Clone)]
+pub struct Pods<'a> {
+    iter: slice::Iter<'a, Pod>,
+}
+
+impl<'a> Iterator for Pods<'a> {
+    type Item = &'a Pod;
+
+    fn next(&mut self) -> Option<&'a Pod> {
+        self.iter.next()
+    }
+}
+
+/// An iterator over the overrides in a project.
+#[derive(Debug, Clone)]
+pub struct Overrides<'a> {
+    iter: slice::Iter<'a, Override>,
+}
+
+impl<'a> Iterator for Overrides<'a> {
+    type Item = &'a Override;
+
+    fn next(&mut self) -> Option<&'a Override> {
+        self.iter.next()
     }
 }
 
