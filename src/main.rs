@@ -21,12 +21,14 @@ const USAGE: &'static str = "
 conductor: Manage large, multi-pod docker-compose apps
 
 Usage:
-  conductor
+  conductor [options]
   conductor (--help | --version)
 
 Options:
-    -h, --help         Show this message
-    --version          Show the version of conductor
+    -h, --help             Show this message
+    --version              Show the version of conductor
+    --override=<override>  Use overrides from the specified subdirectory
+                           of `pods/overrides` [default: development]
 
 Run conductor in a directory containing a `pods` subdirectory.  For more
 information, see https://github.com/faradayio/conductor.
@@ -39,12 +41,14 @@ information, see https://github.com/faradayio/conductor.
 #[derive(Debug, RustcDecodable)]
 struct Args {
     flag_version: bool,
+    flag_override: String,
 }
 
 /// The function which does the real work.  Unlike `main`, we have a return
 /// type of `Result` and may therefore use `try!` to handle errors.
-fn run(_: &Args) -> Result<(), Error> {
+fn run(args: &Args) -> Result<(), Error> {
     let proj = try!(conductor::Project::from_current_dir());
+    let _ovr = proj.ovr(&args.flag_override);
     try!(proj.output());
     Ok(())
 }
