@@ -44,7 +44,8 @@ struct Args {
 /// The function which does the real work.  Unlike `main`, we have a return
 /// type of `Result` and may therefore use `try!` to handle errors.
 fn run(_: &Args) -> Result<(), Error> {
-    try!(conductor::generate());
+    let proj = try!(conductor::Project::from_current_dir());
+    try!(proj.output());
     Ok(())
 }
 
