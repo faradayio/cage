@@ -29,10 +29,10 @@ pub trait Command {
 /// There's some unfortunate Rust lifetime trickiness with the `'a`
 /// parameter, which we use to indicate the idea that the `Command`
 /// returned by `build` is allowed to hold a mutable reference pointing
-/// back to the `CommandBuilder`.  Usually we don't need to specify
+/// back to the `CommandRunner`.  Usually we don't need to specify
 /// lifetimes because Rust can do all the magic in the background, but here
 /// we actually need to expose them.
-pub trait CommandBuilder<'a> {
+pub trait CommandRunner<'a> {
     /// The type of the commands we build.  Must implement our custom
     /// `Command` trait and may contain references of type `'a`.
     type Command: Command + 'a;
@@ -42,9 +42,9 @@ pub trait CommandBuilder<'a> {
 }
 
 /// Support for running operating system commands.
-pub struct OsCommandBuilder;
+pub struct OsCommandRunner;
 
-impl<'a> CommandBuilder<'a> for OsCommandBuilder {
+impl<'a> CommandRunner<'a> for OsCommandRunner {
     type Command = process::Command;
 
     fn build<S: AsRef<OsStr>>(&'a mut self, program: S) -> Self::Command {
@@ -67,21 +67,21 @@ impl Command for process::Command {
 }
 
 #[test]
-fn os_command_builder_runs_commands() {
-    let mut builder = OsCommandBuilder;
-    assert!(builder.build("true").status().unwrap().success());
-    assert!(!builder.build("false").status().unwrap().success());
+fn os_command_runner_runs_commands() {
+    let mut runner = OsCommandRunner;
+    assert!(runner.build("true").status().unwrap().success());
+    assert!(!runner.build("false").status().unwrap().success());
 }
 
 /// Support for running commands in test mode.
-pub struct TestCommandBuilder {
+pub struct TestCommandRunner {
     cmds: Vec<Vec<String>>
 }
 
-impl TestCommandBuilder {
-    /// Create a new `TestCommandBuilder`.
-    pub fn new() -> TestCommandBuilder {
-        TestCommandBuilder { cmds: vec!() }
+impl TestCommandRunner {
+    /// Create a new `TestCommandRunner`.
+    pub fn new() -> TestCommandRunner {
+        TestCommandRunner { cmds: vec!() }
     }
 
     /// Access the list of commands run.
@@ -90,25 +90,25 @@ impl TestCommandBuilder {
     }
 }
 
-impl<'a> CommandBuilder<'a> for TestCommandBuilder {
+impl<'a> CommandRunner<'a> for TestCommandRunner {
     type Command = TestCommand<'a>;
 
     fn build<S: AsRef<OsStr>>(&'a mut self, program: S) -> Self::Command {
         self.cmds.push(vec!(program.as_ref().to_string_lossy().into_owned()));
-        TestCommand { builder: self }
+        TestCommand { runner: self }
     }
 }
 
-/// A fake command that gets logged to a `TestCommandBuilder` instead of
+/// A fake command that gets logged to a `TestCommandRunner` instead of
 /// actually getting run.
 pub struct TestCommand<'a> {
-    builder: &'a mut TestCommandBuilder,
+    runner: &'a mut TestCommandRunner,
 }
 
 impl<'a> Command for TestCommand<'a> {
-    /// Record the command arguments in our `TestCommandBuilder`.
+    /// Record the command arguments in our `TestCommandRunner`.
     fn arg<S: AsRef<OsStr>>(&mut self, arg: S) -> &mut Self {
-        self.builder.cmds.last_mut().unwrap()
+        self.runner.cmds.last_mut().unwrap()
             .push(arg.as_ref().to_string_lossy().into_owned());
         self
     }
@@ -123,12 +123,12 @@ impl<'a> Command for TestCommand<'a> {
 }
 
 #[test]
-pub fn test_command_builder_logs_commands() {
-    let mut builder = TestCommandBuilder::new();
-    let exit_code = builder.build("git")
+pub fn test_command_runner_logs_commands() {
+    let mut runner = TestCommandRunner::new();
+    let exit_code = runner.build("git")
         .args(&["clone", "https://github.com/torvalds/linux"])
         .status().unwrap();
     assert!(exit_code.success());
-    assert_eq!(builder.cmds(),
+    assert_eq!(runner.cmds(),
                &[&["git", "clone", "https://github.com/torvalds/linux"]]);
 }
