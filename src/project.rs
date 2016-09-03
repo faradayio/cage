@@ -138,6 +138,12 @@ impl Project {
         self.pods.iter().find(|pod| pod.name() == name)
     }
 
+    /// Look up the named override.  We name this function `ovr` instead of
+    /// `override` to avoid a keyword clash.
+    pub fn ovr(&self, name: &str) -> Option<&Override> {
+        self.overrides.iter().find(|ovr| ovr.name() == name)
+    }
+
     /// Delete our existing output and replace it with a processed and
     /// expanded version of our pod definitions.
     pub fn output(&self) -> Result<(), Error> {

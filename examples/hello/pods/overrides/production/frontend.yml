@@ -3,6 +3,9 @@
 
 version: "2"
 services:
+  # Note: Please do not override `web:` in this example override file.  The
+  # unit tests assume that it's not here.
+
   proxy:
     ports:
       - "443:443"

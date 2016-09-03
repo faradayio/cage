@@ -46,6 +46,10 @@ impl FileInfo {
     /// file.  If you're going tp call this, it must be called after
     /// `finish_normalization`
     fn ensure_all_services_from(&mut self, base: &dc::File) {
+        for (name, _service) in base.services.iter() {
+            self.file.services.entry(name.to_owned())
+                .or_insert_with(Default::default);
+        }
     }
 
     /// Finish normalizing this file by inserting things like `env_file`
@@ -166,4 +170,13 @@ fn pods_are_normalized_on_load() {
     assert_eq!(web.env_files.len(), 1);
     assert_eq!(web.env_files[0].value().unwrap(),
                Path::new("common.env"));
+
+    // This test assumes that there's no `web` entry in the `production`
+    // override, so we have to create everything from scratch.
+    let production = proj.ovr("production").unwrap();
+    let web_ovr = frontend.override_file(production).unwrap()
+        .services.get("web").unwrap();
+    assert_eq!(web_ovr.env_files.len(), 1);
+    assert_eq!(web_ovr.env_files[0].value().unwrap(),
+               Path::new("overrides/production/common.env"));
 }
