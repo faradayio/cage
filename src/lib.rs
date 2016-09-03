@@ -10,6 +10,7 @@ pub use project::Project;
 pub use pod::Pod;
 
 #[macro_use] mod util;
+pub mod cmd;
 pub mod dir;
 mod ext;
 mod overrides;
