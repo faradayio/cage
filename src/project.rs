@@ -52,11 +52,12 @@ impl Project {
         // and will break parallel tests.)
         let current = try!(env::current_dir());
         let root_dir = try!(dir::find_project(&current));
+        let overrides = try!(Project::find_overrides(&root_dir));
         Ok(Project {
             root_dir: root_dir.clone(),
             output_dir: root_dir.join(".conductor"),
-            pods: try!(Project::find_pods(&root_dir)),
-            overrides: try!(Project::find_overrides(&root_dir)),
+            pods: try!(Project::find_pods(&root_dir, &overrides)),
+            overrides: overrides,
         })
     }
 
@@ -68,11 +69,12 @@ impl Project {
         let example_dir = Path::new("examples").join(name);
         let root_dir = try!(dir::find_project(&example_dir));
         let rand_name = format!("{}-{}", name, random::<u16>());
+        let overrides = try!(Project::find_overrides(&root_dir));
         Ok(Project {
             root_dir: root_dir.clone(),
             output_dir: Path::new("target/test_output").join(&rand_name),
-            pods: try!(Project::find_pods(&root_dir)),
-            overrides: try!(Project::find_overrides(&root_dir)),
+            pods: try!(Project::find_pods(&root_dir, &overrides)),
+            overrides: overrides,
         })
     }
 
@@ -83,21 +85,6 @@ impl Project {
             try!(fs::remove_dir_all(&self.output_dir));
         }
         Ok(())
-    }
-
-    /// Find all the pods defined in this project.
-    fn find_pods(root_dir: &Path) -> Result<Vec<Pod>, Error> {
-        let pods_dir = root_dir.join("pods");
-        let mut pods = vec!();
-        for glob_result in try!(pods_dir.glob("*.yml")) {
-            let path = try!(glob_result);
-            // It's safe to unwrap the file_stem because we know it matched
-            // our glob.
-            let name =
-                try!(path.file_stem().unwrap().to_str_or_err()).to_owned();
-            pods.push(Pod::new(pods_dir.clone(), name));
-        }
-        Ok(pods)
     }
 
     /// Find all the overrides defined in this project.
@@ -117,6 +104,23 @@ impl Project {
         Ok(overrides)
     }
     
+    /// Find all the pods defined in this project.
+    fn find_pods(root_dir: &Path, overrides: &[Override]) ->
+        Result<Vec<Pod>, Error>
+    {
+        let pods_dir = root_dir.join("pods");
+        let mut pods = vec!();
+        for glob_result in try!(pods_dir.glob("*.yml")) {
+            let path = try!(glob_result);
+            // It's safe to unwrap the file_stem because we know it matched
+            // our glob.
+            let name =
+                try!(path.file_stem().unwrap().to_str_or_err()).to_owned();
+            pods.push(try!(Pod::new(pods_dir.clone(), name, overrides)));
+        }
+        Ok(pods)
+    }
+
     /// The root directory of this project.
     pub fn root_dir(&self) -> &Path {
         &self.root_dir
@@ -156,16 +160,16 @@ impl Project {
             let out_path = try!(out_pods.join(&rel).with_guaranteed_parent());
             debug!("Generating {}", out_path.display());
 
-            let file = try!(pod.read());
+            let file = pod.file();
             try!(file.write_to_path(out_path));
 
             // Copy over any override pods, too.
             for ovr in &self.overrides {
-                let rel = pod.override_rel_path(ovr);
+                let rel = try!(pod.override_rel_path(ovr));
                 let out_path = try!(out_pods.join(&rel).with_guaranteed_parent());
                 debug!("Generating {}", out_path.display());
 
-                let file = try!(pod.read_override(ovr));
+                let file = try!(pod.override_file(ovr));
                 try!(file.write_to_path(out_path));
             }
         }
