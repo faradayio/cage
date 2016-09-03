@@ -64,14 +64,25 @@ impl Project {
     /// with an output directory under `target/test_output/$NAME`.
     #[cfg(test)]
     pub fn from_example(name: &str) -> Result<Project, Error> {
+        use rand::random;
         let example_dir = Path::new("examples").join(name);
         let root_dir = try!(dir::find_project(&example_dir));
+        let rand_name = format!("{}-{}", name, random::<u16>());
         Ok(Project {
             root_dir: root_dir.clone(),
-            output_dir: Path::new("target/test_output").join(name),
+            output_dir: Path::new("target/test_output").join(&rand_name),
             pods: try!(Project::find_pods(&root_dir)),
             overrides: try!(Project::find_overrides(&root_dir)),
         })
+    }
+
+    /// (Tests only.) Remove our output directory after a test.
+    #[cfg(test)]
+    pub fn remove_test_output(&self) -> Result<(), Error> {
+        if self.output_dir.exists() {
+            try!(fs::remove_dir_all(&self.output_dir));
+        }
+        Ok(())
     }
 
     /// Find all the pods defined in this project.
@@ -138,6 +149,27 @@ impl Project {
             debug!("Copy {} to {}", in_path.display(), out_path.display());
             try!(fs::copy(in_path, out_path));
         }
+
+        // Copy over our top-level pods.
+        for pod in &self.pods {
+            let rel = pod.rel_path();
+            let out_path = try!(out_pods.join(&rel).with_guaranteed_parent());
+            debug!("Generating {}", out_path.display());
+
+            let file = try!(pod.read());
+            try!(file.write_to_path(out_path));
+
+            // Copy over any override pods, too.
+            for ovr in &self.overrides {
+                let rel = pod.override_rel_path(ovr);
+                let out_path = try!(out_pods.join(&rel).with_guaranteed_parent());
+                debug!("Generating {}", out_path.display());
+
+                let file = try!(pod.read_override(ovr));
+                try!(file.write_to_path(out_path));
+            }
+        }
+
         Ok(())
     }
 }
@@ -146,7 +178,8 @@ impl Project {
 fn new_from_example_uses_example_and_target() {
     let proj = Project::from_example("hello").unwrap();
     assert_eq!(proj.root_dir, Path::new("examples/hello"));
-    assert_eq!(proj.output_dir, Path::new("target/test_output/hello"));
+    let output_dir = proj.output_dir.to_str_or_err().unwrap();
+    assert!(output_dir.starts_with("target/test_output/hello-"));
 }
 
 #[test]
@@ -155,6 +188,19 @@ fn output_copies_env_files() {
     proj.output().unwrap();
     assert!(proj.output_dir.join("pods/common.env").exists());
     assert!(proj.output_dir.join("pods/overrides/test/common.env").exists());
+}
+
+#[test]
+fn output_processes_pods_and_overrides() {
+    //use docker_compose::v2 as dc;
+
+    let proj = Project::from_example("hello").unwrap();
+    proj.output().unwrap();
+    assert!(proj.output_dir.join("pods/frontend.yml").exists());
+    assert!(proj.output_dir.join("pods/overrides/production/frontend.yml").exists());
+    assert!(proj.output_dir.join("pods/overrides/test/frontend.yml").exists());
+
+    //dc::File::
 }
 
 #[test]

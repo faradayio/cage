@@ -2,6 +2,7 @@ extern crate docker_compose;
 extern crate glob;
 #[macro_use]
 extern crate log;
+extern crate rand;
 extern crate regex;
 
 use docker_compose::v2 as dc;
