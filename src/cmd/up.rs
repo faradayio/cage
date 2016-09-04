@@ -20,11 +20,12 @@ impl CommandUp for Project {
     {
         for pod in self.pods() {
             // We pass `-d` because we need to detach from each pod to
-            // launch the next.  To avoid this, we're need to use multiple
+            // launch the next.  To avoid this, we'd need to use multiple
             // parallel threads and maybe some intelligent output
             // buffering.
             let ovr_rel_path = try!(pod.override_rel_path(ovr));
             let status = try!(runner.build("docker-compose")
+                .arg("-p").arg(pod.name())
                 .arg("-f").arg(self.output_pods_dir().join(pod.rel_path()))
                 .arg("-f").arg(self.output_pods_dir().join(ovr_rel_path))
                 .arg("up").arg("-d")
@@ -46,6 +47,7 @@ fn runs_docker_compose_up_on_all_pods() {
     proj.up(&runner, &ovr).unwrap();
     assert_ran!(runner, {
         ["docker-compose",
+         "-p", "frontend",
          "-f", proj.output_dir().join("pods/frontend.yml"),
          "-f", proj.output_dir().join("pods/overrides/development/frontend.yml"),
          "up", "-d"]
