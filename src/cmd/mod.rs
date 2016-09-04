@@ -8,5 +8,7 @@
 //! ```
 
 pub use self::pull::CommandPull;
+pub use self::up::CommandUp;
 
 mod pull;
+mod up;

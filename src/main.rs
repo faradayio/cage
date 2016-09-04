@@ -26,6 +26,7 @@ conductor: Manage large, multi-pod docker-compose apps
 Usage:
   conductor [options]
   conductor [options] pull
+  conductor [options] up
   conductor (--help | --version)
 
 Options:
@@ -45,6 +46,7 @@ information, see https://github.com/faradayio/conductor.
 #[derive(Debug, RustcDecodable)]
 struct Args {
     cmd_pull: bool,
+    cmd_up: bool,
     flag_version: bool,
     flag_override: String,
 }
@@ -61,6 +63,8 @@ fn run(args: &Args) -> Result<(), Error> {
 
     if args.cmd_pull {
         try!(proj.pull(&runner, &ovr));
+    } else if args.cmd_up {
+        try!(proj.up(&runner, &ovr));
     }
 
     Ok(())
