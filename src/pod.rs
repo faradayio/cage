@@ -4,7 +4,7 @@ use docker_compose::v2 as dc;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
-use overrides::Override;
+use ovr::Override;
 use util::Error;
 
 /// Information about a `docker-compose.yml` file, including its path
@@ -126,6 +126,11 @@ impl Pod {
         &self.name
     }
 
+    /// The base directory for our relative paths.
+    pub fn base_dir(&self) -> &Path {
+        &self.base_dir
+    }
+
     /// The path to the top-level file defining this pod, relative to the
     /// `base_dir` specified at creation time.
     pub fn rel_path(&self) -> &Path {
@@ -154,6 +159,7 @@ impl Pod {
         Ok(&(try!(self.override_file_info(ovr)).rel_path))
     }
 
+    /// The `dc::File` for this override.
     pub fn override_file(&self, ovr: &Override) -> Result<&dc::File, Error> {
         Ok(&(try!(self.override_file_info(ovr)).file))
     }

@@ -1,5 +1,6 @@
 //! Our main CLI tool.
 
+#[macro_use]
 extern crate conductor;
 extern crate docopt;
 extern crate env_logger;
@@ -11,6 +12,8 @@ use docopt::Docopt;
 use std::io::{self, Write};
 use std::process;
 
+use conductor::command_runner::OsCommandRunner;
+use conductor::cmd::*;
 use conductor::Error;
 
 /// Our version number, set by Cargo at compile time.
@@ -22,6 +25,7 @@ conductor: Manage large, multi-pod docker-compose apps
 
 Usage:
   conductor [options]
+  conductor [options] pull
   conductor (--help | --version)
 
 Options:
@@ -40,6 +44,7 @@ information, see https://github.com/faradayio/conductor.
 /// [docopt.rs]: https://github.com/docopt/docopt.rs
 #[derive(Debug, RustcDecodable)]
 struct Args {
+    cmd_pull: bool,
     flag_version: bool,
     flag_override: String,
 }
@@ -48,8 +53,16 @@ struct Args {
 /// type of `Result` and may therefore use `try!` to handle errors.
 fn run(args: &Args) -> Result<(), Error> {
     let proj = try!(conductor::Project::from_current_dir());
-    let _ovr = proj.ovr(&args.flag_override);
+    let ovr = try!(proj.ovr(&args.flag_override).ok_or_else(|| {
+        err!("override {} is not defined", &args.flag_override)
+    }));
     try!(proj.output());
+    let runner = OsCommandRunner;
+
+    if args.cmd_pull {
+        try!(proj.pull(&runner, &ovr));
+    }
+
     Ok(())
 }
 

@@ -7,7 +7,7 @@ use std::path::PathBuf;
 use std::slice;
 
 use dir;
-use overrides::Override;
+use ovr::Override;
 use pod::Pod;
 use util::{ConductorPathExt, Error, ToStrOrErr};
 
@@ -131,6 +131,12 @@ impl Project {
     /// the `root_dir`, but it may be overriden.
     pub fn output_dir(&self) -> &Path {
         &self.output_dir
+    }
+
+    /// The path relative to which our pods will be output.  This can be
+    /// joined with `Pod::rel_path` to get an output path for a specific pod.
+    pub fn output_pods_dir(&self) -> PathBuf {
+        self.output_dir.join("pods")
     }
 
     /// Iterate over all pods in this project.

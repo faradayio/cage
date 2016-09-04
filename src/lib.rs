@@ -1,3 +1,7 @@
+//! `conductor` as a reusable API, so that you can call it from other tools.
+
+#![warn(missing_docs)]
+
 extern crate docker_compose;
 extern crate glob;
 #[macro_use] extern crate log;
@@ -5,15 +9,16 @@ extern crate rand;
 extern crate regex;
 
 pub use util::Error;
-pub use overrides::Override;
+pub use ovr::Override;
 pub use project::Project;
 pub use pod::Pod;
 
 #[macro_use] mod util;
-pub mod command_runner;
+#[macro_use] pub mod command_runner;
+pub mod cmd;
 pub mod dir;
 mod ext;
-mod overrides;
+mod ovr;
 mod pod;
 mod project;
 

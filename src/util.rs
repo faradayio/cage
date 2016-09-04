@@ -10,6 +10,7 @@ use std::path::{Path, PathBuf};
 pub type Error = dc::Error;
 
 /// Create an error using a format string and arguments.
+#[macro_export]
 macro_rules! err {
     ($( $e:expr ),*) => ($crate::Error::from(format!($( $e ),*)));
 }
