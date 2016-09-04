@@ -27,6 +27,7 @@ Usage:
   conductor [options]
   conductor [options] pull
   conductor [options] up
+  conductor [options] stop
   conductor (--help | --version)
 
 Options:
@@ -47,6 +48,7 @@ information, see https://github.com/faradayio/conductor.
 struct Args {
     cmd_pull: bool,
     cmd_up: bool,
+    cmd_stop: bool,
     flag_version: bool,
     flag_override: String,
 }
@@ -65,6 +67,8 @@ fn run(args: &Args) -> Result<(), Error> {
         try!(proj.pull(&runner, &ovr));
     } else if args.cmd_up {
         try!(proj.up(&runner, &ovr));
+    } else if args.cmd_stop {
+        try!(proj.stop(&runner, &ovr));
     }
 
     Ok(())
