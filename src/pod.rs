@@ -2,9 +2,11 @@
 
 use docker_compose::v2 as dc;
 use std::collections::BTreeMap;
+use std::ffi::OsString;
 use std::path::{Path, PathBuf};
 
 use ovr::Override;
+use project::Project;
 use util::Error;
 
 /// Information about a `docker-compose.yml` file, including its path
@@ -162,6 +164,17 @@ impl Pod {
     /// The `dc::File` for this override.
     pub fn override_file(&self, ovr: &Override) -> Result<&dc::File, Error> {
         Ok(&(try!(self.override_file_info(ovr)).file))
+    }
+
+    /// Command-line `-p` and `-f` arguments that we'll pass to
+    /// `docker-compose` to describe this file.
+    pub fn compose_args(&self, proj: &Project, ovr: &Override) ->
+        Result<Vec<OsString>, Error>
+    {
+        let ovr_rel_path = try!(self.override_rel_path(ovr));
+        Ok(vec!("-p".into(), self.name().into(),
+                "-f".into(), proj.output_pods_dir().join(self.rel_path()).into(),
+                "-f".into(), proj.output_pods_dir().join(ovr_rel_path).into()))
     }
 }
 

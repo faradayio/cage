@@ -19,10 +19,8 @@ impl CommandPull for Project {
         where CR: CommandRunner
     {
         for pod in self.pods() {
-            let ovr_rel_path = try!(pod.override_rel_path(ovr));
             let status = try!(runner.build("docker-compose")
-                .arg("-f").arg(self.output_pods_dir().join(pod.rel_path()))
-                .arg("-f").arg(self.output_pods_dir().join(ovr_rel_path))
+                .args(&try!(pod.compose_args(self, ovr)))
                 .arg("pull")
                 .status());
             if !status.success() {
@@ -42,6 +40,7 @@ fn runs_docker_compose_pull_on_all_pods() {
     proj.pull(&runner, &ovr).unwrap();
     assert_ran!(runner, {
         ["docker-compose",
+         "-p", "frontend",
          "-f", proj.output_dir().join("pods/frontend.yml"),
          "-f", proj.output_dir().join("pods/overrides/development/frontend.yml"),
          "pull"]
