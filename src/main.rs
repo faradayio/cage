@@ -15,6 +15,7 @@ use std::process;
 use conductor::command_runner::OsCommandRunner;
 use conductor::cmd::*;
 use conductor::Error;
+use conductor::create_project::create_project;
 
 /// Our version number, set by Cargo at compile time.
 const VERSION: &'static str = env!("CARGO_PKG_VERSION");
@@ -25,6 +26,7 @@ conductor: Manage large, multi-pod docker-compose apps
 
 Usage:
   conductor [options]
+  conductor [options] new <name>
   conductor [options] pull
   conductor [options] up
   conductor [options] stop
@@ -54,8 +56,10 @@ struct Args {
     cmd_repo: bool,
     cmd_list: bool,
     cmd_clone: bool,
+    cmd_new: bool,
 
     arg_repo: Option<String>,
+    arg_name: Option<String>,
 
     flag_version: bool,
     flag_override: String,
@@ -64,6 +68,12 @@ struct Args {
 /// The function which does the real work.  Unlike `main`, we have a return
 /// type of `Result` and may therefore use `try!` to handle errors.
 fn run(args: &Args) -> Result<(), Error> {
+
+    if args.cmd_new {
+        create_project(args.arg_name.as_ref().unwrap());
+        return Ok(());
+    }
+
     let proj = try!(conductor::Project::from_current_dir());
     let ovr = try!(proj.ovr(&args.flag_override).ok_or_else(|| {
         err!("override {} is not defined", &args.flag_override)

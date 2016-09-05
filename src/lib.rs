@@ -19,6 +19,7 @@ pub use repos::{Repos, Repo};
 #[macro_use] mod util;
 #[macro_use] pub mod command_runner;
 pub mod cmd;
+pub mod create_project;
 pub mod dir;
 mod ext;
 mod git_url;
