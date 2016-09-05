@@ -20,6 +20,9 @@ pub struct Project {
     /// subdirectory named `pods`.
     root_dir: PathBuf,
 
+    /// Where we keep cloned git repositories.
+    src_dir: PathBuf,
+
     /// The directory to which we'll write our transformed pods.  Defaults
     /// to `root_dir.join(".conductor")`.
     output_dir: PathBuf,
@@ -47,6 +50,7 @@ impl Project {
     ///
     /// let proj = Project::from_current_dir().unwrap();
     /// assert_eq!(proj.root_dir(), saved.join("examples/hello"));
+    /// assert_eq!(proj.src_dir(), saved.join("examples/hello/src"));
     /// assert_eq!(proj.output_dir(), saved.join("examples/hello/.conductor"));
     ///
     /// env::set_current_dir(saved).unwrap();
@@ -62,6 +66,7 @@ impl Project {
         let repos = try!(Repos::new(&pods));
         Ok(Project {
             root_dir: root_dir.clone(),
+            src_dir: root_dir.join("src"),
             output_dir: root_dir.join(".conductor"),
             pods: pods,
             overrides: overrides,
@@ -77,12 +82,14 @@ impl Project {
         let example_dir = Path::new("examples").join(name);
         let root_dir = try!(dir::find_project(&example_dir));
         let rand_name = format!("{}-{}", name, random::<u16>());
+        let test_output = Path::new("target/test_output").join(&rand_name);
         let overrides = try!(Project::find_overrides(&root_dir));
         let pods = try!(Project::find_pods(&root_dir, &overrides));
         let repos = try!(Repos::new(&pods));
         Ok(Project {
             root_dir: root_dir.clone(),
-            output_dir: Path::new("target/test_output").join(&rand_name),
+            src_dir: test_output.join("src"),
+            output_dir: test_output,
             pods: pods,
             overrides: overrides,
             repos: repos,
@@ -114,7 +121,7 @@ impl Project {
         }
         Ok(overrides)
     }
-    
+
     /// Find all the pods defined in this project.
     fn find_pods(root_dir: &Path, overrides: &[Override]) ->
         Result<Vec<Pod>, Error>
@@ -135,6 +142,12 @@ impl Project {
     /// The root directory of this project.
     pub fn root_dir(&self) -> &Path {
         &self.root_dir
+    }
+
+    /// The source directory of this project, where we can put cloned git
+    /// repositories.
+    pub fn src_dir(&self) -> &Path {
+        &self.src_dir
     }
 
     /// The output directory of this project.  Normally `.conductor` inside
@@ -259,6 +272,8 @@ fn new_from_example_uses_example_and_target() {
     assert_eq!(proj.root_dir, Path::new("examples/hello"));
     let output_dir = proj.output_dir.to_str_or_err().unwrap();
     assert!(output_dir.starts_with("target/test_output/hello-"));
+    let src_dir = proj.src_dir.to_str_or_err().unwrap();
+    assert!(src_dir.starts_with("target/test_output/hello-"));
 }
 
 #[test]

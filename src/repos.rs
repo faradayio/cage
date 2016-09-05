@@ -4,10 +4,13 @@ use std::collections::BTreeMap;
 use std::collections::btree_map;
 use std::path::{Path, PathBuf};
 
+use command_runner::{Command, CommandRunner};
+#[cfg(test)] use command_runner::TestCommandRunner;
 use ext::service::ServiceExt;
 use git_url::GitUrl;
+use project::Project;
 use pod::Pod;
-use util::Error;
+use util::{ConductorPathExt, Error};
 
 /// All the git repositories associated with a project.
 #[derive(Debug)]
@@ -107,17 +110,33 @@ impl Repo {
     }
 
     /// The path to which we would check out this repository, relative to
-    /// `Project::output_dir`.
+    /// `Project::src_dir`.
     pub fn rel_path(&self) -> PathBuf {
-        Path::new("src").join(self.alias())
+        Path::new(self.alias()).to_owned()
+    }
+
+    /// Clone the source code of this repository using git.
+    pub fn clone_source<CR>(&self, runner: &CR, project: &Project) ->
+        Result<(), Error>
+        where CR: CommandRunner
+    {
+        let dest =
+            try!(project.src_dir().join(&self.alias).with_guaranteed_parent());
+        let status = try!(runner.build("git")
+            .arg("clone")
+            .arg(self.git_url())
+            .arg(dest)
+            .status());
+        if !status.success() {
+            return Err(err!("Error cloning {} to {}", &self.git_url,
+                            self.rel_path().display()));
+        }
+        Ok(())
     }
 }
 
 #[test]
 fn are_loaded_with_projects() {
-    //use command_runner::TestCommandRunner;
-    use project::Project;
-
     let proj = Project::from_example("hello").unwrap();
     let repos = proj.repos();
     assert_eq!(repos.iter().count(), 2);
@@ -126,8 +145,17 @@ fn are_loaded_with_projects() {
     assert_eq!(hello.alias(), "dockercloud-hello-world");
     assert_eq!(hello.git_url().as_ref() as &str,
                "https://github.com/docker/dockercloud-hello-world.git");
-    assert_eq!(hello.rel_path(), Path::new("src/dockercloud-hello-world"));
+    assert_eq!(hello.rel_path(), Path::new("dockercloud-hello-world"));
+}
 
-    //let runner = TestCommandRunner::new();
-    // TODO: Implement clone.
+#[test]
+fn can_be_cloned_out() {
+    let proj = Project::from_example("hello").unwrap();
+    let repo = proj.repos().find_by_alias("dockercloud-hello-world").unwrap();
+    let runner = TestCommandRunner::new();
+    repo.clone_source(&runner, &proj).unwrap();
+    assert_ran!(runner, {
+        ["git", "clone", repo.git_url(),
+         proj.src_dir().join(repo.rel_path())]
+    });
 }
