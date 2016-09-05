@@ -18,7 +18,7 @@ pub trait FileExt {
 impl FileExt for dc::File {
     fn update_for_output(&mut self, project: &Project) -> Result<(), Error> {
         for (_name, mut service) in self.services.iter_mut() {
-            if let Some(git_url) = try!(service.git_url()) {
+            if let Some(git_url) = try!(service.git_url()).cloned() {
                 if let Some(repo) = project.repos().find_by_git_url(&git_url) {
                     if repo.is_cloned(project) {
                         // Build an absolute path to our repo's clone directory.

@@ -1,5 +1,6 @@
 //! APIs for working with the git repositories associated with a `Project`.
 
+use docker_compose::v2 as dc;
 use std::collections::BTreeMap;
 use std::collections::btree_map;
 use std::path::{Path, PathBuf};
@@ -8,7 +9,6 @@ use command_runner::{Command, CommandRunner};
 #[cfg(test)] use command_runner::TestCommandRunner;
 use ext::service::ServiceExt;
 #[cfg(test)] use std::fs;
-use git_url::GitUrl;
 use project::Project;
 use pod::Pod;
 use util::{ConductorPathExt, Error};
@@ -28,7 +28,7 @@ impl Repos {
         for pod in pods {
             for file in pod.all_files() {
                 for (_name, service) in &file.services {
-                    if let Some(git_url) = try!(service.git_url()) {
+                    if let Some(git_url) = try!(service.git_url()).cloned() {
                         // Figure out what alias we want to use.  The final
                         // `unwrap` should be safe because we know the input
                         // was UTF-8.
@@ -76,7 +76,7 @@ impl Repos {
     }
 
     /// Look up a repository given a git URL.
-    pub fn find_by_git_url(&self, url: &GitUrl) -> Option<&Repo> {
+    pub fn find_by_git_url(&self, url: &dc::GitUrl) -> Option<&Repo> {
         self.repos.values().find(|r| r.git_url() == url)
     }
 }
@@ -100,7 +100,7 @@ impl<'a> Iterator for Iter<'a> {
 #[derive(Debug)]
 pub struct Repo {
     alias: String,
-    git_url: GitUrl,
+    git_url: dc::GitUrl,
 }
 
 impl Repo {
@@ -111,7 +111,7 @@ impl Repo {
     }
 
     /// The remote git URL from which we can clone this repository.
-    pub fn git_url(&self) -> &GitUrl {
+    pub fn git_url(&self) -> &dc::GitUrl {
         &self.git_url
     }
 
