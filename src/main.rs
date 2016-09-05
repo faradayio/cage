@@ -111,7 +111,7 @@ fn main() {
         // We use `unwrap` here to turn I/O errors into application panics.
         // If we can't print a message to stderr without an I/O error,
         // the situation is hopeless.
-        write!(io::stderr(), "Error: {}", err).unwrap();
+        write!(io::stderr(), "Error: {}\n", err).unwrap();
         process::exit(1);
     }
 }
