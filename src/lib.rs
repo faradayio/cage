@@ -4,23 +4,28 @@
 
 extern crate docker_compose;
 extern crate glob;
+#[macro_use] extern crate lazy_static;
 #[macro_use] extern crate log;
 extern crate rand;
 extern crate regex;
+extern crate url;
 
 pub use util::Error;
 pub use ovr::Override;
 pub use project::Project;
 pub use pod::Pod;
+pub use repos::{Repos, Repo};
 
 #[macro_use] mod util;
 #[macro_use] pub mod command_runner;
 pub mod cmd;
 pub mod dir;
 mod ext;
+mod git_url;
 mod ovr;
 mod pod;
 mod project;
+mod repos;
 
 // TODO: Save this code; we're just about to write unit tests for it.
 //

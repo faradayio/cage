@@ -2,6 +2,7 @@
 
 use docker_compose::v2 as dc;
 use std::collections::BTreeMap;
+use std::collections::btree_map;
 use std::ffi::OsString;
 use std::path::{Path, PathBuf};
 
@@ -83,7 +84,7 @@ pub struct Pod {
     /// The individual override files for this pod.  There will always be a
     /// sensible value here for each pod, even if the file doesn't exist on
     /// disk.
-    override_file_infos: BTreeMap<String, FileInfo>,
+    override_file_infos: BTreeMap<Override, FileInfo>,
 }
 
 impl Pod {
@@ -112,7 +113,7 @@ impl Pod {
                 try!(FileInfo::unnormalized(&base_dir, &ovr_rel_path));
             ovr_info.ensure_all_services_from(&file_info.file);
             ovr_info.finish_normalization();
-            ovr_infos.insert(ovr.name().to_owned(), ovr_info);
+            ovr_infos.insert(ovr.to_owned(), ovr_info);
         }
 
         Ok(Pod {
@@ -151,7 +152,7 @@ impl Pod {
     /// error if this override was not specified for this `Pod` at creation
     /// time.
     fn override_file_info(&self, ovr: &Override) -> Result<&FileInfo, Error> {
-        self.override_file_infos.get(ovr.name()).ok_or_else(|| {
+        self.override_file_infos.get(ovr).ok_or_else(|| {
             err!("The override {} is not defined", ovr.name())
         })
     }
@@ -166,6 +167,21 @@ impl Pod {
         Ok(&(try!(self.override_file_info(ovr)).file))
     }
 
+    /// All the overrides associated with this pod.
+    pub fn override_files(&self) -> OverrideFiles {
+        OverrideFiles { iter: self.override_file_infos.iter() }
+    }
+
+    /// Iterate over all `dc::File` objects associated with this pod, including
+    /// both the main `file()` and all the files in `override_files()`.
+    pub fn all_files(&self) -> AllFiles {
+        // Defer all the hard work to our iterator type.
+        AllFiles {
+            pod: self,
+            state: AllFilesState::TopLevelFile,
+        }
+    }
+
     /// Command-line `-p` and `-f` arguments that we'll pass to
     /// `docker-compose` to describe this file.
     pub fn compose_args(&self, proj: &Project, ovr: &Override) ->
@@ -175,6 +191,60 @@ impl Pod {
         Ok(vec!("-p".into(), self.name().into(),
                 "-f".into(), proj.output_pods_dir().join(self.rel_path()).into(),
                 "-f".into(), proj.output_pods_dir().join(ovr_rel_path).into()))
+    }
+}
+
+pub struct OverrideFiles<'a> {
+    iter: btree_map::Iter<'a, Override, FileInfo>,
+}
+
+impl<'a> Iterator for OverrideFiles<'a> {
+    type Item = (&'a Override, &'a dc::File);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.iter.next().map(|(ovr, file_info)| (ovr, &file_info.file))
+    }
+}
+
+/// What should we yield next from our AllFiles iterator?
+enum AllFilesState<'a> {
+    /// Yield the top-level `file()` next.
+    TopLevelFile,
+    /// Yield an item from this iterator next.
+    OverrideFiles(OverrideFiles<'a>),
+}
+
+/// An iterator over all the `dc::File` objects associated with a pod, in
+/// all overlays.
+pub struct AllFiles<'a> {
+    /// The pod whose files we're iterating over.
+    pod: &'a Pod,
+    /// Our current iteration state.
+    state: AllFilesState<'a>,
+}
+
+impl<'a> Iterator for AllFiles<'a> {
+    type Item = &'a dc::File;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        // We could try to implement this by calling:
+        //
+        // ```
+        // iter::once(pod.file())
+        //     .chain(pod.override_files().map(|(_, file)| file))
+        // ```
+        //
+        // ...and storing the result in our object, but the type of that
+        // expression is exquisitely hideous and we'd go mad.
+        match self.state {
+            AllFilesState::TopLevelFile => {
+                self.state = AllFilesState::OverrideFiles(self.pod.override_files());
+                Some(self.pod.file())
+            }
+            AllFilesState::OverrideFiles(ref mut iter) => {
+                iter.next().map(|(_, file)|  file)
+            }
+        }
     }
 }
 

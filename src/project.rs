@@ -9,6 +9,7 @@ use std::slice;
 use dir;
 use ovr::Override;
 use pod::Pod;
+use repos::Repos;
 use util::{ConductorPathExt, Error, ToStrOrErr};
 
 /// A `conductor` project, which is represented as a directory containing a
@@ -28,6 +29,9 @@ pub struct Project {
 
     /// All the overrides associated with this project.
     overrides: Vec<Override>,
+
+    /// All the repositories associated with this project.
+    repos: Repos,
 }
 
 impl Project {
@@ -54,11 +58,14 @@ impl Project {
         let current = try!(env::current_dir());
         let root_dir = try!(dir::find_project(&current));
         let overrides = try!(Project::find_overrides(&root_dir));
+        let pods = try!(Project::find_pods(&root_dir, &overrides));
+        let repos = try!(Repos::new(&pods));
         Ok(Project {
             root_dir: root_dir.clone(),
             output_dir: root_dir.join(".conductor"),
-            pods: try!(Project::find_pods(&root_dir, &overrides)),
+            pods: pods,
             overrides: overrides,
+            repos: repos,
         })
     }
 
@@ -71,11 +78,14 @@ impl Project {
         let root_dir = try!(dir::find_project(&example_dir));
         let rand_name = format!("{}-{}", name, random::<u16>());
         let overrides = try!(Project::find_overrides(&root_dir));
+        let pods = try!(Project::find_pods(&root_dir, &overrides));
+        let repos = try!(Repos::new(&pods));
         Ok(Project {
             root_dir: root_dir.clone(),
             output_dir: Path::new("target/test_output").join(&rand_name),
-            pods: try!(Project::find_pods(&root_dir, &overrides)),
+            pods: pods,
             overrides: overrides,
+            repos: repos,
         })
     }
 
@@ -161,6 +171,12 @@ impl Project {
         self.overrides().find(|ovr| ovr.name() == name)
     }
 
+    /// Return the collection of git repositories associated with this
+    /// project.
+    pub fn repos(&self) -> &Repos {
+        &self.repos
+    }
+
     /// Delete our existing output and replace it with a processed and
     /// expanded version of our pod definitions.
     pub fn output(&self) -> Result<(), Error> {
@@ -210,6 +226,7 @@ impl Project {
 /// An iterator over the pods in a project.
 #[derive(Debug, Clone)]
 pub struct Pods<'a> {
+    // We wrap this in our own struct to make the underlying type opaque.
     iter: slice::Iter<'a, Pod>,
 }
 
@@ -224,6 +241,7 @@ impl<'a> Iterator for Pods<'a> {
 /// An iterator over the overrides in a project.
 #[derive(Debug, Clone)]
 pub struct Overrides<'a> {
+    // We wrap this in our own struct to make the underlying type opaque.
     iter: slice::Iter<'a, Override>,
 }
 
