@@ -1,6 +1,6 @@
 [package]
 name = "conductor"
-version = "0.0.2"
+version = "0.0.3"
 authors = ["Eric Kidd <git@randomhacks.net>"]
 
 description = "Faraday Conductor: Develop and orchestrate multi-pod docker-compose apps"
