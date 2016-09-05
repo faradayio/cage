@@ -28,6 +28,8 @@ Usage:
   conductor [options] pull
   conductor [options] up
   conductor [options] stop
+  conductor [options] repo list
+  conductor [options] repo clone <repo>
   conductor (--help | --version)
 
 Options:
@@ -49,6 +51,12 @@ struct Args {
     cmd_pull: bool,
     cmd_up: bool,
     cmd_stop: bool,
+    cmd_repo: bool,
+    cmd_list: bool,
+    cmd_clone: bool,
+
+    arg_repo: Option<String>,
+
     flag_version: bool,
     flag_override: String,
 }
@@ -69,6 +77,10 @@ fn run(args: &Args) -> Result<(), Error> {
         try!(proj.up(&runner, &ovr));
     } else if args.cmd_stop {
         try!(proj.stop(&runner, &ovr));
+    } else if args.cmd_repo && args.cmd_list {
+        try!(proj.repo_list(&runner));
+    } else if args.cmd_repo && args.cmd_clone {
+        try!(proj.repo_clone(&runner, args.arg_repo.as_ref().unwrap()));
     }
 
     Ok(())
