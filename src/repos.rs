@@ -7,6 +7,7 @@ use std::path::{Path, PathBuf};
 use command_runner::{Command, CommandRunner};
 #[cfg(test)] use command_runner::TestCommandRunner;
 use ext::service::ServiceExt;
+#[cfg(test)] use std::fs;
 use git_url::GitUrl;
 use project::Project;
 use pod::Pod;
@@ -115,6 +116,11 @@ impl Repo {
         Path::new(self.alias()).to_owned()
     }
 
+    /// Has this project been cloned locally?
+    pub fn is_cloned(&self, project: &Project) -> bool {
+        project.src_dir().join(&self.alias).exists()
+    }
+
     /// Clone the source code of this repository using git.
     pub fn clone_source<CR>(&self, runner: &CR, project: &Project) ->
         Result<(), Error>
@@ -149,7 +155,7 @@ fn are_loaded_with_projects() {
 }
 
 #[test]
-fn can_be_cloned_out() {
+fn can_be_cloned() {
     let proj = Project::from_example("hello").unwrap();
     let repo = proj.repos().find_by_alias("dockercloud-hello-world").unwrap();
     let runner = TestCommandRunner::new();
@@ -158,4 +164,15 @@ fn can_be_cloned_out() {
         ["git", "clone", repo.git_url(),
          proj.src_dir().join(repo.rel_path())]
     });
+    proj.remove_test_output().unwrap();
+}
+
+#[test]
+fn can_be_checked_to_see_if_cloned() {
+    let proj = Project::from_example("hello").unwrap();
+    let repo = proj.repos().find_by_alias("dockercloud-hello-world").unwrap();
+    assert!(!repo.is_cloned(&proj));
+    fs::create_dir_all(proj.src_dir().join(repo.rel_path())).unwrap();
+    assert!(repo.is_cloned(&proj));
+    proj.remove_test_output().unwrap();
 }
