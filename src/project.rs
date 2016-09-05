@@ -7,6 +7,7 @@ use std::path::PathBuf;
 use std::slice;
 
 use dir;
+use ext::file::FileExt;
 use ovr::Override;
 use pod::Pod;
 use repos::Repos;
@@ -218,7 +219,8 @@ impl Project {
             let out_path = try!(out_pods.join(&rel).with_guaranteed_parent());
             debug!("Generating {}", out_path.display());
 
-            let file = pod.file();
+            let mut file = pod.file().to_owned();
+            try!(file.update_for_output(self));
             try!(file.write_to_path(out_path));
 
             // Copy over any override pods, too.
@@ -227,7 +229,8 @@ impl Project {
                 let out_path = try!(out_pods.join(&rel).with_guaranteed_parent());
                 debug!("Generating {}", out_path.display());
 
-                let file = try!(pod.override_file(ovr));
+                let mut file = try!(pod.override_file(ovr)).to_owned();
+                try!(file.update_for_output(self));
                 try!(file.write_to_path(out_path));
             }
         }

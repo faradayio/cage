@@ -2,6 +2,7 @@
 
 use docker_compose::v2 as dc;
 use glob;
+use std::env;
 use std::ffi::OsStr;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -49,6 +50,10 @@ pub trait ConductorPathExt: ToStrOrErr {
     /// (And copy it to a fully-owned `PathBuf` to avoid borrow-checker
     /// issues.)
     fn with_guaranteed_parent(&self) -> Result<PathBuf, Error>;
+
+    /// Convert this path to a relative path, interpreting relative to the
+    /// current working directory.
+    fn to_absolute(&self) -> Result<PathBuf, Error>;
 }
 
 impl ConductorPathExt for Path {
@@ -70,6 +75,12 @@ impl ConductorPathExt for Path {
             err!("can't find parent of {}", self.display())
         }))));
         Ok(self.to_owned())
+    }
+
+    fn to_absolute(&self) -> Result<PathBuf, Error> {
+        let path = try!(env::current_dir()).join(self);
+        assert!(path.is_absolute());
+        Ok(path)
     }
 }
 

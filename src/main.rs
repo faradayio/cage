@@ -81,6 +81,8 @@ fn run(args: &Args) -> Result<(), Error> {
         try!(proj.repo_list(&runner));
     } else if args.cmd_repo && args.cmd_clone {
         try!(proj.repo_clone(&runner, args.arg_repo.as_ref().unwrap()));
+        // Regenerate our output now that we've cloned.
+        try!(proj.output());
     }
 
     Ok(())

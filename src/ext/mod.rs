@@ -2,4 +2,5 @@
 //! from other crates.
 
 pub mod context;
+pub mod file;
 pub mod service;

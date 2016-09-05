@@ -21,9 +21,9 @@ impl CommandRepo for Project {
         where CR: CommandRunner
     {
         for repo in self.repos().iter() {
-            println!("{:15} {}", repo.alias(), repo.git_url());
+            println!("{:25} {}", repo.alias(), repo.git_url());
             if repo.is_cloned(self) {
-                let path = try!(self.src_dir().join(repo.rel_path())
+                let path = try!(repo.path(self)
                     .strip_prefix(self.root_dir())).to_owned();
                 println!("  Cloned at {}", path.display());
             }

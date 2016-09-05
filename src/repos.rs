@@ -74,6 +74,11 @@ impl Repos {
     pub fn find_by_alias(&self, alias: &str) -> Option<&Repo> {
         self.repos.get(alias)
     }
+
+    /// Look up a repository given a git URL.
+    pub fn find_by_git_url(&self, url: &GitUrl) -> Option<&Repo> {
+        self.repos.values().find(|r| r.git_url() == url)
+    }
 }
 
 /// An iterator over all repositories associated with this project.
@@ -116,9 +121,16 @@ impl Repo {
         Path::new(self.alias()).to_owned()
     }
 
+    /// The full path to which we would check out this repository.  The
+    /// `project` argument is mandatory because we can't store a pointer
+    /// to it without creating a circular reference loop.
+    pub fn path(&self, project: &Project) -> PathBuf {
+        project.src_dir().join(self.rel_path())
+    }
+
     /// Has this project been cloned locally?
     pub fn is_cloned(&self, project: &Project) -> bool {
-        project.src_dir().join(&self.alias).exists()
+        self.path(project).exists()
     }
 
     /// Clone the source code of this repository using git.
@@ -126,17 +138,24 @@ impl Repo {
         Result<(), Error>
         where CR: CommandRunner
     {
-        let dest =
-            try!(project.src_dir().join(&self.alias).with_guaranteed_parent());
+        let dest = try!(self.path(project).with_guaranteed_parent());
         let status = try!(runner.build("git")
             .arg("clone")
             .arg(self.git_url())
-            .arg(dest)
+            .arg(&dest)
             .status());
         if !status.success() {
             return Err(err!("Error cloning {} to {}", &self.git_url,
-                            self.rel_path().display()));
+                            dest.display()));
         }
+        Ok(())
+    }
+
+    /// (Test mode only.) Pretend to clone the source code for this
+    /// repository by creating an empty directory in the right place.
+    #[cfg(test)]
+    pub fn fake_clone_source(&self, project: &Project) -> Result<(), Error> {
+        try!(fs::create_dir_all(self.path(project)));
         Ok(())
     }
 }
@@ -172,7 +191,7 @@ fn can_be_checked_to_see_if_cloned() {
     let proj = Project::from_example("hello").unwrap();
     let repo = proj.repos().find_by_alias("dockercloud-hello-world").unwrap();
     assert!(!repo.is_cloned(&proj));
-    fs::create_dir_all(proj.src_dir().join(repo.rel_path())).unwrap();
+    repo.fake_clone_source(&proj).unwrap();
     assert!(repo.is_cloned(&proj));
     proj.remove_test_output().unwrap();
 }
