@@ -30,6 +30,7 @@ Usage:
   conductor [options] pull
   conductor [options] up
   conductor [options] stop
+  conductor [options] exec [command options] <pod> <service> <command> [--] [<args>..]
   conductor [options] repo list
   conductor [options] repo clone <repo>
   conductor (--help | --version)
@@ -38,22 +39,31 @@ Commands:
   pull              Pull Docker images used by project
   up                Run project
   stop              Stop all containers associated with project
+  exec              Run a command inside a container
   repo list         List all git repository aliases and URLs
   repo clone        Clone a git repository using its short alias and mount it
                     into the containers that use it
 
 Arguments:
   <repo>            Short alias for a repo (see `repo list`)
+  <pod>             The name of a pod specified in `pods/`
+  <service>         The name of a service in a pod
 
-Options:
+Command options:
+  -d                Run command detached in background
+  --privileged      Run a command with elevated privileges
+  --user <user>     User as which to run a command
+  -T                Do not allocate a TTY when running a command
+
+General options:
   -h, --help        Show this message
   --version         Show the version of conductor
   --override=<override>
                     Use overrides from the specified subdirectory of
                     `pods/overrides` [default: development]
   --default-tags=<tag_file>
-                    A list of tagged image names, one per line.  Tags
-                    will be used as defaults for those images.
+                    A list of tagged image names, one per line, to
+                    be used as defaults for images
 
 Run conductor in a directory containing a `pods` subdirectory.  For more
 information, see https://github.com/faradayio/conductor.
@@ -64,19 +74,30 @@ information, see https://github.com/faradayio/conductor.
 ///
 /// [docopt.rs]: https://github.com/docopt/docopt.rs
 #[derive(Debug, RustcDecodable)]
+#[allow(non_snake_case)] // Allow uppercase options without warnings.
 struct Args {
     cmd_pull: bool,
     cmd_up: bool,
     cmd_stop: bool,
+    cmd_exec: bool,
     cmd_repo: bool,
     cmd_list: bool,
     cmd_clone: bool,
 
     arg_repo: Option<String>,
+    arg_pod: Option<String>,
+    arg_service: Option<String>,
 
+    // Command options.
+    flag_d: bool,
+    flag_privileged: bool,
+    flag_user: Option<String>,
+    flag_T: bool,
+
+    // General options.
     flag_version: bool,
     flag_override: String,
-    flag_default_tags: Option<String>
+    flag_default_tags: Option<String>,
 }
 
 /// The function which does the real work.  Unlike `main`, we have a return
@@ -99,6 +120,9 @@ fn run(args: &Args) -> Result<(), Error> {
         try!(proj.up(&runner, &ovr));
     } else if args.cmd_stop {
         try!(proj.stop(&runner, &ovr));
+    } else if args.cmd_exec {
+        unimplemented!();
+        //try!(proj.exec(...));
     } else if args.cmd_repo && args.cmd_list {
         try!(proj.repo_list(&runner));
     } else if args.cmd_repo && args.cmd_clone {
