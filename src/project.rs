@@ -6,6 +6,7 @@ use std::path::Path;
 use std::path::PathBuf;
 use std::slice;
 
+use default_tags::DefaultTags;
 use dir;
 use ext::file::FileExt;
 use ovr::Override;
@@ -36,6 +37,10 @@ pub struct Project {
 
     /// All the repositories associated with this project.
     repos: Repos,
+
+    /// Docker image tags to use for images that don't have them.
+    /// Typically used to lock down versions supplied by a CI system.
+    default_tags: Option<DefaultTags>,
 }
 
 impl Project {
@@ -72,6 +77,7 @@ impl Project {
             pods: pods,
             overrides: overrides,
             repos: repos,
+            default_tags: None,
         })
     }
 
@@ -94,6 +100,7 @@ impl Project {
             pods: pods,
             overrides: overrides,
             repos: repos,
+            default_tags: None,
         })
     }
 
@@ -189,6 +196,17 @@ impl Project {
     /// project.
     pub fn repos(&self) -> &Repos {
         &self.repos
+    }
+
+    /// Get the default tags associated with this project, if any.
+    pub fn default_tags(&self) -> Option<&DefaultTags> {
+        self.default_tags.as_ref()
+    }
+
+    /// Set the default tags associated with this project.
+    pub fn set_default_tags(&mut self, tags: DefaultTags) -> &mut Project {
+        self.default_tags = Some(tags);
+        self
     }
 
     /// Delete our existing output and replace it with a processed and

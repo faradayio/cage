@@ -9,6 +9,8 @@ extern crate log;
 extern crate rustc_serialize;
 
 use docopt::Docopt;
+use std::env;
+use std::fs;
 use std::io::{self, Write};
 use std::process;
 
@@ -32,11 +34,26 @@ Usage:
   conductor [options] repo clone <repo>
   conductor (--help | --version)
 
+Commands:
+  pull              Pull Docker images used by project
+  up                Run project
+  stop              Stop all containers associated with project
+  repo list         List all git repository aliases and URLs
+  repo clone        Clone a git repository using its short alias and mount it
+                    into the containers that use it
+
+Arguments:
+  <repo>            Short alias for a repo (see `repo list`)
+
 Options:
-    -h, --help             Show this message
-    --version              Show the version of conductor
-    --override=<override>  Use overrides from the specified subdirectory
-                           of `pods/overrides` [default: development]
+  -h, --help        Show this message
+  --version         Show the version of conductor
+  --override=<override>
+                    Use overrides from the specified subdirectory of
+                    `pods/overrides` [default: development]
+  --default-tags=<tag_file>
+                    A list of tagged image names, one per line.  Tags
+                    will be used as defaults for those images.
 
 Run conductor in a directory containing a `pods` subdirectory.  For more
 information, see https://github.com/faradayio/conductor.
@@ -59,12 +76,17 @@ struct Args {
 
     flag_version: bool,
     flag_override: String,
+    flag_default_tags: Option<String>
 }
 
 /// The function which does the real work.  Unlike `main`, we have a return
 /// type of `Result` and may therefore use `try!` to handle errors.
 fn run(args: &Args) -> Result<(), Error> {
-    let proj = try!(conductor::Project::from_current_dir());
+    let mut proj = try!(conductor::Project::from_current_dir());
+    if let Some(ref default_tags_path) = args.flag_default_tags {
+        let file = try!(fs::File::open(default_tags_path));
+        proj.set_default_tags(try!(conductor::DefaultTags::read(file)));
+    }
     let ovr = try!(proj.ovr(&args.flag_override).ok_or_else(|| {
         err!("override {} is not defined", &args.flag_override)
     }));
@@ -90,8 +112,15 @@ fn run(args: &Args) -> Result<(), Error> {
 
 /// Our main entry point.
 fn main() {
-    // Boot up logging.
-    env_logger::init().unwrap();
+    // Initialize logging with some custom options, mostly so we can see
+    // our own warnings.
+    let mut builder = env_logger::LogBuilder::new();
+    builder.filter(Some("docker_compose"), log::LogLevelFilter::Warn);
+    builder.filter(Some("conductor"), log::LogLevelFilter::Warn);
+    if let Ok(config) = env::var("RUST_LOG") {
+        builder.parse(&config);
+    }
+    builder.init().unwrap();
 
     // Parse our args using docopt.rs.
     let args: Args = Docopt::new(USAGE)

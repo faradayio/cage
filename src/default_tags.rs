@@ -62,12 +62,18 @@ impl DefaultTags {
     /// image if possible.
     pub fn default_for(&self, image: &dc::Image) -> dc::Image {
         if image.tag.is_some() {
+            // Already tagged, so assume the user knows what they're doing.
             image.to_owned()
         } else {
             if let Some(default) = self.tags.get(&image) {
-                debug!("Default {} to {}", image, &default);
+                debug!("Defaulting {} to {}", image, &default);
                 default.to_owned()
             } else {
+                // If we have a list of default tags, but it doesn't
+                // include all the images we use, then we consider that
+                // mildy alarming.  Note that we do show warnings by
+                // default.
+                warn!("Could not find default tag for {}", image);
                 image.to_owned()
             }
         }

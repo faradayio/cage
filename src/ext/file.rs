@@ -1,11 +1,14 @@
 //! Extension methods for `docker_compose::v2::File`.
 
 use docker_compose::v2 as dc;
+#[cfg(test)] use std::io;
 #[cfg(test)] use std::path::Path;
 
+#[cfg(test)] use default_tags::DefaultTags;
 use ext::service::ServiceExt;
 use project::Project;
-use util::{ConductorPathExt, Error};
+#[cfg(test)] use util::ConductorPathExt;
+use util::Error;
 
 /// These methods will appear as regular methods on `dc::File` in any module
 /// which includes `FileExt`.
@@ -18,24 +21,7 @@ pub trait FileExt {
 impl FileExt for dc::File {
     fn update_for_output(&mut self, project: &Project) -> Result<(), Error> {
         for (_name, mut service) in self.services.iter_mut() {
-            if let Some(git_url) = try!(service.git_url()).cloned() {
-                if let Some(repo) = project.repos().find_by_git_url(&git_url) {
-                    if repo.is_cloned(project) {
-                        // Build an absolute path to our repo's clone directory.
-                        let path = try!(repo.path(project).to_absolute());
-
-                        // Mount the local build directory as `/app` inside the
-                        // container.
-                        let mount = dc::VolumeMount::host(&path, "/app");
-                        service.volumes.push(dc::value(mount));
-
-                        // Update the `build` field if present.
-                        if let Some(ref mut build) = service.build {
-                            build.context = dc::value(dc::Context::Dir(path));
-                        }
-                    }
-                }
-            }
+            try!(service.update_for_output(project));
         }
         Ok(())
     }
@@ -45,7 +31,11 @@ impl FileExt for dc::File {
 fn update_for_output_mounts_cloned_source() {
     use docker_compose::v2 as dc;
 
-    let proj = Project::from_example("hello").unwrap();
+    let cursor = io::Cursor::new("dockercloud/hello-world:staging\n");
+    let default_tags = DefaultTags::read(cursor).unwrap();
+
+    let mut proj = Project::from_example("hello").unwrap();
+    proj.set_default_tags(default_tags);
     let repo = proj.repos().find_by_alias("dockercloud-hello-world").unwrap();
     repo.fake_clone_source(&proj).unwrap();
     proj.output().unwrap();
@@ -68,6 +58,10 @@ fn update_for_output_mounts_cloned_source() {
         .value().unwrap();
     assert_eq!(mount.host, Some(dc::HostVolume::Path(src_path)));
     assert_eq!(mount.container, Path::new("/app"));
+
+    // Make sure that our image versions were correctly defaulted.
+    assert_eq!(web.image.as_ref().unwrap().value().unwrap(),
+               &dc::Image::new("dockercloud/hello-world:staging").unwrap());
 
     proj.remove_test_output().unwrap();
 }
