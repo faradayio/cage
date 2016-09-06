@@ -1,5 +1,5 @@
 use std::env;
-use std::fs::{create_dir};
+use std::fs;
 use std::io;
 use std::path::PathBuf;
 use util::{Error};
@@ -9,24 +9,16 @@ use util::{Error};
 // annotations or generic parameter binding required [E0282]
 // src/create_project.rs:13     Ok(cwd);
 //
-//pub fn create_project(name: &str) -> Result<PathBuf, Error> {
-    //let cwd = try!(env::current_dir());
-    //cwd.push(name);
-
-    ////fs::create_dir(project_directory(name));
-
-    //Ok(cwd);
-//}
-
-pub fn create_project(name: &str) {
-    let mut cwd = env::current_dir().unwrap();
+pub fn create_project(name: &str) -> Result<PathBuf, Error> {
+    let cwd = try!(env::current_dir());
     cwd.push(name);
 
-    //fs::create_dir(project_directory(name));
-}
+    fs::create_dir(cwd);
 
+    Ok(cwd);
+}
 
 #[test]
 fn create_project_default() {
-    create_project("test");
+    create_project("test").unwrap();
 }
