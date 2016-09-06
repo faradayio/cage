@@ -10,6 +10,7 @@ extern crate rand;
 extern crate regex;
 
 pub use util::Error;
+pub use default_tags::DefaultTags;
 pub use ovr::Override;
 pub use project::Project;
 pub use pod::Pod;
@@ -18,6 +19,7 @@ pub use repos::{Repos, Repo};
 #[macro_use] mod util;
 #[macro_use] pub mod command_runner;
 pub mod cmd;
+mod default_tags;
 pub mod dir;
 mod ext;
 mod ovr;
