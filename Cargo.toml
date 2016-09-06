@@ -8,6 +8,10 @@ license = "MIT/Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/faradayio/conductor"
 
+[[bin]]
+name = "conductor"
+doc = false
+
 [dependencies]
 docker_compose = "0.3.3"
 docopt = "0.6.83"
