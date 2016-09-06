@@ -17,7 +17,7 @@ pub fn find_project(start_dir: &Path) -> Result<PathBuf, Error> {
             if let Some(parent) = dir.parent() {
                 dir = parent;
             } else {
-                let err = err!("could not find conductor project in {}", start_dir.display());
+                let err = err!("could not find conductor project in {} or any directory above it", start_dir.display());
                 return Err(err);
             }
         }
