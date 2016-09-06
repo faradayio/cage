@@ -12,9 +12,10 @@ extern crate regex;
 pub use util::Error;
 pub use default_tags::DefaultTags;
 pub use ovr::Override;
-pub use project::Project;
-pub use pod::Pod;
+pub use project::{Project, Pods, Overrides};
+pub use pod::{Pod, OverrideFiles, AllFiles};
 pub use repos::{Repos, Repo};
+pub use repos::Iter as RepoIter;
 
 #[macro_use] mod util;
 #[macro_use] pub mod command_runner;

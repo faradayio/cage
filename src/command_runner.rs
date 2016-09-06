@@ -102,7 +102,10 @@ impl CommandRunner for TestCommandRunner {
 /// A fake command that gets logged to a `TestCommandRunner` instead of
 /// actually getting run.
 pub struct TestCommand {
+    /// The command we're building.
     cmd: Vec<OsString>,
+    /// The list of commands we share with our `TestCommandRunner`, into which
+    /// we'll insert `self.cmd` just before running.
     cmds: Rc<RefCell<Vec<Vec<OsString>>>>,
 }
 

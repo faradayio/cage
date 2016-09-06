@@ -194,6 +194,7 @@ impl Pod {
     }
 }
 
+/// An iterator over this pods overrides and their associated files.
 pub struct OverrideFiles<'a> {
     iter: btree_map::Iter<'a, Override, FileInfo>,
 }
