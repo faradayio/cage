@@ -30,7 +30,7 @@ Usage:
   conductor [options] pull
   conductor [options] up
   conductor [options] stop
-  conductor [options] exec [command options] <pod> <service> <command> [--] [<args>..]
+  conductor [options] exec [exec options] <pod> <service> <command> [--] [<args>..]
   conductor [options] repo list
   conductor [options] repo clone <repo>
   conductor (--help | --version)
@@ -49,7 +49,7 @@ Arguments:
   <pod>             The name of a pod specified in `pods/`
   <service>         The name of a service in a pod
 
-Command options:
+Exec options:
   -d                Run command detached in background
   --privileged      Run a command with elevated privileges
   --user <user>     User as which to run a command
@@ -88,7 +88,7 @@ struct Args {
     arg_pod: Option<String>,
     arg_service: Option<String>,
 
-    // Command options.
+    // Exec options.
     flag_d: bool,
     flag_privileged: bool,
     flag_user: Option<String>,
@@ -98,6 +98,20 @@ struct Args {
     flag_version: bool,
     flag_override: String,
     flag_default_tags: Option<String>,
+}
+
+impl Args {
+    /// Extract `ExecOptions` from our command-line arguments.
+    fn to_exec_options(&self) -> conductor::ExecOptions {
+        conductor::ExecOptions {
+            detached: self.flag_d,
+            privileged: self.flag_privileged,
+            // Convert their Option<String> to my Option<String>.
+            user: self.flag_user.clone(),
+            allocate_tty: !self.flag_T,
+            ..Default::default()
+        }
+    }
 }
 
 /// The function which does the real work.  Unlike `main`, we have a return
@@ -121,8 +135,9 @@ fn run(args: &Args) -> Result<(), Error> {
     } else if args.cmd_stop {
         try!(proj.stop(&runner, &ovr));
     } else if args.cmd_exec {
-        unimplemented!();
-        //try!(proj.exec(...));
+        let _opts = args.to_exec_options();
+        unimplemented!()
+        //try!(proj.exec(&runner, &ovr, &pod, &service, &opts, ));
     } else if args.cmd_repo && args.cmd_list {
         try!(proj.repo_list(&runner));
     } else if args.cmd_repo && args.cmd_clone {
