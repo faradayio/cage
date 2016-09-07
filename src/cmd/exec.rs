@@ -5,7 +5,6 @@ use command_runner::{Command, CommandRunner};
 use command_runner::TestCommandRunner;
 use exec::{self, ToArgs};
 use ext::service::ServiceExt;
-use ovr::Override;
 use project::Project;
 use util::Error;
 
