@@ -45,4 +45,5 @@ fn runs_docker_compose_stop_on_all_pods() {
          "-f", proj.output_dir().join("pods/overrides/development/frontend.yml"),
          "stop"]
     });
+    proj.remove_test_output().unwrap();
 }
