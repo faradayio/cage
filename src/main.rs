@@ -87,6 +87,8 @@ struct Args {
     arg_repo: Option<String>,
     arg_pod: Option<String>,
     arg_service: Option<String>,
+    arg_command: Option<String>,
+    arg_args: Option<Vec<String>>,
 
     // Exec options.
     flag_d: bool,
@@ -101,15 +103,36 @@ struct Args {
 }
 
 impl Args {
-    /// Extract `ExecOptions` from our command-line arguments.
-    fn to_exec_options(&self) -> conductor::ExecOptions {
-        conductor::ExecOptions {
+    /// Extract `exec::Options` from our command-line arguments.
+    fn to_exec_options(&self) -> conductor::exec::Options {
+        conductor::exec::Options {
             detached: self.flag_d,
             privileged: self.flag_privileged,
-            // Convert their Option<String> to my Option<String>.
             user: self.flag_user.clone(),
             allocate_tty: !self.flag_T,
             ..Default::default()
+        }
+    }
+
+    /// Extract `exec::Target` from our command-line arguments.
+    fn to_exec_target(&self) -> Option<conductor::exec::Target> {
+        match (&self.arg_pod, &self.arg_service) {
+            (&Some(ref pod), &Some(ref service)) =>
+                Some(conductor::exec::Target::new(pod, service)),
+            _ => None,
+        }
+    }
+
+    /// Extract `exec::Command` from our command-line arguments.
+    fn to_exec_command(&self) -> Option<conductor::exec::Command> {
+        // We have an `Option<Vec<String>>` and we want a `&[String]`,
+        // so do a little munging.
+        let args = self.arg_args.as_ref()
+            .map(|v| (v as &[_])).unwrap_or(&[]);
+        if let &Some(ref command) = &self.arg_command {
+            Some(conductor::exec::Command::new(command).with_args(&args))
+        } else {
+            None
         }
     }
 }
@@ -135,9 +158,10 @@ fn run(args: &Args) -> Result<(), Error> {
     } else if args.cmd_stop {
         try!(proj.stop(&runner, &ovr));
     } else if args.cmd_exec {
-        let _opts = args.to_exec_options();
-        unimplemented!()
-        //try!(proj.exec(&runner, &ovr, &pod, &service, &opts, ));
+        let target = args.to_exec_target().unwrap();
+        let opts = args.to_exec_options();
+        let cmd = args.to_exec_command().unwrap();
+        try!(proj.exec(&runner, &ovr, &target, &cmd, &opts));
     } else if args.cmd_repo && args.cmd_list {
         try!(proj.repo_list(&runner));
     } else if args.cmd_repo && args.cmd_clone {

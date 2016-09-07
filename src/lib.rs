@@ -11,7 +11,6 @@ extern crate regex;
 
 pub use util::Error;
 pub use default_tags::DefaultTags;
-pub use exec::ExecOptions;
 pub use ovr::Override;
 pub use project::{Project, Pods, Overrides};
 pub use pod::{Pod, OverrideFiles, AllFiles};
@@ -23,7 +22,7 @@ pub use repos::Iter as RepoIter;
 pub mod cmd;
 mod default_tags;
 pub mod dir;
-mod exec;
+pub mod exec;
 mod ext;
 mod ovr;
 mod pod;
