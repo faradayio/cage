@@ -31,6 +31,7 @@ Usage:
   conductor [options] up
   conductor [options] stop
   conductor [options] exec [exec options] <pod> <service> <command> [--] [<args>..]
+  conductor [options] shell [exec options] <pod> <service>
   conductor [options] repo list
   conductor [options] repo clone <repo>
   conductor (--help | --version)
@@ -80,6 +81,7 @@ struct Args {
     cmd_up: bool,
     cmd_stop: bool,
     cmd_exec: bool,
+    cmd_shell: bool,
     cmd_repo: bool,
     cmd_list: bool,
     cmd_clone: bool,
@@ -115,11 +117,15 @@ impl Args {
     }
 
     /// Extract `exec::Target` from our command-line arguments.
-    fn to_exec_target(&self) -> Option<conductor::exec::Target> {
+    fn to_exec_target<'a>(&'a self, project: &'a conductor::Project,
+                          ovr: &'a conductor::Override) ->
+        Result<Option<conductor::exec::Target<'a>>, Error>
+    {
         match (&self.arg_pod, &self.arg_service) {
             (&Some(ref pod), &Some(ref service)) =>
-                Some(conductor::exec::Target::new(pod, service)),
-            _ => None,
+                Ok(Some(try!(conductor::exec::Target::new(project, ovr, pod,
+                                                          service)))),
+            _ => Ok(None),
         }
     }
 
@@ -158,10 +164,14 @@ fn run(args: &Args) -> Result<(), Error> {
     } else if args.cmd_stop {
         try!(proj.stop(&runner, &ovr));
     } else if args.cmd_exec {
-        let target = args.to_exec_target().unwrap();
+        let target = try!(args.to_exec_target(&proj, &ovr)).unwrap();
         let opts = args.to_exec_options();
         let cmd = args.to_exec_command().unwrap();
-        try!(proj.exec(&runner, &ovr, &target, &cmd, &opts));
+        try!(proj.exec(&runner, &target, &cmd, &opts));
+    } else if args.cmd_shell {
+        let target = try!(args.to_exec_target(&proj, &ovr)).unwrap();
+        let opts = args.to_exec_options();
+        try!(proj.shell(&runner, &target, &opts));
     } else if args.cmd_repo && args.cmd_list {
         try!(proj.repo_list(&runner));
     } else if args.cmd_repo && args.cmd_clone {

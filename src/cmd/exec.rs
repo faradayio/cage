@@ -4,6 +4,7 @@ use command_runner::{Command, CommandRunner};
 #[cfg(test)]
 use command_runner::TestCommandRunner;
 use exec::{self, ToArgs};
+use ext::service::ServiceExt;
 use ovr::Override;
 use project::Project;
 use util::Error;
@@ -14,35 +15,35 @@ pub trait CommandExec {
     /// Exectute a command inside a running container.  Even though we
     /// package up most of our arguments into structs, we still have a
     /// ridiculous number of arguments.
-    fn exec<CR>(&self, runner: &CR, ovr: &Override,
+    fn exec<CR>(&self, runner: &CR,
                 target: &exec::Target,
                 command: &exec::Command,
+                opts: &exec::Options) ->
+        Result<(), Error>
+        where CR: CommandRunner;
+
+    /// Execute an interactive shell inside a running container.
+    fn shell<CR>(&self, runner: &CR,
+                target: &exec::Target,
                 opts: &exec::Options) ->
         Result<(), Error>
         where CR: CommandRunner;
 }
 
 impl CommandExec for Project {
-    fn exec<CR>(&self, runner: &CR, ovr: &Override,
+    fn exec<CR>(&self, runner: &CR,
                 target: &exec::Target,
                 command: &exec::Command,
                 opts: &exec::Options) ->
         Result<(), Error>
         where CR: CommandRunner
     {
-        let pod = try!(self.pod(&target.pod).ok_or_else(|| {
-            err!("Cannot find pod {}", &target.pod)
-        }));
-        // Just check to see whether our service exists.
-        let _ = try!(pod.file().services.get(&target.service).ok_or_else(|| {
-            err!("Cannot find service {} in pod {}", &target.service, &target.pod)
-        }));
 
         let status = try!(runner.build("docker-compose")
-            .args(&try!(pod.compose_args(self, ovr)))
+            .args(&try!(target.pod().compose_args(self, target.ovr())))
             .arg("exec")
             .args(&opts.to_args())
-            .arg(&target.service)
+            .arg(target.service_name())
             .args(&command.to_args())
             .status());
         if !status.success() {
@@ -50,6 +51,24 @@ impl CommandExec for Project {
         }
 
         Ok(())
+    }
+
+    fn shell<CR>(&self, runner: &CR,
+                target: &exec::Target,
+                opts: &exec::Options) ->
+        Result<(), Error>
+        where CR: CommandRunner
+    {
+        // Sanity-check our arguments.
+        if opts.detached {
+            return Err(err!("Can't run shell in detached mode"));
+        }
+        if !opts.allocate_tty {
+            return Err(err!("Can't run shell without a TTY"));
+        }
+
+        let shell = try!(target.service().shell());
+        self.exec(runner, target, &exec::Command::new(shell), opts)
     }
 }
 
@@ -59,10 +78,10 @@ fn invokes_docker_exec() {
     let ovr = proj.ovr("development").unwrap();
     let runner = TestCommandRunner::new();
     proj.output().unwrap();
-    let target = exec::Target::new("frontend", "web");
+    let target = exec::Target::new(&proj, &ovr, "frontend", "web").unwrap();
     let command = exec::Command::new("true");
     let opts = exec::Options { allocate_tty: false, ..Default::default() };
-    proj.exec(&runner, &ovr, &target, &command, &opts).unwrap();
+    proj.exec(&runner, &target, &command, &opts).unwrap();
 
     assert_ran!(runner, {
         ["docker-compose",
@@ -70,6 +89,26 @@ fn invokes_docker_exec() {
          "-f", proj.output_dir().join("pods/frontend.yml"),
          "-f", proj.output_dir().join("pods/overrides/development/frontend.yml"),
          "exec", "-T", "web", "true"]
+    });
+
+    proj.remove_test_output().unwrap();
+}
+
+#[test]
+fn runs_shells() {
+    let proj = Project::from_example("hello").unwrap();
+    let ovr = proj.ovr("development").unwrap();
+    let runner = TestCommandRunner::new();
+    proj.output().unwrap();
+    let target = exec::Target::new(&proj, &ovr, "frontend", "web").unwrap();
+    proj.shell(&runner, &target, &Default::default()).unwrap();
+
+    assert_ran!(runner, {
+        ["docker-compose",
+         "-p", "frontend",
+         "-f", proj.output_dir().join("pods/frontend.yml"),
+         "-f", proj.output_dir().join("pods/overrides/development/frontend.yml"),
+         "exec", "web", "sh"]
     });
 
     proj.remove_test_output().unwrap();

@@ -12,6 +12,10 @@ pub trait ServiceExt {
     /// The URL for the the git repository associated with this service.
     fn git_url(&self) -> Result<Option<&dc::GitUrl>, Error>;
 
+    /// Get the default shell associated with this service.  Used for
+    /// getting interactive access to a container.
+    fn shell(&self) -> Result<String, Error>;
+
     /// Make any local updates to this service we want to make before
     /// outputting it for `Project::output`.
     fn update_for_output(&mut self, project: &Project) -> Result<(), Error>;
@@ -24,6 +28,12 @@ impl ServiceExt for dc::Service {
         } else {
             Ok(None)
         }
+    }
+
+    fn shell(&self) -> Result<String, Error> {
+        Ok(self.labels.get("io.fdy.conductor.shell").cloned().unwrap_or_else(|| {
+            "sh".to_owned()
+        }))
     }
 
     fn update_for_output(&mut self, project: &Project) -> Result<(), Error> {
@@ -57,8 +67,26 @@ impl ServiceExt for dc::Service {
             }
         }
 
+        // TODO LOW: Remove `io.fdy.conductor.` labels?
+
         Ok(())
     }
+}
+
+#[test]
+fn shell_returns_preferred_shell_for_this_service() {
+    let proj: Project = Project::from_example("hello").unwrap();
+    let ovr = proj.ovr("development").unwrap();
+    let frontend = proj.pod("frontend").unwrap();
+    let merged = frontend.merged_file(&ovr).unwrap();
+
+    // Default value.
+    let web = merged.services.get("web").unwrap();
+    assert_eq!(web.shell().unwrap(), "sh");
+
+    // Custom value.
+    let proxy = merged.services.get("proxy").unwrap();
+    assert_eq!(proxy.shell().unwrap(), "/bin/sh");
 }
 
 // update_for_output is tested in ext::file::FileExt.

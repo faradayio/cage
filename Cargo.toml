@@ -13,7 +13,7 @@ name = "conductor"
 doc = false
 
 [dependencies]
-docker_compose = "0.3.3"
+docker_compose = "0.3.4"
 docopt = "0.6.83"
 env_logger = "0.3.4"
 glob = "0.2.11"

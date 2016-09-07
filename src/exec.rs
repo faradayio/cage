@@ -1,7 +1,13 @@
 //! Options which can be passed to `docker-compose exec`.
 
+use docker_compose::v2 as dc;
 use std::ffi::{OsStr, OsString};
 use std::marker::PhantomData;
+
+use ovr::Override;
+use pod::Pod;
+use project::Project;
+use util::Error;
 
 /// Trait for types which can be converted to command-line arguments.
 pub trait ToArgs {
@@ -89,18 +95,59 @@ impl Default for Options {
     }
 }
 
-/// The pod and service within which to execute a command.
-pub struct Target {
+/// The pod and service within which to execute a command.  The lifetime
+/// `'a` needs to be longer than the useful lifetime of this `Target`.
+pub struct Target<'a> {
+    /// The override we're using to run this command.
+    ovr: &'a Override,
     /// The name of the pod in which to run the command.
-    pub pod: String,
+    pod: &'a Pod,
     /// The name of the service in which to run the command.
-    pub service: String,
+    service_name: &'a str,
+    /// The `Service` object for the service where we'll run the command.
+    service: dc::Service,
 }
 
-impl Target {
-    /// Create a new `Target`.
-    pub fn new(pod: &str, service: &str) -> Target {
-        Target { pod: pod.to_owned(), service: service.to_owned() }
+impl<'a> Target<'a> {
+    /// Create a new `Target`, looking up the underlying pod and service
+    /// objects.
+    pub fn new(project: &'a Project, ovr: &'a Override,
+               pod_name: &'a str, service_name: &'a str) ->
+        Result<Target<'a>, Error>
+    {
+        let pod = try!(project.pod(pod_name).ok_or_else(|| {
+            err!("Cannot find pod {}", pod_name)
+        }));
+        let file = try!(pod.merged_file(ovr));
+        let service = try!(file.services.get(service_name).ok_or_else(|| {
+            err!("Cannot find service {}", service_name)
+        }));
+        Ok(Target {
+            ovr: ovr,
+            pod: pod,
+            service_name: service_name,
+            service: service.to_owned(),
+        })
+    }
+
+    /// The active override for the command we want to run.
+    pub fn ovr(&self) -> &Override {
+        self.ovr
+    }
+
+    /// The pod for this target.
+    pub fn pod(&self) -> &Pod {
+        self.pod
+    }
+
+    /// The service name for this target.
+    pub fn service_name(&self) -> &str {
+        self.service_name
+    }
+
+    /// The `Service` object for this target.
+    pub fn service(&self) -> &dc::Service {
+        &self.service
     }
 }
 
@@ -150,12 +197,3 @@ fn command_to_args_converts_to_arguments() {
     assert_eq!(Command::new("foo").with_args(&["--opt"]).to_args(),
                vec!(OsStr::new("foo"), OsStr::new("--"), OsStr::new("--opt")));
 }
-
-//pub struct ExecTarget
-//    pod: &Pod,
-//    service_name: String,
-//}
-
-//opts: ExecOptions,
-//command: String,
-//args: Vec<String>,

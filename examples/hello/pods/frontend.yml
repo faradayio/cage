@@ -16,3 +16,8 @@ services:
       - "web"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
+    # We can use `org.fdy.conductor` labels to override some common
+    # defaults.
+    labels:
+      # Specify the shell used by `conductor shell`.  Defaults to `sh`.
+      io.fdy.conductor.shell: "/bin/sh"
