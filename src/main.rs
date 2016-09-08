@@ -32,6 +32,7 @@ Usage:
   conductor [options] stop
   conductor [options] exec [exec options] <pod> <service> <command> [--] [<args>..]
   conductor [options] shell [exec options] <pod> <service>
+  conductor [options] test <pod> <service>
   conductor [options] repo list
   conductor [options] repo clone <repo>
   conductor (--help | --version)
@@ -41,6 +42,8 @@ Commands:
   up                Run project
   stop              Stop all containers associated with project
   exec              Run a command inside a container
+  shell             Run an interactive shell inside a running container
+  test              Run the tests associated with a service, if any
   repo list         List all git repository aliases and URLs
   repo clone        Clone a git repository using its short alias and mount it
                     into the containers that use it
@@ -82,6 +85,7 @@ struct Args {
     cmd_stop: bool,
     cmd_exec: bool,
     cmd_shell: bool,
+    cmd_test: bool,
     cmd_repo: bool,
     cmd_list: bool,
     cmd_clone: bool,
@@ -172,6 +176,12 @@ fn run(args: &Args) -> Result<(), Error> {
         let target = try!(args.to_exec_target(&proj, &ovr)).unwrap();
         let opts = args.to_exec_options();
         try!(proj.shell(&runner, &target, &opts));
+    } else if args.cmd_test {
+        let test_ovr = try!(proj.ovr("test").ok_or_else(|| {
+            err!("override test is required to run tests")
+        }));
+        let target = try!(args.to_exec_target(&proj, &test_ovr)).unwrap();
+        try!(proj.test(&runner, &target));
     } else if args.cmd_repo && args.cmd_list {
         try!(proj.repo_list(&runner));
     } else if args.cmd_repo && args.cmd_clone {

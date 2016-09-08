@@ -8,6 +8,7 @@ extern crate glob;
 #[macro_use] extern crate log;
 extern crate rand;
 extern crate regex;
+extern crate shlex;
 
 pub use util::Error;
 pub use default_tags::DefaultTags;

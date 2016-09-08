@@ -27,6 +27,12 @@ pub trait CommandExec {
                 opts: &exec::Options) ->
         Result<(), Error>
         where CR: CommandRunner;
+
+    /// Execute tests inside a fresh container.
+    fn test<CR>(&self, runner: &CR,
+                target: &exec::Target) ->
+        Result<(), Error>
+        where CR: CommandRunner;
 }
 
 impl CommandExec for Project {
@@ -69,6 +75,24 @@ impl CommandExec for Project {
         let shell = try!(target.service().shell());
         self.exec(runner, target, &exec::Command::new(shell), opts)
     }
+
+    fn test<CR>(&self, runner: &CR,
+                target: &exec::Target) ->
+        Result<(), Error>
+        where CR: CommandRunner
+    {
+        let status = try!(runner.build("docker-compose")
+            .args(&try!(target.pod().compose_args(self, target.ovr())))
+            .arg("run").arg("--rm").arg("--no-deps")
+            .arg(target.service_name())
+            .args(&try!(target.service().test_command()))
+            .status());
+        if !status.success() {
+            return Err(err!("Error running docker-compose"));
+        }
+
+        Ok(())
+    }
 }
 
 #[test]
@@ -78,6 +102,7 @@ fn invokes_docker_exec() {
     let runner = TestCommandRunner::new();
     proj.output().unwrap();
     let target = exec::Target::new(&proj, &ovr, "frontend", "web").unwrap();
+
     let command = exec::Command::new("true");
     let opts = exec::Options { allocate_tty: false, ..Default::default() };
     proj.exec(&runner, &target, &command, &opts).unwrap();
@@ -100,6 +125,7 @@ fn runs_shells() {
     let runner = TestCommandRunner::new();
     proj.output().unwrap();
     let target = exec::Target::new(&proj, &ovr, "frontend", "web").unwrap();
+
     proj.shell(&runner, &target, &Default::default()).unwrap();
 
     assert_ran!(runner, {
@@ -108,6 +134,28 @@ fn runs_shells() {
          "-f", proj.output_dir().join("pods/frontend.yml"),
          "-f", proj.output_dir().join("pods/overrides/development/frontend.yml"),
          "exec", "web", "sh"]
+    });
+
+    proj.remove_test_output().unwrap();
+}
+
+#[test]
+fn runs_tests() {
+    let proj = Project::from_example("hello").unwrap();
+    let ovr = proj.ovr("test").unwrap();
+    let runner = TestCommandRunner::new();
+    proj.output().unwrap();
+    let target = exec::Target::new(&proj, &ovr, "frontend", "proxy").unwrap();
+
+    proj.test(&runner, &target).unwrap();
+
+    assert_ran!(runner, {
+        ["docker-compose",
+         "-p", "frontendtest",
+         "-f", proj.output_pods_dir().join("frontend.yml"),
+         "-f", proj.output_pods_dir().join("overrides/test/frontend.yml"),
+         "run", "--rm", "--no-deps", "proxy",
+         "echo", "All tests passed"]
     });
 
     proj.remove_test_output().unwrap();

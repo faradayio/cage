@@ -1,6 +1,7 @@
 //! Extension methods for `docker_compose::v2::Service`.
 
 use docker_compose::v2 as dc;
+use shlex;
 
 use ext::context::ContextExt;
 use project::Project;
@@ -15,6 +16,9 @@ pub trait ServiceExt {
     /// Get the default shell associated with this service.  Used for
     /// getting interactive access to a container.
     fn shell(&self) -> Result<String, Error>;
+
+    /// Get the test command associated with this service.
+    fn test_command(&self) -> Result<Vec<String>, Error>;
 
     /// Make any local updates to this service we want to make before
     /// outputting it for `Project::output`.
@@ -34,6 +38,20 @@ impl ServiceExt for dc::Service {
         Ok(self.labels.get("io.fdy.conductor.shell").cloned().unwrap_or_else(|| {
             "sh".to_owned()
         }))
+    }
+
+    fn test_command(&self) -> Result<Vec<String>, Error> {
+        let raw = try!(self.labels.get("io.fdy.conductor.test").ok_or_else(|| {
+            err!("specify a value for the label io.fdy.conductor.test to run tests")
+        }));
+        let mut lexer = shlex::Shlex::new(raw);
+        let result: Vec<String> =
+            lexer.by_ref().map(|w| w.to_owned()).collect();
+        if lexer.had_error {
+            Err(err!("cannot parse <{}> into shell words", raw))
+        } else {
+            Ok(result)
+        }
     }
 
     fn update_for_output(&mut self, project: &Project) -> Result<(), Error> {

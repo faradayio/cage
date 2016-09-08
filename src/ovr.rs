@@ -2,6 +2,8 @@
 //!
 //! This module has a plural name to avoid clashing with a keyword.
 
+use pod::Pod;
+
 /// An `Override` is a collection of extensions to a project's basic pods.
 /// Overrides are typically used to represent deployment environments: test,
 /// development and production.
@@ -30,4 +32,14 @@ impl Override {
     pub fn name(&self) -> &str {
         &self.name
     }
+
+    /// Get a value for `docker-compose`'s `-p` argument for a given pod.
+    pub fn compose_project_name(&self, pod: &Pod) -> String {
+        if self.name == "test" {
+            format!("{}test", pod.name())
+        } else {
+            pod.name().to_owned()
+        }
+    }
 }
+

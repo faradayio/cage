@@ -21,3 +21,6 @@ services:
     labels:
       # Specify the shell used by `conductor shell`.  Defaults to `sh`.
       io.fdy.conductor.shell: "/bin/sh"
+      # Specify how to run the service's internal tests.  May use shell
+      # quoting but not shell variables.
+      io.fdy.conductor.test: "echo 'All tests passed'"
