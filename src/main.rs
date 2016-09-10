@@ -156,10 +156,6 @@ impl Args {
 fn run(args: &Args) -> Result<(), Error> {
 
     if args.cmd_new {
-        // You need a `try!` here.  Rust is unhappy if you throw away a
-        // `Result` value.  The `unwrap` is fine because `docopt.rs` won't
-        // let you get this far if a required argument to `cmd_new` is
-        // missing.
         try!(create_project(args.arg_name.as_ref().unwrap()));
         return Ok(());
     }
