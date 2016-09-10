@@ -1,6 +1,7 @@
 //! A single pod in a project.
 
 use docker_compose::v2 as dc;
+use docker_compose::v2::MergeOverride;
 use std::collections::BTreeMap;
 use std::collections::btree_map;
 use std::ffi::OsString;
@@ -167,6 +168,14 @@ impl Pod {
         Ok(&(try!(self.override_file_info(ovr)).file))
     }
 
+    /// Return the base file and the override file merged into a single
+    /// `docker-compose.yml` file.
+    pub fn merged_file(&self, ovr: &Override) -> Result<dc::File, Error> {
+        // This is expensive so log it.
+        debug!("Merging pod {} with override {}", self.name(), ovr.name());
+        Ok(self.file().merge_override(try!(self.override_file(ovr))))
+    }
+
     /// All the overrides associated with this pod.
     pub fn override_files(&self) -> OverrideFiles {
         OverrideFiles { iter: self.override_file_infos.iter() }
@@ -188,12 +197,14 @@ impl Pod {
         Result<Vec<OsString>, Error>
     {
         let ovr_rel_path = try!(self.override_rel_path(ovr));
-        Ok(vec!("-p".into(), self.name().into(),
+        let compose_project_name = ovr.compose_project_name(self);
+        Ok(vec!("-p".into(), compose_project_name.into(),
                 "-f".into(), proj.output_pods_dir().join(self.rel_path()).into(),
                 "-f".into(), proj.output_pods_dir().join(ovr_rel_path).into()))
     }
 }
 
+/// An iterator over this pods overrides and their associated files.
 pub struct OverrideFiles<'a> {
     iter: btree_map::Iter<'a, Override, FileInfo>,
 }
@@ -268,4 +279,14 @@ fn pods_are_normalized_on_load() {
     assert_eq!(web_ovr.env_files.len(), 1);
     assert_eq!(web_ovr.env_files[0].value().unwrap(),
                Path::new("overrides/production/common.env"));
+}
+
+#[test]
+fn can_merge_base_file_and_override() {
+    let proj: Project = Project::from_example("hello").unwrap();
+    let ovr = proj.ovr("development").unwrap();
+    let frontend = proj.pod("frontend").unwrap();
+    let merged = frontend.merged_file(&ovr).unwrap();
+    let proxy = merged.services.get("proxy").unwrap();
+    assert_eq!(proxy.env_files.len(), 2);
 }

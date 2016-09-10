@@ -1,6 +1,6 @@
 [package]
 name = "conductor"
-version = "0.0.3"
+version = "0.0.4"
 authors = ["Eric Kidd <git@randomhacks.net>"]
 
 description = "Faraday Conductor: Develop and orchestrate multi-pod docker-compose apps"
@@ -8,8 +8,12 @@ license = "MIT/Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/faradayio/conductor"
 
+[[bin]]
+name = "conductor"
+doc = false
+
 [dependencies]
-docker_compose = "0.3.2"
+docker_compose = "0.3.4"
 docopt = "0.6.83"
 env_logger = "0.3.4"
 glob = "0.2.11"
@@ -18,4 +22,4 @@ log = "0.3.6"
 rand = "0.3.14"
 regex = "0.1.73"
 rustc-serialize = "0.3.19"
-url = "1.2.0"
+shlex = "0.1.1"

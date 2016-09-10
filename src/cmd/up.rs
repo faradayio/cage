@@ -49,4 +49,5 @@ fn runs_docker_compose_up_on_all_pods() {
          "-f", proj.output_dir().join("pods/overrides/development/frontend.yml"),
          "up", "-d"]
     });
+    proj.remove_test_output().unwrap();
 }

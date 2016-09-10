@@ -45,4 +45,5 @@ fn runs_docker_compose_pull_on_all_pods() {
          "-f", proj.output_dir().join("pods/overrides/development/frontend.yml"),
          "pull"]
     });
+    proj.remove_test_output().unwrap();
 }
