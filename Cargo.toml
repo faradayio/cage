@@ -8,6 +8,11 @@ license = "MIT/Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/faradayio/conductor"
 
+[features]
+# This is just here to keep travis-cargo happy; we don't do anything special
+# for nightly Rust.
+unstable = []
+
 [[bin]]
 name = "conductor"
 doc = false
