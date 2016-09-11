@@ -2,9 +2,12 @@
 
 use docker_compose::v2 as dc;
 use glob;
+use retry::retry;
 use std::env;
+use std::error;
 use std::ffi::OsStr;
 use std::fs;
+use std::io;
 use std::path::{Path, PathBuf};
 
 /// We use the same `Error` type as `docker_compose` for simplicity.
@@ -71,12 +74,39 @@ impl ConductorPathExt for Path {
     }
 
     fn with_guaranteed_parent(&self) -> Result<PathBuf, Error> {
-        try!(fs::create_dir_all(try!(self.parent().ok_or_else(|| {
-            err!("can't find parent of {}", self.display())
-        }))).map_err(|err| {
-            err!("error creating parent directories for {}: {}",
-                 self.display(), err)
+        let parent = try!(self.parent().ok_or_else(|| {
+            err!("can't find parent path of {}", self.display())
         }));
+
+        // Take an error message and elaborate a bit.  We use a trait
+        // pointer here so we can use this for multiple error types,
+        // because Rust closures don't seem to support type parameters.
+        let wrap_err = |err: &error::Error| -> Error {
+            err!("error creating parent directories for {}: {}",
+                 parent.display(), err)
+        };
+
+        // On certain file systems, `create_dir_all` is not terribly thread
+        // safe, and it may fail if another thread is trying to create the
+        // same directories.  This seems to happen inside Docker containers
+        // on Travis CI, for example.  For a possibly related issue, see
+        // https://github.com/jpetazzo/dind/issues/73.  So we're going to
+        // retry this function if it fails, in case it failed at some
+        // intermediate step in the directory hierarchy.
+        let retry_result = retry(5, 50, || {
+            // The function to re-try.
+            fs::create_dir_all(&parent)
+        }, |result| {
+            // Return true if we're done retrying.
+            match result {
+                &Err(ref err) if err.kind() == io::ErrorKind::AlreadyExists =>
+                    false,
+                _ => true
+            }
+        });
+        // Unwrap twice: Outer error is a possible retry failure, inner
+        // error is a filesystem error.
+        try!(try!(retry_result.map_err(|e| wrap_err(&e))).map_err(|e| wrap_err(&e)));
         Ok(self.to_owned())
     }
 

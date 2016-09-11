@@ -10,6 +10,7 @@ dependencies = [
  "log 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand 0.3.14 (registry+https://github.com/rust-lang/crates.io-index)",
  "regex 0.1.75 (registry+https://github.com/rust-lang/crates.io-index)",
+ "retry 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rustc-serialize 0.3.19 (registry+https://github.com/rust-lang/crates.io-index)",
  "shlex 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -167,6 +168,14 @@ dependencies = [
 name = "regex-syntax"
 version = "0.3.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "retry"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "rand 0.3.14 (registry+https://github.com/rust-lang/crates.io-index)",
+]
 
 [[package]]
 name = "rustc-serialize"

@@ -9,6 +9,7 @@ extern crate glob;
 #[macro_use] extern crate log;
 extern crate rand;
 extern crate regex;
+extern crate retry;
 extern crate shlex;
 
 pub use util::Error;
