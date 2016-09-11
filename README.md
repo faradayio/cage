@@ -5,6 +5,8 @@ This is a work in progress using the
 a reimplementation of our internal, _ad hoc_ tools using the new
 `docker-compose.yml` version 2 format and Rust.
 
+[API Documentation](https://faradayio.github.io/conductor/)
+
 ## Installation
 
 To install, we recommend using `rustup` and `cargo`:
