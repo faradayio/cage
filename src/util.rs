@@ -91,8 +91,8 @@ impl ConductorPathExt for Path {
         // same directories.  This seems to happen inside Docker containers
         // on Travis CI, for example.  For a possibly related issue, see
         // https://github.com/jpetazzo/dind/issues/73.  So we're going to
-        // retry this function if it fails, in case it failed at some
-        // intermediate step in the directory hierarchy.
+        // retry this function if it fails, because it will fail to
+        // create directories below the one that already existed.
         let retry_result = retry(5, 50, || {
             // The function to re-try.
             fs::create_dir_all(&parent)
