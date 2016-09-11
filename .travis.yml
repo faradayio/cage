@@ -1,9 +1,16 @@
 language: rust
 sudo: required
+os:
+- linux
+- osx
 rust:
 - stable
-- beta
-- nightly
+matrix:
+  include:
+    - os: linux
+      rust: beta
+    - os: linux
+      rust: nightly
 before_script:
 - |
   pip install 'travis-cargo<0.2' --user &&
