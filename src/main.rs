@@ -39,6 +39,7 @@ Usage:
   conductor (--help | --version)
 
 Commands:
+  new               Create a directory containing a new sample project
   pull              Pull Docker images used by project
   up                Run project
   stop              Stop all containers associated with project
