@@ -21,6 +21,7 @@ pub use repos::Iter as RepoIter;
 #[macro_use] mod util;
 #[macro_use] pub mod command_runner;
 pub mod cmd;
+pub mod create_project;
 mod default_tags;
 pub mod dir;
 pub mod exec;

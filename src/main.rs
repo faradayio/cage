@@ -17,6 +17,7 @@ use std::process;
 use conductor::command_runner::OsCommandRunner;
 use conductor::cmd::*;
 use conductor::Error;
+use conductor::create_project::create_project;
 
 /// Our version number, set by Cargo at compile time.
 const VERSION: &'static str = env!("CARGO_PKG_VERSION");
@@ -27,6 +28,7 @@ conductor: Manage large, multi-pod docker-compose apps
 
 Usage:
   conductor [options]
+  conductor [options] new <name>
   conductor [options] pull
   conductor [options] up
   conductor [options] stop
@@ -89,12 +91,14 @@ struct Args {
     cmd_repo: bool,
     cmd_list: bool,
     cmd_clone: bool,
+    cmd_new: bool,
 
-    arg_repo: Option<String>,
-    arg_pod: Option<String>,
-    arg_service: Option<String>,
-    arg_command: Option<String>,
     arg_args: Option<Vec<String>>,
+    arg_command: Option<String>,
+    arg_name: Option<String>,
+    arg_pod: Option<String>,
+    arg_repo: Option<String>,
+    arg_service: Option<String>,
 
     // Exec options.
     flag_d: bool,
@@ -150,6 +154,12 @@ impl Args {
 /// The function which does the real work.  Unlike `main`, we have a return
 /// type of `Result` and may therefore use `try!` to handle errors.
 fn run(args: &Args) -> Result<(), Error> {
+
+    if args.cmd_new {
+        try!(create_project(args.arg_name.as_ref().unwrap()));
+        return Ok(());
+    }
+
     let mut proj = try!(conductor::Project::from_current_dir());
     if let Some(ref default_tags_path) = args.flag_default_tags {
         let file = try!(fs::File::open(default_tags_path));
