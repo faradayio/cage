@@ -162,6 +162,8 @@ impl Repo {
 
 #[test]
 fn are_loaded_with_projects() {
+    use env_logger;
+    let _ = env_logger::init();
     let proj = Project::from_example("hello").unwrap();
     let repos = proj.repos();
     assert_eq!(repos.iter().count(), 2);
@@ -175,6 +177,8 @@ fn are_loaded_with_projects() {
 
 #[test]
 fn can_be_cloned() {
+    use env_logger;
+    let _ = env_logger::init();
     let proj = Project::from_example("hello").unwrap();
     let repo = proj.repos().find_by_alias("dockercloud-hello-world").unwrap();
     let runner = TestCommandRunner::new();
@@ -188,6 +192,8 @@ fn can_be_cloned() {
 
 #[test]
 fn can_be_checked_to_see_if_cloned() {
+    use env_logger;
+    let _ = env_logger::init();
     let proj = Project::from_example("hello").unwrap();
     let repo = proj.repos().find_by_alias("dockercloud-hello-world").unwrap();
     assert!(!repo.is_cloned(&proj));

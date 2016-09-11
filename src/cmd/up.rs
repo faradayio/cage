@@ -37,6 +37,8 @@ impl CommandUp for Project {
 
 #[test]
 fn runs_docker_compose_up_on_all_pods() {
+    use env_logger;
+    let _ = env_logger::init();
     let proj = Project::from_example("hello").unwrap();
     let ovr = proj.ovr("development").unwrap();
     let runner = TestCommandRunner::new();

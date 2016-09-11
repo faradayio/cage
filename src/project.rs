@@ -289,6 +289,8 @@ impl<'a> Iterator for Overrides<'a> {
 
 #[test]
 fn new_from_example_uses_example_and_target() {
+    use env_logger;
+    let _ = env_logger::init();
     let proj = Project::from_example("hello").unwrap();
     assert_eq!(proj.root_dir, Path::new("examples/hello"));
     let output_dir = proj.output_dir.to_str_or_err().unwrap();
@@ -299,6 +301,8 @@ fn new_from_example_uses_example_and_target() {
 
 #[test]
 fn pods_are_loaded() {
+    use env_logger;
+    let _ = env_logger::init();
     let proj = Project::from_example("hello").unwrap();
     let names: Vec<_> = proj.pods.iter().map(|pod| pod.name()).collect();
     assert_eq!(names, ["frontend"]);
@@ -306,6 +310,8 @@ fn pods_are_loaded() {
 
 #[test]
 fn overrides_are_loaded() {
+    use env_logger;
+    let _ = env_logger::init();
     let proj = Project::from_example("hello").unwrap();
     let names: Vec<_> = proj.overrides.iter().map(|o| o.name()).collect();
     assert_eq!(names, ["development", "production", "test"]);
@@ -313,6 +319,8 @@ fn overrides_are_loaded() {
 
 #[test]
 fn output_copies_env_files() {
+    use env_logger;
+    let _ = env_logger::init();
     let proj = Project::from_example("hello").unwrap();
     proj.output().unwrap();
     assert!(proj.output_dir.join("pods/common.env").exists());
@@ -322,6 +330,8 @@ fn output_copies_env_files() {
 
 #[test]
 fn output_processes_pods_and_overrides() {
+    use env_logger;
+    let _ = env_logger::init();
     let proj = Project::from_example("hello").unwrap();
     proj.output().unwrap();
     assert!(proj.output_dir.join("pods/frontend.yml").exists());

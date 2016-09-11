@@ -30,6 +30,8 @@ impl FileExt for dc::File {
 #[test]
 fn update_for_output_mounts_cloned_source() {
     use docker_compose::v2 as dc;
+    use env_logger;
+    let _ = env_logger::init();
 
     let cursor = io::Cursor::new("dockercloud/hello-world:staging\n");
     let default_tags = DefaultTags::read(cursor).unwrap();

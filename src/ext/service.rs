@@ -93,6 +93,8 @@ impl ServiceExt for dc::Service {
 
 #[test]
 fn shell_returns_preferred_shell_for_this_service() {
+    use env_logger;
+    let _ = env_logger::init();
     let proj: Project = Project::from_example("hello").unwrap();
     let ovr = proj.ovr("development").unwrap();
     let frontend = proj.pod("frontend").unwrap();

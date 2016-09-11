@@ -261,7 +261,9 @@ impl<'a> Iterator for AllFiles<'a> {
 
 #[test]
 fn pods_are_normalized_on_load() {
+    use env_logger;
     use project::Project;
+    let _ = env_logger::init();
 
     let proj = Project::from_example("hello").unwrap();
     let frontend = proj.pod("frontend").unwrap();
@@ -283,6 +285,8 @@ fn pods_are_normalized_on_load() {
 
 #[test]
 fn can_merge_base_file_and_override() {
+    use env_logger;
+    let _ = env_logger::init();
     let proj: Project = Project::from_example("hello").unwrap();
     let ovr = proj.ovr("development").unwrap();
     let frontend = proj.pod("frontend").unwrap();

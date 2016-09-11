@@ -3,6 +3,7 @@
 #![warn(missing_docs)]
 
 extern crate docker_compose;
+#[cfg(test)] extern crate env_logger;
 extern crate glob;
 #[macro_use] extern crate lazy_static;
 #[macro_use] extern crate log;
