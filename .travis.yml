@@ -33,7 +33,7 @@ after_success:
 - travis-cargo --only nightly --no-sudo coveralls
 before_deploy:
 - |
-  cargo build --release
+  cargo build --release &&
   zip -j ${PROJECT_NAME}-${TRAVIS_TAG}-${TARGET}.zip target/release/conductor
 env:
   global:
@@ -43,9 +43,10 @@ deploy:
   api_key:
     secure: XxzjVK+KvEew2d/uCQ78i9Wx5OII/Nb6eVKND5oIItYq3HiZeNee7fen1p7fB1/TTsw/MhWm29aCmEZNJ+bihwJbeQDgTPuWWYPx785ryF5AxaZmHeLWs9uPotJbukOuiNL+xkcOQ8RZOZvCs5elJ9LW36MftbZBRsR6F1MY19b6nq57SCptKy1DTvhoJ3VyOQ/Xu7hSIQkpDPWaFVIHfkaaeOJN3Cc0QjEsWhMuA4gv+8WSvzvci5/xTSqbux7+UPau12yANVhFHkTHfpFjjPT27Hziiq86FPdWmi+YZXlNqVtDvyYtCQ2cAXj0rdfSBXWVfoRxwEptu/EF0mzFERSifZvoqQEAHGmQ2mAoUPO3B7FubMi8ni7uURcgEG1S+5+51Jz/5BM78bPTywznIH1IHgG6ABCSzrdW7t5AD7nvgQa96ePXg4nb9+iYC6Z+5mtffEmg29wJy0ictMVFc/fokSPBNiZA+6SjUfXEIcwGdD+EwOMmWod/IFe6E4vQci1JHH2uZfH4gYbivCIYyaJ6wVkqCTRP+b9wDyMO4jvlDof8mOewa/F2QoqlkRM2Q1N0nKpfrtJE0LpDV1cft4BGj72NCzhafneHI2jI70liKUUX/XmNEvG2hqvFRXHupnExy2gvVHzngGEMGtlkHJ1FEFE8SQed5BEBuWJMSVQ=
   file_glob: true
-  file: "${PROJECT_NAME}-${TRAVIS_TAG}-${TARGET}."
+  file: "${PROJECT_NAME}-${TRAVIS_TAG}-${TARGET}.*"
   skip_cleanup: true
   on:
     repo: faradayio/conductor
     rust: stable
-    os: osx
+    condition: "$TRAVIS_OS_NAME = osx"
+    #tags: true
