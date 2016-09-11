@@ -25,6 +25,7 @@ before_script:
   export PATH=$HOME/.local/bin:$HOME/Library/Python/2.7/bin:$PATH
 script:
 - |
+  export RUST_BACKTRACE=1 &&
   travis-cargo build &&
   travis-cargo test &&
   travis-cargo bench &&
