@@ -73,7 +73,10 @@ impl ConductorPathExt for Path {
     fn with_guaranteed_parent(&self) -> Result<PathBuf, Error> {
         try!(fs::create_dir_all(try!(self.parent().ok_or_else(|| {
             err!("can't find parent of {}", self.display())
-        }))));
+        }))).map_err(|err| {
+            err!("error creating parent directories for {}: {}",
+                 self.display(), err)
+        }));
         Ok(self.to_owned())
     }
 
