@@ -9,6 +9,23 @@ a reimplementation of our internal, _ad hoc_ tools using the new
 
 [API Documentation](https://faradayio.github.io/conductor/)
 
+## What's this for?
+
+- Does your app include more than one `docker-compose.yml` file?
+- Does your app contain a mixture of permanently running containers and
+  one-shot tasks?
+- Does your app run across more than one cluster of machines?
+- Do individual components of your app need their own load balancers?
+- When running in development mode, do you need to replace 3rd-party
+  services with local containers?
+
+If you answer to one or more of these questions is "yes", then `conductor`
+is probably for you.  It provides development and deployment tools for
+complex `docker-compose` apps, following
+a [convention over configuration][] philosophy.
+
+[configuration over configuration]: https://en.wikipedia.org/wiki/Convention_over_configuration
+
 ## Installation
 
 To install, we recommend using `rustup` and `cargo`:
@@ -74,6 +91,30 @@ General options:
 Run conductor in a directory containing a `pods` subdirectory.  For more
 information, see https://github.com/faradayio/conductor.
 ```
+
+## What's a pod?
+
+A "pod" is a tightly-linked group of containers that are always deployed
+together.  Kubernetes [defines pods][pods] as:
+
+> A pod (as in a pod of whales or pea pod) is a group of one or more
+> containers (such as Docker containers), the shared storage for those
+> containers, and options about how to run the containers. Pods are always
+> co-located and co-scheduled, and run in a shared context. A pod models an
+> application-specific “logical host” - it contains one or more application
+> containers which are relatively tightly coupled — in a pre-container
+> world, they would have executed on the same physical or virtual machine.
+
+If you're using Amazon's ECS, a pod corresponds to an ECS "task" or
+"service".  If you're using Docker Swarm, a pod corresponds to a single
+`docker-compose.xml` file full of services that you always launch as a
+single unit.
+
+Pods typically talk to other pods using ordinary DNS lookups or service
+discovery.  If a pod accepts outside network connections, it will often do
+so via a load balancer.
+
+[pods]: http://kubernetes.io/docs/user-guide/pods/
 
 ## Project format
 
