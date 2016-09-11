@@ -17,7 +17,6 @@ use std::process;
 use conductor::command_runner::OsCommandRunner;
 use conductor::cmd::*;
 use conductor::Error;
-use conductor::create_project::create_project;
 
 /// Our version number, set by Cargo at compile time.
 const VERSION: &'static str = env!("CARGO_PKG_VERSION");
@@ -156,7 +155,8 @@ impl Args {
 fn run(args: &Args) -> Result<(), Error> {
 
     if args.cmd_new {
-        try!(create_project(args.arg_name.as_ref().unwrap()));
+        try!(conductor::Project::generate(&try!(env::current_dir()),
+                                          args.arg_name.as_ref().unwrap()));
         return Ok(());
     }
 
