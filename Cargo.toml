@@ -7,6 +7,7 @@ description = "Faraday Conductor: Develop and orchestrate multi-pod docker-compo
 license = "MIT/Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/faradayio/conductor"
+documentation = "https://faradayio.github.io/conductor/"
 
 [features]
 # This is just here to keep travis-cargo happy; we don't do anything special
