@@ -22,9 +22,9 @@ a reimplementation of our internal, _ad hoc_ tools using the new
 If you answer to one or more of these questions is "yes", then `conductor`
 is probably for you.  It provides development and deployment tools for
 complex `docker-compose` apps, following
-a [convention over configuration][] philosophy.
+a [convention over configuration][coc] philosophy.
 
-[configuration over configuration]: https://en.wikipedia.org/wiki/Convention_over_configuration
+[coc]: https://en.wikipedia.org/wiki/Convention_over_configuration
 
 ## Installation
 
