@@ -146,3 +146,36 @@ hello
         └── test
             └── common.env
 ```
+
+## Development notes
+
+Pull requests are welcome!  If you're not sure whether your idea would fit
+into the project's vision, please feel free to file an issue and ask us.
+
+**To make an official release,** you need to be a maintainer, and you need
+to have `cargo publish` permissions.  If this is the case, first edit
+`Cargo.toml` to bump the version number, then regenerate `Cargo.lock`
+using:
+
+```sh
+cargo build
+```
+
+Commit the release, using a commit message of the format:
+
+```txt
+v<VERSION>: <SUMMARY>
+
+<RELEASE NOTES>
+```
+
+Then run:
+
+```
+git tag v$VERSION
+git push; git push --tags
+cargo publish
+```
+
+This will rebuild the official binaries using Travis CI, and upload a new version of
+the crate to [crates.io](https://crates.io/crates/conductor).
