@@ -5,11 +5,13 @@
 extern crate docker_compose;
 #[cfg(test)] extern crate env_logger;
 extern crate glob;
+extern crate handlebars;
 #[macro_use] extern crate lazy_static;
 #[macro_use] extern crate log;
 extern crate rand;
 extern crate regex;
 extern crate retry;
+extern crate rustc_serialize;
 extern crate shlex;
 
 pub use util::Error;
