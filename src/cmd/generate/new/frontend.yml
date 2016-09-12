@@ -1,0 +1,9 @@
+# An example frontend web pod using Rails.
+web:
+  # The name of the Docker image.
+  image: "faraday/rails_hello"
+  # The GitHub repository containing the source code for this image,
+  # for use with `conductor repo clone`.
+  build: "https://github.com/faradayio/rails_hello.git"
+  ports:
+  - "3000:3000"

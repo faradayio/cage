@@ -21,7 +21,7 @@ pub trait CommandGenerate {
     /// <name>
     /// └── pods
     ///   ├── common.env
-    ///   ├── app.yml
+    ///   ├── frontend.yml
     ///   └── overrides
     ///       ├── development
     ///       │   └── common.env
@@ -46,8 +46,10 @@ impl CommandGenerate for Project {
         let proj_info = ProjectInfo { name: name };
         try!(generate(&mut renderer, &COMMON_ENV, &proj_info,
                       &pods_dir.join("common.env")));
-        try!(generate(&mut renderer, &MAIN_YML, &proj_info,
-                      &pods_dir.join("app.yml")));
+        try!(generate(&mut renderer, &FRONTEND_YML, &proj_info,
+                      &pods_dir.join("frontend.yml")));
+        try!(generate(&mut renderer, &DB_YML, &proj_info,
+                      &pods_dir.join("db.yml")));
 
         // Generate files for each override.
         let overrides_dir: PathBuf = pods_dir.join("overrides");
@@ -73,7 +75,8 @@ fn create_project_default() {
 
     assert!(proj_dir.exists());
     assert!(proj_dir.join("pods/common.env").exists());
-    assert!(proj_dir.join("pods/app.yml").exists());
+    assert!(proj_dir.join("pods/frontend.yml").exists());
+    assert!(proj_dir.join("pods/db.yml").exists());
     assert!(proj_dir.join("pods/overrides/development/common.env").exists());
     assert!(proj_dir.join("pods/overrides/production/common.env").exists());
     assert!(proj_dir.join("pods/overrides/test/common.env").exists());
@@ -101,14 +104,14 @@ fn generate<T>(renderer: &mut hb::Handlebars,
     // Make sure our parent directory exists.
     try!(path.with_guaranteed_parent());
 
-    // Create our output file and copy data into it.
+    // Create our output file.
     let mut out = try!(fs::File::create(path).map_err(|e| {
         err!("Unable to create file {}: {}", path.display(), &e)
     }));
 
     // Render our template to the file.
     let ctx = hb::Context::wraps(data);
-    renderer.template_renderw(template.trim_left(), &ctx, &mut out).map_err(|e| {
+    renderer.template_renderw(template, &ctx, &mut out).map_err(|e| {
         err!("Unable to generate {}: {}", path.display(), &e)
     })
 }
@@ -171,31 +174,9 @@ impl<'a> ToJson for OverrideInfo<'a> {
 //}
 
 // Standard overrides that we'll use for new projects.
-const OVERRIDES: &'static [ &'static str ] =
-    &["development", "production", "test"];
+const OVERRIDES: &'static [ &'static str ] = &["development", "production", "test"];
 
-static MAIN_YML: &'static str = r#"
-db:
-  image: postgres
-web:
-  image: rails
-  links:
-    - db:db
-  ports:
-    - 3000:3000
-"#;
-
-static COMMON_ENV: &'static str = r#"
-# Define environment variables here to make them visible in all containers.
-# For example:
-PROJECT_NAME="{{name}}"
-"#;
-
-static OVERRIDE_ENV: &'static str = r#"
-# Define environment variables here to make them visible to all containers
-# when this overlay is being used.  For example:
-RAILS_ENV="{{name}}"
-RACK_ENV="{{name}}"
-NODE_ENV="{{name}}"
-DATABASE_URL="postgres://postgres@db:5432/{{project.name}}_{{name}}"
-"#;
+static FRONTEND_YML: &'static str = include_str!("generate/new/frontend.yml");
+static DB_YML: &'static str = include_str!("generate/new/db.yml");
+static COMMON_ENV: &'static str = include_str!("generate/new/common.env");
+static OVERRIDE_ENV: &'static str = include_str!("generate/new/overrides/common.env");
