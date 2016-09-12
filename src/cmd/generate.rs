@@ -154,25 +154,6 @@ impl<'a> ToJson for OverrideInfo<'a> {
     }
 }
 
-//fn write_to_file<F, W>(path: &Path,   ->
-//    Result<(), Error>
-//    where W: Write
-//{
-//    println!("Writing file {:?}", path.to_str());
-//
-//    // Make sure our parent directory exists.
-//    try!(path.with_guaranteed_parent());
-//
-//    // Create our output file and copy data into it.
-//    let mut out = try!(fs::File::create(path).map_err(|e| {
-//        err!("Unable to create file {}: {}", path.display(), &e)
-//    }));
-//    try!(io::copy(content, out).map_err(|e| {
-//        err!("Unable to write to file {}: {}", path.display(), &e)
-//    }));
-//    Ok(())
-//}
-
 // Standard overrides that we'll use for new projects.
 const OVERRIDES: &'static [ &'static str ] = &["development", "production", "test"];
 
