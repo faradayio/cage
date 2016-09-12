@@ -35,6 +35,16 @@ curl https://sh.rustup.rs -sSf | sh
 cargo install conductor
 ```
 
+We also provide [official binary releases][releases] for Mac OS X and for
+Linux.  The Linux binaries are statically linked using [musl-libc][]
+and [rust-musl-builder][], so they should work on any Linux distribution,
+including both regular distributions and stripped down distributions like
+Alpine.  Just unzip the binaries and copy them to where you want them.
+
+[releases]: https://github.com/faradayio/conductor/releases
+[musl-libc]: https://www.musl-libc.org/
+[rust-musl-builder]: https://github.com/emk/rust-musl-builder
+
 ## Usage
 
 To see how to use `conductor`, run `conductor --help` (which may be newer
@@ -57,6 +67,7 @@ Usage:
   conductor (--help | --version)
 
 Commands:
+  new               Create a directory containing a new sample project
   pull              Pull Docker images used by project
   up                Run project
   stop              Stop all containers associated with project
@@ -68,6 +79,7 @@ Commands:
                     into the containers that use it
 
 Arguments:
+  <name>            The name of the project directory to create
   <repo>            Short alias for a repo (see `repo list`)
   <pod>             The name of a pod specified in `pods/`
   <service>         The name of a service in a pod

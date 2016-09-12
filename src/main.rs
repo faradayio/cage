@@ -51,6 +51,7 @@ Commands:
                     into the containers that use it
 
 Arguments:
+  <name>            The name of the project directory to create
   <repo>            Short alias for a repo (see `repo list`)
   <pod>             The name of a pod specified in `pods/`
   <service>         The name of a service in a pod
