@@ -18,6 +18,11 @@ use util::{ConductorPathExt, Error, ToStrOrErr};
 /// `pods` subdirectory.
 #[derive(Debug)]
 pub struct Project {
+    /// The name of this project.  This defaults to the name of the
+    /// directory containing the project, but it can be overriden, just
+    /// like with `docker-compose`.
+    name: String,
+
     /// The directory which contains our `project`.  Must have a
     /// subdirectory named `pods`.
     root_dir: PathBuf,
@@ -44,6 +49,31 @@ pub struct Project {
 }
 
 impl Project {
+    /// Create a `Project`, specifying what directories to use.
+    fn from_dirs(root_dir: &Path, src_dir: &Path, output_dir: &Path) ->
+        Result<Project, Error>
+    {
+        let overrides = try!(Project::find_overrides(root_dir));
+        let pods = try!(Project::find_pods(root_dir, &overrides));
+        let repos = try!(Repos::new(&pods));
+        let absolute_root = try!(root_dir.to_absolute());
+        let name = try!(absolute_root.file_name().and_then(|s| {
+            s.to_str()
+        }).ok_or_else(|| {
+            err!("Can't find directory name for {}", root_dir.display())
+        }));
+        Ok(Project {
+            name: name.to_owned(),
+            root_dir: root_dir.to_owned(),
+            src_dir: src_dir.to_owned(),
+            output_dir: output_dir.to_owned(),
+            pods: pods,
+            overrides: overrides,
+            repos: repos,
+            default_tags: None,
+        })
+    }
+
     /// Create a `Project` using the current directory as input and the
     /// `.conductor` subdirectory as output.
     ///
@@ -67,18 +97,9 @@ impl Project {
         // and will break parallel tests.)
         let current = try!(env::current_dir());
         let root_dir = try!(dir::find_project(&current));
-        let overrides = try!(Project::find_overrides(&root_dir));
-        let pods = try!(Project::find_pods(&root_dir, &overrides));
-        let repos = try!(Repos::new(&pods));
-        Ok(Project {
-            root_dir: root_dir.clone(),
-            src_dir: root_dir.join("src"),
-            output_dir: root_dir.join(".conductor"),
-            pods: pods,
-            overrides: overrides,
-            repos: repos,
-            default_tags: None,
-        })
+        Project::from_dirs(&root_dir,
+                           &root_dir.join("src"),
+                           &root_dir.join(".conductor"))
     }
 
     /// (Tests only.) Create a `Project` from a subirectory of `examples`,
@@ -86,22 +107,12 @@ impl Project {
     #[cfg(test)]
     pub fn from_example(name: &str) -> Result<Project, Error> {
         use rand::random;
-        let example_dir = Path::new("examples").join(name);
-        let root_dir = try!(dir::find_project(&example_dir));
+        let root_dir = Path::new("examples").join(name);
         let rand_name = format!("{}-{}", name, random::<u16>());
         let test_output = Path::new("target/test_output").join(&rand_name);
-        let overrides = try!(Project::find_overrides(&root_dir));
-        let pods = try!(Project::find_pods(&root_dir, &overrides));
-        let repos = try!(Repos::new(&pods));
-        Ok(Project {
-            root_dir: root_dir.clone(),
-            src_dir: test_output.join("src"),
-            output_dir: test_output,
-            pods: pods,
-            overrides: overrides,
-            repos: repos,
-            default_tags: None,
-        })
+        Project::from_dirs(&root_dir,
+                           &test_output.join("src"),
+                           &test_output)
     }
 
     /// (Tests only.) Remove our output directory after a test.
@@ -145,6 +156,19 @@ impl Project {
             pods.push(try!(Pod::new(pods_dir.clone(), name, overrides)));
         }
         Ok(pods)
+    }
+
+    /// The name of this project.  This defaults to the name of the current
+    /// directory.
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    /// Set the name of this project.  This should be done before calling
+    /// `output` or any methods in `conductor::cmd`.
+    pub fn set_name(&mut self, name: &str) -> &mut Project {
+        self.name = name.to_owned();
+        self
     }
 
     /// The root directory of this project.
@@ -297,6 +321,16 @@ fn new_from_example_uses_example_and_target() {
     assert!(output_dir.starts_with("target/test_output/hello-"));
     let src_dir = proj.src_dir.to_str_or_err().unwrap();
     assert!(src_dir.starts_with("target/test_output/hello-"));
+}
+
+#[test]
+fn name_defaults_to_project_dir_but_can_be_overridden() {
+    use env_logger;
+    let _ = env_logger::init();
+    let mut proj = Project::from_example("hello").unwrap();
+    assert_eq!(proj.name(), "hello");
+    proj.set_name("hi");
+    assert_eq!(proj.name(), "hi");
 }
 
 #[test]

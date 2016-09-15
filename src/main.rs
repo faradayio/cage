@@ -65,6 +65,9 @@ Exec options:
 General options:
   -h, --help        Show this message
   --version         Show the version of conductor
+  -p, --project-name <project_name>
+                    The name of this project.  Defaults to the current
+                    directory name.
   --override=<override>
                     Use overrides from the specified subdirectory of
                     `pods/overrides` [default: development]
@@ -109,8 +112,9 @@ struct Args {
 
     // General options.
     flag_version: bool,
-    flag_override: String,
     flag_default_tags: Option<String>,
+    flag_override: String,
+    flag_project_name: Option<String>,
 }
 
 impl Args {
@@ -163,6 +167,9 @@ fn run(args: &Args) -> Result<(), Error> {
     }
 
     let mut proj = try!(conductor::Project::from_current_dir());
+    if let Some(ref project_name) = args.flag_project_name {
+        proj.set_name(project_name);
+    }
     if let Some(ref default_tags_path) = args.flag_default_tags {
         let file = try!(fs::File::open(default_tags_path));
         proj.set_default_tags(try!(conductor::DefaultTags::read(file)));
