@@ -42,7 +42,7 @@ fn runs_docker_compose_stop_on_all_pods() {
     proj.stop(&runner, &ovr).unwrap();
     assert_ran!(runner, {
         ["docker-compose",
-         "-p", "frontend",
+         "-p", "hello",
          "-f", proj.output_dir().join("pods/frontend.yml"),
          "-f", proj.output_dir().join("pods/overrides/development/frontend.yml"),
          "stop"]

@@ -111,7 +111,7 @@ fn invokes_docker_exec() {
 
     assert_ran!(runner, {
         ["docker-compose",
-         "-p", "frontend",
+         "-p", "hello",
          "-f", proj.output_dir().join("pods/frontend.yml"),
          "-f", proj.output_dir().join("pods/overrides/development/frontend.yml"),
          "exec", "-T", "web", "true"]
@@ -134,7 +134,7 @@ fn runs_shells() {
 
     assert_ran!(runner, {
         ["docker-compose",
-         "-p", "frontend",
+         "-p", "hello",
          "-f", proj.output_dir().join("pods/frontend.yml"),
          "-f", proj.output_dir().join("pods/overrides/development/frontend.yml"),
          "exec", "web", "sh"]
@@ -157,7 +157,7 @@ fn runs_tests() {
 
     assert_ran!(runner, {
         ["docker-compose",
-         "-p", "frontendtest",
+         "-p", "hellotest",
          "-f", proj.output_pods_dir().join("frontend.yml"),
          "-f", proj.output_pods_dir().join("overrides/test/frontend.yml"),
          "run", "--rm", "--no-deps", "proxy",

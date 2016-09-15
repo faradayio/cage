@@ -46,7 +46,7 @@ fn runs_docker_compose_up_on_all_pods() {
     proj.up(&runner, &ovr).unwrap();
     assert_ran!(runner, {
         ["docker-compose",
-         "-p", "frontend",
+         "-p", "hello",
          "-f", proj.output_dir().join("pods/frontend.yml"),
          "-f", proj.output_dir().join("pods/overrides/development/frontend.yml"),
          "up", "-d"]
