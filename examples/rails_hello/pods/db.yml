@@ -1,0 +1,8 @@
+# This pod contains a database, but we only use it in development mode.  In
+# production, we assume that we have a hosted database service, such as
+# Amazon RDS or Heroku Postgres.
+db:
+  image: "postgres"
+  labels:
+    # Specify which overrides should contain this pod.
+    io.fdy.conductor.overrides: "development"
