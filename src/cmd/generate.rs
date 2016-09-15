@@ -1,16 +1,19 @@
 //! The `conductor new` command, and any other file generators.
 
-use handlebars as hb;
 use rustc_serialize::json::{Json, ToJson};
 use std::collections::BTreeMap;
 #[cfg(test)]
 use std::env;
-use std::fmt::Debug;
+#[cfg(test)]
 use std::fs;
 use std::path::{PathBuf, Path};
 
 use project::Project;
-use util::{ConductorPathExt, Error};
+use template::Template;
+use util::Error;
+
+/// A list of standard overrides to generate.
+const OVERRIDES: &'static [ &'static str ] = &["development", "production", "test"];
 
 /// Interface to various file-generation commands.
 pub trait CommandGenerate {
@@ -36,31 +39,22 @@ pub trait CommandGenerate {
 impl CommandGenerate for Project {
     fn generate(parent_dir: &Path, name: &str) -> Result<PathBuf, Error> {
         let proj_dir = parent_dir.join(name);
-        let pods_dir = proj_dir.join("pods");
-
-        // Create a template engine to generate our files.
-        let mut renderer: hb::Handlebars = hb::Handlebars::new();
-        renderer.register_escape_fn(escape_double_quotes);
 
         // Generate our top-level files.
+        let mut proj_tmpl = try!(Template::new("new"));
         let proj_info = ProjectInfo { name: name };
-        try!(generate(&mut renderer, &COMMON_ENV, &proj_info,
-                      &pods_dir.join("common.env")));
-        try!(generate(&mut renderer, &FRONTEND_YML, &proj_info,
-                      &pods_dir.join("frontend.yml")));
-        try!(generate(&mut renderer, &DB_YML, &proj_info,
-                      &pods_dir.join("db.yml")));
+        try!(proj_tmpl.generate(&proj_dir, &proj_info));
 
         // Generate files for each override.
-        let overrides_dir: PathBuf = pods_dir.join("overrides");
+        let mut ovr_tmpl = try!(Template::new("new/pods/_overrides/_default"));
+        let overrides_dir = proj_dir.join("pods").join("overrides");
         for ovr in OVERRIDES {
             let ovr_info = OverrideInfo {
                 project: &proj_info,
                 name: ovr,
             };
             let dir = overrides_dir.join(ovr);
-            try!(generate(&mut renderer, &OVERRIDE_ENV, &ovr_info,
-                          &dir.join("common.env")));
+            try!(ovr_tmpl.generate(&dir, &ovr_info));
         }
 
         Ok(proj_dir)
@@ -84,37 +78,6 @@ fn create_project_default() {
     fs::remove_dir_all(&proj_dir.as_path()).unwrap();
 }
 
-/// Escape double quotes in a string that we're rendering, which should
-/// work well more-or-less well enough for all the formats we're generating.
-fn escape_double_quotes(data: &str) -> String {
-    data.replace(r#"""#, r#"\""#)
-}
-
-/// Generate a template and write it to the specified file.
-fn generate<T>(renderer: &mut hb::Handlebars,
-               template: &str,
-               data: &T,
-               path: &Path) ->
-    Result<(), Error>
-    where T: ToJson + Debug
-{
-    debug!("Generating {} with {:?}", path.display(), data);
-    println!("Generating {}", path.display());
-
-    // Make sure our parent directory exists.
-    try!(path.with_guaranteed_parent());
-
-    // Create our output file.
-    let mut out = try!(fs::File::create(path).map_err(|e| {
-        err!("Unable to create file {}: {}", path.display(), &e)
-    }));
-
-    // Render our template to the file.
-    let ctx = hb::Context::wraps(data);
-    renderer.template_renderw(template, &ctx, &mut out).map_err(|e| {
-        err!("Unable to generate {}: {}", path.display(), &e)
-    })
-}
 
 /// Information about the project we're generating.  This will be passed to
 /// our templates.
@@ -153,11 +116,3 @@ impl<'a> ToJson for OverrideInfo<'a> {
         info.to_json()
     }
 }
-
-// Standard overrides that we'll use for new projects.
-const OVERRIDES: &'static [ &'static str ] = &["development", "production", "test"];
-
-static FRONTEND_YML: &'static str = include_str!("generate/new/frontend.yml");
-static DB_YML: &'static str = include_str!("generate/new/db.yml");
-static COMMON_ENV: &'static str = include_str!("generate/new/common.env");
-static OVERRIDE_ENV: &'static str = include_str!("generate/new/overrides/common.env");

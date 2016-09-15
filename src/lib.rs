@@ -6,8 +6,10 @@ extern crate docker_compose;
 #[cfg(test)] extern crate env_logger;
 extern crate glob;
 extern crate handlebars;
+extern crate includedir;
 #[macro_use] extern crate lazy_static;
 #[macro_use] extern crate log;
+extern crate phf;
 extern crate rand;
 extern crate regex;
 extern crate retry;
@@ -33,3 +35,11 @@ mod ovr;
 mod pod;
 mod project;
 mod repos;
+mod template;
+
+/// Include raw data files into our binary at compile time using the
+/// `includedir_codegen` and `includedir` crates.  The actual code
+/// generation is performed by our top-level `build.rs` script.
+mod data {
+    include!(concat!(env!("OUT_DIR"), "/data.rs"));
+}
