@@ -4,6 +4,7 @@ use command_runner::{Command, CommandRunner};
 #[cfg(test)]
 use command_runner::TestCommandRunner;
 use ovr::Override;
+use pod::PodType;
 use project::Project;
 use util::Error;
 
@@ -19,16 +20,18 @@ impl CommandUp for Project {
         where CR: CommandRunner
     {
         for pod in self.pods() {
-            // We pass `-d` because we need to detach from each pod to
-            // launch the next.  To avoid this, we'd need to use multiple
-            // parallel threads and maybe some intelligent output
-            // buffering.
-            let status = try!(runner.build("docker-compose")
-                .args(&try!(pod.compose_args(self, ovr)))
-                .arg("up").arg("-d")
-                .status());
-            if !status.success() {
-                return Err(err!("Error running docker-compose"));
+            if try!(pod.pod_type(ovr)) == PodType::Service {
+                // We pass `-d` because we need to detach from each pod to
+                // launch the next.  To avoid this, we'd need to use
+                // multiple parallel threads and maybe some intelligent
+                // output buffering.
+                let status = try!(runner.build("docker-compose")
+                    .args(&try!(pod.compose_args(self, ovr)))
+                    .arg("up").arg("-d")
+                    .status());
+                if !status.success() {
+                    return Err(err!("Error running docker-compose"));
+                }
             }
         }
         Ok(())
