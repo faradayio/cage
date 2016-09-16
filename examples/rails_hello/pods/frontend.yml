@@ -14,3 +14,5 @@ services:
     labels:
       # Choose a more useful shell.
       io.fdy.conductor.shell: "bash"
+      # Our test command.  Invoke with `conductor test frontend web`.
+      io.fdy.conductor.test: "bundle exec rake"
