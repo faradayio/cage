@@ -6,7 +6,9 @@ use std::collections::BTreeMap;
 use std::collections::btree_map;
 use std::ffi::OsString;
 use std::path::{Path, PathBuf};
+use std::str::FromStr;
 
+use ext::file::FileExt;
 use ovr::Override;
 use project::Project;
 use util::Error;
@@ -64,6 +66,26 @@ impl FileInfo {
         let env_path = self.rel_path.parent().unwrap().join("common.env");
         for (_name, service) in self.file.services.iter_mut() {
             service.env_files.insert(0, dc::value(env_path.clone()));
+        }
+    }
+}
+
+/// Indicates whether a pod is a regular service or a one-shot task.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PodType {
+    /// A service is normally started up and left running.
+    Service,
+    /// A task is run once and expected to exit.
+    Task,
+}
+
+impl FromStr for PodType {
+    type Err = Error;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "service" => Ok(PodType::Service),
+            "task" => Ok(PodType::Task),
+            _ => Err(err!("Unknown pod type: <{}>", s)),
         }
     }
 }
@@ -128,6 +150,15 @@ impl Pod {
     /// Get the name of this pod.
     pub fn name(&self) -> &str {
         &self.name
+    }
+
+    /// Get the type of this pod.
+    pub fn pod_type(&self, ovr: &Override) -> Result<PodType, Error> {
+        let file = try!(self.merged_file(ovr));
+        match try!(file.pod_label("io.fdy.conductor.type")) {
+            None => Ok(PodType::Service),
+            Some(ref pod_type_str) => pod_type_str.parse(),
+        }
     }
 
     /// The base directory for our relative paths.
@@ -293,4 +324,16 @@ fn can_merge_base_file_and_override() {
     let merged = frontend.merged_file(&ovr).unwrap();
     let proxy = merged.services.get("proxy").unwrap();
     assert_eq!(proxy.env_files.len(), 2);
+}
+
+#[test]
+fn pod_type_returns_type_of_pod() {
+    use env_logger;
+    let _ = env_logger::init();
+    let proj: Project = Project::from_example("rails_hello").unwrap();
+    let ovr = proj.ovr("development").unwrap();
+    let frontend = proj.pod("frontend").unwrap();
+    assert_eq!(frontend.pod_type(&ovr).unwrap(), PodType::Service);
+    let migrate = proj.pod("migrate").unwrap();
+    assert_eq!(migrate.pod_type(&ovr).unwrap(), PodType::Task);
 }
