@@ -134,7 +134,7 @@ impl Repo {
         let dest = try!(self.path(project).with_guaranteed_parent());
         let status = try!(runner.build("git")
             .arg("clone")
-            .arg(self.git_url())
+            .args(&try!(self.git_url().clone_args()))
             .arg(&dest)
             .status());
         if !status.success() {

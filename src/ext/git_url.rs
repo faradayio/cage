@@ -1,6 +1,7 @@
 //! Extension methods for `docker_compose::v2::GitUrl`.
 
 use docker_compose::v2 as dc;
+use std::ffi::OsString;
 use std::path::Path;
 use url;
 
@@ -12,6 +13,9 @@ pub trait GitUrlExt {
     /// Construct a short, easy-to-type alias for this URL, suitable for
     /// use as a command-line argument or a directory name.
     fn human_alias(&self) -> Result<String, Error>;
+
+    /// Turn this URL into arguments to `git clone`.
+    fn clone_args(&self) -> Result<Vec<OsString>, Error>;
 }
 
 impl GitUrlExt for dc::GitUrl {
@@ -35,6 +39,16 @@ impl GitUrlExt for dc::GitUrl {
             Some(branch) => Ok(format!("{}_{}", base_alias, branch)),
         }
     }
+
+    fn clone_args(&self) -> Result<Vec<OsString>, Error> {
+        let url_str: &str = self.as_ref();
+        if let Some(pos) = url_str.find('#') {
+            let (base, branch) = url_str.split_at(pos);
+            Ok(vec!("-b".into(), branch[1..].into(), base.into()))
+        } else {
+            Ok(vec!(url_str.into()))
+        }
+    }
 }
 
 #[test]
@@ -44,4 +58,15 @@ fn human_alias_uses_dir_name_and_branch() {
 
     let branch = dc::GitUrl::new("https://github.com/faradayio/rails_hello.git#dev").unwrap();
     assert_eq!(branch.human_alias().unwrap(), "rails_hello_dev");
+}
+
+#[test]
+fn clone_args_handles_branch() {
+    let master = dc::GitUrl::new("https://github.com/faradayio/rails_hello.git").unwrap();
+    let expected_url: OsString = master.to_string().into();
+    assert_eq!(master.clone_args().unwrap(), vec!(expected_url.clone()));
+
+    let branch = dc::GitUrl::new("https://github.com/faradayio/rails_hello.git#dev").unwrap();
+    assert_eq!(branch.clone_args().unwrap(),
+               vec!("-b".into(), "dev".into(), expected_url.clone()));
 }
