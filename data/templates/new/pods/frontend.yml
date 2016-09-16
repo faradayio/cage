@@ -1,6 +1,8 @@
+# An example frontend web pod using Rails.
+
 version: "2"
+
 services:
-  # An example frontend web pod using Rails.
   web:
     # The name of the Docker image.
     image: "faraday/rails_hello"
