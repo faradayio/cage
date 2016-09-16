@@ -129,11 +129,12 @@ than this README during development):
 conductor: Manage large, multi-pod docker-compose apps
 
 Usage:
-  conductor [options]
   conductor [options] new <name>
+  conductor [options] build
   conductor [options] pull
   conductor [options] up
   conductor [options] stop
+  conductor [options] run <pod>
   conductor [options] exec [exec options] <pod> <service> <command> [--] [<args>..]
   conductor [options] shell [exec options] <pod> <service>
   conductor [options] test <pod> <service>
@@ -143,9 +144,11 @@ Usage:
 
 Commands:
   new               Create a directory containing a new sample project
+  build             Build images for the containers associated with this project
   pull              Pull Docker images used by project
   up                Run project
   stop              Stop all containers associated with project
+  run               Run a specific pod as a one-shot task
   exec              Run a command inside a container
   shell             Run an interactive shell inside a running container
   test              Run the tests associated with a service, if any
@@ -168,6 +171,9 @@ Exec options:
 General options:
   -h, --help        Show this message
   --version         Show the version of conductor
+  -p, --project-name <project_name>
+                    The name of this project.  Defaults to the current
+                    directory name.
   --override=<override>
                     Use overrides from the specified subdirectory of
                     `pods/overrides` [default: development]
