@@ -2,6 +2,7 @@
 
 use docker_compose::v2 as dc;
 use shlex;
+use std::path::{Path, PathBuf};
 
 use ext::context::ContextExt;
 use project::Project;
@@ -12,6 +13,10 @@ use util::{ConductorPathExt, Error};
 pub trait ServiceExt {
     /// The URL for the the git repository associated with this service.
     fn git_url(&self) -> Result<Option<&dc::GitUrl>, Error>;
+
+    /// The directory in which to mount our source code if it's checked
+    /// out.
+    fn source_mount_dir(&self) -> Result<PathBuf, Error>;
 
     /// Get the default shell associated with this service.  Used for
     /// getting interactive access to a container.
@@ -32,6 +37,15 @@ impl ServiceExt for dc::Service {
         } else {
             Ok(None)
         }
+    }
+
+    fn source_mount_dir(&self) -> Result<PathBuf, Error> {
+        Ok(Path::new(self.labels.get("io.fdy.conductor.srcdir").map(|v| {
+            v as &str
+        }).unwrap_or_else(|| {
+            "/app"
+        })).to_owned())
+
     }
 
     fn shell(&self) -> Result<String, Error> {
@@ -62,9 +76,10 @@ impl ServiceExt for dc::Service {
                     // Build an absolute path to our repo's clone directory.
                     let path = try!(repo.path(project).to_absolute());
 
-                    // Mount the local build directory as `/app` inside the
+                    // Mount the local build directory inside the
                     // container.
-                    let mount = dc::VolumeMount::host(&path, "/app");
+                    let srcdir = try!(self.source_mount_dir());
+                    let mount = dc::VolumeMount::host(&path, &srcdir);
                     self.volumes.push(dc::value(mount));
 
                     // Update the `build` field if present.
@@ -89,6 +104,26 @@ impl ServiceExt for dc::Service {
 
         Ok(())
     }
+}
+
+#[test]
+fn src_dir_returns_the_source_directory_for_this_service() {
+    use env_logger;
+    let _ = env_logger::init();
+    let proj: Project = Project::from_example("rails_hello").unwrap();
+    let ovr = proj.ovr("development").unwrap();
+
+    // Default value.
+    let db = proj.pod("db").unwrap();
+    let merged = db.merged_file(&ovr).unwrap();
+    let db = merged.services.get("db").unwrap();
+    assert_eq!(db.source_mount_dir().unwrap(), Path::new("/app"));
+
+    // Custom value.
+    let frontend = proj.pod("frontend").unwrap();
+    let merged = frontend.merged_file(&ovr).unwrap();
+    let proxy = merged.services.get("web").unwrap();
+    assert_eq!(proxy.source_mount_dir().unwrap(), Path::new("/usr/src/app"));
 }
 
 #[test]
