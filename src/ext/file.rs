@@ -1,6 +1,7 @@
 //! Extension methods for `docker_compose::v2::File`.
 
 use docker_compose::v2 as dc;
+use std::collections::BTreeSet;
 #[cfg(test)] use std::io;
 #[cfg(test)] use std::path::Path;
 
@@ -16,6 +17,16 @@ pub trait FileExt {
     /// Make any local updates to this file we want to make before
     /// outputting it for `Project::output`.
     fn update_for_output(&mut self, project: &Project) -> Result<(), Error>;
+
+    /// Fetch a label associated with this pod.  For now, pod labels may be
+    /// attached to any service in the pod as regular label, so long as
+    /// there aren't conflicating values.  Returns `Ok(None)` if the label
+    /// is not present on any service, or `Err(..)` if there are
+    /// conflicting values.
+    ///
+    /// When `docker-compose.yml` adds support for custom top-level properties,
+    /// we won't need this dubious hack any more.
+    fn pod_label(&self, key: &str) -> Result<Option<String>, Error>;
 }
 
 impl FileExt for dc::File {
@@ -25,10 +36,27 @@ impl FileExt for dc::File {
         }
         Ok(())
     }
+
+    fn pod_label(&self, key: &str) -> Result<Option<String>, Error> {
+        let mut set = BTreeSet::new();
+        for (_name, service) in &self.services {
+            if let Some(ref value) = service.labels.get(key) {
+                set.insert(value.to_owned());
+            }
+        }
+        match set.len() {
+            0 => Ok(None),
+            1 => {
+                // Fetch the first and only item.
+                Ok(Some(set.iter().cloned().next().unwrap().to_owned()))
+            }
+            _ => Err(err!("Conflicting values for {} in a single pod", key)),
+        }
+    }
 }
 
 #[test]
-fn update_for_output_mounts_cloned_source() {
+fn update_for_output_adds_tags_and_mounts_cloned_source() {
     use docker_compose::v2 as dc;
     use env_logger;
     let _ = env_logger::init();
@@ -66,4 +94,20 @@ fn update_for_output_mounts_cloned_source() {
                &dc::Image::new("dockercloud/hello-world:staging").unwrap());
 
     proj.remove_test_output().unwrap();
+}
+
+#[test]
+fn pod_label_fetches_label_from_service() {
+    use env_logger;
+    let _ = env_logger::init();
+
+    let proj = Project::from_example("rails_hello").unwrap();
+    let ovr = proj.ovr("development").unwrap();
+    proj.output().unwrap();
+
+    // Load the generated file and look at the `migrate` pod.
+    let pod = proj.pod("migrate").unwrap();
+    let file = pod.merged_file(&ovr).unwrap();
+    assert_eq!(file.pod_label("io.fdy.conductor.type").unwrap().unwrap(),
+               "task");
 }
