@@ -26,8 +26,8 @@ const USAGE: &'static str = "
 conductor: Manage large, multi-pod docker-compose apps
 
 Usage:
-  conductor [options]
   conductor [options] new <name>
+  conductor [options] build
   conductor [options] pull
   conductor [options] up
   conductor [options] stop
@@ -40,6 +40,7 @@ Usage:
 
 Commands:
   new               Create a directory containing a new sample project
+  build             Build images for the containers associated with this project
   pull              Pull Docker images used by project
   up                Run project
   stop              Stop all containers associated with project
@@ -86,6 +87,7 @@ information, see https://github.com/faradayio/conductor.
 #[derive(Debug, RustcDecodable)]
 #[allow(non_snake_case)] // Allow uppercase options without warnings.
 struct Args {
+    cmd_build: bool,
     cmd_pull: bool,
     cmd_up: bool,
     cmd_stop: bool,
@@ -182,6 +184,8 @@ fn run(args: &Args) -> Result<(), Error> {
 
     if args.cmd_pull {
         try!(proj.pull(&runner, &ovr));
+    } else if args.cmd_build {
+        try!(proj.build(&runner, &ovr));
     } else if args.cmd_up {
         try!(proj.up(&runner, &ovr));
     } else if args.cmd_stop {
