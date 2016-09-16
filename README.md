@@ -47,7 +47,7 @@ Alpine.  Just unzip the binaries and copy them to where you want them.
 
 ## Trying it out
 
-Create a new applicating using conductor, and list the associated Git
+Create a new application using conductor, and list the associated Git
 repositories:
 
 ```sh
@@ -97,7 +97,9 @@ Attaching to myapp_migrate_1
 myapp_migrate_1 exited with code 0
 ```
 
-Here, you may also notice that since `myapp_migrate_1` is based on the same
+You should be able to access your application at http://localhost:3000/.
+
+You may also notice that since `myapp_migrate_1` is based on the same
 underlying Git repository as `myapp_web_1`, that it also has a mount of
 `src/rails_hello` in the appropriate location.  If you change the source on
 your host system, it will automatically show up in both containers.
