@@ -50,7 +50,7 @@ impl Repos {
                                 vacant.insert(repo);
                             }
                             btree_map::Entry::Occupied(occupied) => {
-                                if &repo.alias != &occupied.get().alias {
+                                if &repo.git_url != &occupied.get().git_url {
                                     return Err(err!("{} and {} would both alias to {}",
                                                     &occupied.get().git_url,
                                                     &repo.git_url,
