@@ -7,6 +7,7 @@ use std::path::{Path, PathBuf};
 
 use command_runner::{Command, CommandRunner};
 #[cfg(test)] use command_runner::TestCommandRunner;
+use ext::git_url::GitUrlExt;
 use ext::service::ServiceExt;
 #[cfg(test)] use std::fs;
 use project::Project;
@@ -29,16 +30,8 @@ impl Repos {
             for file in pod.all_files() {
                 for (_name, service) in &file.services {
                     if let Some(git_url) = try!(service.git_url()).cloned() {
-                        // Figure out what alias we want to use.  The final
-                        // `unwrap` should be safe because we know the input
-                        // was UTF-8.
-                        //
-                        // TODO LOW: We may need to unescape this.
-                        let url_path =
-                            Path::new(try!(git_url.to_url()).path()).to_owned();
-                        let alias = try!(url_path.file_stem().ok_or_else(|| {
-                            err!("Can't get repo name from {}", &git_url)
-                        })).to_str().unwrap().to_owned();
+                        // Figure out what alias we want to use.
+                        let alias = try!(git_url.human_alias());
 
                         // Build our repository.
                         let repo = Repo { alias: alias, git_url: git_url };

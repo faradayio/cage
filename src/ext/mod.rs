@@ -3,4 +3,5 @@
 
 pub mod context;
 pub mod file;
+pub mod git_url;
 pub mod service;

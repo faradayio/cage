@@ -15,6 +15,7 @@ extern crate regex;
 extern crate retry;
 extern crate rustc_serialize;
 extern crate shlex;
+extern crate url;
 
 pub use util::Error;
 pub use default_tags::DefaultTags;
