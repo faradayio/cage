@@ -45,6 +45,81 @@ Alpine.  Just unzip the binaries and copy them to where you want them.
 [musl-libc]: https://www.musl-libc.org/
 [rust-musl-builder]: https://github.com/emk/rust-musl-builder
 
+## Trying it out
+
+Create a new applicating using conductor, and list the associated Git
+repositories:
+
+```sh
+$ conductor new myapp
+$ cd myapp
+$ conductor repo list
+rails_hello               https://github.com/faradayio/rails_hello.git
+```
+
+Check out the source code for an image locally:
+
+```sh
+$ conductor repo clone rails_hello
+$ conductor repo list
+rails_hello               https://github.com/faradayio/rails_hello.git
+  Cloned at src/rails_hello
+```
+
+Start up your application:
+
+```sh
+$ conductor up
+Starting myapp_db_1
+Starting myapp_web_1
+```
+
+You'll notice that the `src/rails_hello` directory is mounted at
+`/usr/src/app` inside the `myapp_web_1` pod, so that you can make changes
+locally and test them.
+
+Run a command inside the `frontend` pod's `web` container to create a
+database:
+
+```sh
+$ conductor exec frontend web rake db:create
+Created database 'myapp_development'
+Created database 'db/test.sqlite3'
+```
+
+We can also package up frequently-used commands in their own, standalone
+"task" pods, and run them on demand:
+
+```sh
+$ conductor run migrate
+Creating myapp_migrate_1
+Attaching to myapp_migrate_1
+myapp_migrate_1 exited with code 0
+```
+
+Here, you may also notice that since `myapp_migrate_1` is based on the same
+underlying Git repository as `myapp_web_1`, that it also has a mount of
+`src/rails_hello` in the appropriate location.  If you change the source on
+your host system, it will automatically show up in both containers.
+
+We can run container-specific unit tests, which are specified by the
+container, so that you can invoke any unit test framework of your choice:
+
+```sh
+$ conductor test frontend web
+```
+
+And we can access individual containers using a configurable shell:
+
+```sh
+$ conductor shell frontend web
+root@21bbbb41ad4a:/usr/src/app#
+```
+
+The top-level convenience commands like `test` and `shell` make it much
+easier to perform standard development tasks without knowing how individual
+containers work.
+
 ## Usage
 
 To see how to use `conductor`, run `conductor --help` (which may be newer
