@@ -40,24 +40,44 @@ pub trait Command {
 pub struct OsCommandRunner;
 
 impl CommandRunner for OsCommandRunner {
-    type Command = process::Command;
+    type Command = OsCommand;
 
     fn build<S: AsRef<OsStr>>(&self, program: S) -> Self::Command {
-        process::Command::new(program)
+        let program = program.as_ref();
+        OsCommand {
+            command: process::Command::new(program),
+            arg_log: vec!(program.to_owned()),
+        }
     }
 }
 
-impl Command for process::Command {
+/// A wrapper around `std::process:Command` which logs the commands run.
+pub struct OsCommand {
+    /// The actual command we're going to run.
+    command: process::Command,
+    /// A collection of all the arguments to the command we're going to
+    /// run, for logging purposes.
+    arg_log: Vec<OsString>,
+}
+
+impl Command for OsCommand {
     fn arg<S: AsRef<OsStr>>(&mut self, arg: S) -> &mut Self {
-        process::Command::arg(self, arg)
+        let arg = arg.as_ref();
+        self.arg_log.push(arg.to_owned());
+        self.command.arg(arg);
+        self
     }
 
     fn args<S: AsRef<OsStr>>(&mut self, args: &[S]) -> &mut Self {
-        process::Command::args(self, args)
+        let args: Vec<_> = args.iter().map(|a| a.as_ref().to_owned()).collect();
+        self.arg_log.extend_from_slice(&args);
+        self.command.args(&args);
+        self
     }
 
     fn status(&mut self) -> io::Result<process::ExitStatus> {
-        process::Command::status(self)
+        debug!("Running {:?}", &self.arg_log);
+        self.command.status()
     }
 }
 
