@@ -1,6 +1,6 @@
 [root]
 name = "conductor"
-version = "0.0.6"
+version = "0.0.7"
 dependencies = [
  "docker_compose 0.3.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "docopt 0.6.83 (registry+https://github.com/rust-lang/crates.io-index)",
