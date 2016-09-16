@@ -31,6 +31,7 @@ Usage:
   conductor [options] pull
   conductor [options] up
   conductor [options] stop
+  conductor [options] run <pod>
   conductor [options] exec [exec options] <pod> <service> <command> [--] [<args>..]
   conductor [options] shell [exec options] <pod> <service>
   conductor [options] test <pod> <service>
@@ -44,6 +45,7 @@ Commands:
   pull              Pull Docker images used by project
   up                Run project
   stop              Stop all containers associated with project
+  run               Run a specific pod as a one-shot task
   exec              Run a command inside a container
   shell             Run an interactive shell inside a running container
   test              Run the tests associated with a service, if any
@@ -91,6 +93,7 @@ struct Args {
     cmd_pull: bool,
     cmd_up: bool,
     cmd_stop: bool,
+    cmd_run: bool,
     cmd_exec: bool,
     cmd_shell: bool,
     cmd_test: bool,
@@ -190,6 +193,8 @@ fn run(args: &Args) -> Result<(), Error> {
         try!(proj.up(&runner, &ovr));
     } else if args.cmd_stop {
         try!(proj.stop(&runner, &ovr));
+    } else if args.cmd_run {
+        try!(proj.run(&runner, &ovr, args.arg_pod.as_ref().unwrap()));
     } else if args.cmd_exec {
         let target = try!(args.to_exec_target(&proj, &ovr)).unwrap();
         let opts = args.to_exec_options();
