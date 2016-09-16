@@ -21,6 +21,7 @@ name = "conductor"
 doc = false
 
 [build-dependencies]
+glob = "0.2.11"
 includedir_codegen = "0.2.1"
 
 [dependencies]
