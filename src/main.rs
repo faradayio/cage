@@ -30,7 +30,7 @@ Usage:
   conductor [options] new <name>
   conductor [options] build
   conductor [options] pull
-  conductor [options] up
+  conductor [options] up [<pods>..]
   conductor [options] stop
   conductor [options] run <pod>
   conductor [options] exec [exec options] <pod> <service> <command> [--] [<args>..]
@@ -57,11 +57,11 @@ Commands:
   export            Export to the named directory as flattened *.yml files
 
 Arguments:
-  <name>            The name of the project directory to create
-  <repo>            Short alias for a repo (see `repo list`)
-  <pod>             The name of a pod specified in `pods/`
-  <service>         The name of a service in a pod
   <dir>             The name of a directory
+  <name>            The name of the project directory to create
+  <pod>, <pods>     The name of a pod specified in `pods/`
+  <repo>            Short alias for a repo (see `repo list`)
+  <service>         The name of a service in a pod
 
 Exec options:
   -d                Run command detached in background
@@ -112,6 +112,7 @@ struct Args {
     arg_dir: Option<String>,
     arg_name: Option<String>,
     arg_pod: Option<String>,
+    arg_pods: Vec<String>,
     arg_repo: Option<String>,
     arg_service: Option<String>,
 
@@ -196,7 +197,14 @@ fn run(args: &Args) -> Result<(), Error> {
     } else if args.cmd_build {
         try!(proj.build(&runner, &ovr));
     } else if args.cmd_up {
-        try!(proj.up(&runner, &ovr));
+        if args.arg_pods.is_empty() {
+            try!(proj.up_all(&runner, &ovr));
+        } else {
+            let pods: Vec<&str> = args.arg_pods.iter()
+                .map(|p| &p[..])
+                .collect();
+            try!(proj.up(&runner, &ovr, &pods));
+        }
     } else if args.cmd_stop {
         try!(proj.stop(&runner, &ovr));
     } else if args.cmd_run {
