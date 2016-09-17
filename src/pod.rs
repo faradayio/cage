@@ -41,7 +41,12 @@ impl FileInfo {
         Ok(FileInfo {
             rel_path: rel_path.to_owned(),
             file: if path.exists() {
-                try!(dc::File::read_from_path(&path))
+                debug!("Parsing {}", path.display());
+                try!(dc::File::read_from_path(&path).map_err(|e| {
+                    // Make sure we tie parse errors to a specific file, for
+                    // the sake of sanity.
+                    err!("Error parsing {}: {}", path.display(), e)
+                }))
             } else {
                 Default::default()
             },
