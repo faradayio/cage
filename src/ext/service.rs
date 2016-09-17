@@ -4,6 +4,7 @@ use docker_compose::v2 as dc;
 use shlex;
 use std::path::{Path, PathBuf};
 
+use default_tags::DefaultTags;
 use ext::context::ContextExt;
 use project::Project;
 use util::{ConductorPathExt, Error};
@@ -25,9 +26,16 @@ pub trait ServiceExt {
     /// Get the test command associated with this service.
     fn test_command(&self) -> Result<Vec<String>, Error>;
 
+    /// Use the specified tags as default tags for all untagged image fields.
+    fn apply_default_tags(&mut self, tags: &DefaultTags) -> Result<(), Error>;
+
     /// Make any local updates to this service we want to make before
     /// outputting it for `Project::output`.
     fn update_for_output(&mut self, project: &Project) -> Result<(), Error>;
+
+    /// Make any local updates to this service we want to make before
+    /// outputting it for `Project::export`.
+    fn update_for_export(&mut self, project: &Project) -> Result<(), Error>;
 }
 
 impl ServiceExt for dc::Service {
@@ -68,6 +76,16 @@ impl ServiceExt for dc::Service {
         }
     }
 
+    fn apply_default_tags(&mut self, tags: &DefaultTags) -> Result<(), Error> {
+        // Clone `self.image` to make life easy for the borrow checker,
+        // so that it remains my friend.
+        if let Some(image) = self.image.to_owned() {
+            let default = tags.default_for(try!(image.value()));
+            self.image = Some(dc::value(default));
+        }
+        Ok(())
+    }
+
     fn update_for_output(&mut self, project: &Project) -> Result<(), Error> {
         // Handle locally cloned repositories.
         if let Some(git_url) = try!(self.git_url()).cloned() {
@@ -92,16 +110,19 @@ impl ServiceExt for dc::Service {
 
         // Handle image version defaulting.
         if let Some(default_tags) = project.default_tags() {
-            // Clone `self.image` to make life easy for the borrow checker,
-            // so that it remains my friend.
-            if let Some(image) = self.image.to_owned() {
-                let default = default_tags.default_for(try!(image.value()));
-                self.image = Some(dc::value(default));
-            }
+            try!(self.apply_default_tags(default_tags));
         }
 
         // TODO LOW: Remove `io.fdy.conductor.` labels?
 
+        Ok(())
+    }
+
+    fn update_for_export(&mut self, project: &Project) -> Result<(), Error> {
+        // We warn about missing default tags before we ever get here.
+        if let Some(default_tags) = project.default_tags() {
+            try!(self.apply_default_tags(default_tags));
+        }
         Ok(())
     }
 }

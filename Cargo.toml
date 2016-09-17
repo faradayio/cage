@@ -25,7 +25,7 @@ glob = "0.2.11"
 includedir_codegen = "0.2.1"
 
 [dependencies]
-docker_compose = "0.3.5"
+docker_compose = "0.3.6"
 docopt = "0.6.83"
 env_logger = "0.3.4"
 glob = "0.2.11"

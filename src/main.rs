@@ -12,6 +12,7 @@ use docopt::Docopt;
 use std::env;
 use std::fs;
 use std::io::{self, Write};
+use std::path::Path;
 use std::process;
 
 use conductor::command_runner::OsCommandRunner;
@@ -37,6 +38,7 @@ Usage:
   conductor [options] test <pod> <service>
   conductor [options] repo list
   conductor [options] repo clone <repo>
+  conductor [options] export <dir>
   conductor (--help | --version)
 
 Commands:
@@ -52,12 +54,14 @@ Commands:
   repo list         List all git repository aliases and URLs
   repo clone        Clone a git repository using its short alias and mount it
                     into the containers that use it
+  export            Export to the named directory as flattened *.yml files
 
 Arguments:
   <name>            The name of the project directory to create
   <repo>            Short alias for a repo (see `repo list`)
   <pod>             The name of a pod specified in `pods/`
   <service>         The name of a service in a pod
+  <dir>             The name of a directory
 
 Exec options:
   -d                Run command detached in background
@@ -101,9 +105,11 @@ struct Args {
     cmd_list: bool,
     cmd_clone: bool,
     cmd_new: bool,
+    cmd_export: bool,
 
     arg_args: Option<Vec<String>>,
     arg_command: Option<String>,
+    arg_dir: Option<String>,
     arg_name: Option<String>,
     arg_pod: Option<String>,
     arg_repo: Option<String>,
@@ -216,6 +222,11 @@ fn run(args: &Args) -> Result<(), Error> {
         try!(proj.repo_clone(&runner, args.arg_repo.as_ref().unwrap()));
         // Regenerate our output now that we've cloned.
         try!(proj.output());
+    } else if args.cmd_export {
+        try!(proj.export(&ovr, &Path::new(args.arg_dir.as_ref().unwrap())));
+    } else {
+        // The above cases should be exhaustive.
+        unreachable!()
     }
 
     Ok(())

@@ -18,6 +18,10 @@ pub trait FileExt {
     /// outputting it for `Project::output`.
     fn update_for_output(&mut self, project: &Project) -> Result<(), Error>;
 
+    /// Make any local updates to this file we want to make before
+    /// outputting it for `Project::export`.
+    fn update_for_export(&mut self, project: &Project) -> Result<(), Error>;
+
     /// Fetch a label associated with this pod.  For now, pod labels may be
     /// attached to any service in the pod as regular label, so long as
     /// there aren't conflicating values.  Returns `Ok(None)` if the label
@@ -33,6 +37,13 @@ impl FileExt for dc::File {
     fn update_for_output(&mut self, project: &Project) -> Result<(), Error> {
         for (_name, mut service) in self.services.iter_mut() {
             try!(service.update_for_output(project));
+        }
+        Ok(())
+    }
+
+    fn update_for_export(&mut self, project: &Project) -> Result<(), Error> {
+        for (_name, mut service) in self.services.iter_mut() {
+            try!(service.update_for_export(project));
         }
         Ok(())
     }

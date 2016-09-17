@@ -10,7 +10,7 @@ use default_tags::DefaultTags;
 use dir;
 use ext::file::FileExt;
 use ovr::Override;
-use pod::Pod;
+use pod::{Pod, PodType};
 use repos::Repos;
 use util::{ConductorPathExt, Error, ToStrOrErr};
 
@@ -279,6 +279,47 @@ impl Project {
 
         Ok(())
     }
+
+    /// Export this project (with the specified override applied) as a set
+    /// of standalone `*.yml` files with no environment variable
+    /// interpolations and no external dependencies.
+    pub fn export(&self, ovr: &Override, export_dir: &Path) -> Result<(), Error> {
+        // Don't clobber an existing directory.
+        if export_dir.exists() {
+            return Err(err!("The directory {} already exists",
+                            export_dir.display()));
+        }
+
+        // You should really supply default tags if you're going to export.
+        if self.default_tags().is_none() {
+            warn!("Exporting project without --default-tags");
+        }
+
+        // Get a path to our input pods directory.
+        let pods_dir = self.root_dir.join("pods");
+
+        // Export each pod.
+        for pod in &self.pods {
+            // Figure out where to put our exported pod.
+            let file_name = format!("{}.yml", pod.name());
+            let rel_path =
+                match try!(pod.pod_type(ovr)) {
+                    PodType::Service => Path::new(&file_name).to_owned(),
+                    PodType::Task => Path::new("tasks").join(file_name),
+                };
+            let out_path =
+                try!(export_dir.join(&rel_path).with_guaranteed_parent());
+            debug!("Exporting {}", out_path.display());
+
+            // Combine overrides, make it standalone, tweak as needed, and
+            // output.
+            let mut file = try!(pod.merged_file(ovr));
+            try!(file.make_standalone(&pods_dir));
+            try!(file.update_for_export(self));
+            try!(file.write_to_path(out_path));
+        }
+        Ok(())
+    }
 }
 
 /// An iterator over the pods in a project.
@@ -371,5 +412,19 @@ fn output_processes_pods_and_overrides() {
     assert!(proj.output_dir.join("pods/frontend.yml").exists());
     assert!(proj.output_dir.join("pods/overrides/production/frontend.yml").exists());
     assert!(proj.output_dir.join("pods/overrides/test/frontend.yml").exists());
+    proj.remove_test_output().unwrap();
+}
+
+#[test]
+fn export_creates_a_directory_of_flat_yml_files() {
+    use env_logger;
+    let _ = env_logger::init();
+    let proj = Project::from_example("rails_hello").unwrap();
+    let export_dir = proj.output_dir.join("hello_export");
+    let ovr = proj.ovr("development").unwrap();
+    proj.export(&ovr, &export_dir).unwrap();
+    assert!(export_dir.join("frontend.yml").exists());
+    assert!(export_dir.join("db.yml").exists());
+    assert!(export_dir.join("tasks/migrate.yml").exists());
     proj.remove_test_output().unwrap();
 }

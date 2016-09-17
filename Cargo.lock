@@ -2,7 +2,7 @@
 name = "conductor"
 version = "0.0.7"
 dependencies = [
- "docker_compose 0.3.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "docker_compose 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "docopt 0.6.83 (registry+https://github.com/rust-lang/crates.io-index)",
  "env_logger 0.3.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "glob 0.2.11 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -43,7 +43,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "docker_compose"
-version = "0.3.5"
+version = "0.3.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "glob 0.2.11 (registry+https://github.com/rust-lang/crates.io-index)",
