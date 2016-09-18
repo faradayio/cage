@@ -243,7 +243,9 @@ impl Project {
         // exists).
         let out_pods = self.output_dir.join("pods");
         if out_pods.exists() {
-            try!(fs::remove_dir_all(&out_pods));
+            try!(fs::remove_dir_all(&out_pods).map_err(|e| {
+                err!("Cannot delete {}: {}", out_pods.display(), e)
+            }));
         }
 
         // Iterate over our *.env files recursively.
