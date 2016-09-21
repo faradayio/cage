@@ -13,13 +13,11 @@ pub fn find_project(start_dir: &Path) -> Result<PathBuf, Error> {
     loop {
         if dir.join("pods").exists() {
             return Ok(dir.to_owned());
+        } else if let Some(parent) = dir.parent() {
+            dir = parent;
         } else {
-            if let Some(parent) = dir.parent() {
-                dir = parent;
-            } else {
-                let err = err!("could not find conductor project in {} or any directory above it", start_dir.display());
-                return Err(err);
-            }
+            let err = err!("could not find conductor project in {} or any directory above it", start_dir.display());
+            return Err(err);
         }
     }
 }

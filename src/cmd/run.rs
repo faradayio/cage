@@ -5,7 +5,7 @@ use command_runner::{Command, CommandRunner};
 use command_runner::TestCommandRunner;
 use ovr::Override;
 use project::Project;
-use util::Error;
+use util::{Error, err};
 
 /// We implement `conductor run` with a trait so we put it in its own module.
 pub trait CommandRun {
@@ -28,7 +28,7 @@ impl CommandRun for Project {
             .arg("up")
             .status());
         if !status.success() {
-            return Err(err!("Error running docker-compose"));
+            return Err(err("Error running docker-compose"));
         }
         Ok(())
     }

@@ -17,7 +17,7 @@ extern crate rustc_serialize;
 extern crate shlex;
 extern crate url;
 
-pub use util::Error;
+pub use util::{Error, err};
 pub use default_tags::DefaultTags;
 pub use ovr::Override;
 pub use project::{Project, Pods, Overrides};

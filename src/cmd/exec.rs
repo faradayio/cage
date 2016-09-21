@@ -6,7 +6,7 @@ use command_runner::TestCommandRunner;
 use exec::{self, ToArgs};
 use ext::service::ServiceExt;
 use project::Project;
-use util::Error;
+use util::{Error, err};
 
 /// We implement `conductor exec` with a trait so we can put it in its own
 /// module.
@@ -52,7 +52,7 @@ impl CommandExec for Project {
             .args(&command.to_args())
             .status());
         if !status.success() {
-            return Err(err!("Error running docker-compose"));
+            return Err(err("Error running docker-compose"));
         }
 
         Ok(())
@@ -66,10 +66,10 @@ impl CommandExec for Project {
     {
         // Sanity-check our arguments.
         if opts.detached {
-            return Err(err!("Can't run shell in detached mode"));
+            return Err(err("Can't run shell in detached mode"));
         }
         if !opts.allocate_tty {
-            return Err(err!("Can't run shell without a TTY"));
+            return Err(err("Can't run shell without a TTY"));
         }
 
         let shell = try!(target.service().shell());
@@ -88,7 +88,7 @@ impl CommandExec for Project {
             .args(&try!(target.service().test_command()))
             .status());
         if !status.success() {
-            return Err(err!("Error running docker-compose"));
+            return Err(err("Error running docker-compose"));
         }
 
         Ok(())

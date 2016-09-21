@@ -159,9 +159,9 @@ impl Args {
         // We have an `Option<Vec<String>>` and we want a `&[String]`,
         // so do a little munging.
         let args = self.arg_args.as_ref()
-            .map(|v| (v as &[_])).unwrap_or(&[]);
-        if let &Some(ref command) = &self.arg_command {
-            Some(conductor::exec::Command::new(command).with_args(&args))
+            .map_or(&[] as &[_], |v| (v as &[_]));
+        if let Some(ref command) = self.arg_command {
+            Some(conductor::exec::Command::new(command).with_args(args))
         } else {
             None
         }
@@ -220,7 +220,7 @@ fn run(args: &Args) -> Result<(), Error> {
         try!(proj.shell(&runner, &target, &opts));
     } else if args.cmd_test {
         let test_ovr = try!(proj.ovr("test").ok_or_else(|| {
-            err!("override test is required to run tests")
+            conductor::err("override test is required to run tests")
         }));
         let target = try!(args.to_exec_target(&proj, &test_ovr)).unwrap();
         try!(proj.test(&runner, &target));

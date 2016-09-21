@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 use default_tags::DefaultTags;
 use ext::context::ContextExt;
 use project::Project;
-use util::{ConductorPathExt, Error};
+use util::{ConductorPathExt, Error, err};
 
 /// These methods will appear as regular methods on `Service` in any module
 /// which includes `ServiceExt`.
@@ -48,12 +48,9 @@ impl ServiceExt for dc::Service {
     }
 
     fn source_mount_dir(&self) -> Result<PathBuf, Error> {
-        Ok(Path::new(self.labels.get("io.fdy.conductor.srcdir").map(|v| {
+        Ok(Path::new(self.labels.get("io.fdy.conductor.srcdir").map_or_else(|| "/app", |v| {
             v as &str
-        }).unwrap_or_else(|| {
-            "/app"
         })).to_owned())
-
     }
 
     fn shell(&self) -> Result<String, Error> {
@@ -64,7 +61,7 @@ impl ServiceExt for dc::Service {
 
     fn test_command(&self) -> Result<Vec<String>, Error> {
         let raw = try!(self.labels.get("io.fdy.conductor.test").ok_or_else(|| {
-            err!("specify a value for the label io.fdy.conductor.test to run tests")
+            err("specify a value for the label io.fdy.conductor.test to run tests")
         }));
         let mut lexer = shlex::Shlex::new(raw);
         let result: Vec<String> =

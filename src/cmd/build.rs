@@ -5,7 +5,7 @@ use command_runner::{Command, CommandRunner};
 use command_runner::TestCommandRunner;
 use ovr::Override;
 use project::Project;
-use util::Error;
+use util::{Error, err};
 
 /// We implement `conductor build` with a trait so we put it in its own
 /// module.
@@ -25,7 +25,7 @@ impl CommandBuild for Project {
                 .arg("build")
                 .status());
             if !status.success() {
-                return Err(err!("Error running docker-compose"));
+                return Err(err("Error running docker-compose"));
             }
         }
         Ok(())

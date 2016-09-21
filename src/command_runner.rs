@@ -108,6 +108,12 @@ impl TestCommandRunner {
     }
 }
 
+// This mostly exists to shut Clippy up, because Clippy doesn't like
+// zero-argument `new` without a `default` implementation as well.
+impl Default for TestCommandRunner {
+    fn default() -> TestCommandRunner { TestCommandRunner::new() }
+}
+
 impl CommandRunner for TestCommandRunner {
     type Command = TestCommand;
 

@@ -46,7 +46,7 @@ impl Template {
             if key.starts_with(&prefix) {
                 let rel: &str = &key[prefix.len()..];
                 // Make sure it doesn't belong to a child template.
-                if !rel.starts_with("_") && !rel.contains("/_") {
+                if !rel.starts_with('_') && !rel.contains("/_") {
                     // Load this file and add it to our list.
                     let raw_data = try!(data::DATA.get(key)).into_owned();
                     let data = try!(String::from_utf8(raw_data));
@@ -73,7 +73,7 @@ impl Template {
         where T: ToJson + fmt::Debug
     {
         debug!("Generating {} with {:?}", &self.name, data);
-        for (ref rel_path, ref tmpl) in &self.files {
+        for (rel_path, tmpl) in &self.files {
             let path = target_dir.join(rel_path);
             debug!("Output {}", path.display());
             println!("Generating: {}", rel_path.display());

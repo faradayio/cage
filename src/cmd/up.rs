@@ -6,7 +6,7 @@ use command_runner::TestCommandRunner;
 use ovr::Override;
 use pod::PodType;
 use project::Project;
-use util::Error;
+use util::{Error, err};
 
 /// We implement `conductor up` with a trait so we put it in its own module.
 pub trait CommandUp {
@@ -48,7 +48,7 @@ impl CommandUp for Project {
                     .arg("up").arg("-d")
                     .status());
                 if !status.success() {
-                    return Err(err!("Error running docker-compose"));
+                    return Err(err("Error running docker-compose"));
                 }
             }
         }

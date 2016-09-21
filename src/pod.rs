@@ -57,7 +57,7 @@ impl FileInfo {
     /// file.  If you're going tp call this, it must be called after
     /// `finish_normalization`
     fn ensure_all_services_from(&mut self, base: &dc::File) {
-        for (name, _service) in base.services.iter() {
+        for name in base.services.keys() {
             self.file.services.entry(name.to_owned())
                 .or_insert_with(Default::default);
         }
@@ -69,7 +69,7 @@ impl FileInfo {
         // It's safe to call `unwrap` here because we know `rel_path` should
         // have a parent directory.
         let env_path = self.rel_path.parent().unwrap().join("common.env");
-        for (_name, service) in self.file.services.iter_mut() {
+        for service in self.file.services.values_mut() {
             service.env_files.insert(0, dc::value(env_path.clone()));
         }
     }
@@ -253,7 +253,7 @@ impl<'a> Iterator for OverrideFiles<'a> {
     }
 }
 
-/// What should we yield next from our AllFiles iterator?
+/// What should we yield next from our `AllFiles` iterator?
 enum AllFilesState<'a> {
     /// Yield the top-level `file()` next.
     TopLevelFile,

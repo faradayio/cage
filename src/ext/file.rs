@@ -35,14 +35,14 @@ pub trait FileExt {
 
 impl FileExt for dc::File {
     fn update_for_output(&mut self, project: &Project) -> Result<(), Error> {
-        for (_name, mut service) in self.services.iter_mut() {
+        for service in self.services.values_mut() {
             try!(service.update_for_output(project));
         }
         Ok(())
     }
 
     fn update_for_export(&mut self, project: &Project) -> Result<(), Error> {
-        for (_name, mut service) in self.services.iter_mut() {
+        for service in self.services.values_mut() {
             try!(service.update_for_export(project));
         }
         Ok(())
@@ -50,8 +50,8 @@ impl FileExt for dc::File {
 
     fn pod_label(&self, key: &str) -> Result<Option<String>, Error> {
         let mut set = BTreeSet::new();
-        for (_name, service) in &self.services {
-            if let Some(ref value) = service.labels.get(key) {
+        for service in self.services.values() {
+            if let Some(value) = service.labels.get(key) {
                 set.insert(value.to_owned());
             }
         }

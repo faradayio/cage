@@ -13,10 +13,18 @@ use std::path::{Path, PathBuf};
 /// We use the same `Error` type as `docker_compose` for simplicity.
 pub type Error = dc::Error;
 
+
 /// Create an error using a format string and arguments.
 #[macro_export]
 macro_rules! err {
-    ($( $e:expr ),*) => ($crate::Error::from(format!($( $e ),*)));
+    ($( $e:expr ),+) => ($crate::Error::from(format!($( $e ),+)));
+}
+
+/// Create an error using a string literal.  (This exists mostly so that
+/// clippy doesn't complain about `err!` expanding to `format!` with no
+/// arguments.)
+pub fn err(msg: &str) -> Error {
+    Error::from(msg)
 }
 
 pub trait ToStrOrErr {
@@ -98,8 +106,8 @@ impl ConductorPathExt for Path {
             fs::create_dir_all(&parent)
         }, |result| {
             // Return true if we're done retrying.
-            match result {
-                &Err(ref err) if err.kind() == io::ErrorKind::AlreadyExists =>
+            match *result {
+                Err(ref err) if err.kind() == io::ErrorKind::AlreadyExists =>
                     false,
                 _ => true
             }

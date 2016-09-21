@@ -28,7 +28,7 @@ impl Repos {
         let mut repos: BTreeMap<String, Repo> = BTreeMap::new();
         for pod in pods {
             for file in pod.all_files() {
-                for (_name, service) in &file.services {
+                for service in file.services.values() {
                     if let Some(git_url) = try!(service.git_url()).cloned() {
                         // Figure out what alias we want to use.
                         let alias = try!(git_url.human_alias());

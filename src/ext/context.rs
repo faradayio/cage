@@ -12,9 +12,9 @@ pub trait ContextExt {
 
 impl ContextExt for dc::Context {
     fn git_url(&self) -> Option<&dc::GitUrl> {
-        match self {
-            &dc::Context::GitUrl(ref url) => Some(url),
-            &dc::Context::Dir(_) => None,
+        match *self {
+            dc::Context::GitUrl(ref url) => Some(url),
+            dc::Context::Dir(_) => None,
         }
     }
 }
