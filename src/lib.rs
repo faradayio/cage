@@ -1,6 +1,10 @@
 //! `conductor` as a reusable API, so that you can call it from other tools.
 
+#![cfg_attr(feature="clippy", feature(plugin))]
+#![cfg_attr(feature="clippy", plugin(clippy))]
+
 #![warn(missing_docs)]
+#![deny(warnings)]
 
 extern crate docker_compose;
 #[cfg(test)] extern crate env_logger;

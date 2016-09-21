@@ -14,7 +14,7 @@ build = "build.rs"
 [features]
 # This is just here to keep travis-cargo happy; we don't do anything special
 # for nightly Rust.
-unstable = []
+unstable = ["clippy"]
 
 [[bin]]
 name = "conductor"
@@ -25,6 +25,7 @@ glob = "0.2.11"
 includedir_codegen = "0.2.1"
 
 [dependencies]
+clippy = { version = "*", optional = true }
 docker_compose = "0.3.6"
 docopt = "0.6.83"
 env_logger = "0.3.4"

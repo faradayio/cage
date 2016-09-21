@@ -1,5 +1,10 @@
 //! Our main CLI tool.
 
+#![cfg_attr(feature="clippy", feature(plugin))]
+#![cfg_attr(feature="clippy", plugin(clippy))]
+
+#![deny(warnings)]
+
 #[macro_use]
 extern crate conductor;
 extern crate docopt;
