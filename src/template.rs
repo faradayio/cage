@@ -68,8 +68,7 @@ impl Template {
 
     /// Generate this template into `target_dir`, passing `data` to the
     /// Handlebars templates.
-    pub fn generate<T>(&mut self, target_dir: &Path, data: &T) ->
-        Result<(), Error>
+    pub fn generate<T>(&mut self, target_dir: &Path, data: &T) -> Result<(), Error>
         where T: ToJson + fmt::Debug
     {
         debug!("Generating {} with {:?}", &self.name, data);
@@ -83,14 +82,14 @@ impl Template {
 
             // Create our output file.
             let mut out = try!(fs::File::create(&path).map_err(|e| {
-                err!("Unable to create file {}: {}", path.display(), &e)
-            }));
+                    err!("Unable to create file {}: {}", path.display(), &e)
+                }));
 
             // Render our template to the file.
             let ctx = hb::Context::wraps(data);
-            try!(self.handlebars.template_renderw(tmpl, &ctx, &mut out).map_err(|e| {
-                err!("Unable to generate {}: {}", path.display(), &e)
-            }));
+            try!(self.handlebars
+                .template_renderw(tmpl, &ctx, &mut out)
+                .map_err(|e| err!("Unable to generate {}: {}", path.display(), &e)));
         }
         Ok(())
     }
@@ -100,6 +99,6 @@ impl Template {
 fn loads_correct_files_for_template() {
     let tmpl = Template::new("test_tmpl").unwrap();
     let keys: Vec<_> = tmpl.files.keys().cloned().collect();
-    assert!(keys.contains(&Path::new("test.txt" ).to_owned()));
-    assert!(!keys.contains(&Path::new("_child_tmpl/child.txt" ).to_owned()));
+    assert!(keys.contains(&Path::new("test.txt").to_owned()));
+    assert!(!keys.contains(&Path::new("_child_tmpl/child.txt").to_owned()));
 }

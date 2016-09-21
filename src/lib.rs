@@ -7,12 +7,15 @@
 #![deny(warnings)]
 
 extern crate docker_compose;
-#[cfg(test)] extern crate env_logger;
+#[cfg(test)]
+extern crate env_logger;
 extern crate glob;
 extern crate handlebars;
 extern crate includedir;
-#[macro_use] extern crate lazy_static;
-#[macro_use] extern crate log;
+#[macro_use]
+extern crate lazy_static;
+#[macro_use]
+extern crate log;
 extern crate phf;
 extern crate rand;
 extern crate regex;
@@ -29,8 +32,10 @@ pub use pod::{Pod, OverrideFiles, AllFiles};
 pub use repos::{Repos, Repo};
 pub use repos::Iter as RepoIter;
 
-#[macro_use] mod util;
-#[macro_use] pub mod command_runner;
+#[macro_use]
+mod util;
+#[macro_use]
+pub mod command_runner;
 pub mod cmd;
 mod default_tags;
 pub mod dir;

@@ -36,8 +36,7 @@ pub trait ToStrOrErr {
 impl ToStrOrErr for OsStr {
     fn to_str_or_err(&self) -> Result<&str, Error> {
         self.to_str().ok_or_else(|| {
-            err!("the string {:?} contains non-Unicode characters",
-                 self)
+            err!("the string {:?} contains non-Unicode characters", self)
         })
     }
 }
@@ -82,16 +81,16 @@ impl ConductorPathExt for Path {
     }
 
     fn with_guaranteed_parent(&self) -> Result<PathBuf, Error> {
-        let parent = try!(self.parent().ok_or_else(|| {
-            err!("can't find parent path of {}", self.display())
-        }));
+        let parent = try!(self.parent()
+            .ok_or_else(|| err!("can't find parent path of {}", self.display())));
 
         // Take an error message and elaborate a bit.  We use a trait
         // pointer here so we can use this for multiple error types,
         // because Rust closures don't seem to support type parameters.
         let wrap_err = |err: &error::Error| -> Error {
             err!("error creating parent directories for {}: {}",
-                 parent.display(), err)
+                 parent.display(),
+                 err)
         };
 
         // On certain file systems, `create_dir_all` is not terribly thread
@@ -101,15 +100,15 @@ impl ConductorPathExt for Path {
         // https://github.com/jpetazzo/dind/issues/73.  So we're going to
         // retry this function if it fails, because it will fail to
         // create directories below the one that already existed.
-        let retry_result = retry(5, 50, || {
+        let retry_fn = || {
             // The function to re-try.
             fs::create_dir_all(&parent)
-        }, |result| {
+        };
+        let retry_result = retry(5, 50, retry_fn, |result| {
             // Return true if we're done retrying.
             match *result {
-                Err(ref err) if err.kind() == io::ErrorKind::AlreadyExists =>
-                    false,
-                _ => true
+                Err(ref err) if err.kind() == io::ErrorKind::AlreadyExists => false,
+                _ => true,
             }
         });
         // Unwrap twice: Outer error is a possible retry failure, inner
@@ -128,8 +127,9 @@ impl ConductorPathExt for Path {
 #[test]
 fn path_glob_uses_path_as_base() {
     let base = Path::new("examples/hello/pods/overrides");
-    let paths: Vec<_> = base.glob("test/*.env").unwrap()
+    let paths: Vec<_> = base.glob("test/*.env")
+        .unwrap()
         .map(|p| p.unwrap().strip_prefix(base).unwrap().to_owned())
         .collect();
-    assert_eq!(paths, vec!(Path::new("test/common.env")));
+    assert_eq!(paths, vec![Path::new("test/common.env")]);
 }

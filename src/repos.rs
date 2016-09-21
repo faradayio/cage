@@ -6,10 +6,12 @@ use std::collections::btree_map;
 use std::path::{Path, PathBuf};
 
 use command_runner::{Command, CommandRunner};
-#[cfg(test)] use command_runner::TestCommandRunner;
+#[cfg(test)]
+use command_runner::TestCommandRunner;
 use ext::git_url::GitUrlExt;
 use ext::service::ServiceExt;
-#[cfg(test)] use std::fs;
+#[cfg(test)]
+use std::fs;
 use project::Project;
 use pod::Pod;
 use util::{ConductorPathExt, Error};
@@ -34,7 +36,10 @@ impl Repos {
                         let alias = try!(git_url.human_alias());
 
                         // Build our repository.
-                        let repo = Repo { alias: alias, git_url: git_url };
+                        let repo = Repo {
+                            alias: alias,
+                            git_url: git_url,
+                        };
 
                         // Insert our repository our map, checking for alias
                         // clashes.
@@ -44,7 +49,8 @@ impl Repos {
                             }
                             btree_map::Entry::Occupied(occupied) => {
                                 if &repo.git_url != &occupied.get().git_url {
-                                    return Err(err!("{} and {} would both alias to {}",
+                                    return Err(err!("{} and {} would both alias to \
+                                                     {}",
                                                     &occupied.get().git_url,
                                                     &repo.git_url,
                                                     &repo.alias));
@@ -127,8 +133,7 @@ impl Repo {
     }
 
     /// Clone the source code of this repository using git.
-    pub fn clone_source<CR>(&self, runner: &CR, project: &Project) ->
-        Result<(), Error>
+    pub fn clone_source<CR>(&self, runner: &CR, project: &Project) -> Result<(), Error>
         where CR: CommandRunner
     {
         let dest = try!(self.path(project).with_guaranteed_parent());
@@ -138,8 +143,7 @@ impl Repo {
             .arg(&dest)
             .status());
         if !status.success() {
-            return Err(err!("Error cloning {} to {}", &self.git_url,
-                            dest.display()));
+            return Err(err!("Error cloning {} to {}", &self.git_url, dest.display()));
         }
         Ok(())
     }
@@ -177,8 +181,7 @@ fn can_be_cloned() {
     let runner = TestCommandRunner::new();
     repo.clone_source(&runner, &proj).unwrap();
     assert_ran!(runner, {
-        ["git", "clone", repo.git_url(),
-         proj.src_dir().join(repo.rel_path())]
+        ["git", "clone", repo.git_url(), proj.src_dir().join(repo.rel_path())]
     });
     proj.remove_test_output().unwrap();
 }

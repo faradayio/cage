@@ -2,13 +2,17 @@
 
 use docker_compose::v2 as dc;
 use std::collections::BTreeSet;
-#[cfg(test)] use std::io;
-#[cfg(test)] use std::path::Path;
+#[cfg(test)]
+use std::io;
+#[cfg(test)]
+use std::path::Path;
 
-#[cfg(test)] use default_tags::DefaultTags;
+#[cfg(test)]
+use default_tags::DefaultTags;
 use ext::service::ServiceExt;
 use project::Project;
-#[cfg(test)] use util::ConductorPathExt;
+#[cfg(test)]
+use util::ConductorPathExt;
 use util::Error;
 
 /// These methods will appear as regular methods on `dc::File` in any module
@@ -94,9 +98,11 @@ fn update_for_output_adds_tags_and_mounts_cloned_source() {
 
     // Make sure the local source directory is being mounted into the
     // container.
-    let mount = web.volumes.last()
+    let mount = web.volumes
+        .last()
         .expect("expected web service to have volumes")
-        .value().unwrap();
+        .value()
+        .unwrap();
     assert_eq!(mount.host, Some(dc::HostVolume::Path(src_path)));
     assert_eq!(mount.container, Path::new("/app"));
 

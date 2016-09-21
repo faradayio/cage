@@ -44,7 +44,7 @@ impl ToArgs for Options {
     /// Convert to arguments suitable for `std::process::Command` or our
     /// `CommandBuilder`.
     fn to_args(&self) -> Vec<OsString> {
-        let mut args: Vec<OsString> = vec!();
+        let mut args: Vec<OsString> = vec![];
         if self.detached {
             args.push(OsStr::new("-d").to_owned());
         }
@@ -111,17 +111,17 @@ pub struct Target<'a> {
 impl<'a> Target<'a> {
     /// Create a new `Target`, looking up the underlying pod and service
     /// objects.
-    pub fn new(project: &'a Project, ovr: &'a Override,
-               pod_name: &'a str, service_name: &'a str) ->
-        Result<Target<'a>, Error>
-    {
-        let pod = try!(project.pod(pod_name).ok_or_else(|| {
-            err!("Cannot find pod {}", pod_name)
-        }));
+    pub fn new(project: &'a Project,
+               ovr: &'a Override,
+               pod_name: &'a str,
+               service_name: &'a str)
+               -> Result<Target<'a>, Error> {
+        let pod = try!(project.pod(pod_name)
+            .ok_or_else(|| err!("Cannot find pod {}", pod_name)));
         let file = try!(pod.merged_file(ovr));
-        let service = try!(file.services.get(service_name).ok_or_else(|| {
-            err!("Cannot find service {}", service_name)
-        }));
+        let service = try!(file.services
+            .get(service_name)
+            .ok_or_else(|| err!("Cannot find service {}", service_name)));
         Ok(Target {
             ovr: ovr,
             pod: pod,
@@ -164,7 +164,7 @@ impl Command {
     pub fn new<S: AsRef<OsStr>>(command: S) -> Command {
         Command {
             command: command.as_ref().to_owned(),
-            args: vec!(),
+            args: vec![],
         }
     }
 
@@ -178,7 +178,7 @@ impl Command {
 
 impl ToArgs for Command {
     fn to_args(&self) -> Vec<OsString> {
-        let mut result: Vec<OsString> = vec!();
+        let mut result: Vec<OsString> = vec![];
         result.push(self.command.clone());
         if !self.args.is_empty() {
             result.push(OsStr::new("--").to_owned());
@@ -192,8 +192,7 @@ impl ToArgs for Command {
 
 #[test]
 fn command_to_args_converts_to_arguments() {
-    assert_eq!(Command::new("foo").to_args(),
-               vec!(OsStr::new("foo")));
+    assert_eq!(Command::new("foo").to_args(), vec![OsStr::new("foo")]);
     assert_eq!(Command::new("foo").with_args(&["--opt"]).to_args(),
-               vec!(OsStr::new("foo"), OsStr::new("--"), OsStr::new("--opt")));
+               vec![OsStr::new("foo"), OsStr::new("--"), OsStr::new("--opt")]);
 }

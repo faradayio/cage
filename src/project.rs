@@ -50,18 +50,19 @@ pub struct Project {
 
 impl Project {
     /// Create a `Project`, specifying what directories to use.
-    fn from_dirs(root_dir: &Path, src_dir: &Path, output_dir: &Path) ->
-        Result<Project, Error>
-    {
+    fn from_dirs(root_dir: &Path,
+                 src_dir: &Path,
+                 output_dir: &Path)
+                 -> Result<Project, Error> {
         let overrides = try!(Project::find_overrides(root_dir));
         let pods = try!(Project::find_pods(root_dir, &overrides));
         let repos = try!(Repos::new(&pods));
         let absolute_root = try!(root_dir.to_absolute());
-        let name = try!(absolute_root.file_name().and_then(|s| {
-            s.to_str()
-        }).ok_or_else(|| {
-            err!("Can't find directory name for {}", root_dir.display())
-        }));
+        let name = try!(absolute_root.file_name()
+                .and_then(|s| s.to_str())
+                .ok_or_else(|| {
+                    err!("Can't find directory name for {}", root_dir.display())
+                }));
         Ok(Project {
             name: name.to_owned(),
             root_dir: root_dir.to_owned(),
@@ -110,9 +111,7 @@ impl Project {
         let root_dir = Path::new("examples").join(name);
         let rand_name = format!("{}-{}", name, random::<u16>());
         let test_output = Path::new("target/test_output").join(&rand_name);
-        Project::from_dirs(&root_dir,
-                           &test_output.join("src"),
-                           &test_output)
+        Project::from_dirs(&root_dir, &test_output.join("src"), &test_output)
     }
 
     /// (Tests only.) Remove our output directory after a test.
@@ -127,14 +126,13 @@ impl Project {
     /// Find all the overrides defined in this project.
     fn find_overrides(root_dir: &Path) -> Result<Vec<Override>, Error> {
         let overrides_dir = root_dir.join("pods/overrides");
-        let mut overrides = vec!();
+        let mut overrides = vec![];
         for glob_result in try!(overrides_dir.glob("*")) {
             let path = try!(glob_result);
             if path.is_dir() {
                 // It's safe to unwrap file_name because we know it matched
                 // our glob.
-                let name =
-                    try!(path.file_name().unwrap().to_str_or_err()).to_owned();
+                let name = try!(path.file_name().unwrap().to_str_or_err()).to_owned();
                 overrides.push(Override::new(name));
             }
         }
@@ -142,17 +140,14 @@ impl Project {
     }
 
     /// Find all the pods defined in this project.
-    fn find_pods(root_dir: &Path, overrides: &[Override]) ->
-        Result<Vec<Pod>, Error>
-    {
+    fn find_pods(root_dir: &Path, overrides: &[Override]) -> Result<Vec<Pod>, Error> {
         let pods_dir = root_dir.join("pods");
-        let mut pods = vec!();
+        let mut pods = vec![];
         for glob_result in try!(pods_dir.glob("*.yml")) {
             let path = try!(glob_result);
             // It's safe to unwrap the file_stem because we know it matched
             // our glob.
-            let name =
-                try!(path.file_stem().unwrap().to_str_or_err()).to_owned();
+            let name = try!(path.file_stem().unwrap().to_str_or_err()).to_owned();
             pods.push(try!(Pod::new(pods_dir.clone(), name, overrides)));
         }
         Ok(pods)
@@ -243,9 +238,8 @@ impl Project {
         // exists).
         let out_pods = self.output_dir.join("pods");
         if out_pods.exists() {
-            try!(fs::remove_dir_all(&out_pods).map_err(|e| {
-                err!("Cannot delete {}: {}", out_pods.display(), e)
-            }));
+            try!(fs::remove_dir_all(&out_pods)
+                .map_err(|e| err!("Cannot delete {}: {}", out_pods.display(), e)));
         }
 
         // Iterate over our *.env files recursively.
@@ -288,8 +282,7 @@ impl Project {
     pub fn export(&self, ovr: &Override, export_dir: &Path) -> Result<(), Error> {
         // Don't clobber an existing directory.
         if export_dir.exists() {
-            return Err(err!("The directory {} already exists",
-                            export_dir.display()));
+            return Err(err!("The directory {} already exists", export_dir.display()));
         }
 
         // You should really supply default tags if you're going to export.
@@ -304,13 +297,11 @@ impl Project {
         for pod in &self.pods {
             // Figure out where to put our exported pod.
             let file_name = format!("{}.yml", pod.name());
-            let rel_path =
-                match try!(pod.pod_type(ovr)) {
-                    PodType::Service => Path::new(&file_name).to_owned(),
-                    PodType::Task => Path::new("tasks").join(file_name),
-                };
-            let out_path =
-                try!(export_dir.join(&rel_path).with_guaranteed_parent());
+            let rel_path = match try!(pod.pod_type(ovr)) {
+                PodType::Service => Path::new(&file_name).to_owned(),
+                PodType::Task => Path::new("tasks").join(file_name),
+            };
+            let out_path = try!(export_dir.join(&rel_path).with_guaranteed_parent());
             debug!("Exporting {}", out_path.display());
 
             // Combine overrides, make it standalone, tweak as needed, and

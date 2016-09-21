@@ -48,15 +48,17 @@ impl ServiceExt for dc::Service {
     }
 
     fn source_mount_dir(&self) -> Result<PathBuf, Error> {
-        Ok(Path::new(self.labels.get("io.fdy.conductor.srcdir").map_or_else(|| "/app", |v| {
-            v as &str
-        })).to_owned())
+        Ok(Path::new(self.labels
+                .get("io.fdy.conductor.srcdir")
+                .map_or_else(|| "/app", |v| v as &str))
+            .to_owned())
     }
 
     fn shell(&self) -> Result<String, Error> {
-        Ok(self.labels.get("io.fdy.conductor.shell").cloned().unwrap_or_else(|| {
-            "sh".to_owned()
-        }))
+        Ok(self.labels
+            .get("io.fdy.conductor.shell")
+            .cloned()
+            .unwrap_or_else(|| "sh".to_owned()))
     }
 
     fn test_command(&self) -> Result<Vec<String>, Error> {
@@ -64,8 +66,7 @@ impl ServiceExt for dc::Service {
             err("specify a value for the label io.fdy.conductor.test to run tests")
         }));
         let mut lexer = shlex::Shlex::new(raw);
-        let result: Vec<String> =
-            lexer.by_ref().map(|w| w.to_owned()).collect();
+        let result: Vec<String> = lexer.by_ref().map(|w| w.to_owned()).collect();
         if lexer.had_error {
             Err(err!("cannot parse <{}> into shell words", raw))
         } else {

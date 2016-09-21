@@ -58,7 +58,9 @@ impl FileInfo {
     /// `finish_normalization`
     fn ensure_all_services_from(&mut self, base: &dc::File) {
         for name in base.services.keys() {
-            self.file.services.entry(name.to_owned())
+            self.file
+                .services
+                .entry(name.to_owned())
                 .or_insert_with(Default::default);
         }
     }
@@ -119,9 +121,12 @@ impl Pod {
     /// Create a new pod, specifying the base directory from which we'll load
     /// pod definitions and the name of the pod.
     #[doc(hidden)]
-    pub fn new<P, S>(base_dir: P, name: S, overrides: &[Override]) ->
-        Result<Pod, Error>
-        where P: Into<PathBuf>, S: Into<String>
+    pub fn new<P, S>(base_dir: P,
+                     name: S,
+                     overrides: &[Override])
+                     -> Result<Pod, Error>
+        where P: Into<PathBuf>,
+              S: Into<String>
     {
         let base_dir = base_dir.into();
         let name = name.into();
@@ -137,8 +142,7 @@ impl Pod {
             let ovr_rel_path =
                 Path::new(&format!("overrides/{}/{}.yml", ovr.name(), &name))
                     .to_owned();
-            let mut ovr_info =
-                try!(FileInfo::unnormalized(&base_dir, &ovr_rel_path));
+            let mut ovr_info = try!(FileInfo::unnormalized(&base_dir, &ovr_rel_path));
             ovr_info.ensure_all_services_from(&file_info.file);
             ovr_info.finish_normalization();
             ovr_infos.insert(ovr.to_owned(), ovr_info);
@@ -189,9 +193,9 @@ impl Pod {
     /// error if this override was not specified for this `Pod` at creation
     /// time.
     fn override_file_info(&self, ovr: &Override) -> Result<&FileInfo, Error> {
-        self.override_file_infos.get(ovr).ok_or_else(|| {
-            err!("The override {} is not defined", ovr.name())
-        })
+        self.override_file_infos
+            .get(ovr)
+            .ok_or_else(|| err!("The override {} is not defined", ovr.name()))
     }
 
     /// The path to the specificied override file for this pod.
@@ -229,14 +233,18 @@ impl Pod {
 
     /// Command-line `-p` and `-f` arguments that we'll pass to
     /// `docker-compose` to describe this file.
-    pub fn compose_args(&self, proj: &Project, ovr: &Override) ->
-        Result<Vec<OsString>, Error>
-    {
+    pub fn compose_args(&self,
+                        proj: &Project,
+                        ovr: &Override)
+                        -> Result<Vec<OsString>, Error> {
         let ovr_rel_path = try!(self.override_rel_path(ovr));
         let compose_project_name = ovr.compose_project_name(proj);
-        Ok(vec!("-p".into(), compose_project_name.into(),
-                "-f".into(), proj.output_pods_dir().join(self.rel_path()).into(),
-                "-f".into(), proj.output_pods_dir().join(ovr_rel_path).into()))
+        Ok(vec!["-p".into(),
+                compose_project_name.into(),
+                "-f".into(),
+                proj.output_pods_dir().join(self.rel_path()).into(),
+                "-f".into(),
+                proj.output_pods_dir().join(ovr_rel_path).into()])
     }
 }
 
@@ -289,7 +297,7 @@ impl<'a> Iterator for AllFiles<'a> {
                 Some(self.pod.file())
             }
             AllFilesState::OverrideFiles(ref mut iter) => {
-                iter.next().map(|(_, file)|  file)
+                iter.next().map(|(_, file)| file)
             }
         }
     }
@@ -306,14 +314,16 @@ fn pods_are_normalized_on_load() {
 
     let web = frontend.file().services.get("web").unwrap();
     assert_eq!(web.env_files.len(), 1);
-    assert_eq!(web.env_files[0].value().unwrap(),
-               Path::new("common.env"));
+    assert_eq!(web.env_files[0].value().unwrap(), Path::new("common.env"));
 
     // This test assumes that there's no `web` entry in the `production`
     // override, so we have to create everything from scratch.
     let production = proj.ovr("production").unwrap();
-    let web_ovr = frontend.override_file(production).unwrap()
-        .services.get("web").unwrap();
+    let web_ovr = frontend.override_file(production)
+        .unwrap()
+        .services
+        .get("web")
+        .unwrap();
     assert_eq!(web_ovr.env_files.len(), 1);
     assert_eq!(web_ovr.env_files[0].value().unwrap(),
                Path::new("overrides/production/common.env"));

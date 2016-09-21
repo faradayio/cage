@@ -14,33 +14,34 @@ pub trait CommandExec {
     /// Exectute a command inside a running container.  Even though we
     /// package up most of our arguments into structs, we still have a
     /// ridiculous number of arguments.
-    fn exec<CR>(&self, runner: &CR,
+    fn exec<CR>(&self,
+                runner: &CR,
                 target: &exec::Target,
                 command: &exec::Command,
-                opts: &exec::Options) ->
-        Result<(), Error>
+                opts: &exec::Options)
+                -> Result<(), Error>
         where CR: CommandRunner;
 
     /// Execute an interactive shell inside a running container.
-    fn shell<CR>(&self, runner: &CR,
-                target: &exec::Target,
-                opts: &exec::Options) ->
-        Result<(), Error>
+    fn shell<CR>(&self,
+                 runner: &CR,
+                 target: &exec::Target,
+                 opts: &exec::Options)
+                 -> Result<(), Error>
         where CR: CommandRunner;
 
     /// Execute tests inside a fresh container.
-    fn test<CR>(&self, runner: &CR,
-                target: &exec::Target) ->
-        Result<(), Error>
+    fn test<CR>(&self, runner: &CR, target: &exec::Target) -> Result<(), Error>
         where CR: CommandRunner;
 }
 
 impl CommandExec for Project {
-    fn exec<CR>(&self, runner: &CR,
+    fn exec<CR>(&self,
+                runner: &CR,
                 target: &exec::Target,
                 command: &exec::Command,
-                opts: &exec::Options) ->
-        Result<(), Error>
+                opts: &exec::Options)
+                -> Result<(), Error>
         where CR: CommandRunner
     {
 
@@ -58,10 +59,11 @@ impl CommandExec for Project {
         Ok(())
     }
 
-    fn shell<CR>(&self, runner: &CR,
-                target: &exec::Target,
-                opts: &exec::Options) ->
-        Result<(), Error>
+    fn shell<CR>(&self,
+                 runner: &CR,
+                 target: &exec::Target,
+                 opts: &exec::Options)
+                 -> Result<(), Error>
         where CR: CommandRunner
     {
         // Sanity-check our arguments.
@@ -76,14 +78,14 @@ impl CommandExec for Project {
         self.exec(runner, target, &exec::Command::new(shell), opts)
     }
 
-    fn test<CR>(&self, runner: &CR,
-                target: &exec::Target) ->
-        Result<(), Error>
+    fn test<CR>(&self, runner: &CR, target: &exec::Target) -> Result<(), Error>
         where CR: CommandRunner
     {
         let status = try!(runner.build("docker-compose")
             .args(&try!(target.pod().compose_args(self, target.ovr())))
-            .arg("run").arg("--rm").arg("--no-deps")
+            .arg("run")
+            .arg("--rm")
+            .arg("--no-deps")
             .arg(target.service_name())
             .args(&try!(target.service().test_command()))
             .status());
@@ -111,10 +113,16 @@ fn invokes_docker_exec() {
 
     assert_ran!(runner, {
         ["docker-compose",
-         "-p", "hello",
-         "-f", proj.output_dir().join("pods/frontend.yml"),
-         "-f", proj.output_dir().join("pods/overrides/development/frontend.yml"),
-         "exec", "-T", "web", "true"]
+         "-p",
+         "hello",
+         "-f",
+         proj.output_dir().join("pods/frontend.yml"),
+         "-f",
+         proj.output_dir().join("pods/overrides/development/frontend.yml"),
+         "exec",
+         "-T",
+         "web",
+         "true"]
     });
 
     proj.remove_test_output().unwrap();
@@ -134,10 +142,15 @@ fn runs_shells() {
 
     assert_ran!(runner, {
         ["docker-compose",
-         "-p", "hello",
-         "-f", proj.output_dir().join("pods/frontend.yml"),
-         "-f", proj.output_dir().join("pods/overrides/development/frontend.yml"),
-         "exec", "web", "sh"]
+         "-p",
+         "hello",
+         "-f",
+         proj.output_dir().join("pods/frontend.yml"),
+         "-f",
+         proj.output_dir().join("pods/overrides/development/frontend.yml"),
+         "exec",
+         "web",
+         "sh"]
     });
 
     proj.remove_test_output().unwrap();
@@ -157,11 +170,18 @@ fn runs_tests() {
 
     assert_ran!(runner, {
         ["docker-compose",
-         "-p", "hellotest",
-         "-f", proj.output_pods_dir().join("frontend.yml"),
-         "-f", proj.output_pods_dir().join("overrides/test/frontend.yml"),
-         "run", "--rm", "--no-deps", "proxy",
-         "echo", "All tests passed"]
+         "-p",
+         "hellotest",
+         "-f",
+         proj.output_pods_dir().join("frontend.yml"),
+         "-f",
+         proj.output_pods_dir().join("overrides/test/frontend.yml"),
+         "run",
+         "--rm",
+         "--no-deps",
+         "proxy",
+         "echo",
+         "All tests passed"]
     });
 
     proj.remove_test_output().unwrap();

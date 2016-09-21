@@ -10,19 +10,15 @@ use util::{Error, err};
 /// We implement `conductor run` with a trait so we put it in its own module.
 pub trait CommandRun {
     /// Run a specific pod as a one-shot task.
-    fn run<CR>(&self, runner: &CR, ovr: &Override, pod: &str) ->
-        Result<(), Error>
+    fn run<CR>(&self, runner: &CR, ovr: &Override, pod: &str) -> Result<(), Error>
         where CR: CommandRunner;
 }
 
 impl CommandRun for Project {
-    fn run<CR>(&self, runner: &CR, ovr: &Override, pod: &str) ->
-        Result<(), Error>
+    fn run<CR>(&self, runner: &CR, ovr: &Override, pod: &str) -> Result<(), Error>
         where CR: CommandRunner
     {
-        let pod = try!(self.pod(pod).ok_or_else(|| {
-            err!("Cannot find pod {}", pod)
-        }));
+        let pod = try!(self.pod(pod).ok_or_else(|| err!("Cannot find pod {}", pod)));
         let status = try!(runner.build("docker-compose")
             .args(&try!(pod.compose_args(self, ovr)))
             .arg("up")
@@ -45,9 +41,12 @@ fn runs_docker_compose_up_on_all_pods() {
     proj.run(&runner, &ovr, "migrate").unwrap();
     assert_ran!(runner, {
         ["docker-compose",
-         "-p", "rails_hello",
-         "-f", proj.output_dir().join("pods/migrate.yml"),
-         "-f", proj.output_dir().join("pods/overrides/development/migrate.yml"),
+         "-p",
+         "rails_hello",
+         "-f",
+         proj.output_dir().join("pods/migrate.yml"),
+         "-f",
+         proj.output_dir().join("pods/overrides/development/migrate.yml"),
          "up"]
     });
     proj.remove_test_output().unwrap();

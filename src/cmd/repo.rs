@@ -7,8 +7,7 @@ use util::Error;
 /// We implement `conductor repo` with a trait so we put it in its own module.
 pub trait CommandRepo {
     /// List all the repositories associated with a project.
-    fn repo_list<CR>(&self, runner: &CR) -> Result<(), Error>
-        where CR: CommandRunner;
+    fn repo_list<CR>(&self, runner: &CR) -> Result<(), Error> where CR: CommandRunner;
 
     /// Clone the specified repository.
     fn repo_clone<CR>(&self, runner: &CR, alias: &str) -> Result<(), Error>
@@ -24,7 +23,8 @@ impl CommandRepo for Project {
             println!("{:25} {}", repo.alias(), repo.git_url());
             if repo.is_cloned(self) {
                 let path = try!(repo.path(self)
-                    .strip_prefix(self.root_dir())).to_owned();
+                        .strip_prefix(self.root_dir()))
+                    .to_owned();
                 println!("  Cloned at {}", path.display());
             }
         }
@@ -34,9 +34,11 @@ impl CommandRepo for Project {
     fn repo_clone<CR>(&self, runner: &CR, alias: &str) -> Result<(), Error>
         where CR: CommandRunner
     {
-        let repo = try!(self.repos().find_by_alias(alias).ok_or_else(|| {
-            err!("Could not find a repo with short alias \"{}\"", alias)
-        }));
+        let repo = try!(self.repos()
+                .find_by_alias(alias)
+                .ok_or_else(|| {
+                    err!("Could not find a repo with short alias \"{}\"", alias)
+                }));
         if !repo.is_cloned(self) {
             try!(repo.clone_source(runner, self));
         }

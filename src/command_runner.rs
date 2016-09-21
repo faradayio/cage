@@ -46,7 +46,7 @@ impl CommandRunner for OsCommandRunner {
         let program = program.as_ref();
         OsCommand {
             command: process::Command::new(program),
-            arg_log: vec!(program.to_owned()),
+            arg_log: vec![program.to_owned()],
         }
     }
 }
@@ -99,7 +99,7 @@ pub struct TestCommandRunner {
 impl TestCommandRunner {
     /// Create a new `TestCommandRunner`.
     pub fn new() -> TestCommandRunner {
-        TestCommandRunner { cmds: Rc::new(RefCell::new(vec!())) }
+        TestCommandRunner { cmds: Rc::new(RefCell::new(vec![])) }
     }
 
     /// Access the list of commands run.
@@ -111,7 +111,9 @@ impl TestCommandRunner {
 // This mostly exists to shut Clippy up, because Clippy doesn't like
 // zero-argument `new` without a `default` implementation as well.
 impl Default for TestCommandRunner {
-    fn default() -> TestCommandRunner { TestCommandRunner::new() }
+    fn default() -> TestCommandRunner {
+        TestCommandRunner::new()
+    }
 }
 
 impl CommandRunner for TestCommandRunner {
@@ -119,7 +121,7 @@ impl CommandRunner for TestCommandRunner {
 
     fn build<S: AsRef<OsStr>>(&self, program: S) -> Self::Command {
         TestCommand {
-            cmd: vec!(program.as_ref().to_owned()),
+            cmd: vec![program.as_ref().to_owned()],
             cmds: self.cmds.clone(),
         }
     }
@@ -191,7 +193,8 @@ pub fn test_command_runner_logs_commands() {
 
     let exit_code = runner.build("git")
         .args(&["clone", "https://github.com/torvalds/linux"])
-        .status().unwrap();
+        .status()
+        .unwrap();
     assert!(exit_code.success());
 
     runner.build("echo").arg("a").arg("b").status().unwrap();

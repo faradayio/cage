@@ -13,7 +13,7 @@ use template::Template;
 use util::Error;
 
 /// A list of standard overrides to generate.
-const OVERRIDES: &'static [ &'static str ] = &["development", "production", "test"];
+const OVERRIDES: &'static [&'static str] = &["development", "production", "test"];
 
 /// Interface to various file-generation commands.
 pub trait CommandGenerate {

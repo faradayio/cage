@@ -147,14 +147,17 @@ impl Args {
     }
 
     /// Extract `exec::Target` from our command-line arguments.
-    fn to_exec_target<'a>(&'a self, project: &'a conductor::Project,
-                          ovr: &'a conductor::Override) ->
-        Result<Option<conductor::exec::Target<'a>>, Error>
-    {
+    fn to_exec_target<'a>(&'a self,
+                          project: &'a conductor::Project,
+                          ovr: &'a conductor::Override)
+                          -> Result<Option<conductor::exec::Target<'a>>, Error> {
         match (&self.arg_pod, &self.arg_service) {
-            (&Some(ref pod), &Some(ref service)) =>
-                Ok(Some(try!(conductor::exec::Target::new(project, ovr, pod,
-                                                          service)))),
+            (&Some(ref pod), &Some(ref service)) => {
+                Ok(Some(try!(conductor::exec::Target::new(project,
+                                                          ovr,
+                                                          pod,
+                                                          service))))
+            }
             _ => Ok(None),
         }
     }
@@ -163,7 +166,8 @@ impl Args {
     fn to_exec_command(&self) -> Option<conductor::exec::Command> {
         // We have an `Option<Vec<String>>` and we want a `&[String]`,
         // so do a little munging.
-        let args = self.arg_args.as_ref()
+        let args = self.arg_args
+            .as_ref()
             .map_or(&[] as &[_], |v| (v as &[_]));
         if let Some(ref command) = self.arg_command {
             Some(conductor::exec::Command::new(command).with_args(args))
@@ -191,9 +195,8 @@ fn run(args: &Args) -> Result<(), Error> {
         let file = try!(fs::File::open(default_tags_path));
         proj.set_default_tags(try!(conductor::DefaultTags::read(file)));
     }
-    let ovr = try!(proj.ovr(&args.flag_override).ok_or_else(|| {
-        err!("override {} is not defined", &args.flag_override)
-    }));
+    let ovr = try!(proj.ovr(&args.flag_override)
+        .ok_or_else(|| err!("override {} is not defined", &args.flag_override)));
     try!(proj.output());
     let runner = OsCommandRunner;
 
@@ -205,7 +208,8 @@ fn run(args: &Args) -> Result<(), Error> {
         if args.arg_pods.is_empty() {
             try!(proj.up_all(&runner, &ovr));
         } else {
-            let pods: Vec<&str> = args.arg_pods.iter()
+            let pods: Vec<&str> = args.arg_pods
+                .iter()
                 .map(|p| &p[..])
                 .collect();
             try!(proj.up(&runner, &ovr, &pods));
@@ -224,9 +228,8 @@ fn run(args: &Args) -> Result<(), Error> {
         let opts = args.to_exec_options();
         try!(proj.shell(&runner, &target, &opts));
     } else if args.cmd_test {
-        let test_ovr = try!(proj.ovr("test").ok_or_else(|| {
-            conductor::err("override test is required to run tests")
-        }));
+        let test_ovr = try!(proj.ovr("test")
+            .ok_or_else(|| conductor::err("override test is required to run tests")));
         let target = try!(args.to_exec_target(&proj, &test_ovr)).unwrap();
         try!(proj.test(&runner, &target));
     } else if args.cmd_repo && args.cmd_list {
