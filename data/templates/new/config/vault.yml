@@ -1,0 +1,38 @@
+# As an alternative to using secrets.yml, you can also store your secrets
+# in Vault.
+#
+# In this file, the following variables will be replaced:
+#
+#     $PROJECT    The name of the project (-p)
+#     $OVERRIDE   The name of the current override
+#     $POD        The name of the pod
+#     $CONTAINER  The name of the container
+
+# How should individual containers authenticate themselves to vault?  The only
+# supported value for now is "token".
+#
+# token:
+#
+#   To use this, set the environment variables `VAULT_ADDR` and
+#   `VAULT_MASTER_TOKEN` before running conductor.  These values will be
+#   used to construct per-container `VAULT_TOKEN` values, which be added
+#   to the appropriate containers along with `VAULT_ADDR`.
+auth_type: "token"
+
+# Extra environment variables to add to each container.
+extra_environment:
+  VAULT_ENV: "$OVERRIDE"
+
+# We use these templates to construct the names of policies to apply to our
+# project.
+default_policies:
+  - "$PROJECT-$OVERRIDE"
+  - "$PROJECT-$OVERRIDE-$POD-$CONTAINER"
+
+# If you want to apply addition policies to particular pods, you may also
+# override them as follows.
+pods:
+  frontend:
+    web:
+      policies:
+        - "$PROJECT-$OVERRIDE-ssl"
