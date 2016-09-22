@@ -11,6 +11,12 @@ os:
 - osx
 rust:
 - stable
+matrix:
+  include:
+  - os: linux
+    rust: beta
+  - os: linux
+    rust: nightly
 services:
 - docker
 addons:
@@ -20,12 +26,6 @@ addons:
     - libelf-dev
     - libdw-dev
     - binutils-dev
-matrix:
-  include:
-  - os: linux
-    rust: beta
-  - os: linux
-    rust: nightly
 before_script:
 - |
   (cargo install rustfmt || true) &&
