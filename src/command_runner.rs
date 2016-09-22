@@ -3,6 +3,7 @@
 use std::cell::{Ref, RefCell};
 use std::ffi::{OsStr, OsString};
 use std::io;
+use std::marker::PhantomData;
 use std::process;
 use std::rc::Rc;
 
@@ -37,7 +38,21 @@ pub trait Command {
 }
 
 /// Support for running operating system commands.
-pub struct OsCommandRunner;
+#[derive(Debug, Default)]
+#[allow(missing_copy_implementations)]
+pub struct OsCommandRunner {
+    /// PRIVATE: This field is a stand-in for future options.
+    /// See http://stackoverflow.com/q/39277157/12089
+    #[doc(hidden)]
+    pub _nonexhaustive: PhantomData<()>,
+}
+
+impl OsCommandRunner {
+    /// Create a new OsCommandRunner.
+    pub fn new() -> OsCommandRunner {
+        OsCommandRunner { _nonexhaustive: PhantomData }
+    }
+}
 
 impl CommandRunner for OsCommandRunner {
     type Command = OsCommand;
@@ -52,6 +67,7 @@ impl CommandRunner for OsCommandRunner {
 }
 
 /// A wrapper around `std::process:Command` which logs the commands run.
+#[derive(Debug)]
 pub struct OsCommand {
     /// The actual command we're going to run.
     command: process::Command,
@@ -83,12 +99,13 @@ impl Command for OsCommand {
 
 #[test]
 fn os_command_runner_runs_commands() {
-    let runner = OsCommandRunner;
+    let runner = OsCommandRunner::new();
     assert!(runner.build("true").status().unwrap().success());
     assert!(!runner.build("false").status().unwrap().success());
 }
 
 /// Support for running commands in test mode.
+#[derive(Debug)]
 pub struct TestCommandRunner {
     /// The commands that have been executed.  Because we want to avoid
     /// borrow checker hell, we use `Rc<RefCell<_>>` to implement a shared,
@@ -129,6 +146,7 @@ impl CommandRunner for TestCommandRunner {
 
 /// A fake command that gets logged to a `TestCommandRunner` instead of
 /// actually getting run.
+#[derive(Debug)]
 pub struct TestCommand {
     /// The command we're building.
     cmd: Vec<OsString>,

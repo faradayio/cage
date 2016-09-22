@@ -97,6 +97,7 @@ impl Default for Options {
 
 /// The pod and service within which to execute a command.  The lifetime
 /// `'a` needs to be longer than the useful lifetime of this `Target`.
+#[derive(Debug)]
 pub struct Target<'a> {
     /// The override we're using to run this command.
     ovr: &'a Override,
@@ -152,6 +153,7 @@ impl<'a> Target<'a> {
 }
 
 /// A command which can be executed.
+#[derive(Debug)]
 pub struct Command {
     /// The command to execute.
     pub command: OsString,

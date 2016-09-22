@@ -198,7 +198,7 @@ fn run(args: &Args) -> Result<(), Error> {
     let ovr = try!(proj.ovr(&args.flag_override)
         .ok_or_else(|| err!("override {} is not defined", &args.flag_override)));
     try!(proj.output());
-    let runner = OsCommandRunner;
+    let runner = OsCommandRunner::new();
 
     if args.cmd_pull {
         try!(proj.pull(&runner, &ovr));

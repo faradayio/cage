@@ -82,6 +82,7 @@ impl Repos {
 
 /// An iterator over all repositories associated with this project.
 #[derive(Clone)]
+#[allow(missing_debug_implementations)]
 pub struct Iter<'a> {
     /// Our wrapped iterator.  We wrap this in our own struct to make the
     /// underlying type opaque.

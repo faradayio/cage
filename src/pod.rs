@@ -252,6 +252,7 @@ impl Pod {
 }
 
 /// An iterator over this pods overrides and their associated files.
+#[allow(missing_debug_implementations)]
 pub struct OverrideFiles<'a> {
     /// Our wrapped iterator.
     iter: btree_map::Iter<'a, Override, FileInfo>,
@@ -266,6 +267,7 @@ impl<'a> Iterator for OverrideFiles<'a> {
 }
 
 /// What should we yield next from our `AllFiles` iterator?
+#[allow(missing_debug_implementations)]
 enum AllFilesState<'a> {
     /// Yield the top-level `file()` next.
     TopLevelFile,
@@ -275,6 +277,7 @@ enum AllFilesState<'a> {
 
 /// An iterator over all the `dc::File` objects associated with a pod, in
 /// all overlays.
+#[allow(missing_debug_implementations)]
 pub struct AllFiles<'a> {
     /// The pod whose files we're iterating over.
     pod: &'a Pod,
