@@ -7,6 +7,9 @@
 //! use conductor::cmd::*;
 //! ```
 
+// We're allowed to print things to the user in the `cmd` submodule.
+#![cfg_attr(feature="clippy", allow(print_stdout))]
+
 pub use self::build::CommandBuild;
 pub use self::exec::CommandExec;
 pub use self::generate::CommandGenerate;

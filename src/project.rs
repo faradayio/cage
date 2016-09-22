@@ -318,7 +318,8 @@ impl Project {
 /// An iterator over the pods in a project.
 #[derive(Debug, Clone)]
 pub struct Pods<'a> {
-    // We wrap this in our own struct to make the underlying type opaque.
+    /// Our wrapped iterator.  We wrap this in our own struct to make the
+    /// underlying type opaque.
     iter: slice::Iter<'a, Pod>,
 }
 
@@ -333,7 +334,8 @@ impl<'a> Iterator for Pods<'a> {
 /// An iterator over the overrides in a project.
 #[derive(Debug, Clone)]
 pub struct Overrides<'a> {
-    // We wrap this in our own struct to make the underlying type opaque.
+    /// Our wrapped iterator.  We wrap this in our own struct to make the
+    /// underlying type opaque.
     iter: slice::Iter<'a, Override>,
 }
 

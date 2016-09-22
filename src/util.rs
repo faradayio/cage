@@ -27,6 +27,8 @@ pub fn err(msg: &str) -> Error {
     Error::from(msg)
 }
 
+/// Trait for things which we really hope are actually UTF-8 strings, and not
+/// something weird like [WTF-8](https://simonsapin.github.io/wtf-8/).
 pub trait ToStrOrErr {
     /// Convert to a Rust string as per `OsStr::to_str`, or return an
     /// error;

@@ -28,7 +28,10 @@ use util::Error;
 /// clone.  This is the master copy.
 #[derive(Debug)]
 struct FileInfo {
+    /// The path to this file relative to `pods/`.
     rel_path: PathBuf,
+    /// Either the data we loaded from file, or default data if the file
+    /// didn't exist.
     file: dc::File,
 }
 
@@ -250,6 +253,7 @@ impl Pod {
 
 /// An iterator over this pods overrides and their associated files.
 pub struct OverrideFiles<'a> {
+    /// Our wrapped iterator.
     iter: btree_map::Iter<'a, Override, FileInfo>,
 }
 

@@ -4,7 +4,18 @@
 #![cfg_attr(feature="clippy", plugin(clippy))]
 
 #![warn(missing_docs)]
-#![deny(warnings)]
+#![cfg_attr(feature="clippy", warn(missing_docs_in_private_items))]
+#![cfg_attr(feature="clippy", warn(mut_mut))]
+// We allow `println!` only in the `cmd` submodule.  If you want to print
+// debugging output, using `debug!`, or have `cmd` pass you an `io::Write`
+// implementation.
+#![cfg_attr(feature="clippy", warn(print_stdout))]
+// This allows us to use `unwrap` on `Option` values (because doing makes
+// working with Regex matches much nicer) and when compiling in test mode
+// (because using it in tests is idiomatic).
+#![cfg_attr(all(not(test), feature="clippy"), warn(result_unwrap_used))]
+#![cfg_attr(feature="clippy", warn(unseparated_literal_suffix))]
+#![cfg_attr(feature="clippy", warn(wrong_pub_self_convention))]
 
 extern crate docker_compose;
 #[cfg(test)]

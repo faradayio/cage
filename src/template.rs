@@ -6,6 +6,7 @@ use rustc_serialize::json::ToJson;
 use std::collections::BTreeMap;
 use std::fmt;
 use std::fs;
+use std::io;
 use std::path::{Path, PathBuf};
 
 use data;
@@ -23,8 +24,11 @@ fn escape_double_quotes(data: &str) -> String {
 
 /// A set of files which can be generated.
 pub struct Template {
+    /// The name used to create this template.
     name: String,
+    /// File data associated with this template.
     files: BTreeMap<PathBuf, String>,
+    /// Our templating engine.
     handlebars: hb::Handlebars,
 }
 
@@ -67,15 +71,20 @@ impl Template {
     }
 
     /// Generate this template into `target_dir`, passing `data` to the
-    /// Handlebars templates.
-    pub fn generate<T>(&mut self, target_dir: &Path, data: &T) -> Result<(), Error>
-        where T: ToJson + fmt::Debug
+    /// Handlebars templates, and writing progress messages to `out`.
+    pub fn generate<T, W>(&mut self,
+                          target_dir: &Path,
+                          data: &T,
+                          out: &mut W)
+                          -> Result<(), Error>
+        where T: ToJson + fmt::Debug,
+              W: io::Write
     {
         debug!("Generating {} with {:?}", &self.name, data);
         for (rel_path, tmpl) in &self.files {
             let path = target_dir.join(rel_path);
             debug!("Output {}", path.display());
-            println!("Generating: {}", rel_path.display());
+            try!(writeln!(out, "Generating: {}", rel_path.display()));
 
             // Make sure our parent directory exists.
             try!(path.with_guaranteed_parent());

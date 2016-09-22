@@ -6,6 +6,7 @@ use std::collections::BTreeMap;
 use std::env;
 #[cfg(test)]
 use std::fs;
+use std::io;
 use std::path::{PathBuf, Path};
 
 use project::Project;
@@ -43,7 +44,7 @@ impl CommandGenerate for Project {
         // Generate our top-level files.
         let mut proj_tmpl = try!(Template::new("new"));
         let proj_info = ProjectInfo { name: name };
-        try!(proj_tmpl.generate(&proj_dir, &proj_info));
+        try!(proj_tmpl.generate(&proj_dir, &proj_info, &mut io::stdout()));
 
         // Generate files for each override.
         let mut ovr_tmpl = try!(Template::new("new/pods/_overrides/_default"));
@@ -54,7 +55,7 @@ impl CommandGenerate for Project {
                 name: ovr,
             };
             let dir = overrides_dir.join(ovr);
-            try!(ovr_tmpl.generate(&dir, &ovr_info));
+            try!(ovr_tmpl.generate(&dir, &ovr_info, &mut io::stdout()));
         }
 
         Ok(proj_dir)

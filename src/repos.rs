@@ -83,7 +83,8 @@ impl Repos {
 /// An iterator over all repositories associated with this project.
 #[derive(Clone)]
 pub struct Iter<'a> {
-    // We wrap this in our own struct to make the underlying type opaque.
+    /// Our wrapped iterator.  We wrap this in our own struct to make the
+    /// underlying type opaque.
     iter: btree_map::Iter<'a, String, Repo>,
 }
 
@@ -98,7 +99,9 @@ impl<'a> Iterator for Iter<'a> {
 /// A single repository.
 #[derive(Debug)]
 pub struct Repo {
+    /// A short name for this repository.
     alias: String,
+    /// The remote location from which we can clone this repository.
     git_url: dc::GitUrl,
 }
 
