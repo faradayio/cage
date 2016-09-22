@@ -105,7 +105,7 @@ fn invokes_docker_exec() {
     let ovr = proj.ovr("development").unwrap();
     let runner = TestCommandRunner::new();
     proj.output().unwrap();
-    let target = exec::Target::new(&proj, &ovr, "frontend", "web").unwrap();
+    let target = exec::Target::new(&proj, ovr, "frontend", "web").unwrap();
 
     let command = exec::Command::new("true");
     let opts = exec::Options { allocate_tty: false, ..Default::default() };
@@ -136,7 +136,7 @@ fn runs_shells() {
     let ovr = proj.ovr("development").unwrap();
     let runner = TestCommandRunner::new();
     proj.output().unwrap();
-    let target = exec::Target::new(&proj, &ovr, "frontend", "web").unwrap();
+    let target = exec::Target::new(&proj, ovr, "frontend", "web").unwrap();
 
     proj.shell(&runner, &target, &Default::default()).unwrap();
 
@@ -164,7 +164,7 @@ fn runs_tests() {
     let ovr = proj.ovr("test").unwrap();
     let runner = TestCommandRunner::new();
     proj.output().unwrap();
-    let target = exec::Target::new(&proj, &ovr, "frontend", "proxy").unwrap();
+    let target = exec::Target::new(&proj, ovr, "frontend", "proxy").unwrap();
 
     proj.test(&runner, &target).unwrap();
 

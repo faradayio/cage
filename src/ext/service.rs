@@ -134,13 +134,13 @@ fn src_dir_returns_the_source_directory_for_this_service() {
 
     // Default value.
     let db = proj.pod("db").unwrap();
-    let merged = db.merged_file(&ovr).unwrap();
+    let merged = db.merged_file(ovr).unwrap();
     let db = merged.services.get("db").unwrap();
     assert_eq!(db.source_mount_dir().unwrap(), Path::new("/app"));
 
     // Custom value.
     let frontend = proj.pod("frontend").unwrap();
-    let merged = frontend.merged_file(&ovr).unwrap();
+    let merged = frontend.merged_file(ovr).unwrap();
     let proxy = merged.services.get("web").unwrap();
     assert_eq!(proxy.source_mount_dir().unwrap(), Path::new("/usr/src/app"));
 }
@@ -152,7 +152,7 @@ fn shell_returns_preferred_shell_for_this_service() {
     let proj: Project = Project::from_example("hello").unwrap();
     let ovr = proj.ovr("development").unwrap();
     let frontend = proj.pod("frontend").unwrap();
-    let merged = frontend.merged_file(&ovr).unwrap();
+    let merged = frontend.merged_file(ovr).unwrap();
 
     // Default value.
     let web = merged.services.get("web").unwrap();

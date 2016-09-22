@@ -336,7 +336,7 @@ fn can_merge_base_file_and_override() {
     let proj: Project = Project::from_example("hello").unwrap();
     let ovr = proj.ovr("development").unwrap();
     let frontend = proj.pod("frontend").unwrap();
-    let merged = frontend.merged_file(&ovr).unwrap();
+    let merged = frontend.merged_file(ovr).unwrap();
     let proxy = merged.services.get("proxy").unwrap();
     assert_eq!(proxy.env_files.len(), 2);
 }
@@ -348,7 +348,7 @@ fn pod_type_returns_type_of_pod() {
     let proj: Project = Project::from_example("rails_hello").unwrap();
     let ovr = proj.ovr("development").unwrap();
     let frontend = proj.pod("frontend").unwrap();
-    assert_eq!(frontend.pod_type(&ovr).unwrap(), PodType::Service);
+    assert_eq!(frontend.pod_type(ovr).unwrap(), PodType::Service);
     let migrate = proj.pod("migrate").unwrap();
-    assert_eq!(migrate.pod_type(&ovr).unwrap(), PodType::Task);
+    assert_eq!(migrate.pod_type(ovr).unwrap(), PodType::Task);
 }

@@ -38,7 +38,7 @@ fn runs_docker_compose_up_on_all_pods() {
     let ovr = proj.ovr("development").unwrap();
     let runner = TestCommandRunner::new();
     proj.output().unwrap();
-    proj.run(&runner, &ovr, "migrate").unwrap();
+    proj.run(&runner, ovr, "migrate").unwrap();
     assert_ran!(runner, {
         ["docker-compose",
          "-p",

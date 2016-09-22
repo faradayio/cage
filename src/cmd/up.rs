@@ -68,7 +68,7 @@ fn runs_docker_compose_up_on_all_pods() {
     let ovr = proj.ovr("development").unwrap();
     let runner = TestCommandRunner::new();
     proj.output().unwrap();
-    proj.up_all(&runner, &ovr).unwrap();
+    proj.up_all(&runner, ovr).unwrap();
     assert_ran!(runner, {
         ["docker-compose",
          "-p",
@@ -91,7 +91,7 @@ fn runs_docker_compose_up_on_specified_pods() {
     let ovr = proj.ovr("development").unwrap();
     let runner = TestCommandRunner::new();
     proj.output().unwrap();
-    proj.up(&runner, &ovr, &["db"]).unwrap();
+    proj.up(&runner, ovr, &["db"]).unwrap();
     assert_ran!(runner, {
         ["docker-compose",
          "-p",

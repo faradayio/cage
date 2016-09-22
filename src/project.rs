@@ -415,7 +415,7 @@ fn export_creates_a_directory_of_flat_yml_files() {
     let proj = Project::from_example("rails_hello").unwrap();
     let export_dir = proj.output_dir.join("hello_export");
     let ovr = proj.ovr("development").unwrap();
-    proj.export(&ovr, &export_dir).unwrap();
+    proj.export(ovr, &export_dir).unwrap();
     assert!(export_dir.join("frontend.yml").exists());
     assert!(export_dir.join("db.yml").exists());
     assert!(export_dir.join("tasks/migrate.yml").exists());

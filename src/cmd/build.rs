@@ -40,7 +40,7 @@ fn runs_docker_compose_build_on_all_pods() {
     let ovr = proj.ovr("development").unwrap();
     let runner = TestCommandRunner::new();
     proj.output().unwrap();
-    proj.build(&runner, &ovr).unwrap();
+    proj.build(&runner, ovr).unwrap();
     assert_ran!(runner, {
         ["docker-compose",
          "-p",

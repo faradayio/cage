@@ -124,7 +124,7 @@ fn pod_label_fetches_label_from_service() {
 
     // Load the generated file and look at the `migrate` pod.
     let pod = proj.pod("migrate").unwrap();
-    let file = pod.merged_file(&ovr).unwrap();
+    let file = pod.merged_file(ovr).unwrap();
     assert_eq!(file.pod_label("io.fdy.conductor.type").unwrap().unwrap(),
                "task");
 }
