@@ -1,5 +1,10 @@
 language: rust
-cache: cargo
+cache:
+  apt: true
+  cargo: true
+  pip: true
+  directories:
+  - "$TRAVIS_BUILD_DIR/target"
 sudo: required
 os:
 - linux
