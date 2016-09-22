@@ -235,8 +235,68 @@ hello
 Pull requests are welcome!  If you're not sure whether your idea would fit
 into the project's vision, please feel free to file an issue and ask us.
 
-**To make an official release,** you need to be a maintainer, and you need
-to have `cargo publish` permissions.  If this is the case, first edit
+### Setting up tools
+
+When working on this code, we recommend installing the following support
+tools:
+
+```sh
+cargo install rustfmt
+cargo install cargo-watch
+```
+
+We also recommend installing nightly Rust, which produces better error
+messages and supports extra warnings using [Clippy][]:
+
+```sh
+rustup update nightly
+rustup override set nightly
+```
+
+If `nightly` produces build errors, you may need to update your compiler
+and libraries to the latest versions:
+
+```sh
+rustup update nightly
+cargo update
+```
+
+If that still doesn't work, try `stable`:
+
+```sh
+rustup override set stable
+```
+
+If you're using `nightly`, run the following in a terminal as you edit:
+
+```sh
+cargo watch "test --features unstable --color=always" \
+    "build --features unstable --color=always"
+```
+
+If you're using `stable`, leave out `--features unstable`:
+
+```sh
+cargo watch "test --color=always" "build --color=always"
+```
+
+Before committing your code, run:
+
+```sh
+cargo fmt
+```
+
+This will automatically reformat your code according to the project's
+conventions.  We use Travis CI to verify that `cargo fmt` has been run and
+that the project builds with no warnings.  If it fails, no worries—just go
+ahead and fix your pull request, or ask us for help.
+
+[Clippy]: https://github.com/Manishearth/rust-clippy
+
+### Official releases
+
+To make an official release, you need to be a maintainer, and you need to
+have `cargo publish` permissions.  If this is the case, first edit
 `Cargo.toml` to bump the version number, then regenerate `Cargo.lock`
 using:
 
