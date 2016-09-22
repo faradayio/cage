@@ -1,4 +1,5 @@
 language: rust
+cache: cargo
 sudo: required
 os:
 - linux
@@ -22,12 +23,14 @@ matrix:
     rust: nightly
 before_script:
 - |
+  (cargo install rustfmt || true) &&
   pip install 'travis-cargo<0.2' --user &&
   export PATH=$HOME/.local/bin:$HOME/Library/Python/2.7/bin:$PATH
 script:
 - |
   travis-cargo build &&
   travis-cargo test &&
+  cargo fmt -- --write-mode=diff &&
   travis-cargo bench &&
   travis-cargo doc
 after_success:
