@@ -25,7 +25,7 @@ before_script:
 - |
   (cargo install rustfmt || true) &&
   pip install 'travis-cargo<0.2' --user &&
-  export PATH=$HOME/.local/bin:$HOME/Library/Python/2.7/bin:$PATH
+  export PATH=$HOME/.local/bin:$HOME/Library/Python/2.7/bin:$HOME/.cargo/bin:$PATH
 script:
 - |
   travis-cargo build &&
