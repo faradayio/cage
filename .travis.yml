@@ -19,13 +19,6 @@ matrix:
     rust: nightly
 services:
 - docker
-addons:
-  apt:
-    packages:
-    - libcurl4-openssl-dev
-    - libelf-dev
-    - libdw-dev
-    - binutils-dev
 before_script:
 - |
   (cargo install rustfmt || true) &&
@@ -40,7 +33,6 @@ script:
   travis-cargo doc
 after_success:
 - travis-cargo --only nightly doc-upload
-- travis-cargo --only nightly --no-sudo coveralls
 before_deploy: "./build-release conductor ${TRAVIS_TAG}-${TRAVIS_OS_NAME}"
 env:
   global:
