@@ -9,7 +9,7 @@ use project::Project;
 use util::Error;
 
 pub mod secrets;
-// pub mod vault;
+pub mod vault;
 
 /// What kind of transform operation are we performing?
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
