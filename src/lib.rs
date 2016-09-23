@@ -46,6 +46,7 @@ extern crate docker_compose;
 extern crate env_logger;
 extern crate glob;
 extern crate handlebars;
+extern crate hashicorp_vault as vault;
 extern crate includedir;
 #[macro_use]
 extern crate log;

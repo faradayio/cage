@@ -26,11 +26,12 @@ serde_codegen = { version = "0.8", optional = true }
 
 [dependencies]
 clippy = { version = "*", optional = true }
-docker_compose = { version = "0.3.6", default-features = false }
+docker_compose = { version = "0.3.8", default-features = false }
 docopt = "0.6.83"
 env_logger = "0.3.4"
 glob = "0.2.11"
 handlebars = "0.20.5"
+hashicorp_vault = "0.6.1"
 includedir = "0.2.1"
 log = "0.3.6"
 phf = "0.7.16"
