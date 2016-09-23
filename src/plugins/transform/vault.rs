@@ -259,7 +259,7 @@ impl PluginTransform for Plugin {
             }
 
             // Generate a VAULT_TOKEN.
-            let display_name = format!("{}-{}-{}-{}",
+            let display_name = format!("{}_{}_{}_{}",
                                        ctx.project.name(),
                                        ctx.ovr.name(),
                                        ctx.pod.name(),
@@ -321,7 +321,7 @@ fn interpolates_policies() {
     let calls = calls.borrow();
     assert_eq!(calls.len(), 1);
     let (ref display_name, ref policies, ref ttl) = calls[0];
-    assert_eq!(display_name, "vault_integration-production-frontend-web");
+    assert_eq!(display_name, "vault_integration_production_frontend_web");
     assert_eq!(policies,
                &["vault_integration-production".to_owned(),
                  "vault_integration-production-frontend-web".to_owned(),
