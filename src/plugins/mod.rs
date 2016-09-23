@@ -6,7 +6,6 @@ use std::marker::PhantomData;
 
 use ovr::Override;
 use pod::Pod;
-use plugins::transform::PluginNew;
 use project::Project;
 use util::Error;
 
@@ -47,11 +46,22 @@ impl Manager {
     /// Create a new manager for the specified project.
     pub fn new(proj: &Project) -> Result<Manager, Error> {
         let mut manager = Manager { transforms: vec![] };
-        if try!(transform::secrets::Plugin::should_enable_for(&proj)) {
-            let plugin = try!(transform::secrets::Plugin::new(&proj));
-            manager.transforms.push(Box::new(plugin));
-        }
+        try!(manager.register_transform::<transform::secrets::Plugin>(proj));
+        try!(manager.register_transform::<transform::vault::Plugin>(proj));
         Ok(manager)
+    }
+
+    /// Register a transform with this manager.
+    fn register_transform<T>(&mut self, proj: &Project) -> Result<(), Error>
+        where T: transform::PluginNew + 'static
+    {
+        if try!(T::should_enable_for(&proj)) {
+            let plugin = try!(T::new(&proj).map_err(|e| {
+                err!("Error initializing plugin: {}", e)
+            }));
+            self.transforms.push(Box::new(plugin));
+        }
+        Ok(())
     }
 
     /// Apply all our transform plugins.
@@ -61,7 +71,9 @@ impl Manager {
                      file: &mut dc::File)
                      -> Result<(), Error> {
         for plugin in &self.transforms {
-            try!(plugin.transform(op, ctx, file));
+            try!(plugin.transform(op, ctx, file).map_err(|e| {
+                err!("Error applying plugin {}: {}", plugin.name(), e)
+            }));
         }
         Ok(())
     }
