@@ -2,13 +2,15 @@
 
 use docker_compose::v2 as dc;
 use serde_yaml;
+#[cfg(test)]
+use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::env;
 use std::fmt::Debug;
 use std::fs;
 use std::path::PathBuf;
 #[cfg(test)]
-use std::cell::{Ref, RefCell};
+use std::rc::Rc;
 use vault;
 use vault::client::VaultDuration;
 
@@ -56,10 +58,14 @@ trait GenerateToken: Debug {
     /// Generate a token with the specified parameters.
     fn generate_token(&self,
                       display_name: &str,
-                      policies: &[&str],
+                      policies: Vec<String>,
                       ttl: VaultDuration)
                       -> Result<String, Error>;
 }
+
+/// A list of calls made to a `MockVault` instance.
+#[cfg(test)]
+type MockVaultCalls = Rc<RefCell<Vec<(String, Vec<String>, VaultDuration)>>>;
 
 /// A fake interface to vault for testing purposes.
 #[derive(Debug)]
@@ -68,19 +74,19 @@ struct MockVault {
     /// The tokens we were asked to generate.  We store these in a RefCell
     /// so that we can have "interior" mutability, because we don't want
     /// `generate_token` to be `&mut self` in the general case.
-    calls: RefCell<Vec<(String, Vec<String>, VaultDuration)>>,
+    calls: MockVaultCalls,
 }
 
 #[cfg(test)]
 impl MockVault {
     /// Create a new MockVault.
     fn new() -> MockVault {
-        MockVault { calls: RefCell::new(vec![]) }
+        MockVault { calls: Rc::new(RefCell::new(vec![])) }
     }
 
-    /// Return the calls that were made to our MockVault.
-    fn calls(&self) -> Ref<Vec<(String, Vec<String>, VaultDuration)>> {
-        self.calls.borrow()
+    /// Return a reference to record of calls made to our vault.
+    fn calls(&self) -> MockVaultCalls {
+        self.calls.clone()
     }
 }
 
@@ -92,14 +98,10 @@ impl GenerateToken for MockVault {
 
     fn generate_token(&self,
                       display_name: &str,
-                      policies: &[&str],
+                      policies: Vec<String>,
                       ttl: VaultDuration)
                       -> Result<String, Error> {
-        let saved_policies = policies.iter()
-            .cloned()
-            .map(|p| p.to_owned())
-            .collect();
-        self.calls.borrow_mut().push((display_name.to_owned(), saved_policies, ttl));
+        self.calls.borrow_mut().push((display_name.to_owned(), policies, ttl));
         Ok("fake_token".to_owned())
     }
 }
@@ -132,7 +134,7 @@ impl GenerateToken for Vault {
 
     fn generate_token(&self,
                       display_name: &str,
-                      policies: &[&str],
+                      policies: Vec<String>,
                       ttl: VaultDuration)
                       -> Result<String, Error> {
         // We can't store `client` in `self`, because it has some obnoxious
@@ -145,7 +147,7 @@ impl GenerateToken for Vault {
             .display_name(display_name)
             .renewable(false)
             .ttl(ttl)
-            .policies(policies.to_owned());
+            .policies(policies);
         let auth = try!(client.create_token(&opts));
         Ok(auth.client_token)
     }
@@ -198,20 +200,45 @@ impl PluginTransform for Plugin {
                 service: name,
             };
 
+            // Define a local helper function to interpolate
+            // `RawOr<String>` values using `env`.
+            let interpolated = |raw_val: &dc::RawOr<String>| -> Result<String, Error> {
+                let mut val = raw_val.to_owned();
+                Ok(try!(val.interpolate_env(&env)).to_owned())
+            };
+
             // Insert our VAULT_ADDR value into the generated files.
             service.environment
                 .insert("VAULT_ADDR".to_owned(), self.generator.addr().to_owned());
 
+            // Get a list of policy "patterns" that apply to this service.
+            let mut raw_policies = self.config.default_policies.clone();
+            raw_policies.extend(self.config
+                .pods
+                .get(ctx.pod.name())
+                .and_then(|pod| pod.get(name))
+                .map_or_else(|| vec![], |s| s.policies.clone()));
+
+            // Interpolate the variables found in our policy patterns.
+            let mut policies = vec![];
+            for result in raw_policies.iter().map(|p| interpolated(p)) {
+                // We'd like to use std::result::fold here but it's unstable.
+                policies.push(try!(result));
+            }
+
             // Generate a VAULT_TOKEN.
+            let display_name = format!("{}-{}-{}-{}",
+                                       ctx.project.name(),
+                                       ctx.ovr.name(),
+                                       ctx.pod.name(),
+                                       name);
             let token = try!(self.generator
-                .generate_token("TODO", &[], VaultDuration::hours(1)));
+                .generate_token(&display_name, policies, VaultDuration::hours(1)));
             service.environment.insert("VAULT_TOKEN".to_owned(), token);
 
             // Add in any extra environment variables.
-            for (var, raw_val) in &self.config.extra_environment {
-                let mut val = raw_val.to_owned();
-                let new_val = try!(val.interpolate_env(&env)).to_owned();
-                service.environment.insert(var.to_owned(), new_val);
+            for (var, val) in &self.config.extra_environment {
+                service.environment.insert(var.to_owned(), try!(interpolated(val)));
             }
         }
         Ok(())
@@ -239,6 +266,7 @@ fn interpolates_policies() {
     let ovr = proj.ovr("production").unwrap();
 
     let vault = MockVault::new();
+    let calls = vault.calls();
     let plugin = Plugin::new_with_generator(&proj, vault).unwrap();
 
     let frontend = proj.pod("frontend").unwrap();
@@ -253,5 +281,12 @@ fn interpolates_policies() {
     assert_eq!(web.environment.get("VAULT_ENV").expect("has VAULT_ENV"),
                "production");
 
-    // TODO: Check policies used to issue tokens.
+    let calls = calls.borrow();
+    assert_eq!(calls.len(), 1);
+    let (ref display_name, ref policies, ref ttl) = calls[0];
+    assert_eq!(display_name, "rails_hello-production-frontend-web");
+    assert_eq!(policies,
+               &["rails_hello-production".to_owned(),
+                 "rails_hello-production-frontend-web".to_owned(),
+                 "rails_hello-production-ssl".to_owned()]);
 }
