@@ -9,7 +9,7 @@ use std::path::PathBuf;
 
 use plugins;
 use plugins::transform::Operation;
-use plugins::transform::Plugin as TransformPlugin;
+use plugins::transform::{Plugin as TransformPlugin, PluginNew};
 use project::Project;
 use util::Error;
 
@@ -33,25 +33,16 @@ impl Plugin {
 }
 
 impl TransformPlugin for Plugin {
-    /// Should we enable this plugin for this project?
-    fn should_enable_for(project: &Project) -> Result<bool, Error> {
-        let path = Self::config_path(project);
-        Ok(path.exists())
+    fn name(&self) -> &'static str {
+        "secrets"
     }
 
-    /// Create a new plugin.
-    fn new(project: &Project) -> Result<Self, Error> {
-        let f = try!(fs::File::open(&Self::config_path(project)));
-        let config = try!(serde_yaml::from_reader(f));
-        Ok(Plugin { config: config })
-    }
-
-    /// Transform the specified file.
     fn transform(&self,
                  _op: Operation,
                  ctx: &plugins::Context,
                  file: &mut dc::File)
                  -> Result<(), Error> {
+
         let append_container =
             |service: &mut dc::Service, pods: &BTreeMap<_, PodSecrets>, name| {
                 let opt_env = pods.get(ctx.pod.name()).and_then(|p| p.get(name));
@@ -69,6 +60,21 @@ impl TransformPlugin for Plugin {
             }
         }
         Ok(())
+    }
+}
+
+impl PluginNew for Plugin {
+    /// Should we enable this plugin for this project?
+    fn should_enable_for(project: &Project) -> Result<bool, Error> {
+        let path = Self::config_path(project);
+        Ok(path.exists())
+    }
+
+    /// Create a new plugin.
+    fn new(project: &Project) -> Result<Self, Error> {
+        let f = try!(fs::File::open(&Self::config_path(project)));
+        let config = try!(serde_yaml::from_reader(f));
+        Ok(Plugin { config: config })
     }
 }
 

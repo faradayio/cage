@@ -10,6 +10,8 @@ use default_tags::DefaultTags;
 use dir;
 use ext::file::FileExt;
 use ovr::Override;
+use plugins;
+use plugins::transform::Operation;
 use pod::{Pod, PodType};
 use repos::Repos;
 use util::{ConductorPathExt, Error, ToStrOrErr};
@@ -46,6 +48,10 @@ pub struct Project {
     /// Docker image tags to use for images that don't have them.
     /// Typically used to lock down versions supplied by a CI system.
     default_tags: Option<DefaultTags>,
+
+    /// The plugins associated with this project.  Guaranteed to never be
+    /// `None` after returning from `from_dirs`.
+    plugins: Option<plugins::Manager>,
 }
 
 impl Project {
@@ -63,7 +69,7 @@ impl Project {
                 .ok_or_else(|| {
                     err!("Can't find directory name for {}", root_dir.display())
                 }));
-        Ok(Project {
+        let mut proj = Project {
             name: name.to_owned(),
             root_dir: root_dir.to_owned(),
             src_dir: src_dir.to_owned(),
@@ -72,7 +78,11 @@ impl Project {
             overrides: overrides,
             repos: repos,
             default_tags: None,
-        })
+            plugins: None,
+        };
+        let plugins = try!(plugins::Manager::new(&proj));
+        proj.plugins = Some(plugins);
+        Ok(proj)
     }
 
     /// Create a `Project` using the current directory as input and the
@@ -228,6 +238,12 @@ impl Project {
         self
     }
 
+    /// Our plugin manager.
+    fn plugins(&self) -> &plugins::Manager {
+        self.plugins.as_ref()
+            .expect("plugins should always be set at Project init")
+    }
+
     /// Delete our existing output and replace it with a processed and
     /// expanded version of our pod definitions.
     pub fn output(&self) -> Result<(), Error> {
@@ -269,6 +285,8 @@ impl Project {
 
                 let mut file = try!(pod.override_file(ovr)).to_owned();
                 try!(file.update_for_output(self));
+                let ctx = plugins::Context::new(self, ovr, pod);
+                try!(self.plugins().transform(Operation::Output, &ctx, &mut file));
                 try!(file.write_to_path(out_path));
             }
         }

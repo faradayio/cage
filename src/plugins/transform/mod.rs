@@ -1,6 +1,7 @@
 //! Plugins which transform `dc::File` objects.
 
 use docker_compose::v2 as dc;
+use std::fmt::Debug;
 use std::marker::Sized;
 
 use plugins;
@@ -23,12 +24,9 @@ pub enum Operation {
 }
 
 /// A plugin which transforms a `dc::File` object.
-pub trait Plugin: Sized {
-    /// Should we enable this plugin for this project?
-    fn should_enable_for(project: &Project) -> Result<bool, Error>;
-
-    /// Create a new plugin.
-    fn new(project: &Project) -> Result<Self, Error>;
+pub trait Plugin {
+    /// The name of this plugin.
+    fn name(&self) -> &'static str;
 
     /// Transform the specified file.
     fn transform(&self,
@@ -36,4 +34,16 @@ pub trait Plugin: Sized {
                  ctx: &plugins::Context,
                  file: &mut dc::File)
                  -> Result<(), Error>;
+}
+
+/// Initialization for `Plugin`.  These methods can't be part of `Plugin`
+/// itself, because that would prevent us from working with runtime
+/// polymorphic trait objects such as `&Plugin` or `Box<Plugin>` (i.e.,
+/// runtime object orientation).
+pub trait PluginNew: Plugin + Sized + Debug {
+    /// Should we enable this plugin for this project?
+    fn should_enable_for(project: &Project) -> Result<bool, Error>;
+
+    /// Create a new plugin.
+    fn new(project: &Project) -> Result<Self, Error>;
 }

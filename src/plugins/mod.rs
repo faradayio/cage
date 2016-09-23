@@ -1,10 +1,14 @@
 //! Plugin support for conductor.
 
+use docker_compose::v2 as dc;
+use std::fmt;
 use std::marker::PhantomData;
 
 use ovr::Override;
 use pod::Pod;
+use plugins::transform::PluginNew;
 use project::Project;
+use util::Error;
 
 pub mod transform;
 
@@ -30,5 +34,44 @@ impl<'a> Context<'a> {
             pod: pod,
             _nonexclusive: PhantomData,
         }
+    }
+}
+
+/// A collection of plugins, normally associated with a project.
+pub struct Manager {
+    /// Our `dc::File` transforming plugins.
+    transforms: Vec<Box<transform::Plugin>>,
+}
+
+impl Manager {
+    /// Create a new manager for the specified project.
+    pub fn new(proj: &Project) -> Result<Manager, Error> {
+        let mut manager = Manager { transforms: vec![] };
+        if try!(transform::secrets::Plugin::should_enable_for(&proj)) {
+            let plugin = try!(transform::secrets::Plugin::new(&proj));
+            manager.transforms.push(Box::new(plugin));
+        }
+        Ok(manager)
+    }
+
+    /// Apply all our transform plugins.
+    pub fn transform(&self,
+                     op: transform::Operation,
+                     ctx: &Context,
+                     file: &mut dc::File)
+                     -> Result<(), Error>
+    {
+        for plugin in &self.transforms {
+            try!(plugin.transform(op, ctx, file));
+        }
+        Ok(())
+    }
+}
+
+impl fmt::Debug for Manager {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut names: Vec<_> = vec![];
+        names.extend_from_slice(&self.transforms.iter().map(|p| p.name()).collect::<Vec<_>>());
+        write!(f, "plugins::Manager {{ {:?} }}", &names)
     }
 }
