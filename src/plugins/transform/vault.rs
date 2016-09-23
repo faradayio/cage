@@ -141,7 +141,13 @@ impl GenerateToken for Vault {
         // and `hyper` HTTP connections used to have expiration issues that
         // were tricky for clients to deal with correctly.
         let client = try!(vault::Client::new(&self.addr, &self.token));
-        unimplemented!()
+        let opts = vault::client::TokenOptions::default()
+            .display_name(display_name)
+            .renewable(false)
+            .ttl(ttl)
+            .policies(policies.to_owned());
+        let auth = try!(client.create_token(&opts));
+        Ok(auth.client_token)
     }
 }
 
