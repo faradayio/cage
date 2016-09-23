@@ -9,7 +9,7 @@ use std::path::PathBuf;
 
 use plugins;
 use plugins::transform::Operation;
-use plugins::transform::{Plugin as TransformPlugin, PluginNew};
+use plugins::transform::{Plugin as PluginTransform, PluginNew};
 use project::Project;
 use util::Error;
 
@@ -32,7 +32,7 @@ impl Plugin {
     }
 }
 
-impl TransformPlugin for Plugin {
+impl PluginTransform for Plugin {
     fn name(&self) -> &'static str {
         "secrets"
     }
