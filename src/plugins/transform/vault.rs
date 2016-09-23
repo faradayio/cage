@@ -8,6 +8,7 @@ use std::collections::BTreeMap;
 use std::env;
 use std::fmt::Debug;
 use std::fs;
+use std::io::Read;
 use std::path::PathBuf;
 #[cfg(test)]
 use std::rc::Rc;
@@ -24,6 +25,31 @@ use util::{Error, err};
 include!(concat!("vault_config.in.rs"));
 #[cfg(feature = "serde_codegen")]
 include!(concat!(env!("OUT_DIR"), "/plugins/transform/vault_config.rs"));
+
+/// Load a vault token from `~/.vault-token`, where the command line client
+/// puts it.
+fn load_vault_token_from_file() -> Result<String, Error> {
+    let path = try!(env::home_dir().ok_or_else(|| {
+        err("You do not appear to have a home directory")
+    })).join(".vault-token");
+    let mut f = try!(fs::File::open(&path).map_err(|e| {
+        err!("Error opening {}: {}", path.display(), e)
+    }));
+    let mut result = String::new();
+    try!(f.read_to_string(&mut result).map_err(|e| {
+        err!("Error reading {}: {}", path.display(), e)
+    }));
+    Ok(result.trim().to_owned())
+}
+
+/// Find the vault token we'll use to generate new tokens.
+fn find_vault_token() -> Result<String, Error> {
+    env::var("VAULT_MASTER_TOKEN")
+        .or_else(|_| env::var("VAULT_TOKEN"))
+        .or_else(|_| load_vault_token_from_file())
+        .map_err(|e| err!("{}.  You probably want to log in using the vault \
+                           client or set VAULT_MASTER_TOKEN", e))
+}
 
 /// The "environment" in which to interpret a configuration file.  We don't
 /// want to use the OS environment variables, but rather a fake environment
@@ -122,11 +148,7 @@ impl Vault {
             err("Please set the environment variable VAULT_ADDR to the URL of \
                  your vault server")
         }));
-        let token = try!(env::var("VAULT_MASTER_TOKEN").map_err(|_| {
-            err("Please set the environment variable VAULT_MASTER_TOKEN to a \
-                 token which can create other tokens (generally one with the \
-                 `root` policy)")
-        }));
+        let token = try!(find_vault_token());
         Ok(Vault {
             addr: addr,
             token: token,
