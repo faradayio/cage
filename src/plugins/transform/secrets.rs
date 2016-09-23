@@ -72,8 +72,11 @@ impl PluginNew for Plugin {
 
     /// Create a new plugin.
     fn new(project: &Project) -> Result<Self, Error> {
-        let f = try!(fs::File::open(&Self::config_path(project)));
-        let config = try!(serde_yaml::from_reader(f));
+        let path = Self::config_path(project);
+        let f = try!(fs::File::open(&path));
+        let config = try!(serde_yaml::from_reader(f).map_err(|e| {
+            err!("Error reading {}: {}", path.display(), e)
+        }));
         Ok(Plugin { config: config })
     }
 }
