@@ -4,7 +4,7 @@
 /// How should our applications authenticate themselves with vault?
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 enum AuthType {
-    /// Issue time-limited VAULT_TOKEN values to each container, setting
+    /// Issue time-limited VAULT_TOKEN values to each service, setting
     /// appropriate policies on each token.
     #[serde(rename = "token")]
     Token,
@@ -12,13 +12,13 @@ enum AuthType {
 
 /// The policies associated with a specific pod.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-struct ContainerConfig {
-    /// Policies to apply to this container.
+struct ServiceConfig {
+    /// Policies to apply to this service.
     policies: Vec<dc::RawOr<String>>,
 }
 
-/// Policies to apply to each container in a pod.
-type PodConfig = BTreeMap<String, ContainerConfig>;
+/// Policies to apply to each service in a pod.
+type PodConfig = BTreeMap<String, ServiceConfig>;
 
 /// The configuration for our Vault plugin.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -26,10 +26,10 @@ struct Config {
     /// The kind of authentication to use.
     auth_type: AuthType,
 
-    /// Extra environment variables to inject into each container.
+    /// Extra environment variables to inject into each service.
     extra_environment: BTreeMap<String, dc::RawOr<String>>,
 
-    /// Default policies to apply to every container.
+    /// Default policies to apply to every service.
     default_policies: Vec<dc::RawOr<String>>,
 
     /// More specific policies to apply to individual

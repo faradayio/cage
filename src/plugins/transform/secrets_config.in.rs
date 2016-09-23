@@ -1,17 +1,17 @@
 // This is not a standalone Rust module.  It gets processed by serde to
 // generate serialization code and included directly into another module.
 
-/// The secrets for a single container.
-type ContainerSecrets = BTreeMap<String, String>;
+/// The secrets for a single service.
+type ServiceSecrets = BTreeMap<String, String>;
 
 /// The secrets for a pod.
-type PodSecrets = BTreeMap<String, ContainerSecrets>;
+type PodSecrets = BTreeMap<String, ServiceSecrets>;
 
 /// The secrets for an override.
 #[derive(Debug, Serialize, Deserialize)]
 struct OverrideSecrets {
-    /// Shared between all containers in this override.
-    common: ContainerSecrets,
+    /// Shared between all services in this override.
+    common: ServiceSecrets,
     /// Secrets for each of our pods.
     pods: BTreeMap<String, PodSecrets>,
 }
@@ -19,8 +19,8 @@ struct OverrideSecrets {
 /// The deserialized form of `secrets.yml`.  This is basically
 #[derive(Debug, Serialize, Deserialize)]
 struct Config {
-    /// Shared between all containers in this pod.
-    common: ContainerSecrets,
+    /// Shared between all services in this pod.
+    common: ServiceSecrets,
     /// Secrets for each of our pods.
     pods: BTreeMap<String, PodSecrets>,
     /// Secrets for each of our overrides.

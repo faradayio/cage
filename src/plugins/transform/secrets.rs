@@ -43,7 +43,7 @@ impl PluginTransform for Plugin {
                  file: &mut dc::File)
                  -> Result<(), Error> {
 
-        let append_container =
+        let append_service =
             |service: &mut dc::Service, pods: &BTreeMap<_, PodSecrets>, name| {
                 let opt_env = pods.get(ctx.pod.name()).and_then(|p| p.get(name));
                 if let Some(env) = opt_env {
@@ -53,10 +53,10 @@ impl PluginTransform for Plugin {
 
         for (name, mut service) in &mut file.services {
             service.environment.append(&mut self.config.common.clone());
-            append_container(&mut service, &self.config.pods, name);
+            append_service(&mut service, &self.config.pods, name);
             if let Some(ovr) = self.config.overrides.get(ctx.ovr.name()) {
                 service.environment.append(&mut ovr.common.clone());
-                append_container(&mut service, &ovr.pods, name);
+                append_service(&mut service, &ovr.pods, name);
             }
         }
         Ok(())
@@ -89,7 +89,7 @@ fn enabled_for_projects_with_config_file() {
 }
 
 #[test]
-fn injects_secrets_into_containers() {
+fn injects_secrets_into_services() {
     use env_logger;
     let _ = env_logger::init();
     let proj = Project::from_example("rails_hello").unwrap();

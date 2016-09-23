@@ -6,20 +6,20 @@
 #     $PROJECT    The name of the project (-p)
 #     $OVERRIDE   The name of the current override
 #     $POD        The name of the pod
-#     $CONTAINER  The name of the container
+#     $SERVICE    The name of the service
 
-# How should individual containers authenticate themselves to vault?  The only
+# How should individual services authenticate themselves to vault?  The only
 # supported value for now is "token".
 #
 # token:
 #
 #   To use this, set the environment variables `VAULT_ADDR` and
 #   `VAULT_MASTER_TOKEN` before running conductor.  These values will be
-#   used to construct per-container `VAULT_TOKEN` values, which be added
-#   to the appropriate containers along with `VAULT_ADDR`.
+#   used to construct per-service `VAULT_TOKEN` values, which be added
+#   to the appropriate services along with `VAULT_ADDR`.
 auth_type: "token"
 
-# Extra environment variables to add to each container.
+# Extra environment variables to add to each service.
 extra_environment:
   VAULT_ENV: "$OVERRIDE"
 
@@ -27,7 +27,7 @@ extra_environment:
 # project.
 default_policies:
   - "$PROJECT-$OVERRIDE"
-  - "$PROJECT-$OVERRIDE-$POD-$CONTAINER"
+  - "$PROJECT-$OVERRIDE-$POD-$SERVICE"
 
 # If you want to apply addition policies to particular pods, you may also
 # override them as follows.
