@@ -29,6 +29,9 @@ struct Config {
     /// Extra environment variables to inject into each service.
     extra_environment: BTreeMap<String, dc::RawOr<String>>,
 
+    /// How long should tokens be valid for?
+    default_ttl: u64,
+
     /// Default policies to apply to every service.
     default_policies: Vec<dc::RawOr<String>>,
 

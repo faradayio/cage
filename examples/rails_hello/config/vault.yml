@@ -23,6 +23,9 @@ auth_type: "token"
 extra_environment:
   VAULT_ENV: "$OVERRIDE"
 
+# How long should the generated tokens be valid for, in seconds?
+default_ttl: 2592000
+
 # We use these templates to construct the names of policies to apply to our
 # project.
 default_policies:

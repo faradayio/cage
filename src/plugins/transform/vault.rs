@@ -232,8 +232,9 @@ impl PluginTransform for Plugin {
                                        ctx.ovr.name(),
                                        ctx.pod.name(),
                                        name);
+            let ttl = VaultDuration::seconds(self.config.default_ttl);
             let token = try!(self.generator
-                .generate_token(&display_name, policies, VaultDuration::hours(1)));
+                .generate_token(&display_name, policies, ttl));
             service.environment.insert("VAULT_TOKEN".to_owned(), token);
 
             // Add in any extra environment variables.
@@ -289,4 +290,5 @@ fn interpolates_policies() {
                &["rails_hello-production".to_owned(),
                  "rails_hello-production-frontend-web".to_owned(),
                  "rails_hello-production-ssl".to_owned()]);
+    assert_eq!(ttl, &VaultDuration::seconds(2592000));
 }
