@@ -59,8 +59,7 @@ impl Manager {
                      op: transform::Operation,
                      ctx: &Context,
                      file: &mut dc::File)
-                     -> Result<(), Error>
-    {
+                     -> Result<(), Error> {
         for plugin in &self.transforms {
             try!(plugin.transform(op, ctx, file));
         }
@@ -71,7 +70,10 @@ impl Manager {
 impl fmt::Debug for Manager {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut names: Vec<_> = vec![];
-        names.extend_from_slice(&self.transforms.iter().map(|p| p.name()).collect::<Vec<_>>());
+        names.extend_from_slice(&self.transforms
+            .iter()
+            .map(|p| p.name())
+            .collect::<Vec<_>>());
         write!(f, "plugins::Manager {{ {:?} }}", &names)
     }
 }

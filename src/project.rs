@@ -240,7 +240,8 @@ impl Project {
 
     /// Our plugin manager.
     fn plugins(&self) -> &plugins::Manager {
-        self.plugins.as_ref()
+        self.plugins
+            .as_ref()
             .expect("plugins should always be set at Project init")
     }
 
