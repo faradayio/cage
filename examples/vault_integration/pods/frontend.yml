@@ -1,0 +1,20 @@
+# An example frontend web pod using Rails.
+
+version: "2"
+
+services:
+  web:
+    # The name of the Docker image.
+    image: "faraday/rails_hello"
+    # The GitHub repository containing the source code for this image,
+    # for use with `conductor repo clone`.
+    build: "https://github.com/faradayio/rails_hello.git"
+    ports:
+    - "3000:3000"
+    labels:
+      # The directory where our source code gets mounted into the container.
+      io.fdy.conductor.srcdir: "/usr/src/app"
+      # Choose a more useful shell.
+      io.fdy.conductor.shell: "bash"
+      # Our test command.  Invoke with `conductor test frontend web`.
+      io.fdy.conductor.test: "bundle exec rake"

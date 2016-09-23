@@ -18,7 +18,7 @@ use plugins;
 use plugins::transform::Operation;
 use plugins::transform::{Plugin as PluginTransform, PluginNew};
 use project::Project;
-use util::Error;
+use util::{Error, err};
 
 #[cfg(feature = "serde_macros")]
 include!(concat!("vault_config.in.rs"));
@@ -118,8 +118,15 @@ struct Vault {
 impl Vault {
     /// Create a new vault client.
     fn new() -> Result<Vault, Error> {
-        let addr = try!(env::var("VAULT_ADDR"));
-        let token = try!(env::var("VAULT_MASTER_TOKEN"));
+        let addr = try!(env::var("VAULT_ADDR").map_err(|_| {
+            err("Please set the environment variable VAULT_ADDR to the URL of \
+                 your vault server")
+        }));
+        let token = try!(env::var("VAULT_MASTER_TOKEN").map_err(|_| {
+            err("Please set the environment variable VAULT_MASTER_TOKEN to a \
+                 token which can create other tokens (generally one with the \
+                 `root` policy)")
+        }));
         Ok(Vault {
             addr: addr,
             token: token,
@@ -172,8 +179,11 @@ impl Plugin {
     fn new_with_generator<G>(project: &Project, generator: G) -> Result<Plugin, Error>
         where G: GenerateToken + 'static
     {
-        let f = try!(fs::File::open(&Self::config_path(project)));
-        let config = try!(serde_yaml::from_reader(f));
+        let path = Self::config_path(project);
+        let f = try!(fs::File::open(&path));
+        let config = try!(serde_yaml::from_reader(f).map_err(|e| {
+            err!("Error reading {}: {}", path.display(), e)
+        }));
         Ok(Plugin {
             config: config,
             generator: Box::new(generator),
@@ -263,7 +273,11 @@ impl PluginNew for Plugin {
 fn interpolates_policies() {
     use env_logger;
     let _ = env_logger::init();
-    let proj = Project::from_example("rails_hello").unwrap();
+
+    env::set_var("VAULT_ADDR", "http://example.com:8200/");
+    env::set_var("VAULT_MASTER_TOKEN", "fake master token");
+
+    let proj = Project::from_example("vault_integration").unwrap();
     let ovr = proj.ovr("production").unwrap();
 
     let vault = MockVault::new();
@@ -285,10 +299,10 @@ fn interpolates_policies() {
     let calls = calls.borrow();
     assert_eq!(calls.len(), 1);
     let (ref display_name, ref policies, ref ttl) = calls[0];
-    assert_eq!(display_name, "rails_hello-production-frontend-web");
+    assert_eq!(display_name, "vault_integration-production-frontend-web");
     assert_eq!(policies,
-               &["rails_hello-production".to_owned(),
-                 "rails_hello-production-frontend-web".to_owned(),
-                 "rails_hello-production-ssl".to_owned()]);
+               &["vault_integration-production".to_owned(),
+                 "vault_integration-production-frontend-web".to_owned(),
+                 "vault_integration-production-ssl".to_owned()]);
     assert_eq!(ttl, &VaultDuration::seconds(2592000));
 }
