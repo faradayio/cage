@@ -29,16 +29,14 @@ include!(concat!(env!("OUT_DIR"), "/plugins/transform/vault_config.rs"));
 /// Load a vault token from `~/.vault-token`, where the command line client
 /// puts it.
 fn load_vault_token_from_file() -> Result<String, Error> {
-    let path = try!(env::home_dir().ok_or_else(|| {
-        err("You do not appear to have a home directory")
-    })).join(".vault-token");
-    let mut f = try!(fs::File::open(&path).map_err(|e| {
-        err!("Error opening {}: {}", path.display(), e)
-    }));
+    let path = try!(env::home_dir()
+            .ok_or_else(|| err("You do not appear to have a home directory")))
+        .join(".vault-token");
+    let mut f = try!(fs::File::open(&path)
+        .map_err(|e| err!("Error opening {}: {}", path.display(), e)));
     let mut result = String::new();
-    try!(f.read_to_string(&mut result).map_err(|e| {
-        err!("Error reading {}: {}", path.display(), e)
-    }));
+    try!(f.read_to_string(&mut result)
+        .map_err(|e| err!("Error reading {}: {}", path.display(), e)));
     Ok(result.trim().to_owned())
 }
 
@@ -47,8 +45,11 @@ fn find_vault_token() -> Result<String, Error> {
     env::var("VAULT_MASTER_TOKEN")
         .or_else(|_| env::var("VAULT_TOKEN"))
         .or_else(|_| load_vault_token_from_file())
-        .map_err(|e| err!("{}.  You probably want to log in using the vault \
-                           client or set VAULT_MASTER_TOKEN", e))
+        .map_err(|e| {
+            err!("{}.  You probably want to log in using the vault client or set \
+                  VAULT_MASTER_TOKEN",
+                 e)
+        })
 }
 
 /// The "environment" in which to interpret a configuration file.  We don't
@@ -203,9 +204,8 @@ impl Plugin {
     {
         let path = Self::config_path(project);
         let f = try!(fs::File::open(&path));
-        let config = try!(serde_yaml::from_reader(f).map_err(|e| {
-            err!("Error reading {}: {}", path.display(), e)
-        }));
+        let config = try!(serde_yaml::from_reader(f)
+            .map_err(|e| err!("Error reading {}: {}", path.display(), e)));
         Ok(Plugin {
             config: config,
             generator: Box::new(generator),
