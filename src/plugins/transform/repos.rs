@@ -1,4 +1,5 @@
-//! Plugin which applies `DefaultTags` to `dc::File`.
+//! Plugin which transforms `dc::File` to point at local clones of GitHub
+//! repositories.
 
 use docker_compose::v2 as dc;
 use std::marker::PhantomData;
@@ -9,7 +10,8 @@ use plugins::{Operation, PluginNew, PluginTransform};
 use project::Project;
 use util::{ConductorPathExt, Error};
 
-/// Loads a `config/secrets.yml` file and merges in into a project.
+/// Transforms `dc::File` to point at local clones of GitHub
+//! repositories.
 #[derive(Debug)]
 #[allow(missing_copy_implementations)]
 pub struct Plugin {

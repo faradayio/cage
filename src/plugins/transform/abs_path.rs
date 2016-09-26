@@ -9,7 +9,7 @@ use plugins::{Operation, PluginNew, PluginTransform};
 use project::Project;
 use util::{ConductorPathExt, Error, err};
 
-/// Loads a `config/secrets.yml` file and merges in into a project.
+/// Plugin which converts all paths in a `dc::File` to absolute.
 #[derive(Debug)]
 #[allow(missing_copy_implementations)]
 pub struct Plugin {
@@ -60,6 +60,7 @@ impl PluginTransform for Plugin {
                     }
                     Some(dc::HostVolume::UserRelativePath(ref path))
                         if path.is_relative() => {
+
                         let home = try!(env::home_dir()
                             .ok_or_else(|| err("Cannot find HOME directory")));
                         let new_path = home.join(path);

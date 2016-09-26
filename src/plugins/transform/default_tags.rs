@@ -8,7 +8,7 @@ use plugins::{Operation, PluginNew, PluginTransform};
 use project::Project;
 use util::Error;
 
-/// Loads a `config/secrets.yml` file and merges in into a project.
+/// Applies `DefaultTags` to `dc::File`.
 #[derive(Debug)]
 #[allow(missing_copy_implementations)]
 pub struct Plugin {
