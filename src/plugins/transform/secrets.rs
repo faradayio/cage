@@ -39,7 +39,11 @@ impl plugins::Plugin for Plugin {
     }
 }
 
-impl PluginGenerate for Plugin {}
+impl PluginGenerate for Plugin {
+    fn generator_description(&self) -> &'static str {
+        "Store passwords & other secrets in a local file"
+    }
+}
 
 impl PluginTransform for Plugin {
     fn transform(&self,
@@ -86,9 +90,8 @@ impl PluginNew for Plugin {
         let path = Self::config_path(project);
         let config = if path.exists() {
             let f = try!(fs::File::open(&path));
-            Some(try!(serde_yaml::from_reader(f).map_err(|e| {
-                err!("Error reading {}: {}", path.display(), e)
-            })))
+            Some(try!(serde_yaml::from_reader(f)
+                .map_err(|e| err!("Error reading {}: {}", path.display(), e))))
         } else {
             None
         };

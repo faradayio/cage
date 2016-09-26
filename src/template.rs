@@ -79,7 +79,8 @@ impl Template {
                        -> Result<(), Error>
         where T: ToJson + fmt::Debug
     {
-        debug!("Generating {} with {:?}", &self.name, data);
+        let json = data.to_json();
+        debug!("Generating {} with {}", &self.name, &json);
         for (rel_path, tmpl) in &self.files {
             let path = target_dir.join(rel_path);
             debug!("Output {}", path.display());
@@ -94,7 +95,7 @@ impl Template {
                 }));
 
             // Render our template to the file.
-            let ctx = hb::Context::wraps(data);
+            let ctx = hb::Context::wraps(&json);
             try!(self.handlebars
                 .template_renderw(tmpl, &ctx, &mut out)
                 .map_err(|e| err!("Unable to generate {}: {}", path.display(), &e)));

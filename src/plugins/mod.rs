@@ -94,13 +94,16 @@ pub trait PluginTransform: Plugin {
 
 /// A plugin which can generate source code.
 pub trait PluginGenerate: Plugin {
+    /// A short, human-readable description of what this generator does in
+    /// fewer than 60 characters (for display on monospaced terminals).
+    fn generator_description(&self) -> &'static str;
+
     /// Generate source code.  The default implementation generates the
     /// template of the same name as the plugin, using the project as
     /// input.  This is a good default.
     fn generate(&self, project: &Project, out: &mut io::Write) -> Result<(), Error> {
-        let proj_dir = project.root_dir();
         let mut proj_tmpl = try!(Template::new(self.name()));
-        try!(proj_tmpl.generate(&proj_dir, project, out));
+        try!(proj_tmpl.generate(&project.root_dir(), project, out));
         Ok(())
     }
 }
@@ -128,6 +131,11 @@ impl Manager {
         try!(manager.register_generator::<transform::vault::Plugin>(proj));
         try!(manager.register_transform::<transform::vault::Plugin>(proj));
         Ok(manager)
+    }
+
+    /// Get the generators registered with this plugin manager.
+    pub fn generators(&self) -> &[Box<PluginGenerate>] {
+        &self.generators
     }
 
     /// Create a new plugin, returning a reasonably helpful error if we
@@ -159,6 +167,20 @@ impl Manager {
         Ok(())
     }
 
+    /// Run the specified generator in the current project.
+    pub fn generate(&self,
+                    project: &Project,
+                    name: &str,
+                    out: &mut io::Write)
+                    -> Result<(), Error> {
+        let generator = try!(self.generators
+            .iter()
+            .find(|g| g.name() == name)
+            .ok_or_else(|| err!("Cannot find a generator named {}", name)));
+        debug!("Generating {}", generator.name());
+        generator.generate(project, out)
+    }
+
     /// Apply all our transform plugins.
     pub fn transform(&self,
                      op: Operation,
@@ -166,9 +188,8 @@ impl Manager {
                      file: &mut dc::File)
                      -> Result<(), Error> {
         for plugin in &self.transforms {
-            try!(plugin.transform(op, ctx, file).map_err(|e| {
-                err!("Error applying plugin {}: {}", plugin.name(), e)
-            }));
+            try!(plugin.transform(op, ctx, file)
+                .map_err(|e| err!("Error applying plugin {}: {}", plugin.name(), e)));
         }
         Ok(())
     }

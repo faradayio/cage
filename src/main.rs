@@ -43,6 +43,8 @@ Usage:
   conductor [options] test <pod> <service>
   conductor [options] repo list
   conductor [options] repo clone <repo>
+  conductor [options] generate list
+  conductor [options] generate <generator>
   conductor [options] export <dir>
   conductor (--help | --version)
 
@@ -59,6 +61,8 @@ Commands:
   repo list         List all git repository aliases and URLs
   repo clone        Clone a git repository using its short alias and mount it
                     into the containers that use it
+  generate list     List all available generators
+  generate          Run the specified generator
   export            Export to the named directory as flattened *.yml files
 
 Arguments:
@@ -67,6 +71,7 @@ Arguments:
   <pod>, <pods>     The name of a pod specified in `pods/`
   <repo>            Short alias for a repo (see `repo list`)
   <service>         The name of a service in a pod
+  <generator>       The name of a generator
 
 Exec options:
   -d                Run command detached in background
@@ -110,11 +115,13 @@ struct Args {
     cmd_list: bool,
     cmd_clone: bool,
     cmd_new: bool,
+    cmd_generate: bool,
     cmd_export: bool,
 
     arg_args: Option<Vec<String>>,
     arg_command: Option<String>,
     arg_dir: Option<String>,
+    arg_generator: Option<String>,
     arg_name: Option<String>,
     arg_pod: Option<String>,
     arg_pods: Vec<String>,
@@ -182,8 +189,8 @@ impl Args {
 fn run(args: &Args) -> Result<(), Error> {
 
     if args.cmd_new {
-        try!(conductor::Project::generate(&try!(env::current_dir()),
-                                          args.arg_name.as_ref().unwrap()));
+        try!(conductor::Project::generate_new(&try!(env::current_dir()),
+                                              args.arg_name.as_ref().unwrap()));
         return Ok(());
     }
 
@@ -238,6 +245,10 @@ fn run(args: &Args) -> Result<(), Error> {
         try!(proj.repo_clone(&runner, args.arg_repo.as_ref().unwrap()));
         // Regenerate our output now that we've cloned.
         try!(proj.output(ovr));
+    } else if args.cmd_generate && args.cmd_list {
+        try!(proj.generate_list())
+    } else if args.cmd_generate {
+        try!(proj.generate(&args.arg_generator.as_ref().unwrap()))
     } else if args.cmd_export {
         try!(proj.export(&ovr, &Path::new(args.arg_dir.as_ref().unwrap())));
     } else {
