@@ -5,8 +5,9 @@ use shlex;
 use std::path::{Path, PathBuf};
 
 use ext::context::ContextExt;
+#[cfg(test)]
 use project::Project;
-use util::{ConductorPathExt, Error, err};
+use util::{Error, err};
 
 /// These methods will appear as regular methods on `Service` in any module
 /// which includes `ServiceExt`.
@@ -24,10 +25,6 @@ pub trait ServiceExt {
 
     /// Get the test command associated with this service.
     fn test_command(&self) -> Result<Vec<String>, Error>;
-
-    /// Make any local updates to this service we want to make before
-    /// outputting it for `Project::output`.
-    fn update_for_output(&mut self, project: &Project) -> Result<(), Error>;
 }
 
 impl ServiceExt for dc::Service {
@@ -64,33 +61,6 @@ impl ServiceExt for dc::Service {
         } else {
             Ok(result)
         }
-    }
-
-    fn update_for_output(&mut self, project: &Project) -> Result<(), Error> {
-        // Handle locally cloned repositories.
-        if let Some(git_url) = try!(self.git_url()).cloned() {
-            if let Some(repo) = project.repos().find_by_git_url(&git_url) {
-                if repo.is_cloned(project) {
-                    // Build an absolute path to our repo's clone directory.
-                    let path = try!(repo.path(project).to_absolute());
-
-                    // Mount the local build directory inside the
-                    // container.
-                    let srcdir = try!(self.source_mount_dir());
-                    let mount = dc::VolumeMount::host(&path, &srcdir);
-                    self.volumes.push(dc::value(mount));
-
-                    // Update the `build` field if present.
-                    if let Some(ref mut build) = self.build {
-                        build.context = dc::value(dc::Context::Dir(path));
-                    }
-                }
-            }
-        }
-
-        // TODO LOW: Remove `io.fdy.conductor.` labels?
-
-        Ok(())
     }
 }
 
@@ -131,5 +101,3 @@ fn shell_returns_preferred_shell_for_this_service() {
     let proxy = merged.services.get("proxy").unwrap();
     assert_eq!(proxy.shell().unwrap(), "/bin/sh");
 }
-
-// update_for_output is tested in ext::file::FileExt.

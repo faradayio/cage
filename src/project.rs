@@ -3,13 +3,14 @@
 use std::collections::BTreeMap;
 use std::env;
 use std::fs;
+#[cfg(test)]
+use std::io;
 use std::path::Path;
 use std::path::PathBuf;
 use std::slice;
 
 use default_tags::DefaultTags;
 use dir;
-use ext::file::FileExt;
 use ovr::Override;
 use plugins::{self, Operation};
 use pod::{Pod, PodType};
@@ -278,9 +279,6 @@ impl Project {
             // output.
             let mut file = try!(pod.merged_file(ovr));
             try!(file.make_standalone(&self.pods_dir()));
-            if op == Operation::Output {
-                try!(file.update_for_output(self));
-            }
             let ctx = plugins::Context::new(self, ovr, pod);
             try!(self.plugins().transform(op, &ctx, &mut file));
             try!(file.write_to_path(out_path));
@@ -426,5 +424,49 @@ fn export_creates_a_directory_of_flat_yml_files() {
     assert!(export_dir.join("frontend.yml").exists());
     assert!(export_dir.join("db.yml").exists());
     assert!(export_dir.join("tasks/migrate.yml").exists());
+    proj.remove_test_output().unwrap();
+}
+
+#[test]
+fn output_adds_tags_and_mounts_cloned_source() {
+    use docker_compose::v2 as dc;
+    use env_logger;
+    let _ = env_logger::init();
+
+    let cursor = io::Cursor::new("dockercloud/hello-world:staging\n");
+    let default_tags = DefaultTags::read(cursor).unwrap();
+
+    let mut proj = Project::from_example("hello").unwrap();
+    proj.set_default_tags(default_tags);
+    let ovr = proj.ovr("development").unwrap();
+    let repo = proj.repos().find_by_alias("dockercloud-hello-world").unwrap();
+    repo.fake_clone_source(&proj).unwrap();
+    proj.output(ovr).unwrap();
+
+    // Load the generated file and look at the `web` service we cloned.
+    let frontend_file = proj.output_dir().join("pods/frontend.yml");
+    let file = dc::File::read_from_path(frontend_file).unwrap();
+    let web = file.services.get("web").unwrap();
+    let src_path = repo.path(&proj).to_absolute().unwrap();
+
+    // Make sure our `build` entry has been pointed at the local source
+    // directory.
+    assert_eq!(web.build.as_ref().unwrap().context.value().unwrap(),
+               &dc::Context::new(src_path.to_str().unwrap()));
+
+    // Make sure the local source directory is being mounted into the
+    // container.
+    let mount = web.volumes
+        .last()
+        .expect("expected web service to have volumes")
+        .value()
+        .unwrap();
+    assert_eq!(mount.host, Some(dc::HostVolume::Path(src_path)));
+    assert_eq!(mount.container, Path::new("/app"));
+
+    // Make sure that our image versions were correctly defaulted.
+    assert_eq!(web.image.as_ref().unwrap().value().unwrap(),
+               &dc::Image::new("dockercloud/hello-world:staging").unwrap());
+
     proj.remove_test_output().unwrap();
 }

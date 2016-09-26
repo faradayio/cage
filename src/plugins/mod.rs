@@ -129,9 +129,12 @@ impl Manager {
         try!(manager.register_generator::<transform::secrets::Plugin>(proj));
         try!(manager.register_generator::<transform::vault::Plugin>(proj));
 
+        try!(manager.register_transform::<transform::repos::Plugin>(proj));
         try!(manager.register_transform::<transform::secrets::Plugin>(proj));
         try!(manager.register_transform::<transform::vault::Plugin>(proj));
         try!(manager.register_transform::<transform::default_tags::Plugin>(proj));
+
+        // TODO LOW: Final plugin to remove `io.fdy.conductor.` labels?
 
         Ok(manager)
     }
