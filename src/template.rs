@@ -72,13 +72,12 @@ impl Template {
 
     /// Generate this template into `target_dir`, passing `data` to the
     /// Handlebars templates, and writing progress messages to `out`.
-    pub fn generate<T, W>(&mut self,
-                          target_dir: &Path,
-                          data: &T,
-                          out: &mut W)
-                          -> Result<(), Error>
-        where T: ToJson + fmt::Debug,
-              W: io::Write
+    pub fn generate<T>(&mut self,
+                       target_dir: &Path,
+                       data: &T,
+                       out: &mut io::Write)
+                       -> Result<(), Error>
+        where T: ToJson + fmt::Debug
     {
         debug!("Generating {} with {:?}", &self.name, data);
         for (rel_path, tmpl) in &self.files {

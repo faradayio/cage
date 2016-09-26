@@ -2,11 +2,13 @@
 
 use docker_compose::v2 as dc;
 use std::fmt;
+use std::io;
 use std::marker::PhantomData;
 
 use ovr::Override;
 use pod::Pod;
 use project::Project;
+use template::Template;
 use util::Error;
 
 pub mod transform;
@@ -36,29 +38,122 @@ impl<'a> Context<'a> {
     }
 }
 
+/// What kind of transform operation are we performing?  (Adding new kinds
+/// of operations will be a breaking API change for plugins.)
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Operation {
+    /// We're outputting a file for local development with conductor.
+    Output,
+    /// We're exporting a file for use by another tool.
+    Export,
+}
+
+/// The "super-trait" of all our specific plugin traits.  This needs to be
+/// usable as a [trait object][], so it may not contain any static "class"
+/// methods or methods with type parameters.  Those can be found in
+/// `PluginNew` instead.  This trait needs to be usable as a trait object
+/// so that we can create a `Vec` containing multiple different plugin
+/// implementations.  Trait objects are as close as Rust comes to object
+/// orientation.
+///
+/// [trait object]: https://doc.rust-lang.org/book/trait-objects.html
+pub trait Plugin {
+    /// The name of this plugin (available after we create an instance).
+    fn name(&self) -> &'static str;
+}
+
+/// Initialization for `Plugin`.  These methods can't be part of `Plugin`
+/// itself, because they would prevent us from using `Plugin` as a [trait
+/// object][].
+///
+/// [trait object]: https://doc.rust-lang.org/book/trait-objects.html
+pub trait PluginNew: Plugin + Sized + fmt::Debug {
+    /// The name of this plugin (available before we create an instance).
+    fn plugin_name() -> &'static str;
+
+    /// Has this plugin been configured for this project?  This will be
+    /// called before instantiating any plugin type except
+    /// `PluginGenerate`.
+    fn is_configured_for(_project: &Project) -> Result<bool, Error> {
+        Ok(true)
+    }
+
+    /// Create a new plugin.
+    fn new(project: &Project) -> Result<Self, Error>;
+}
+
+/// A plugin which transforms a `dc::File` object.
+pub trait PluginTransform: Plugin {
+    /// Transform the specified file.
+    fn transform(&self,
+                 op: Operation,
+                 ctx: &Context,
+                 file: &mut dc::File)
+                 -> Result<(), Error>;
+}
+
+/// A plugin which can generate source code.
+pub trait PluginGenerate: Plugin {
+    /// Generate source code.  The default implementation generates the
+    /// template of the same name as the plugin, using the project as
+    /// input.  This is a good default.
+    fn generate(&self, project: &Project, out: &mut io::Write) -> Result<(), Error> {
+        let proj_dir = project.root_dir();
+        let mut proj_tmpl = try!(Template::new(self.name()));
+        try!(proj_tmpl.generate(&proj_dir, project, out));
+        Ok(())
+    }
+}
+
 /// A collection of plugins, normally associated with a project.
 pub struct Manager {
     /// Our `dc::File` transforming plugins.
-    transforms: Vec<Box<transform::Plugin>>,
+    transforms: Vec<Box<PluginTransform>>,
+
+    /// Our code generator plugins.
+    generators: Vec<Box<PluginGenerate>>,
 }
 
 impl Manager {
     /// Create a new manager for the specified project.
     pub fn new(proj: &Project) -> Result<Manager, Error> {
-        let mut manager = Manager { transforms: vec![] };
+        let mut manager = Manager {
+            transforms: vec![],
+            generators: vec![],
+        };
+        // We instantiate some of these plugins twice, could we be more
+        // clever about it?
+        try!(manager.register_generator::<transform::secrets::Plugin>(proj));
         try!(manager.register_transform::<transform::secrets::Plugin>(proj));
+        try!(manager.register_generator::<transform::vault::Plugin>(proj));
         try!(manager.register_transform::<transform::vault::Plugin>(proj));
         Ok(manager)
     }
 
+    /// Create a new plugin, returning a reasonably helpful error if we
+    /// fail.
+    fn new_plugin<T>(&self, proj: &Project) -> Result<T, Error>
+        where T: PluginNew + 'static
+    {
+        T::new(proj)
+            .map_err(|e| err!("Error initializing plugin {}: {}", T::plugin_name(), e))
+    }
+
+    /// Register a generator with this manager.
+    fn register_generator<T>(&mut self, proj: &Project) -> Result<(), Error>
+        where T: PluginNew + PluginGenerate + 'static
+    {
+        let plugin: T = try!(self.new_plugin(&proj));
+        self.generators.push(Box::new(plugin));
+        Ok(())
+    }
+
     /// Register a transform with this manager.
     fn register_transform<T>(&mut self, proj: &Project) -> Result<(), Error>
-        where T: transform::PluginNew + 'static
+        where T: PluginNew + PluginTransform + 'static
     {
-        if try!(T::should_enable_for(&proj)) {
-            let plugin = try!(T::new(&proj).map_err(|e| {
-                err!("Error initializing plugin: {}", e)
-            }));
+        if try!(T::is_configured_for(&proj)) {
+            let plugin: T = try!(self.new_plugin(&proj));
             self.transforms.push(Box::new(plugin));
         }
         Ok(())
@@ -66,7 +161,7 @@ impl Manager {
 
     /// Apply all our transform plugins.
     pub fn transform(&self,
-                     op: transform::Operation,
+                     op: Operation,
                      ctx: &Context,
                      file: &mut dc::File)
                      -> Result<(), Error> {

@@ -16,8 +16,7 @@ use vault;
 use vault::client::VaultDuration;
 
 use plugins;
-use plugins::transform::Operation;
-use plugins::transform::{Plugin as PluginTransform, PluginNew};
+use plugins::{Operation, PluginGenerate, PluginNew, PluginTransform};
 use project::Project;
 use util::{Error, err};
 
@@ -187,7 +186,9 @@ impl GenerateToken for Vault {
 #[derive(Debug)]
 pub struct Plugin {
     /// Our `config/vault.yml` YAML file, parsed and read into memory.
-    config: Config,
+    /// Optional because if we're being run as a `PluginGenerate`, we won't
+    /// have it (but it's guaranteed otherwise).
+    config: Option<Config>,
     /// Our source of tokens.
     generator: Box<GenerateToken>,
 }
@@ -203,9 +204,14 @@ impl Plugin {
         where G: GenerateToken + 'static
     {
         let path = Self::config_path(project);
-        let f = try!(fs::File::open(&path));
-        let config = try!(serde_yaml::from_reader(f)
-            .map_err(|e| err!("Error reading {}: {}", path.display(), e)));
+        let config = if path.exists() {
+            let f = try!(fs::File::open(&path));
+            Some(try!(serde_yaml::from_reader(f).map_err(|e| {
+                err!("Error reading {}: {}", path.display(), e)
+            })))
+        } else {
+            None
+        };
         Ok(Plugin {
             config: config,
             generator: Box::new(generator),
@@ -213,19 +219,28 @@ impl Plugin {
     }
 }
 
-impl PluginTransform for Plugin {
+impl plugins::Plugin for Plugin {
     fn name(&self) -> &'static str {
-        "vault"
+        Self::plugin_name()
     }
+}
 
+impl PluginGenerate for Plugin {}
+
+impl PluginTransform for Plugin {
     fn transform(&self,
                  _op: Operation,
                  ctx: &plugins::Context,
                  file: &mut dc::File)
                  -> Result<(), Error> {
 
+        // Get our plugin config.
+        let config = self.config
+            .as_ref()
+            .expect("config should always be present for transform");
+
         // Should this plugin be excluded in this override?
-        if !ctx.ovr.included_by(&self.config.only_in_overrides) {
+        if !ctx.ovr.included_by(&config.only_in_overrides) {
             return Ok(());
         }
 
@@ -250,9 +265,8 @@ impl PluginTransform for Plugin {
                 .insert("VAULT_ADDR".to_owned(), self.generator.addr().to_owned());
 
             // Get a list of policy "patterns" that apply to this service.
-            let mut raw_policies = self.config.default_policies.clone();
-            raw_policies.extend(self.config
-                .pods
+            let mut raw_policies = config.default_policies.clone();
+            raw_policies.extend(config.pods
                 .get(ctx.pod.name())
                 .and_then(|pod| pod.get(name))
                 .map_or_else(|| vec![], |s| s.policies.clone()));
@@ -270,13 +284,13 @@ impl PluginTransform for Plugin {
                                        ctx.ovr.name(),
                                        ctx.pod.name(),
                                        name);
-            let ttl = VaultDuration::seconds(self.config.default_ttl);
+            let ttl = VaultDuration::seconds(config.default_ttl);
             let token = try!(self.generator
                 .generate_token(&display_name, policies, ttl));
             service.environment.insert("VAULT_TOKEN".to_owned(), token);
 
             // Add in any extra environment variables.
-            for (var, val) in &self.config.extra_environment {
+            for (var, val) in &config.extra_environment {
                 service.environment.insert(var.to_owned(), try!(interpolated(val)));
             }
         }
@@ -285,13 +299,15 @@ impl PluginTransform for Plugin {
 }
 
 impl PluginNew for Plugin {
-    /// Should we enable this plugin for this project?
-    fn should_enable_for(project: &Project) -> Result<bool, Error> {
+    fn plugin_name() -> &'static str {
+        "vault"
+    }
+
+    fn is_configured_for(project: &Project) -> Result<bool, Error> {
         let path = Self::config_path(project);
         Ok(path.exists())
     }
 
-    /// Create a new plugin.
     fn new(project: &Project) -> Result<Self, Error> {
         Self::new_with_generator(project, try!(Vault::new()))
     }

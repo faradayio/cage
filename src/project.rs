@@ -1,5 +1,6 @@
 //! A conductor project.
 
+use std::collections::BTreeMap;
 use std::env;
 use std::fs;
 use std::path::Path;
@@ -10,10 +11,10 @@ use default_tags::DefaultTags;
 use dir;
 use ext::file::FileExt;
 use ovr::Override;
-use plugins;
-use plugins::transform::Operation;
+use plugins::{self, Operation};
 use pod::{Pod, PodType};
 use repos::Repos;
+use rustc_serialize::json::{Json, ToJson};
 use util::{ConductorPathExt, Error, ToStrOrErr};
 
 /// A `conductor` project, which is represented as a directory containing a
@@ -316,6 +317,15 @@ impl Project {
         }
 
         self.output_helper(ovr, Operation::Export, export_dir)
+    }
+}
+
+/// Convert to JSON for use in generator templates.
+impl<'a> ToJson for Project {
+    fn to_json(&self) -> Json {
+        let mut info: BTreeMap<String, Json> = BTreeMap::new();
+        info.insert("name".to_string(), self.name().to_json());
+        info.to_json()
     }
 }
 

@@ -8,8 +8,7 @@ use std::fs;
 use std::path::PathBuf;
 
 use plugins;
-use plugins::transform::Operation;
-use plugins::transform::{Plugin as PluginTransform, PluginNew};
+use plugins::{Operation, PluginGenerate, PluginNew, PluginTransform};
 use project::Project;
 use util::Error;
 
@@ -22,7 +21,9 @@ include!(concat!(env!("OUT_DIR"), "/plugins/transform/secrets_config.rs"));
 #[derive(Debug)]
 pub struct Plugin {
     /// Our `config/secrets.yml` YAML file, parsed and read into memory.
-    config: Config,
+    /// Optional because if we're being run as a `PluginGenerate`, we won't
+    /// have it (but it's guaranteed otherwise).
+    config: Option<Config>,
 }
 
 impl Plugin {
@@ -32,16 +33,24 @@ impl Plugin {
     }
 }
 
-impl PluginTransform for Plugin {
+impl plugins::Plugin for Plugin {
     fn name(&self) -> &'static str {
-        "secrets"
+        Self::plugin_name()
     }
+}
 
+impl PluginGenerate for Plugin {}
+
+impl PluginTransform for Plugin {
     fn transform(&self,
                  _op: Operation,
                  ctx: &plugins::Context,
                  file: &mut dc::File)
                  -> Result<(), Error> {
+
+        let config = self.config
+            .as_ref()
+            .expect("config should always be present for transform");
 
         let append_service =
             |service: &mut dc::Service, pods: &BTreeMap<_, PodSecrets>, name| {
@@ -52,9 +61,9 @@ impl PluginTransform for Plugin {
             };
 
         for (name, mut service) in &mut file.services {
-            service.environment.append(&mut self.config.common.clone());
-            append_service(&mut service, &self.config.pods, name);
-            if let Some(ovr) = self.config.overrides.get(ctx.ovr.name()) {
+            service.environment.append(&mut config.common.clone());
+            append_service(&mut service, &config.pods, name);
+            if let Some(ovr) = config.overrides.get(ctx.ovr.name()) {
                 service.environment.append(&mut ovr.common.clone());
                 append_service(&mut service, &ovr.pods, name);
             }
@@ -64,19 +73,25 @@ impl PluginTransform for Plugin {
 }
 
 impl PluginNew for Plugin {
-    /// Should we enable this plugin for this project?
-    fn should_enable_for(project: &Project) -> Result<bool, Error> {
+    fn plugin_name() -> &'static str {
+        "secrets"
+    }
+
+    fn is_configured_for(project: &Project) -> Result<bool, Error> {
         let path = Self::config_path(project);
         Ok(path.exists())
     }
 
-    /// Create a new plugin.
     fn new(project: &Project) -> Result<Self, Error> {
         let path = Self::config_path(project);
-        let f = try!(fs::File::open(&path));
-        let config = try!(serde_yaml::from_reader(f).map_err(|e| {
-            err!("Error reading {}: {}", path.display(), e)
-        }));
+        let config = if path.exists() {
+            let f = try!(fs::File::open(&path));
+            Some(try!(serde_yaml::from_reader(f).map_err(|e| {
+                err!("Error reading {}: {}", path.display(), e)
+            })))
+        } else {
+            None
+        };
         Ok(Plugin { config: config })
     }
 }
@@ -86,9 +101,9 @@ fn enabled_for_projects_with_config_file() {
     use env_logger;
     let _ = env_logger::init();
     let proj1 = Project::from_example("hello").unwrap();
-    assert!(!Plugin::should_enable_for(&proj1).unwrap());
+    assert!(!Plugin::is_configured_for(&proj1).unwrap());
     let proj2 = Project::from_example("rails_hello").unwrap();
-    assert!(Plugin::should_enable_for(&proj2).unwrap());
+    assert!(Plugin::is_configured_for(&proj2).unwrap());
 }
 
 #[test]
