@@ -9,6 +9,3 @@ services:
     image: "faraday/rails_hello"
     build: "https://github.com/faradayio/rails_hello.git"
     command: ["rake", "db:migrate"]
-    labels:
-      # This pod will only be run manually, as a one-shot task.
-      io.fdy.conductor.type: "task"

@@ -1,0 +1,2 @@
+# This pod will only be run manually, as a one-shot task.
+pod_type: "task"

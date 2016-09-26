@@ -159,7 +159,9 @@ impl Project {
             // It's safe to unwrap the file_stem because we know it matched
             // our glob.
             let name = try!(path.file_stem().unwrap().to_str_or_err()).to_owned();
-            pods.push(try!(Pod::new(pods_dir.clone(), name, overrides)));
+            if !name.ends_with(".config") {
+                pods.push(try!(Pod::new(pods_dir.clone(), name, overrides)));
+            }
         }
         Ok(pods)
     }
@@ -263,7 +265,7 @@ impl Project {
         for pod in &self.pods {
             // Figure out where to put our pod.
             let file_name = format!("{}.yml", pod.name());
-            let rel_path = match (op, try!(pod.pod_type(ovr))) {
+            let rel_path = match (op, pod.pod_type()) {
                 (Operation::Export, PodType::Task) => {
                     Path::new("tasks").join(file_name)
                 }

@@ -1,0 +1,3 @@
+# This pod should only be present in the `development` override.
+only_in_overrides:
+  - "development"

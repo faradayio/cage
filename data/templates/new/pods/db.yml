@@ -8,7 +8,5 @@ services:
   db:
     image: "postgres"
     labels:
-      # Specify which overrides should contain this pod.
-      io.fdy.conductor.overrides: "development"
       # Choose a more useful shell.
       io.fdy.conductor.shell: "bash"

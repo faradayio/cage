@@ -41,7 +41,7 @@ impl CommandUp for Project {
         for pod_name in pods_names {
             let pod = try!(self.pod(pod_name)
                 .ok_or_else(|| err!("Cannot find pod {}", pod_name)));
-            if try!(pod.pod_type(ovr)) == PodType::Service {
+            if pod.pod_type() == PodType::Service {
                 // We pass `-d` because we need to detach from each pod to
                 // launch the next.  To avoid this, we'd need to use
                 // multiple parallel threads and maybe some intelligent

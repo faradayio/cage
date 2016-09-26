@@ -2,16 +2,24 @@
 
 use docker_compose::v2 as dc;
 use docker_compose::v2::MergeOverride;
+use serde_yaml;
 use std::collections::BTreeMap;
 use std::collections::btree_map;
 use std::ffi::OsString;
+use std::fs;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
-use ext::file::FileExt;
 use ovr::Override;
 use project::Project;
 use util::Error;
+
+// Include some source code containing data structures we need to run
+// through serde.
+#[cfg(feature = "serde_macros")]
+include!(concat!("pod_config.in.rs"));
+#[cfg(feature = "serde_codegen")]
+include!(concat!(env!("OUT_DIR"), "/pod_config.rs"));
 
 /// Information about a `docker-compose.yml` file, including its path
 /// relative to `base_dir` (`base_dir` is normally `$PROJECT/pods`), and
@@ -80,15 +88,6 @@ impl FileInfo {
     }
 }
 
-/// Indicates whether a pod is a regular service or a one-shot task.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum PodType {
-    /// A service is normally started up and left running.
-    Service,
-    /// A task is run once and expected to exit.
-    Task,
-}
-
 impl FromStr for PodType {
     type Err = Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -118,6 +117,9 @@ pub struct Pod {
     /// sensible value here for each pod, even if the file doesn't exist on
     /// disk.
     override_file_infos: BTreeMap<Override, FileInfo>,
+
+    /// Per-pod configuration.
+    config: Config,
 }
 
 impl Pod {
@@ -133,6 +135,17 @@ impl Pod {
     {
         let base_dir = base_dir.into();
         let name = name.into();
+
+        // Load our `*.config.yml` file, if any.
+        let config_path = base_dir.join(&format!("{}.config.yml", &name));
+        let config: Config = if config_path.exists() {
+            let f = try!(fs::File::open(&config_path)
+               .map_err(|e| err!("Error opening {}: {}", &config_path.display(), e)));
+            try!(serde_yaml::from_reader(f)
+               .map_err(|e| err!("Error reading {}: {}", &config_path.display(), e)))
+        } else {
+            Config::default()
+        };
 
         // Load our main `*.yml` file.
         let rel_path = Path::new(&format!("{}.yml", &name)).to_owned();
@@ -151,11 +164,13 @@ impl Pod {
             ovr_infos.insert(ovr.to_owned(), ovr_info);
         }
 
+
         Ok(Pod {
             base_dir: base_dir,
             name: name,
             file_info: file_info,
             override_file_infos: ovr_infos,
+            config: config,
         })
     }
 
@@ -165,12 +180,8 @@ impl Pod {
     }
 
     /// Get the type of this pod.
-    pub fn pod_type(&self, ovr: &Override) -> Result<PodType, Error> {
-        let file = try!(self.merged_file(ovr));
-        match try!(file.pod_label("io.fdy.conductor.type")) {
-            None => Ok(PodType::Service),
-            Some(ref pod_type_str) => pod_type_str.parse(),
-        }
+    pub fn pod_type(&self) -> PodType {
+        self.config.pod_type.unwrap_or(PodType::Service)
     }
 
     /// The base directory for our relative paths.
@@ -350,9 +361,8 @@ fn pod_type_returns_type_of_pod() {
     use env_logger;
     let _ = env_logger::init();
     let proj: Project = Project::from_example("rails_hello").unwrap();
-    let ovr = proj.ovr("development").unwrap();
     let frontend = proj.pod("frontend").unwrap();
-    assert_eq!(frontend.pod_type(ovr).unwrap(), PodType::Service);
+    assert_eq!(frontend.pod_type(), PodType::Service);
     let migrate = proj.pod("migrate").unwrap();
-    assert_eq!(migrate.pod_type(ovr).unwrap(), PodType::Task);
+    assert_eq!(migrate.pod_type(), PodType::Task);
 }
