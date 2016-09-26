@@ -20,23 +20,12 @@ pub trait FileExt {
     /// Make any local updates to this file we want to make before
     /// outputting it for `Project::output`.
     fn update_for_output(&mut self, project: &Project) -> Result<(), Error>;
-
-    /// Make any local updates to this file we want to make before
-    /// outputting it for `Project::export`.
-    fn update_for_export(&mut self, project: &Project) -> Result<(), Error>;
 }
 
 impl FileExt for dc::File {
     fn update_for_output(&mut self, project: &Project) -> Result<(), Error> {
         for service in self.services.values_mut() {
             try!(service.update_for_output(project));
-        }
-        Ok(())
-    }
-
-    fn update_for_export(&mut self, project: &Project) -> Result<(), Error> {
-        for service in self.services.values_mut() {
-            try!(service.update_for_export(project));
         }
         Ok(())
     }

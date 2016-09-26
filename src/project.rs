@@ -278,9 +278,8 @@ impl Project {
             // output.
             let mut file = try!(pod.merged_file(ovr));
             try!(file.make_standalone(&self.pods_dir()));
-            match op {
-                Operation::Output => try!(file.update_for_output(self)),
-                Operation::Export => try!(file.update_for_export(self)),
+            if op == Operation::Output {
+                try!(file.update_for_output(self));
             }
             let ctx = plugins::Context::new(self, ovr, pod);
             try!(self.plugins().transform(op, &ctx, &mut file));

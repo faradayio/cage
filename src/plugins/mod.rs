@@ -127,9 +127,12 @@ impl Manager {
         // We instantiate some of these plugins twice, could we be more
         // clever about it?
         try!(manager.register_generator::<transform::secrets::Plugin>(proj));
-        try!(manager.register_transform::<transform::secrets::Plugin>(proj));
         try!(manager.register_generator::<transform::vault::Plugin>(proj));
+
+        try!(manager.register_transform::<transform::secrets::Plugin>(proj));
         try!(manager.register_transform::<transform::vault::Plugin>(proj));
+        try!(manager.register_transform::<transform::default_tags::Plugin>(proj));
+
         Ok(manager)
     }
 
