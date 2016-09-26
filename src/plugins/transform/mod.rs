@@ -11,16 +11,14 @@ use util::Error;
 pub mod secrets;
 pub mod vault;
 
-/// What kind of transform operation are we performing?
+/// What kind of transform operation are we performing?  (Adding new kinds
+/// of operations will be a breaking API change for plugins.)
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Operation {
     /// We're outputting a file for local development with conductor.
     Output,
     /// We're exporting a file for use by another tool.
     Export,
-    /// PRIVATE: Allow future extensibility without breaking compatibility.
-    #[doc(hidden)]
-    _NonExclusive,
 }
 
 /// A plugin which transforms a `dc::File` object.

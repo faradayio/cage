@@ -104,7 +104,7 @@ fn invokes_docker_exec() {
     let proj = Project::from_example("hello").unwrap();
     let ovr = proj.ovr("development").unwrap();
     let runner = TestCommandRunner::new();
-    proj.output().unwrap();
+    proj.output(ovr).unwrap();
     let target = exec::Target::new(&proj, ovr, "frontend", "web").unwrap();
 
     let command = exec::Command::new("true");
@@ -117,8 +117,6 @@ fn invokes_docker_exec() {
          "hello",
          "-f",
          proj.output_dir().join("pods/frontend.yml"),
-         "-f",
-         proj.output_dir().join("pods/overrides/development/frontend.yml"),
          "exec",
          "-T",
          "web",
@@ -135,7 +133,7 @@ fn runs_shells() {
     let proj = Project::from_example("hello").unwrap();
     let ovr = proj.ovr("development").unwrap();
     let runner = TestCommandRunner::new();
-    proj.output().unwrap();
+    proj.output(ovr).unwrap();
     let target = exec::Target::new(&proj, ovr, "frontend", "web").unwrap();
 
     proj.shell(&runner, &target, &Default::default()).unwrap();
@@ -146,8 +144,6 @@ fn runs_shells() {
          "hello",
          "-f",
          proj.output_dir().join("pods/frontend.yml"),
-         "-f",
-         proj.output_dir().join("pods/overrides/development/frontend.yml"),
          "exec",
          "web",
          "sh"]
@@ -163,7 +159,7 @@ fn runs_tests() {
     let proj = Project::from_example("hello").unwrap();
     let ovr = proj.ovr("test").unwrap();
     let runner = TestCommandRunner::new();
-    proj.output().unwrap();
+    proj.output(ovr).unwrap();
     let target = exec::Target::new(&proj, ovr, "frontend", "proxy").unwrap();
 
     proj.test(&runner, &target).unwrap();
@@ -174,8 +170,6 @@ fn runs_tests() {
          "hellotest",
          "-f",
          proj.output_pods_dir().join("frontend.yml"),
-         "-f",
-         proj.output_pods_dir().join("overrides/test/frontend.yml"),
          "run",
          "--rm",
          "--no-deps",

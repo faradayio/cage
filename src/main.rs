@@ -197,7 +197,7 @@ fn run(args: &Args) -> Result<(), Error> {
     }
     let ovr = try!(proj.ovr(&args.flag_override)
         .ok_or_else(|| err!("override {} is not defined", &args.flag_override)));
-    try!(proj.output());
+    try!(proj.output(ovr));
     let runner = OsCommandRunner::new();
 
     if args.cmd_pull {
@@ -237,7 +237,7 @@ fn run(args: &Args) -> Result<(), Error> {
     } else if args.cmd_repo && args.cmd_clone {
         try!(proj.repo_clone(&runner, args.arg_repo.as_ref().unwrap()));
         // Regenerate our output now that we've cloned.
-        try!(proj.output());
+        try!(proj.output(ovr));
     } else if args.cmd_export {
         try!(proj.export(&ovr, &Path::new(args.arg_dir.as_ref().unwrap())));
     } else {

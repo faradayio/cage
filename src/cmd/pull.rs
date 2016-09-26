@@ -38,7 +38,7 @@ fn runs_docker_compose_pull_on_all_pods() {
     let proj = Project::from_example("hello").unwrap();
     let ovr = proj.ovr("development").unwrap();
     let runner = TestCommandRunner::new();
-    proj.output().unwrap();
+    proj.output(ovr).unwrap();
     proj.pull(&runner, ovr).unwrap();
     assert_ran!(runner, {
         ["docker-compose",
@@ -46,8 +46,6 @@ fn runs_docker_compose_pull_on_all_pods() {
          "hello",
          "-f",
          proj.output_dir().join("pods/frontend.yml"),
-         "-f",
-         proj.output_dir().join("pods/overrides/development/frontend.yml"),
          "pull"]
     });
     proj.remove_test_output().unwrap();
