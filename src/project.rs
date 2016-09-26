@@ -1,5 +1,7 @@
 //! A conductor project.
 
+#[cfg(test)]
+use docker_compose::v2 as dc;
 use std::collections::BTreeMap;
 use std::env;
 use std::fs;
@@ -414,22 +416,7 @@ fn output_creates_a_directory_of_flat_yml_files() {
 }
 
 #[test]
-fn export_creates_a_directory_of_flat_yml_files() {
-    use env_logger;
-    let _ = env_logger::init();
-    let proj = Project::from_example("rails_hello").unwrap();
-    let export_dir = proj.output_dir.join("hello_export");
-    let ovr = proj.ovr("development").unwrap();
-    proj.export(ovr, &export_dir).unwrap();
-    assert!(export_dir.join("frontend.yml").exists());
-    assert!(export_dir.join("db.yml").exists());
-    assert!(export_dir.join("tasks/migrate.yml").exists());
-    proj.remove_test_output().unwrap();
-}
-
-#[test]
-fn output_adds_tags_and_mounts_cloned_source() {
-    use docker_compose::v2 as dc;
+fn output_applies_expected_transforms() {
     use env_logger;
     let _ = env_logger::init();
 
@@ -469,4 +456,45 @@ fn output_adds_tags_and_mounts_cloned_source() {
                &dc::Image::new("dockercloud/hello-world:staging").unwrap());
 
     proj.remove_test_output().unwrap();
+}
+
+#[test]
+fn export_creates_a_directory_of_flat_yml_files() {
+    use env_logger;
+    let _ = env_logger::init();
+    let proj = Project::from_example("rails_hello").unwrap();
+    let export_dir = proj.output_dir.join("hello_export");
+    let ovr = proj.ovr("development").unwrap();
+    proj.export(ovr, &export_dir).unwrap();
+    assert!(export_dir.join("frontend.yml").exists());
+    assert!(export_dir.join("db.yml").exists());
+    assert!(export_dir.join("tasks/migrate.yml").exists());
+    proj.remove_test_output().unwrap();
+}
+
+#[test]
+fn export_applies_expected_transforms() {
+    use env_logger;
+    let _ = env_logger::init();
+
+    // We only test the ways in which `export`'s transforms differ from
+    // `output`.
+
+    let proj = Project::from_example("hello").unwrap();
+    let ovr = proj.ovr("development").unwrap();
+    let repo = proj.repos().find_by_alias("dockercloud-hello-world").unwrap();
+    repo.fake_clone_source(&proj).unwrap();
+    let export_dir = proj.output_dir.join("hello_export");
+    proj.export(ovr, &export_dir).unwrap();
+
+    // Load the generated file and look at the `web` service we cloned.
+    let frontend_file = export_dir.join("frontend.yml");
+    let file = dc::File::read_from_path(frontend_file).unwrap();
+    let web = file.services.get("web").unwrap();
+
+    // Make sure our `build` entry has not been pointed at the local source
+    // directory.
+    let url = "https://github.com/docker/dockercloud-hello-world.git";
+    assert_eq!(web.build.as_ref().unwrap().context.value().unwrap(),
+               &dc::Context::new(dc::GitUrl::new(url).unwrap()));
 }

@@ -36,13 +36,17 @@ impl PluginNew for Plugin {
 
 impl PluginTransform for Plugin {
     fn transform(&self,
-                 _op: Operation,
+                 op: Operation,
                  ctx: &plugins::Context,
                  file: &mut dc::File)
                  -> Result<(), Error> {
-        let project = ctx.project;
+        // Give up immediately if we're not doing this for local output.
+        if op != Operation::Output {
+            return Ok(())
+        }
 
         // Update each service to point to our locally cloned repos.
+        let project = ctx.project;
         for service in &mut file.services.values_mut() {
 
             if let Some(git_url) = try!(service.git_url()).cloned() {
