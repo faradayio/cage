@@ -224,6 +224,12 @@ impl PluginTransform for Plugin {
                  file: &mut dc::File)
                  -> Result<(), Error> {
 
+        // Should this plugin be excluded in this override?
+        if !ctx.ovr.included_by(&self.config.only_in_overrides) {
+            return Ok(());
+        }
+
+        // Apply to each service.
         for (name, mut service) in &mut file.services {
             // Set up a ConfigEnvironment that we can use to perform
             // interpolations of values like `$SERVICE` in our config file.
@@ -327,4 +333,23 @@ fn interpolates_policies() {
                  "vault_integration-production-frontend-web".to_owned(),
                  "vault_integration-production-ssl".to_owned()]);
     assert_eq!(ttl, &VaultDuration::seconds(2592000));
+}
+
+#[test]
+fn only_applied_in_specified_overrides() {
+    use env_logger;
+    let _ = env_logger::init();
+
+    let proj = Project::from_example("vault_integration").unwrap();
+    let ovr = proj.ovr("test").unwrap();
+
+    let vault = MockVault::new();
+    let plugin = Plugin::new_with_generator(&proj, vault).unwrap();
+
+    let frontend = proj.pod("frontend").unwrap();
+    let ctx = plugins::Context::new(&proj, ovr, frontend);
+    let mut file = frontend.merged_file(ovr).unwrap();
+    plugin.transform(Operation::Output, &ctx, &mut file).unwrap();
+    let web = file.services.get("web").unwrap();
+    assert_eq!(web.environment.get("VAULT_ADDR"), None);
 }

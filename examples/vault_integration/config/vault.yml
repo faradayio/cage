@@ -8,6 +8,13 @@
 #     $POD        The name of the pod
 #     $SERVICE    The name of the service
 
+# By default, we only want to enable this plugin in production mode (and
+# staging if we have it).  For local development, either specify fake
+# secrets somewhere in `pods/overrides/development`, or use the `secrets`
+# plugin for real secrets.
+only_in_overrides:
+- "production"
+
 # How should individual services authenticate themselves to vault?  The only
 # supported value for now is "token".
 #

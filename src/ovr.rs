@@ -32,6 +32,30 @@ impl Override {
         &self.name
     }
 
+    /// Check to see if this override should be included in some operation,
+    /// given an optional `only_in_overrides` overrides list.  If no list
+    /// is supplied, we're always included.
+    ///
+    /// We have a weird calling convention because our typical callers are
+    /// invoking us using a member field of a `Config` struct that they
+    /// own.
+    ///
+    /// ```
+    /// let ovr = conductor::Override::new("development");
+    /// assert!(ovr.included_by(&None));
+    /// assert!(ovr.included_by(&Some(vec!["development".to_owned()])));
+    /// assert!(!ovr.included_by(&Some(vec!["production".to_owned()])));
+    /// ```
+    pub fn included_by(&self, only_in_overrides: &Option<Vec<String>>) -> bool {
+        if let Some(ref only_in) = *only_in_overrides {
+            // If a list is supplied, we need to appear in it.
+            only_in.contains(&self.name().to_owned())
+        } else {
+            // If no list is supplied, we're always included.
+            true
+        }
+    }
+
     /// Get a value for `docker-compose`'s `-p` argument for a given project.
     pub fn compose_project_name(&self, project: &Project) -> String {
         if self.name == "test" {
