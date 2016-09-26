@@ -316,8 +316,7 @@ impl PluginTransform for Plugin {
                                        ctx.pod.name(),
                                        name);
             let ttl = VaultDuration::seconds(config.default_ttl);
-            let token = try!(generator
-                .generate_token(&display_name, policies, ttl));
+            let token = try!(generator.generate_token(&display_name, policies, ttl));
             service.environment.insert("VAULT_TOKEN".to_owned(), token);
 
             // Add in any extra environment variables.

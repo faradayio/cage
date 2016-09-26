@@ -1,0 +1,12 @@
+# If several of your images share a single library, you can use this file
+# to specify where the source code for those libraries can be found.
+#
+# Each entry takes the form:
+#
+#     <KEY>: <GIT URL>
+#
+# To specify that a container should mount the checked-out code as a
+# volume, you can use the key `io.fdy.conductor.lib.<KEY>`.  See
+# `pods/frontend.yml` for an example.
+
+coffee_rails: "https://github.com/rails/coffee-rails.git"

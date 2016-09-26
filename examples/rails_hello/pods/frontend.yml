@@ -14,6 +14,10 @@ services:
     labels:
       # The directory where our source code gets mounted into the container.
       io.fdy.conductor.srcdir: "/usr/src/app"
+      # We can define libraries in `config/libraries.yml`, clone them
+      # using `conductor repo clone $KEY`, and mount them into our
+      # containers using properties like this one.
+      io.fdy.conductor.lib.coffee_rails: "/usr/src/vendor/coffee-rails"
       # Choose a more useful shell.
       io.fdy.conductor.shell: "bash"
       # Our test command.  Invoke with `conductor test frontend web`.

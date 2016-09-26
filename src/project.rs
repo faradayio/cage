@@ -66,7 +66,7 @@ impl Project {
                  -> Result<Project, Error> {
         let overrides = try!(Project::find_overrides(root_dir));
         let pods = try!(Project::find_pods(root_dir, &overrides));
-        let repos = try!(Repos::new(&pods));
+        let repos = try!(Repos::new(&root_dir, &pods));
         let absolute_root = try!(root_dir.to_absolute());
         let name = try!(absolute_root.file_name()
                 .and_then(|s| s.to_str())

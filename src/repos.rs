@@ -1,8 +1,10 @@
 //! APIs for working with the git repositories associated with a `Project`.
 
 use docker_compose::v2 as dc;
+use serde_yaml;
 use std::collections::BTreeMap;
 use std::collections::btree_map;
+use std::fs;
 use std::path::{Path, PathBuf};
 
 use command_runner::{Command, CommandRunner};
@@ -10,8 +12,6 @@ use command_runner::{Command, CommandRunner};
 use command_runner::TestCommandRunner;
 use ext::git_url::GitUrlExt;
 use ext::service::ServiceExt;
-#[cfg(test)]
-use std::fs;
 use project::Project;
 use pod::Pod;
 use util::{ConductorPathExt, Error};
@@ -21,47 +21,79 @@ use util::{ConductorPathExt, Error};
 pub struct Repos {
     /// Our repositories, indexed by their local alias.
     repos: BTreeMap<String, Repo>,
+
+    /// A map from keys in `config/libraries.yml` to repository aliases.
+    lib_keys: BTreeMap<String, String>,
 }
 
 impl Repos {
+    /// Add a repository to a map, keyed by its alias.  Returns the alias.
+    fn add_repo(repos: &mut BTreeMap<String, Repo>,
+                git_url: &dc::GitUrl)
+                -> Result<String, Error> {
+        // Figure out what alias we want to use.
+        let alias = try!(git_url.human_alias());
+
+        // Build our repository.
+        let repo = Repo {
+            alias: alias.clone(),
+            git_url: git_url.clone(),
+        };
+
+        // Insert our repository our map, checking for alias
+        // clashes.
+        match repos.entry(repo.alias.clone()) {
+            btree_map::Entry::Vacant(vacant) => {
+                vacant.insert(repo);
+            }
+            btree_map::Entry::Occupied(occupied) => {
+                if &repo.git_url != &occupied.get().git_url {
+                    return Err(err!("{} and {} would both alias to \
+                                     {}",
+                                    &occupied.get().git_url,
+                                    &repo.git_url,
+                                    &repo.alias));
+                }
+            }
+        }
+        Ok(alias)
+    }
+
     /// Create a collection of repositories based on a list of pods.
     #[doc(hidden)]
-    pub fn new(pods: &[Pod]) -> Result<Repos, Error> {
+    pub fn new(root_dir: &Path, pods: &[Pod]) -> Result<Repos, Error> {
         let mut repos: BTreeMap<String, Repo> = BTreeMap::new();
+        let mut lib_keys: BTreeMap<String, String> = BTreeMap::new();
+
+        // Scan our pods for repositories.
         for pod in pods {
             for file in pod.all_files() {
                 for service in file.services.values() {
-                    if let Some(git_url) = try!(service.git_url()).cloned() {
-                        // Figure out what alias we want to use.
-                        let alias = try!(git_url.human_alias());
-
-                        // Build our repository.
-                        let repo = Repo {
-                            alias: alias,
-                            git_url: git_url,
-                        };
-
-                        // Insert our repository our map, checking for alias
-                        // clashes.
-                        match repos.entry(repo.alias.clone()) {
-                            btree_map::Entry::Vacant(vacant) => {
-                                vacant.insert(repo);
-                            }
-                            btree_map::Entry::Occupied(occupied) => {
-                                if &repo.git_url != &occupied.get().git_url {
-                                    return Err(err!("{} and {} would both alias to \
-                                                     {}",
-                                                    &occupied.get().git_url,
-                                                    &repo.git_url,
-                                                    &repo.alias));
-                                }
-                            }
-                        }
+                    if let Some(git_url) = try!(service.git_url()) {
+                        try!(Self::add_repo(&mut repos, git_url));
                     }
                 }
             }
         }
-        Ok(Repos { repos: repos })
+
+        // Scan our config files for repositories.
+        let path = root_dir.join("config/libraries.yml");
+        if path.exists() {
+            let f = try!(fs::File::open(&path)
+                .map_err(|e| err!("Error opening {}: {}", &path.display(), e)));
+            let libs: BTreeMap<String, String> = try!(serde_yaml::from_reader(f)
+                .map_err(|e| err!("Error reading {}: {}", &path.display(), e)));
+            for (lib_key, lib_src) in &libs {
+                let git_url: dc::GitUrl = try!(dc::GitUrl::new(&lib_src[..]));
+                let alias = try!(Self::add_repo(&mut repos, &git_url));
+                lib_keys.insert(lib_key.clone(), alias);
+            }
+        }
+
+        Ok(Repos {
+            repos: repos,
+            lib_keys: lib_keys,
+        })
     }
 
     /// Iterate over all repositories associated with this project.
@@ -77,6 +109,15 @@ impl Repos {
     /// Look up a repository given a git URL.
     pub fn find_by_git_url(&self, url: &dc::GitUrl) -> Option<&Repo> {
         self.repos.values().find(|r| r.git_url() == url)
+    }
+
+    /// Look up a repository using a "lib key", which is key used in
+    /// `config/libraries.yml` and with service labels of the form
+    /// `io.fdy.conductor.lib.<KEY>`.
+    pub fn find_by_lib_key(&self, lib_key: &str) -> Option<&Repo> {
+        self.lib_keys
+            .get(lib_key)
+            .and_then(|alias| self.find_by_alias(alias))
     }
 }
 
@@ -174,6 +215,20 @@ fn are_loaded_with_projects() {
     assert_eq!(hello.git_url().as_ref() as &str,
                "https://github.com/docker/dockercloud-hello-world.git");
     assert_eq!(hello.rel_path(), Path::new("dockercloud-hello-world"));
+}
+
+#[test]
+fn are_loaded_from_config_libraries() {
+    use env_logger;
+    let _ = env_logger::init();
+    let proj = Project::from_example("rails_hello").unwrap();
+    let repos = proj.repos();
+    let lib = repos.find_by_lib_key("coffee_rails")
+        .expect("libs should include coffee_rails");
+    assert_eq!(lib.alias(), "coffee-rails");
+    assert_eq!(lib.git_url().as_ref() as &str,
+               "https://github.com/rails/coffee-rails.git");
+    assert_eq!(lib.rel_path(), Path::new("coffee-rails"));
 }
 
 #[test]
