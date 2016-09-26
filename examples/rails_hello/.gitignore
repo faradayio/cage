@@ -1,3 +1,4 @@
 /.conductor/
+/data/
 /src/
 /config/secrets.yml

@@ -485,7 +485,8 @@ fn output_mounts_cloned_libraries() {
         .value()
         .unwrap();
     assert_eq!(mount.host, Some(dc::HostVolume::Path(src_path)));
-    assert_eq!(mount.container, Path::new("/usr/src/app/vendor/coffee-rails"));
+    assert_eq!(mount.container,
+               Path::new("/usr/src/app/vendor/coffee-rails"));
 }
 
 #[test]

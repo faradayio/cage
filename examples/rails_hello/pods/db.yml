@@ -7,6 +7,10 @@ services:
 
   db:
     image: "postgres"
+    # We can use a relative volume here because this pod is only used
+    # in development mode.
+    volumes:
+    - "../data/db:/var/lib/postgresql/data"
     labels:
       # Choose a more useful shell.
       io.fdy.conductor.shell: "bash"
