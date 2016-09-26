@@ -459,6 +459,36 @@ fn output_applies_expected_transforms() {
 }
 
 #[test]
+fn output_mounts_cloned_libraries() {
+    use env_logger;
+    let _ = env_logger::init();
+
+    let proj = Project::from_example("rails_hello").unwrap();
+    let ovr = proj.ovr("development").unwrap();
+    let repo = proj.repos()
+        .find_by_lib_key("coffee_rails")
+        .expect("should define lib coffee_rails");
+    repo.fake_clone_source(&proj).unwrap();
+    proj.output(ovr).unwrap();
+
+    // Load the generated file and look at the `web` service we cloned.
+    let frontend_file = proj.output_dir().join("pods/frontend.yml");
+    let file = dc::File::read_from_path(frontend_file).unwrap();
+    let web = file.services.get("web").unwrap();
+    let src_path = repo.path(&proj).to_absolute().unwrap();
+
+    // Make sure the local source directory is being mounted into the
+    // container.
+    let mount = web.volumes
+        .last()
+        .expect("expected web service to have volumes")
+        .value()
+        .unwrap();
+    assert_eq!(mount.host, Some(dc::HostVolume::Path(src_path)));
+    assert_eq!(mount.container, Path::new("/usr/src/vendor/coffee-rails"));
+}
+
+#[test]
 fn export_creates_a_directory_of_flat_yml_files() {
     use env_logger;
     let _ = env_logger::init();

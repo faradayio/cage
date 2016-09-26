@@ -49,6 +49,7 @@ impl PluginTransform for Plugin {
         let project = ctx.project;
         for service in &mut file.services.values_mut() {
 
+            // Handle the main repo associated with this service.
             if let Some(git_url) = try!(service.git_url()).cloned() {
                 if let Some(repo) = project.repos().find_by_git_url(&git_url) {
                     if repo.is_cloned(project) {
@@ -66,6 +67,24 @@ impl PluginTransform for Plugin {
                             build.context = dc::value(dc::Context::Dir(path));
                         }
                     }
+                }
+            }
+
+            // Look for library repos as well.
+            for (label, mount_as) in &service.labels {
+                let prefix = "io.fdy.conductor.lib.";
+                if label.starts_with(prefix) {
+                    let key = &label[prefix.len()..];
+                    let repo = try!(project.repos()
+                        .find_by_lib_key(key)
+                        .ok_or_else(|| {
+                            err!("no library <{}> defined in `config/libraries.yml`",
+                                 key)
+                        }));
+
+                    let path = try!(repo.path(project).to_absolute());
+                    let mount = dc::VolumeMount::host(&path, mount_as);
+                    service.volumes.push(dc::value(mount));
                 }
             }
         }
