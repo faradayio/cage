@@ -32,9 +32,7 @@ script:
   fi &&
   travis-cargo build $EXTRA_ARGS &&
   travis-cargo test $EXTRA_ARGS &&
-  if [[ "$TRAVIS_RUST_VERSION" == stable ]]; then
-    cargo fmt -- --write-mode=diff
-  fi &&
+  (cargo fmt -- --write-mode=diff || true) &&
   travis-cargo bench $EXTRA_ARGS &&
   travis-cargo doc $EXTRA_ARGS
 after_success:
