@@ -1,5 +1,6 @@
 //! A conductor project.
 
+use std::collections::BTreeMap;
 use std::env;
 use std::fs;
 use std::path::Path;
@@ -10,8 +11,10 @@ use default_tags::DefaultTags;
 use dir;
 use ext::file::FileExt;
 use ovr::Override;
+use plugins::{self, Operation};
 use pod::{Pod, PodType};
 use repos::Repos;
+use rustc_serialize::json::{Json, ToJson};
 use util::{ConductorPathExt, Error, ToStrOrErr};
 
 /// A `conductor` project, which is represented as a directory containing a
@@ -46,6 +49,10 @@ pub struct Project {
     /// Docker image tags to use for images that don't have them.
     /// Typically used to lock down versions supplied by a CI system.
     default_tags: Option<DefaultTags>,
+
+    /// The plugins associated with this project.  Guaranteed to never be
+    /// `None` after returning from `from_dirs`.
+    plugins: Option<plugins::Manager>,
 }
 
 impl Project {
@@ -63,7 +70,7 @@ impl Project {
                 .ok_or_else(|| {
                     err!("Can't find directory name for {}", root_dir.display())
                 }));
-        Ok(Project {
+        let mut proj = Project {
             name: name.to_owned(),
             root_dir: root_dir.to_owned(),
             src_dir: src_dir.to_owned(),
@@ -72,7 +79,11 @@ impl Project {
             overrides: overrides,
             repos: repos,
             default_tags: None,
-        })
+            plugins: None,
+        };
+        let plugins = try!(plugins::Manager::new(&proj));
+        proj.plugins = Some(plugins);
+        Ok(proj)
     }
 
     /// Create a `Project` using the current directory as input and the
@@ -183,6 +194,12 @@ impl Project {
         &self.output_dir
     }
 
+    /// The directory in which are pods are defined, and relative to which
+    /// all `docker-compose.yml` paths should be interpreted.
+    pub fn pods_dir(&self) -> PathBuf {
+        self.root_dir.join("pods")
+    }
+
     /// The path relative to which our pods will be output.  This can be
     /// joined with `Pod::rel_path` to get an output path for a specific pod.
     pub fn output_pods_dir(&self) -> PathBuf {
@@ -228,52 +245,61 @@ impl Project {
         self
     }
 
+    /// Our plugin manager.
+    pub fn plugins(&self) -> &plugins::Manager {
+        self.plugins
+            .as_ref()
+            .expect("plugins should always be set at Project init")
+    }
+
+    /// Process our pods, flattening and transforming them using our
+    /// plugins, and output them to the specified directory.
+    fn output_helper(&self,
+                     ovr: &Override,
+                     op: Operation,
+                     export_dir: &Path)
+                     -> Result<(), Error> {
+        // Output each pod.
+        for pod in &self.pods {
+            // Figure out where to put our pod.
+            let file_name = format!("{}.yml", pod.name());
+            let rel_path = match (op, try!(pod.pod_type(ovr))) {
+                (Operation::Export, PodType::Task) => {
+                    Path::new("tasks").join(file_name)
+                }
+                _ => Path::new(&file_name).to_owned(),
+            };
+            let out_path = try!(export_dir.join(&rel_path).with_guaranteed_parent());
+            debug!("Outputting {}", out_path.display());
+
+            // Combine overrides, make it standalone, tweak as needed, and
+            // output.
+            let mut file = try!(pod.merged_file(ovr));
+            try!(file.make_standalone(&self.pods_dir()));
+            match op {
+                Operation::Output => try!(file.update_for_output(self)),
+                Operation::Export => try!(file.update_for_export(self)),
+            }
+            let ctx = plugins::Context::new(self, ovr, pod);
+            try!(self.plugins().transform(op, &ctx, &mut file));
+            try!(file.write_to_path(out_path));
+        }
+        Ok(())
+    }
+
+
     /// Delete our existing output and replace it with a processed and
     /// expanded version of our pod definitions.
-    pub fn output(&self) -> Result<(), Error> {
-        // Get a path to our input pods directory.
-        let in_pods = self.root_dir.join("pods");
-
+    pub fn output(&self, ovr: &Override) -> Result<(), Error> {
         // Get a path to our output pods directory (and delete it if it
         // exists).
-        let out_pods = self.output_dir.join("pods");
+        let out_pods = self.output_pods_dir();
         if out_pods.exists() {
             try!(fs::remove_dir_all(&out_pods)
                 .map_err(|e| err!("Cannot delete {}: {}", out_pods.display(), e)));
         }
 
-        // Iterate over our *.env files recursively.
-        for glob_result in try!(in_pods.glob("**/*.env")) {
-            let rel = try!(try!(glob_result).strip_prefix(&in_pods)).to_owned();
-            let in_path = in_pods.join(&rel);
-            let out_path = try!(out_pods.join(&rel).with_guaranteed_parent());
-            debug!("Copy {} to {}", in_path.display(), out_path.display());
-            try!(fs::copy(in_path, out_path));
-        }
-
-        // Copy over our top-level pods.
-        for pod in &self.pods {
-            let rel = pod.rel_path();
-            let out_path = try!(out_pods.join(&rel).with_guaranteed_parent());
-            debug!("Generating {}", out_path.display());
-
-            let mut file = pod.file().to_owned();
-            try!(file.update_for_output(self));
-            try!(file.write_to_path(out_path));
-
-            // Copy over any override pods, too.
-            for ovr in &self.overrides {
-                let rel = try!(pod.override_rel_path(ovr));
-                let out_path = try!(out_pods.join(&rel).with_guaranteed_parent());
-                debug!("Generating {}", out_path.display());
-
-                let mut file = try!(pod.override_file(ovr)).to_owned();
-                try!(file.update_for_output(self));
-                try!(file.write_to_path(out_path));
-            }
-        }
-
-        Ok(())
+        self.output_helper(ovr, Operation::Output, &out_pods)
     }
 
     /// Export this project (with the specified override applied) as a set
@@ -290,28 +316,16 @@ impl Project {
             warn!("Exporting project without --default-tags");
         }
 
-        // Get a path to our input pods directory.
-        let pods_dir = self.root_dir.join("pods");
+        self.output_helper(ovr, Operation::Export, export_dir)
+    }
+}
 
-        // Export each pod.
-        for pod in &self.pods {
-            // Figure out where to put our exported pod.
-            let file_name = format!("{}.yml", pod.name());
-            let rel_path = match try!(pod.pod_type(ovr)) {
-                PodType::Service => Path::new(&file_name).to_owned(),
-                PodType::Task => Path::new("tasks").join(file_name),
-            };
-            let out_path = try!(export_dir.join(&rel_path).with_guaranteed_parent());
-            debug!("Exporting {}", out_path.display());
-
-            // Combine overrides, make it standalone, tweak as needed, and
-            // output.
-            let mut file = try!(pod.merged_file(ovr));
-            try!(file.make_standalone(&pods_dir));
-            try!(file.update_for_export(self));
-            try!(file.write_to_path(out_path));
-        }
-        Ok(())
+/// Convert to JSON for use in generator templates.
+impl<'a> ToJson for Project {
+    fn to_json(&self) -> Json {
+        let mut info: BTreeMap<String, Json> = BTreeMap::new();
+        info.insert("name".to_string(), self.name().to_json());
+        info.to_json()
     }
 }
 
@@ -388,25 +402,15 @@ fn overrides_are_loaded() {
 }
 
 #[test]
-fn output_copies_env_files() {
+fn output_creates_a_directory_of_flat_yml_files() {
     use env_logger;
     let _ = env_logger::init();
-    let proj = Project::from_example("hello").unwrap();
-    proj.output().unwrap();
-    assert!(proj.output_dir.join("pods/common.env").exists());
-    assert!(proj.output_dir.join("pods/overrides/test/common.env").exists());
-    proj.remove_test_output().unwrap();
-}
-
-#[test]
-fn output_processes_pods_and_overrides() {
-    use env_logger;
-    let _ = env_logger::init();
-    let proj = Project::from_example("hello").unwrap();
-    proj.output().unwrap();
+    let proj = Project::from_example("rails_hello").unwrap();
+    let ovr = proj.ovr("development").unwrap();
+    proj.output(ovr).unwrap();
     assert!(proj.output_dir.join("pods/frontend.yml").exists());
-    assert!(proj.output_dir.join("pods/overrides/production/frontend.yml").exists());
-    assert!(proj.output_dir.join("pods/overrides/test/frontend.yml").exists());
+    assert!(proj.output_dir.join("pods/db.yml").exists());
+    assert!(proj.output_dir.join("pods/migrate.yml").exists());
     proj.remove_test_output().unwrap();
 }
 

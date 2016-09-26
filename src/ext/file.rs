@@ -81,9 +81,10 @@ fn update_for_output_adds_tags_and_mounts_cloned_source() {
 
     let mut proj = Project::from_example("hello").unwrap();
     proj.set_default_tags(default_tags);
+    let ovr = proj.ovr("development").unwrap();
     let repo = proj.repos().find_by_alias("dockercloud-hello-world").unwrap();
     repo.fake_clone_source(&proj).unwrap();
-    proj.output().unwrap();
+    proj.output(ovr).unwrap();
 
     // Load the generated file and look at the `web` service we cloned.
     let frontend_file = proj.output_dir().join("pods/frontend.yml");
@@ -120,7 +121,7 @@ fn pod_label_fetches_label_from_service() {
 
     let proj = Project::from_example("rails_hello").unwrap();
     let ovr = proj.ovr("development").unwrap();
-    proj.output().unwrap();
+    proj.output(ovr).unwrap();
 
     // Load the generated file and look at the `migrate` pod.
     let pod = proj.pod("migrate").unwrap();

@@ -67,7 +67,7 @@ fn runs_docker_compose_up_on_all_pods() {
     let proj = Project::from_example("hello").unwrap();
     let ovr = proj.ovr("development").unwrap();
     let runner = TestCommandRunner::new();
-    proj.output().unwrap();
+    proj.output(ovr).unwrap();
     proj.up_all(&runner, ovr).unwrap();
     assert_ran!(runner, {
         ["docker-compose",
@@ -75,8 +75,6 @@ fn runs_docker_compose_up_on_all_pods() {
          "hello",
          "-f",
          proj.output_dir().join("pods/frontend.yml"),
-         "-f",
-         proj.output_dir().join("pods/overrides/development/frontend.yml"),
          "up",
          "-d"]
     });
@@ -90,7 +88,7 @@ fn runs_docker_compose_up_on_specified_pods() {
     let proj = Project::from_example("rails_hello").unwrap();
     let ovr = proj.ovr("development").unwrap();
     let runner = TestCommandRunner::new();
-    proj.output().unwrap();
+    proj.output(ovr).unwrap();
     proj.up(&runner, ovr, &["db"]).unwrap();
     assert_ran!(runner, {
         ["docker-compose",
@@ -98,8 +96,6 @@ fn runs_docker_compose_up_on_specified_pods() {
          "rails_hello",
          "-f",
          proj.output_dir().join("pods/db.yml"),
-         "-f",
-         proj.output_dir().join("pods/overrides/development/db.yml"),
          "up",
          "-d"]
     });

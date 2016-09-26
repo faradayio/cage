@@ -72,15 +72,15 @@ impl Template {
 
     /// Generate this template into `target_dir`, passing `data` to the
     /// Handlebars templates, and writing progress messages to `out`.
-    pub fn generate<T, W>(&mut self,
-                          target_dir: &Path,
-                          data: &T,
-                          out: &mut W)
-                          -> Result<(), Error>
-        where T: ToJson + fmt::Debug,
-              W: io::Write
+    pub fn generate<T>(&mut self,
+                       target_dir: &Path,
+                       data: &T,
+                       out: &mut io::Write)
+                       -> Result<(), Error>
+        where T: ToJson + fmt::Debug
     {
-        debug!("Generating {} with {:?}", &self.name, data);
+        let json = data.to_json();
+        debug!("Generating {} with {}", &self.name, &json);
         for (rel_path, tmpl) in &self.files {
             let path = target_dir.join(rel_path);
             debug!("Output {}", path.display());
@@ -95,7 +95,7 @@ impl Template {
                 }));
 
             // Render our template to the file.
-            let ctx = hb::Context::wraps(data);
+            let ctx = hb::Context::wraps(&json);
             try!(self.handlebars
                 .template_renderw(tmpl, &ctx, &mut out)
                 .map_err(|e| err!("Unable to generate {}: {}", path.display(), &e)));

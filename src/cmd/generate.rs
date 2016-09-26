@@ -34,11 +34,18 @@ pub trait CommandGenerate {
     ///       └── test
     ///           └── common.env
     /// ```
-    fn generate(parent_dir: &Path, name: &str) -> Result<PathBuf, Error>;
+    fn generate_new(parent_dir: &Path, name: &str) -> Result<PathBuf, Error>;
+
+    /// Print our all available generators (excluding the `generate_new`
+    /// generator).
+    fn generate_list(&self) -> Result<(), Error>;
+
+    /// Run the specified generator.
+    fn generate(&self, name: &str) -> Result<(), Error>;
 }
 
 impl CommandGenerate for Project {
-    fn generate(parent_dir: &Path, name: &str) -> Result<PathBuf, Error> {
+    fn generate_new(parent_dir: &Path, name: &str) -> Result<PathBuf, Error> {
         let proj_dir = parent_dir.join(name);
 
         // Generate our top-level files.
@@ -60,12 +67,25 @@ impl CommandGenerate for Project {
 
         Ok(proj_dir)
     }
+
+    fn generate_list(&self) -> Result<(), Error> {
+        for generator in self.plugins().generators() {
+            println!("{:19} {}",
+                     generator.name(),
+                     generator.generator_description());
+        }
+        Ok(())
+    }
+
+    fn generate(&self, name: &str) -> Result<(), Error> {
+        self.plugins().generate(self, name, &mut io::stdout())
+    }
 }
 
 #[test]
-fn create_project_default() {
+fn generate_new_creates_a_project() {
     let cwd = env::current_dir().unwrap();
-    Project::generate(&cwd, "test_project").unwrap();
+    Project::generate_new(&cwd, "test_project").unwrap();
     let proj_dir = env::current_dir().unwrap().join("test_project");
 
     assert!(proj_dir.exists());

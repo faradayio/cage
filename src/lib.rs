@@ -36,11 +36,17 @@
 // used as a dependency by other crates, thanks to Cargo magic.
 #![deny(warnings)]
 
+// Compiler plugins only work with Rust nightly builds, not with stable
+// compilers.  We want to work with both.
+#![cfg_attr(feature = "serde_macros", feature(custom_derive))]
+#![cfg_attr(feature = "serde_macros", plugin(serde_macros))]
+
 extern crate docker_compose;
 #[cfg(test)]
 extern crate env_logger;
 extern crate glob;
 extern crate handlebars;
+extern crate hashicorp_vault as vault;
 extern crate includedir;
 #[macro_use]
 extern crate log;
@@ -49,6 +55,7 @@ extern crate phf;
 extern crate rand;
 extern crate retry;
 extern crate rustc_serialize;
+extern crate serde_yaml;
 extern crate shlex;
 extern crate url;
 
@@ -70,6 +77,7 @@ pub mod dir;
 pub mod exec;
 mod ext;
 mod ovr;
+pub mod plugins;
 mod pod;
 mod project;
 mod repos;

@@ -12,9 +12,8 @@ documentation = "https://faradayio.github.io/conductor/"
 build = "build.rs"
 
 [features]
-# This is just here to keep travis-cargo happy; we don't do anything special
-# for nightly Rust.
-unstable = ["clippy"]
+default = ["serde_codegen", "docker_compose/default"]
+unstable = ["serde_macros", "docker_compose/unstable", "clippy"]
 
 [[bin]]
 name = "conductor"
@@ -23,19 +22,24 @@ doc = false
 [build-dependencies]
 glob = "0.2.11"
 includedir_codegen = "0.2.1"
+serde_codegen = { version = "0.8", optional = true }
 
 [dependencies]
 clippy = { version = "*", optional = true }
-docker_compose = "0.3.6"
+docker_compose = { version = "0.3.8", default-features = false }
 docopt = "0.6.83"
 env_logger = "0.3.4"
 glob = "0.2.11"
 handlebars = "0.20.5"
+hashicorp_vault = "0.6.1"
 includedir = "0.2.1"
 log = "0.3.6"
 phf = "0.7.16"
 rand = "0.3.14"
 retry = "0.4.0"
 rustc-serialize = "0.3.19"
+serde = "0.8"
+serde_macros = { version = "0.8", optional = true }
+serde_yaml = "0.4.0"
 shlex = "0.1.1"
 url = "1.2.0"

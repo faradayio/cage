@@ -27,11 +27,14 @@ before_script:
   export PATH=$HOME/.local/bin:$HOME/Library/Python/2.7/bin:$HOME/.cargo/bin:$PATH
 script:
 - |
-  travis-cargo build &&
-  travis-cargo test &&
-  cargo fmt -- --write-mode=diff &&
-  travis-cargo bench &&
-  travis-cargo doc
+  if [[ "$TRAVIS_RUST_VERSION" == nightly ]]; then
+    EXTRA_ARGS="-- --no-default-features"
+  fi &&
+  travis-cargo build $EXTRA_ARGS &&
+  travis-cargo test $EXTRA_ARGS &&
+  (cargo fmt -- --write-mode=diff || true) &&
+  travis-cargo bench $EXTRA_ARGS &&
+  travis-cargo doc $EXTRA_ARGS
 after_success:
 - travis-cargo --only nightly doc-upload
 before_deploy: "./build-release conductor ${TRAVIS_TAG}-${TRAVIS_OS_NAME}"

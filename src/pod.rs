@@ -240,14 +240,11 @@ impl Pod {
                         proj: &Project,
                         ovr: &Override)
                         -> Result<Vec<OsString>, Error> {
-        let ovr_rel_path = try!(self.override_rel_path(ovr));
         let compose_project_name = ovr.compose_project_name(proj);
         Ok(vec!["-p".into(),
                 compose_project_name.into(),
                 "-f".into(),
-                proj.output_pods_dir().join(self.rel_path()).into(),
-                "-f".into(),
-                proj.output_pods_dir().join(ovr_rel_path).into()])
+                proj.output_pods_dir().join(self.rel_path()).into()])
     }
 }
 

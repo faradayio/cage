@@ -37,7 +37,7 @@ fn runs_docker_compose_up_on_all_pods() {
     let proj = Project::from_example("rails_hello").unwrap();
     let ovr = proj.ovr("development").unwrap();
     let runner = TestCommandRunner::new();
-    proj.output().unwrap();
+    proj.output(ovr).unwrap();
     proj.run(&runner, ovr, "migrate").unwrap();
     assert_ran!(runner, {
         ["docker-compose",
@@ -45,8 +45,6 @@ fn runs_docker_compose_up_on_all_pods() {
          "rails_hello",
          "-f",
          proj.output_dir().join("pods/migrate.yml"),
-         "-f",
-         proj.output_dir().join("pods/overrides/development/migrate.yml"),
          "up"]
     });
     proj.remove_test_output().unwrap();
