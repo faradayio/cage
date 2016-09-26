@@ -14,7 +14,7 @@ use util::Error;
 pub struct Plugin {
     /// Placeholder field for future hidden fields, to keep this from being
     /// directly constructable.
-    _placeholder: PhantomData<()>
+    _placeholder: PhantomData<()>,
 }
 
 impl plugins::Plugin for Plugin {

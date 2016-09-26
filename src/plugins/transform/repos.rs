@@ -15,7 +15,7 @@ use util::{ConductorPathExt, Error};
 pub struct Plugin {
     /// Placeholder field for future hidden fields, to keep this from being
     /// directly constructable.
-    _placeholder: PhantomData<()>
+    _placeholder: PhantomData<()>,
 }
 
 impl plugins::Plugin for Plugin {
@@ -42,7 +42,7 @@ impl PluginTransform for Plugin {
                  -> Result<(), Error> {
         // Give up immediately if we're not doing this for local output.
         if op != Operation::Output {
-            return Ok(())
+            return Ok(());
         }
 
         // Update each service to point to our locally cloned repos.

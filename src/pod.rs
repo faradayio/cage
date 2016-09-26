@@ -140,9 +140,9 @@ impl Pod {
         let config_path = base_dir.join(&format!("{}.config.yml", &name));
         let config: Config = if config_path.exists() {
             let f = try!(fs::File::open(&config_path)
-               .map_err(|e| err!("Error opening {}: {}", &config_path.display(), e)));
+                .map_err(|e| err!("Error opening {}: {}", &config_path.display(), e)));
             try!(serde_yaml::from_reader(f)
-               .map_err(|e| err!("Error reading {}: {}", &config_path.display(), e)))
+                .map_err(|e| err!("Error reading {}: {}", &config_path.display(), e)))
         } else {
             Config::default()
         };
