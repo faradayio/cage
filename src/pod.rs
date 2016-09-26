@@ -184,6 +184,11 @@ impl Pod {
         self.config.pod_type.unwrap_or(PodType::Service)
     }
 
+    /// Is this pod enabled in the specified override?
+    pub fn enabled_in(&self, ovr: &Override) -> bool {
+        ovr.included_by(&self.config.only_in_overrides)
+    }
+
     /// The base directory for our relative paths.
     pub fn base_dir(&self) -> &Path {
         &self.base_dir

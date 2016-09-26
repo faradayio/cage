@@ -41,7 +41,7 @@ impl CommandUp for Project {
         for pod_name in pods_names {
             let pod = try!(self.pod(pod_name)
                 .ok_or_else(|| err!("Cannot find pod {}", pod_name)));
-            if pod.pod_type() == PodType::Service {
+            if pod.pod_type() == PodType::Service && pod.enabled_in(ovr) {
                 // We pass `-d` because we need to detach from each pod to
                 // launch the next.  To avoid this, we'd need to use
                 // multiple parallel threads and maybe some intelligent
@@ -96,6 +96,27 @@ fn runs_docker_compose_up_on_specified_pods() {
          "rails_hello",
          "-f",
          proj.output_dir().join("pods/db.yml"),
+         "up",
+         "-d"]
+    });
+    proj.remove_test_output().unwrap();
+}
+
+#[test]
+fn runs_docker_compose_up_honors_only_in_overrides() {
+    use env_logger;
+    let _ = env_logger::init();
+    let proj = Project::from_example("rails_hello").unwrap();
+    let ovr = proj.ovr("production").unwrap();
+    let runner = TestCommandRunner::new();
+    proj.output(ovr).unwrap();
+    proj.up_all(&runner, ovr).unwrap();
+    assert_ran!(runner, {
+        ["docker-compose",
+         "-p",
+         "rails_hello",
+         "-f",
+         proj.output_dir().join("pods/frontend.yml"),
          "up",
          "-d"]
     });
