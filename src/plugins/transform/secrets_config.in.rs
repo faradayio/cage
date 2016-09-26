@@ -9,21 +9,28 @@ type PodSecrets = BTreeMap<String, ServiceSecrets>;
 
 /// The secrets for an override.
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct OverrideSecrets {
     /// Shared between all services in this override.
+    #[serde(default)]
     common: ServiceSecrets,
     /// Secrets for each of our pods.
+    #[serde(default)]
     pods: BTreeMap<String, PodSecrets>,
 }
 
 /// The deserialized form of `secrets.yml`.  This is basically
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct Config {
     /// Shared between all services in this pod.
+    #[serde(default)]
     common: ServiceSecrets,
     /// Secrets for each of our pods.
+    #[serde(default)]
     pods: BTreeMap<String, PodSecrets>,
     /// Secrets for each of our overrides.
+    #[serde(default)]
     overrides: BTreeMap<String, OverrideSecrets>,
 }
 

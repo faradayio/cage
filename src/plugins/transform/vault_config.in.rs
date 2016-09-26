@@ -12,8 +12,10 @@ enum AuthType {
 
 /// The policies associated with a specific pod.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct ServiceConfig {
     /// Policies to apply to this service.
+    #[serde(default)]
     policies: Vec<dc::RawOr<String>>,
 }
 
@@ -22,20 +24,24 @@ type PodConfig = BTreeMap<String, ServiceConfig>;
 
 /// The configuration for our Vault plugin.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct Config {
     /// The kind of authentication to use.
     auth_type: AuthType,
 
     /// Extra environment variables to inject into each service.
+    #[serde(default)]
     extra_environment: BTreeMap<String, dc::RawOr<String>>,
 
     /// How long should tokens be valid for?
     default_ttl: u64,
 
     /// Default policies to apply to every service.
+    #[serde(default)]
     default_policies: Vec<dc::RawOr<String>>,
 
     /// More specific policies to apply to individual
+    #[serde(default)]
     pods: BTreeMap<String, PodConfig>,
 }
 
