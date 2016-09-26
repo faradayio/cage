@@ -226,6 +226,29 @@ impl plugins::Plugin for Plugin {
     }
 }
 
+impl PluginNew for Plugin {
+    fn plugin_name() -> &'static str {
+        "vault"
+    }
+
+    fn is_configured_for(project: &Project) -> Result<bool, Error> {
+        let path = Self::config_path(project);
+        Ok(path.exists())
+    }
+
+    fn new(project: &Project) -> Result<Self, Error> {
+        // An annoying special case.  We may be called as a code generator,
+        // in which case we don't want to try to create a `GenerateToken`
+        // instance.
+        let token_gen = if try!(Self::is_configured_for(project)) {
+            Some(try!(Vault::new()))
+        } else {
+            None
+        };
+        Self::new_with_generator(project, token_gen)
+    }
+}
+
 impl PluginGenerate for Plugin {
     fn generator_description(&self) -> &'static str {
         "Get passwords & other secrets from a Vault server"
@@ -303,29 +326,6 @@ impl PluginTransform for Plugin {
             }
         }
         Ok(())
-    }
-}
-
-impl PluginNew for Plugin {
-    fn plugin_name() -> &'static str {
-        "vault"
-    }
-
-    fn is_configured_for(project: &Project) -> Result<bool, Error> {
-        let path = Self::config_path(project);
-        Ok(path.exists())
-    }
-
-    fn new(project: &Project) -> Result<Self, Error> {
-        // An annoying special case.  We may be called as a code generator,
-        // in which case we don't want to try to create a `GenerateToken`
-        // instance.
-        let token_gen = if try!(Self::is_configured_for(project)) {
-            Some(try!(Vault::new()))
-        } else {
-            None
-        };
-        Self::new_with_generator(project, token_gen)
     }
 }
 
