@@ -190,7 +190,7 @@ pub struct Plugin {
     /// have it (but it's guaranteed otherwise).
     config: Option<Config>,
     /// Our source of tokens.
-    generator: Box<GenerateToken>,
+    generator: Option<Box<GenerateToken>>,
 }
 
 impl Plugin {
@@ -200,7 +200,9 @@ impl Plugin {
     }
 
     /// Create a new plugin, specifying an alternate source for tokens.
-    fn new_with_generator<G>(project: &Project, generator: G) -> Result<Plugin, Error>
+    fn new_with_generator<G>(project: &Project,
+                             generator: Option<G>)
+                             -> Result<Plugin, Error>
         where G: GenerateToken + 'static
     {
         let path = Self::config_path(project);
@@ -213,7 +215,7 @@ impl Plugin {
         };
         Ok(Plugin {
             config: config,
-            generator: Box::new(generator),
+            generator: generator.map(|gen: G| -> Box<GenerateToken> { Box::new(gen) }),
         })
     }
 }
@@ -241,6 +243,9 @@ impl PluginTransform for Plugin {
         let config = self.config
             .as_ref()
             .expect("config should always be present for transform");
+        let generator = self.generator
+            .as_ref()
+            .expect("generator should always be present for transform");
 
         // Should this plugin be excluded in this override?
         if !ctx.ovr.included_by(&config.only_in_overrides) {
@@ -265,7 +270,7 @@ impl PluginTransform for Plugin {
 
             // Insert our VAULT_ADDR value into the generated files.
             service.environment
-                .insert("VAULT_ADDR".to_owned(), self.generator.addr().to_owned());
+                .insert("VAULT_ADDR".to_owned(), generator.addr().to_owned());
 
             // Get a list of policy "patterns" that apply to this service.
             let mut raw_policies = config.default_policies.clone();
@@ -288,7 +293,7 @@ impl PluginTransform for Plugin {
                                        ctx.pod.name(),
                                        name);
             let ttl = VaultDuration::seconds(config.default_ttl);
-            let token = try!(self.generator
+            let token = try!(generator
                 .generate_token(&display_name, policies, ttl));
             service.environment.insert("VAULT_TOKEN".to_owned(), token);
 
@@ -312,7 +317,15 @@ impl PluginNew for Plugin {
     }
 
     fn new(project: &Project) -> Result<Self, Error> {
-        Self::new_with_generator(project, try!(Vault::new()))
+        // An annoying special case.  We may be called as a code generator,
+        // in which case we don't want to try to create a `GenerateToken`
+        // instance.
+        let token_gen = if try!(Self::is_configured_for(project)) {
+            Some(try!(Vault::new()))
+        } else {
+            None
+        };
+        Self::new_with_generator(project, token_gen)
     }
 }
 
@@ -329,7 +342,7 @@ fn interpolates_policies() {
 
     let vault = MockVault::new();
     let calls = vault.calls();
-    let plugin = Plugin::new_with_generator(&proj, vault).unwrap();
+    let plugin = Plugin::new_with_generator(&proj, Some(vault)).unwrap();
 
     let frontend = proj.pod("frontend").unwrap();
     let ctx = plugins::Context::new(&proj, ovr, frontend);
@@ -363,7 +376,7 @@ fn only_applied_in_specified_overrides() {
     let ovr = proj.ovr("test").unwrap();
 
     let vault = MockVault::new();
-    let plugin = Plugin::new_with_generator(&proj, vault).unwrap();
+    let plugin = Plugin::new_with_generator(&proj, Some(vault)).unwrap();
 
     let frontend = proj.pod("frontend").unwrap();
     let ctx = plugins::Context::new(&proj, ovr, frontend);
