@@ -10,8 +10,13 @@ use plugins::{Operation, PluginNew, PluginTransform};
 use project::Project;
 use util::{ConductorPathExt, Error};
 
-/// Transforms `dc::File` to point at local clones of GitHub
-/// repositories.
+/// Transforms `dc::File` to point at local clones of GitHub repositories.
+///
+/// Note that this is only part of our repository support—this plugin
+/// doesn't load repositories or check them out.  (That's the job of our
+/// top-level `repos` module.)  Rather, this plugin uses information that
+/// we already know about repositories in order to transform a `dc::File`
+/// for local development purposes.
 #[derive(Debug)]
 #[allow(missing_copy_implementations)]
 pub struct Plugin {
