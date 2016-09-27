@@ -29,10 +29,6 @@ pub trait CommandExec {
                  opts: &exec::Options)
                  -> Result<(), Error>
         where CR: CommandRunner;
-
-    /// Execute tests inside a fresh container.
-    fn test<CR>(&self, runner: &CR, target: &exec::Target) -> Result<(), Error>
-        where CR: CommandRunner;
 }
 
 impl CommandExec for Project {
@@ -76,24 +72,6 @@ impl CommandExec for Project {
 
         let shell = try!(target.service().shell());
         self.exec(runner, target, &exec::Command::new(shell), opts)
-    }
-
-    fn test<CR>(&self, runner: &CR, target: &exec::Target) -> Result<(), Error>
-        where CR: CommandRunner
-    {
-        let status = try!(runner.build("docker-compose")
-            .args(&try!(target.pod().compose_args(self, target.ovr())))
-            .arg("run")
-            .arg("--rm")
-            .arg("--no-deps")
-            .arg(target.service_name())
-            .args(&try!(target.service().test_command()))
-            .status());
-        if !status.success() {
-            return Err(err("Error running docker-compose"));
-        }
-
-        Ok(())
     }
 }
 
@@ -147,35 +125,6 @@ fn runs_shells() {
          "exec",
          "web",
          "sh"]
-    });
-
-    proj.remove_test_output().unwrap();
-}
-
-#[test]
-fn runs_tests() {
-    use env_logger;
-    let _ = env_logger::init();
-    let proj = Project::from_example("hello").unwrap();
-    let ovr = proj.ovr("test").unwrap();
-    let runner = TestCommandRunner::new();
-    proj.output(ovr).unwrap();
-    let target = exec::Target::new(&proj, ovr, "frontend", "proxy").unwrap();
-
-    proj.test(&runner, &target).unwrap();
-
-    assert_ran!(runner, {
-        ["docker-compose",
-         "-p",
-         "hellotest",
-         "-f",
-         proj.output_pods_dir().join("frontend.yml"),
-         "run",
-         "--rm",
-         "--no-deps",
-         "proxy",
-         "echo",
-         "All tests passed"]
     });
 
     proj.remove_test_output().unwrap();

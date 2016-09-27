@@ -37,7 +37,7 @@ Usage:
   conductor [options] pull
   conductor [options] up [<pods>..]
   conductor [options] stop
-  conductor [options] run <pod>
+  conductor [options] run <pod> [<command> [--] [<args>...]]
   conductor [options] exec [exec options] <pod> <service> <command> [--] [<args>..]
   conductor [options] shell [exec options] <pod> <service>
   conductor [options] test <pod> <service>
@@ -234,7 +234,13 @@ fn run(args: &Args) -> Result<(), Error> {
     } else if args.cmd_stop {
         try!(proj.stop(&runner, &ovr));
     } else if args.cmd_run {
-        try!(proj.run(&runner, &ovr, args.arg_pod.as_ref().unwrap()));
+        let opts = args.to_exec_options();
+        let cmd = args.to_exec_command();
+        try!(proj.run(&runner,
+                      &ovr,
+                      args.arg_pod.as_ref().unwrap(),
+                      cmd.as_ref(),
+                      &opts));
     } else if args.cmd_exec {
         let target = try!(args.to_exec_target(&proj, &ovr)).unwrap();
         let opts = args.to_exec_options();
