@@ -18,7 +18,7 @@ pub mod transform;
 pub struct Context<'a> {
     /// The project to which we're applying this plugin.
     pub project: &'a Project,
-    /// The overlay which we're currently using.
+    /// The override which we're currently using.
     pub ovr: &'a Override,
     /// The pod to which we're applying this plugin.
     pub pod: &'a Pod,

@@ -12,7 +12,7 @@ use project::Project;
 /// field, suitable for use as key in a `BTreeMap`.  If you add more
 /// fields, you'll probably need to remove `PartialEq`, `Eq`, `PartialOrd`,
 /// `Ord` from the `derive` list, and either implement them manually or
-/// redesign the code that uses overlays as hash table keys.)
+/// redesign the code that uses overrides as hash table keys.)
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Override {
     /// The name of this environment.

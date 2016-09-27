@@ -104,7 +104,7 @@ impl FromStr for PodType {
 #[derive(Debug)]
 pub struct Pod {
     /// All paths in any associated `dc::File` should be intepreted
-    /// relative to this base, including paths in overlay files.
+    /// relative to this base, including paths in override files.
     base_dir: PathBuf,
 
     /// The name of this pod, based on the file `pods/$NAME.yml`.
@@ -289,7 +289,7 @@ enum AllFilesState<'a> {
 }
 
 /// An iterator over all the `dc::File` objects associated with a pod, in
-/// all overlays.
+/// all overrides.
 #[allow(missing_debug_implementations)]
 pub struct AllFiles<'a> {
     /// The pod whose files we're iterating over.

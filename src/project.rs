@@ -222,7 +222,7 @@ impl Project {
         self.pods().find(|pod| pod.name() == name)
     }
 
-    /// Iterate over all overlays in this project.
+    /// Iterate over all overrides in this project.
     pub fn overrides(&self) -> Overrides {
         Overrides { iter: self.overrides.iter() }
     }
