@@ -11,7 +11,7 @@ use project::Project;
 use util::{ConductorPathExt, Error};
 
 /// Transforms `dc::File` to point at local clones of GitHub
-//! repositories.
+/// repositories.
 #[derive(Debug)]
 #[allow(missing_copy_implementations)]
 pub struct Plugin {
