@@ -20,7 +20,7 @@ use std::io::{self, Write};
 use std::path::Path;
 use std::process;
 
-use conductor::command_runner::OsCommandRunner;
+use conductor::command_runner::{Command, CommandRunner, OsCommandRunner};
 use conductor::cmd::*;
 use conductor::Error;
 
@@ -46,7 +46,7 @@ Usage:
   conductor [options] generate list
   conductor [options] generate <generator>
   conductor [options] export <dir>
-  conductor (--help | --version)
+  conductor (--help | --version | --all-versions)
 
 Commands:
   new               Create a directory containing a new sample project
@@ -82,6 +82,7 @@ Exec options:
 General options:
   -h, --help        Show this message
   --version         Show the version of conductor
+  --all-versions    Show the version of conductor and supporting tools
   -p, --project-name <project_name>
                     The name of this project.  Defaults to the current
                     directory name.
@@ -136,6 +137,7 @@ struct Args {
 
     // General options.
     flag_version: bool,
+    flag_all_versions: bool,
     flag_default_tags: Option<String>,
     flag_override: String,
     flag_project_name: Option<String>,
@@ -188,7 +190,15 @@ impl Args {
 /// type of `Result` and may therefore use `try!` to handle errors.
 fn run(args: &Args) -> Result<(), Error> {
 
-    if args.cmd_new {
+    // Handle any flags or arguments we can handle without a project
+    // directory.
+    if args.flag_all_versions {
+        try!(all_versions());
+        return Ok(());
+    } else if args.flag_version {
+        version();
+        return Ok(());
+    } else if args.cmd_new {
         try!(conductor::Project::generate_new(&try!(env::current_dir()),
                                               args.arg_name.as_ref().unwrap()));
         return Ok(());
@@ -259,6 +269,28 @@ fn run(args: &Args) -> Result<(), Error> {
     Ok(())
 }
 
+/// Print the version of this executable.
+fn version() {
+    println!("conductor {}", VERSION);
+}
+
+/// Print the version of this executable and also the versions of several
+/// tools we use.
+fn all_versions() -> Result<(), Error> {
+    version();
+
+    let runner = OsCommandRunner::new();
+    for tool in &["docker", "docker-compose", "git"] {
+        let status = try!(runner.build(tool)
+            .arg("--version")
+            .status());
+        if !status.success() {
+            return Err(err!("Could not run {} (is it installed?)", tool));
+        }
+    }
+    Ok(())
+}
+
 /// Our main entry point.
 fn main() {
     // Initialize logging with some custom options, mostly so we can see
@@ -276,12 +308,6 @@ fn main() {
         .and_then(|d| d.decode())
         .unwrap_or_else(|e| e.exit());
     debug!("Arguments: {:?}", &args);
-
-    // Display our version if we were asked to do so.
-    if args.flag_version {
-        println!("conductor {}", VERSION);
-        process::exit(0);
-    }
 
     // Defer all our real work to `run`, and handle any errors.  This is a
     // standard Rust pattern to make error-handling in `main` nicer.
