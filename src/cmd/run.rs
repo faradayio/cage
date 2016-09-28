@@ -39,6 +39,13 @@ impl CommandRun for Project {
         let pod = try!(self.pod(pod)
             .ok_or_else(|| err!("Cannot find pod {}", pod)));
 
+        // There's no reason docker-compose couldn't support this in the
+        // future (it works fine for `exec`), but apparently nobody has
+        // gotten around to implementing it.
+        if opts.privileged {
+            return Err(err("`run` does not currently support `--privileged`"));
+        }
+
         // Get the single service in our pod.
         let file = try!(pod.merged_file(ovr));
         if file.services.len() != 1 {

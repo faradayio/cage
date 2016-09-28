@@ -37,7 +37,7 @@ Usage:
   conductor [options] pull
   conductor [options] up [<pods>..]
   conductor [options] stop
-  conductor [options] run <pod> [<command> [--] [<args>...]]
+  conductor [options] run [exec options] <pod> [<command> [--] [<args>...]]
   conductor [options] exec [exec options] <pod> <service> <command> [--] [<args>..]
   conductor [options] shell [exec options] <pod> <service>
   conductor [options] test <pod> <service>
