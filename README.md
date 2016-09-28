@@ -41,6 +41,10 @@ and [rust-musl-builder][], so they should work on any Linux distribution,
 including both regular distributions and stripped down distributions like
 Alpine.  Just unzip the binaries and copy them to where you want them.
 
+The Mac binaries are somewhat experimental because of issues with MacPorts
+and OpenSSL.  If they fail to work, please file a bug and try installing
+with `cargo`.
+
 [releases]: https://github.com/faradayio/conductor/releases
 [musl-libc]: https://www.musl-libc.org/
 [rust-musl-builder]: https://github.com/emk/rust-musl-builder
@@ -270,11 +274,12 @@ rustup override set stable
 If you're using `nightly`, run the following in a terminal as you edit:
 
 ```sh
-cargo watch "test --features unstable --color=always" \
-    "build --features unstable --color=always"
+cargo watch "test --no-default-features --features unstable --color=always" \
+    "build --no-default-features --features unstable --color=always"
 ```
 
-If you're using `stable`, leave out `--features unstable`:
+If you're using `stable`, leave out `--no-default-features --features
+unstable`:
 
 ```sh
 cargo watch "test --color=always" "build --color=always"
