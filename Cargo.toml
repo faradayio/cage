@@ -25,12 +25,12 @@ includedir_codegen = "0.2.1"
 serde_codegen = { version = "0.8", optional = true }
 
 [dependencies]
-clippy = { version = "0.0.90", optional = true }
-docker_compose = { version = "0.3.8", default-features = false }
+clippy = { version = "0.0.*", optional = true }
+docker_compose = { version = "0.3.9", default-features = false }
 docopt = "0.6.83"
 env_logger = "0.3.4"
 glob = "0.2.11"
-handlebars = "0.20.5"
+handlebars = "0.21.0"
 hashicorp_vault = "0.6.1"
 includedir = "0.2.1"
 log = "0.3.6"
