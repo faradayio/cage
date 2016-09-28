@@ -89,8 +89,9 @@ impl Project {
         Ok(proj)
     }
 
-    /// Create a `Project` using the current directory as input and the
-    /// `.conductor` subdirectory as output.
+    /// Create a `Project` using the pre-existing project files in the
+    /// current directory as input and the `.conductor` subdirectory as
+    /// output.
     ///
     /// ```
     /// use conductor::Project;
