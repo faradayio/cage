@@ -163,7 +163,7 @@ impl Project {
             // It's safe to unwrap the file_stem because we know it matched
             // our glob.
             let name = try!(path.file_stem().unwrap().to_str_or_err()).to_owned();
-            if !name.ends_with(".config") {
+            if !name.ends_with(".metadata") {
                 pods.push(try!(Pod::new(pods_dir.clone(), name, overrides)));
             }
         }

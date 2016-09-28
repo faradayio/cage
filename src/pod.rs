@@ -136,8 +136,8 @@ impl Pod {
         let base_dir = base_dir.into();
         let name = name.into();
 
-        // Load our `*.config.yml` file, if any.
-        let config_path = base_dir.join(&format!("{}.config.yml", &name));
+        // Load our `*.metadata.yml` file, if any.
+        let config_path = base_dir.join(&format!("{}.metadata.yml", &name));
         let config: Config = if config_path.exists() {
             let f = try!(fs::File::open(&config_path)
                 .map_err(|e| err!("Error opening {}: {}", &config_path.display(), e)));
