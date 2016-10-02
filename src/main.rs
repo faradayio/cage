@@ -88,7 +88,8 @@ General options:
                     directory name.
   --override=<override>
                     Use overrides from the specified subdirectory of
-                    `pods/overrides` [default: development]
+                    `pods/overrides`.  Defaults to `development` unless
+                    running tests.
   --default-tags=<tag_file>
                     A list of tagged image names, one per line, to
                     be used as defaults for images
@@ -139,11 +140,22 @@ struct Args {
     flag_version: bool,
     flag_all_versions: bool,
     flag_default_tags: Option<String>,
-    flag_override: String,
+    flag_override: Option<String>,
     flag_project_name: Option<String>,
 }
 
 impl Args {
+    /// Get either the specified override name, or a reasonable default.
+    fn override_name(&self) -> &str {
+        self.flag_override.as_ref().map_or_else(|| {
+            if self.cmd_test {
+                "test"
+            } else {
+                "development"
+            }
+        }, |s| &s[..])
+    }
+
     /// Extract `exec::Options` from our command-line arguments.
     fn to_exec_options(&self) -> conductor::exec::Options {
         conductor::exec::Options {
@@ -212,8 +224,9 @@ fn run(args: &Args) -> Result<(), Error> {
         let file = try!(fs::File::open(default_tags_path));
         proj.set_default_tags(try!(conductor::DefaultTags::read(file)));
     }
-    let ovr = try!(proj.ovr(&args.flag_override)
-        .ok_or_else(|| err!("override {} is not defined", &args.flag_override)));
+    let override_name = args.override_name();
+    let ovr = try!(proj.ovr(override_name)
+        .ok_or_else(|| err!("override {} is not defined", override_name)));
     try!(proj.output(ovr));
     let runner = OsCommandRunner::new();
 
