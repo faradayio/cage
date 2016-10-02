@@ -4,6 +4,8 @@
 # database server or a SaaS service.
 pod_type: "placeholder"
 
-# This pod should only be started in the `development` override.
+# This pod should only be started in the `development` override.  If you
+# need a real database to run your unit tests, you may also want to add
+# `"test"` to this list.
 enable_in_overrides:
 - "development"

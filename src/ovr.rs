@@ -34,7 +34,8 @@ impl Override {
 
     /// Check to see if this override should be included in some operation,
     /// given an optional `enable_in_overrides` overrides list.  If no list
-    /// is supplied, we're always included.
+    /// is supplied, we'll act as those we were passed a default list
+    /// including all overrides except `test`.
     ///
     /// We have a weird calling convention because our typical callers are
     /// invoking us using a member field of a `Config` struct that they
@@ -42,16 +43,22 @@ impl Override {
     ///
     /// ```
     /// let ovr = conductor::Override::new("development");
-    /// assert!(ovr.included_by(&None));
-    /// assert!(ovr.included_by(&Some(vec!["development".to_owned()])));
-    /// assert!(!ovr.included_by(&Some(vec!["production".to_owned()])));
+    /// assert!(ovr.is_enabled_by(&None));
+    /// assert!(ovr.is_enabled_by(&Some(vec!["development".to_owned()])));
+    /// assert!(!ovr.is_enabled_by(&Some(vec!["production".to_owned()])));
+    ///
+    /// let test_ovr = conductor::Override::new("test");
+    /// assert!(!test_ovr.is_enabled_by(&None));
     /// ```
-    pub fn included_by(&self, enable_in_overrides: &Option<Vec<String>>) -> bool {
+    pub fn is_enabled_by(&self, enable_in_overrides: &Option<Vec<String>>) -> bool {
         if let Some(ref enable_in) = *enable_in_overrides {
             // If a list is supplied, we need to appear in it.
             enable_in.contains(&self.name().to_owned())
+        } else if self.name() == "test" {
+            // `test` is excluded by default.
+            false
         } else {
-            // If no list is supplied, we're always included.
+            // All other overrides are included by default.
             true
         }
     }
