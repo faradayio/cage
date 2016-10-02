@@ -12,7 +12,7 @@
 # staging if we have it).  For local development, either specify fake
 # secrets somewhere in `pods/overrides/development`, or use the `secrets`
 # plugin for real secrets.
-only_in_overrides:
+enable_in_overrides:
 - "production"
 
 # How should individual services authenticate themselves to vault?  The only

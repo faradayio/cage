@@ -271,7 +271,7 @@ impl PluginTransform for Plugin {
             .expect("generator should always be present for transform");
 
         // Should this plugin be excluded in this override?
-        if !ctx.ovr.included_by(&config.only_in_overrides) {
+        if !ctx.ovr.included_by(&config.enable_in_overrides) {
             return Ok(());
         }
 

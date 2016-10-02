@@ -103,7 +103,7 @@ fn runs_docker_compose_up_on_specified_pods() {
 }
 
 #[test]
-fn runs_docker_compose_up_honors_only_in_overrides() {
+fn runs_docker_compose_up_honors_start_in_overrides() {
     use env_logger;
     let _ = env_logger::init();
     let proj = Project::from_example("rails_hello").unwrap();

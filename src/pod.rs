@@ -186,7 +186,7 @@ impl Pod {
 
     /// Is this pod enabled in the specified override?
     pub fn enabled_in(&self, ovr: &Override) -> bool {
-        ovr.included_by(&self.config.only_in_overrides)
+        ovr.included_by(&self.config.enable_in_overrides)
     }
 
     /// The base directory for our relative paths.

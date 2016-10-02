@@ -28,7 +28,7 @@ type PodConfig = BTreeMap<String, ServiceConfig>;
 struct Config {
     /// Only apply this plugin in the specified overrides.  If this
     /// field is omitted, we apply the plguin in all overrides.
-    only_in_overrides: Option<Vec<String>>,
+    enable_in_overrides: Option<Vec<String>>,
 
     /// The kind of authentication to use.
     auth_type: AuthType,

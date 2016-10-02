@@ -19,7 +19,7 @@ pub enum PodType {
 struct Config {
     /// Only use this pod in the specified overrides.  If this field is
     /// omitted, we apply the plguin in all overrides.
-    only_in_overrides: Option<Vec<String>>,
+    enable_in_overrides: Option<Vec<String>>,
 
     /// What kind of pod is this?
     pod_type: Option<PodType>,

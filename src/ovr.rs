@@ -33,7 +33,7 @@ impl Override {
     }
 
     /// Check to see if this override should be included in some operation,
-    /// given an optional `only_in_overrides` overrides list.  If no list
+    /// given an optional `enable_in_overrides` overrides list.  If no list
     /// is supplied, we're always included.
     ///
     /// We have a weird calling convention because our typical callers are
@@ -46,10 +46,10 @@ impl Override {
     /// assert!(ovr.included_by(&Some(vec!["development".to_owned()])));
     /// assert!(!ovr.included_by(&Some(vec!["production".to_owned()])));
     /// ```
-    pub fn included_by(&self, only_in_overrides: &Option<Vec<String>>) -> bool {
-        if let Some(ref only_in) = *only_in_overrides {
+    pub fn included_by(&self, enable_in_overrides: &Option<Vec<String>>) -> bool {
+        if let Some(ref enable_in) = *enable_in_overrides {
             // If a list is supplied, we need to appear in it.
-            only_in.contains(&self.name().to_owned())
+            enable_in.contains(&self.name().to_owned())
         } else {
             // If no list is supplied, we're always included.
             true
