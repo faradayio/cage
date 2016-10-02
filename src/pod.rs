@@ -8,7 +8,6 @@ use std::collections::btree_map;
 use std::ffi::OsString;
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::str::FromStr;
 
 use ovr::Override;
 use project::Project;
@@ -84,17 +83,6 @@ impl FileInfo {
         let env_path = self.rel_path.parent().unwrap().join("common.env");
         for service in self.file.services.values_mut() {
             service.env_files.insert(0, dc::value(env_path.clone()));
-        }
-    }
-}
-
-impl FromStr for PodType {
-    type Err = Error;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "service" => Ok(PodType::Service),
-            "task" => Ok(PodType::Task),
-            _ => Err(err!("Unknown pod type: <{}>", s)),
         }
     }
 }
