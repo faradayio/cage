@@ -1,6 +1,6 @@
 //! Plugin which issues vault tokens to services.
 
-use docker_compose::v2 as dc;
+use compose_yml::v2 as dc;
 use serde_yaml;
 #[cfg(test)]
 use std::cell::RefCell;

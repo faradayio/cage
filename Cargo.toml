@@ -1,9 +1,9 @@
 [package]
 name = "conductor"
-version = "0.0.10"
+version = "0.0.11"
 authors = ["Eric Kidd <git@randomhacks.net>"]
 
-description = "Faraday Conductor: Develop and orchestrate multi-pod docker-compose apps"
+description = "(to be renamed) Develop and orchestrate multi-pod docker-compose apps"
 license = "MIT/Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/faradayio/conductor"
@@ -12,8 +12,8 @@ documentation = "https://faradayio.github.io/conductor/"
 build = "build.rs"
 
 [features]
-default = ["serde_codegen", "docker_compose/default"]
-unstable = ["serde_macros", "docker_compose/unstable", "clippy"]
+default = ["serde_codegen", "compose_yml/default"]
+unstable = ["serde_macros", "compose_yml/unstable", "clippy"]
 
 [[bin]]
 name = "conductor"
@@ -26,7 +26,7 @@ serde_codegen = { version = "0.8", optional = true }
 
 [dependencies]
 clippy = { version = "0.0.*", optional = true }
-docker_compose = { version = "0.3.9", default-features = false }
+compose_yml = { version = "0.0.40", default-features = false }
 docopt = "0.6.83"
 env_logger = "0.3.4"
 glob = "0.2.11"

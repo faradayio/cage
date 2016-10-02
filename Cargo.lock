@@ -1,10 +1,10 @@
 [root]
 name = "conductor"
-version = "0.0.10"
+version = "0.0.11"
 dependencies = [
- "clippy 0.0.91 (registry+https://github.com/rust-lang/crates.io-index)",
- "docker_compose 0.3.9 (registry+https://github.com/rust-lang/crates.io-index)",
- "docopt 0.6.85 (registry+https://github.com/rust-lang/crates.io-index)",
+ "clippy 0.0.92 (registry+https://github.com/rust-lang/crates.io-index)",
+ "compose_yml 0.0.40 (registry+https://github.com/rust-lang/crates.io-index)",
+ "docopt 0.6.86 (registry+https://github.com/rust-lang/crates.io-index)",
  "env_logger 0.3.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "glob 0.2.11 (registry+https://github.com/rust-lang/crates.io-index)",
  "handlebars 0.21.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -68,6 +68,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "clippy"
+version = "0.0.92"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "clippy_lints 0.0.92 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "clippy_lints"
 version = "0.0.91"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -82,19 +90,22 @@ dependencies = [
 ]
 
 [[package]]
-name = "cookie"
-version = "0.2.5"
+name = "clippy_lints"
+version = "0.0.92"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "openssl 0.7.14 (registry+https://github.com/rust-lang/crates.io-index)",
+ "matches 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "quine-mc_cluskey 0.2.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "regex-syntax 0.3.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "rustc-serialize 0.3.19 (registry+https://github.com/rust-lang/crates.io-index)",
- "time 0.1.35 (registry+https://github.com/rust-lang/crates.io-index)",
- "url 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "semver 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "toml 0.1.30 (registry+https://github.com/rust-lang/crates.io-index)",
+ "unicode-normalization 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
-name = "docker_compose"
-version = "0.3.9"
+name = "compose_yml"
+version = "0.0.40"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "clippy 0.0.91 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -112,8 +123,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "cookie"
+version = "0.2.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "openssl 0.7.14 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rustc-serialize 0.3.19 (registry+https://github.com/rust-lang/crates.io-index)",
+ "time 0.1.35 (registry+https://github.com/rust-lang/crates.io-index)",
+ "url 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "docopt"
-version = "0.6.85"
+version = "0.6.86"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "lazy_static 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -809,10 +831,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum bitflags 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)" = "aad18937a628ec6abcd26d1489012cc0e18c21798210f491af69ded9b881106d"
 "checksum chrono 0.2.25 (registry+https://github.com/rust-lang/crates.io-index)" = "9213f7cd7c27e95c2b57c49f0e69b1ea65b27138da84a170133fd21b07659c00"
 "checksum clippy 0.0.91 (registry+https://github.com/rust-lang/crates.io-index)" = "b9a541b05d34e8e12606b234b1d4b1204dac75e3a94adb0bf2708986ca34fc41"
+"checksum clippy 0.0.92 (registry+https://github.com/rust-lang/crates.io-index)" = "8f9ba1b0dfe92b4885f97961aaebf9f3f7c7cb4f22c84b4778bf819542bfb123"
 "checksum clippy_lints 0.0.91 (registry+https://github.com/rust-lang/crates.io-index)" = "99bce9f4f845ad3250dbfbf8c0f3c366291aba5c30d4c231d91fa1d56226402b"
+"checksum clippy_lints 0.0.92 (registry+https://github.com/rust-lang/crates.io-index)" = "5bcaf701be682100ee15f3ca11b405127168e5f902bd2ce0bf3dfeeea2359bf4"
+"checksum compose_yml 0.0.40 (registry+https://github.com/rust-lang/crates.io-index)" = "2bff7e45dd73aa0b84586ab8c7b65cbfc5ae51d42b018a0ad592229a4a39901d"
 "checksum cookie 0.2.5 (registry+https://github.com/rust-lang/crates.io-index)" = "0e3d6405328b6edb412158b3b7710e2634e23f3614b9bb1c412df7952489a626"
-"checksum docker_compose 0.3.9 (registry+https://github.com/rust-lang/crates.io-index)" = "c6d8b3f955610a779082cc7978d2b776e7aba8be3274f134882c05608425724b"
-"checksum docopt 0.6.85 (registry+https://github.com/rust-lang/crates.io-index)" = "1b88d783674021c5570e7238e17985b9b8c7141d90f33de49031b8d56e7f0bf9"
+"checksum docopt 0.6.86 (registry+https://github.com/rust-lang/crates.io-index)" = "4a7ef30445607f6fc8720f0a0a2c7442284b629cf0d049286860fae23e71c4d9"
 "checksum env_logger 0.3.5 (registry+https://github.com/rust-lang/crates.io-index)" = "15abd780e45b3ea4f76b4e9a26ff4843258dd8a3eed2775a0e7368c2e7936c2f"
 "checksum flate2 0.2.14 (registry+https://github.com/rust-lang/crates.io-index)" = "3eeb481e957304178d2e782f2da1257f1434dfecbae883bafb61ada2a9fea3bb"
 "checksum gcc 0.3.35 (registry+https://github.com/rust-lang/crates.io-index)" = "91ecd03771effb0c968fd6950b37e89476a578aaf1c70297d8e92b6516ec3312"

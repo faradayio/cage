@@ -1,7 +1,7 @@
 //! A single pod in a project.
 
-use docker_compose::v2 as dc;
-use docker_compose::v2::MergeOverride;
+use compose_yml::v2 as dc;
+use compose_yml::v2::MergeOverride;
 use serde_yaml;
 use std::collections::BTreeMap;
 use std::collections::btree_map;

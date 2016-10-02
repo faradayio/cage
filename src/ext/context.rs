@@ -1,6 +1,6 @@
-//! Extension methods for `docker_compose::v2::Service`.
+//! Extension methods for `compose_yml::v2::Service`.
 
-use docker_compose::v2 as dc;
+use compose_yml::v2 as dc;
 
 /// These methods will appear as regular methods on `Context` in any module
 /// which includes `ContextExt`.

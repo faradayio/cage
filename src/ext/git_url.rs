@@ -1,6 +1,6 @@
-//! Extension methods for `docker_compose::v2::GitUrl`.
+//! Extension methods for `compose_yml::v2::GitUrl`.
 
-use docker_compose::v2 as dc;
+use compose_yml::v2 as dc;
 use std::ffi::OsString;
 use std::path::Path;
 use url;

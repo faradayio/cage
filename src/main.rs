@@ -302,7 +302,7 @@ fn main() {
     // Initialize logging with some custom options, mostly so we can see
     // our own warnings.
     let mut builder = env_logger::LogBuilder::new();
-    builder.filter(Some("docker_compose"), log::LogLevelFilter::Warn);
+    builder.filter(Some("compose_yml"), log::LogLevelFilter::Warn);
     builder.filter(Some("conductor"), log::LogLevelFilter::Warn);
     if let Ok(config) = env::var("RUST_LOG") {
         builder.parse(&config);

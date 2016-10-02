@@ -1,7 +1,7 @@
 //! A conductor project.
 
 #[cfg(test)]
-use docker_compose::v2 as dc;
+use compose_yml::v2 as dc;
 use std::collections::BTreeMap;
 use std::env;
 use std::fs;

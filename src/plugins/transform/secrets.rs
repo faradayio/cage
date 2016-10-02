@@ -1,7 +1,7 @@
 //! Plugin which loads secrets from `config/secrets.yml` and adds them to a
 //! project.
 
-use docker_compose::v2 as dc;
+use compose_yml::v2 as dc;
 use serde_yaml;
 use std::collections::BTreeMap;
 use std::fs;

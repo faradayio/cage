@@ -41,7 +41,7 @@
 #![cfg_attr(feature = "serde_macros", feature(custom_derive))]
 #![cfg_attr(feature = "serde_macros", plugin(serde_macros))]
 
-extern crate docker_compose;
+extern crate compose_yml;
 #[cfg(test)]
 extern crate env_logger;
 extern crate glob;

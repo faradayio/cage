@@ -1,6 +1,6 @@
 //! Miscellaneous utility macros and functions.
 
-use docker_compose::v2 as dc;
+use compose_yml::v2 as dc;
 use glob;
 use retry::retry;
 use std::env;
@@ -10,7 +10,7 @@ use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
 
-/// We use the same `Error` type as `docker_compose` for simplicity.
+/// We use the same `Error` type as `compose_yml` for simplicity.
 pub type Error = dc::Error;
 
 

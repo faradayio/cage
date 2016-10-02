@@ -4,7 +4,7 @@
 //!
 //! The serde-handling portions are based on
 //! https://serde.rs/codegen-hybrid.html and
-//! https://travis-ci.org/emk/docker_compose-rs
+//! https://travis-ci.org/emk/compose_yml
 
 extern crate includedir_codegen;
 extern crate glob;

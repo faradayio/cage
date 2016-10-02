@@ -1,7 +1,7 @@
 //! Plugin which transforms `dc::File` to point at local clones of GitHub
 //! repositories.
 
-use docker_compose::v2 as dc;
+use compose_yml::v2 as dc;
 use std::marker::PhantomData;
 
 use ext::service::ServiceExt;

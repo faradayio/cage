@@ -1,6 +1,6 @@
 //! Plugin support for conductor.
 
-use docker_compose::v2 as dc;
+use compose_yml::v2 as dc;
 use std::fmt;
 use std::io;
 use std::marker::PhantomData;

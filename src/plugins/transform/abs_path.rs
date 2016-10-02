@@ -1,6 +1,6 @@
 //! Plugin which converts all paths in a `dc::File` to absolute.
 
-use docker_compose::v2 as dc;
+use compose_yml::v2 as dc;
 use std::env;
 use std::marker::PhantomData;
 

@@ -1,6 +1,6 @@
 //! APIs for working with the git repositories associated with a `Project`.
 
-use docker_compose::v2 as dc;
+use compose_yml::v2 as dc;
 use serde_yaml;
 use std::collections::BTreeMap;
 use std::collections::btree_map;

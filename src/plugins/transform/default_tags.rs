@@ -1,6 +1,6 @@
 //! Plugin which applies `DefaultTags` to `dc::File`.
 
-use docker_compose::v2 as dc;
+use compose_yml::v2 as dc;
 use std::marker::PhantomData;
 
 use plugins;

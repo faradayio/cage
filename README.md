@@ -1,9 +1,12 @@
-# Faraday Conductor: Orchestrates `docker-compose` for large, multi-pod apps
+# Orchestrates `docker-compose` for large, multi-pod apps
+
+**THIS PROJECT WILL BE RENAMED SHORTLY.**  Keep tuned; we'll have an actual
+release fairly soon, with any luck.
 
 [![Latest version](https://img.shields.io/crates/v/conductor.svg)](https://crates.io/crates/conductor) [![License](https://img.shields.io/crates/l/conductor.svg)](https://opensource.org/licenses/MIT) [![Build Status](https://travis-ci.org/faradayio/conductor.svg?branch=master)](https://travis-ci.org/faradayio/conductor)
 
 This is a work in progress using the
-[`docker_compose`](https://github.com/emk/docker_compose-rs) library.  It's
+[`compose_yml`](https://github.com/emk/compose_yml) library.  It's
 a reimplementation of our internal, _ad hoc_ tools using the new
 `docker-compose.yml` version 2 format and Rust.
 
