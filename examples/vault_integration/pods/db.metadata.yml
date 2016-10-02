@@ -1,3 +1,9 @@
+# Pods marked as `pod_type: placeholder` will be started before pods marked
+# `pod_type: service`.  Placeholder pods are intended to simulate external
+# servers with high uptime guarantees, such as an externally-managed
+# database server or a SaaS service.
+pod_type: "placeholder"
+
 # This pod should only be started in the `development` override.
 enable_in_overrides:
 - "development"

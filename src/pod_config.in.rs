@@ -2,8 +2,15 @@
 // generate serialization code and included directly into another module.
 
 /// Indicates whether a pod is a regular service or a one-shot task.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum PodType {
+    /// A placeholder represents an externally-managed service, and it is
+    /// generally only present in development mode.  This is mostly treated
+    /// as though it were a service, but with different defaults in several
+    /// places.
+    #[serde(rename = "placeholder")]
+    Placeholder,
+
     /// A service is normally started up and left running.
     #[serde(rename = "service")]
     Service,
