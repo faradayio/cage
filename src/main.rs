@@ -40,6 +40,7 @@ Usage:
   conductor [options] run [exec options] <pod> [<command> [--] [<args>...]]
   conductor [options] exec [exec options] <pod> <service> <command> [--] [<args>..]
   conductor [options] shell [exec options] <pod> <service>
+  conductor [options] logs <pod> <service> [<args>...]
   conductor [options] test <pod> <service>
   conductor [options] repo list
   conductor [options] repo clone <repo>
@@ -112,6 +113,7 @@ struct Args {
     cmd_run: bool,
     cmd_exec: bool,
     cmd_shell: bool,
+    cmd_log: bool,
     cmd_test: bool,
     cmd_repo: bool,
     cmd_list: bool,
@@ -263,6 +265,12 @@ fn run(args: &Args) -> Result<(), Error> {
         let target = try!(args.to_exec_target(&proj, &ovr)).unwrap();
         let opts = args.to_exec_options();
         try!(proj.shell(&runner, &target, &opts));
+    } else if args.cmd_log {
+        let target = try!(args.to_exec_target(&proj, &ovr)).unwrap();
+        let log_args = args.arg_args
+            .as_ref()
+            .map_or(&[] as &[_], |v| (v as &[_]));
+        try!(proj.logs(&runner, &target, &log_args));
     } else if args.cmd_test {
         let test_ovr = try!(proj.ovr("test")
             .ok_or_else(|| conductor::err("override test is required to run tests")));
