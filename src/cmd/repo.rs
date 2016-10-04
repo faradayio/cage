@@ -1,22 +1,22 @@
 //! The `conductor repo` subcommand.
 
 use command_runner::CommandRunner;
+use errors::*;
 use project::Project;
-use util::Error;
 
 /// We implement `conductor repo` with a trait so we put it in its own module.
 pub trait CommandRepo {
     /// List all the repositories associated with a project.
-    fn repo_list<CR>(&self, runner: &CR) -> Result<(), Error> where CR: CommandRunner;
+    fn repo_list<CR>(&self, runner: &CR) -> Result<()> where CR: CommandRunner;
 
     /// Clone the specified repository.
-    fn repo_clone<CR>(&self, runner: &CR, alias: &str) -> Result<(), Error>
+    fn repo_clone<CR>(&self, runner: &CR, alias: &str) -> Result<()>
         where CR: CommandRunner;
 }
 
 
 impl CommandRepo for Project {
-    fn repo_list<CR>(&self, _runner: &CR) -> Result<(), Error>
+    fn repo_list<CR>(&self, _runner: &CR) -> Result<()>
         where CR: CommandRunner
     {
         for repo in self.repos().iter() {
@@ -31,7 +31,7 @@ impl CommandRepo for Project {
         Ok(())
     }
 
-    fn repo_clone<CR>(&self, runner: &CR, alias: &str) -> Result<(), Error>
+    fn repo_clone<CR>(&self, runner: &CR, alias: &str) -> Result<()>
         where CR: CommandRunner
     {
         let repo = try!(self.repos()

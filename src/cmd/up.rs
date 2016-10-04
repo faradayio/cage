@@ -3,15 +3,16 @@
 use command_runner::{Command, CommandRunner};
 #[cfg(test)]
 use command_runner::TestCommandRunner;
+use errors::*;
 use ovr::Override;
 use pod::PodType;
 use project::Project;
-use util::{Error, err};
+use util::err;
 
 /// We implement `conductor up` with a trait so we put it in its own module.
 pub trait CommandUp {
     /// Up all the images associated with a project.
-    fn up_all<CR>(&self, runner: &CR, ovr: &Override) -> Result<(), Error>
+    fn up_all<CR>(&self, runner: &CR, ovr: &Override) -> Result<()>
         where CR: CommandRunner;
 
     /// Up all the images in the specified pods.
@@ -19,15 +20,15 @@ pub trait CommandUp {
               runner: &CR,
               ovr: &Override,
               pod_names: &[&str])
-              -> Result<(), Error>
+              -> Result<()>
         where CR: CommandRunner;
 }
 
 impl CommandUp for Project {
-    fn up_all<CR>(&self, runner: &CR, ovr: &Override) -> Result<(), Error>
+    fn up_all<CR>(&self, runner: &CR, ovr: &Override) -> Result<()>
         where CR: CommandRunner
     {
-        let up_by_pod_type = |ty: PodType| -> Result<(), Error> {
+        let up_by_pod_type = |ty: PodType| -> Result<()> {
             let pod_names: Vec<_> = self.pods()
                 .filter(|p| p.pod_type() == ty)
                 .map(|p| p.name())
@@ -42,7 +43,7 @@ impl CommandUp for Project {
               runner: &CR,
               ovr: &Override,
               pods_names: &[&str])
-              -> Result<(), Error>
+              -> Result<()>
         where CR: CommandRunner
     {
         for pod_name in pods_names {

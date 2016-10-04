@@ -10,7 +10,8 @@ use std::io;
 use std::path::{Path, PathBuf};
 
 use data;
-use util::{ConductorPathExt, Error};
+use errors::*;
+use util::ConductorPathExt;
 
 /// Escape double quotes and backslashes in a string that we're rendering,
 /// which should work well more-or-less well enough for all the formats
@@ -35,7 +36,7 @@ pub struct Template {
 impl Template {
     /// Create a new template, loading it from a subdirectory of `data/`
     /// specified by `template_name`.
-    pub fn new<S: Into<String>>(name: S) -> Result<Template, Error> {
+    pub fn new<S: Into<String>>(name: S) -> Result<Template> {
         let name = name.into();
         let prefix = format!("data/templates/{}/", &name);
 
@@ -76,7 +77,7 @@ impl Template {
                        target_dir: &Path,
                        data: &T,
                        out: &mut io::Write)
-                       -> Result<(), Error>
+                       -> Result<()>
         where T: ToJson + fmt::Debug
     {
         let json = data.to_json();

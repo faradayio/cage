@@ -44,6 +44,8 @@
 extern crate compose_yml;
 #[cfg(test)]
 extern crate env_logger;
+#[macro_use]
+extern crate error_chain;
 extern crate glob;
 extern crate handlebars;
 extern crate hashicorp_vault as vault;
@@ -59,13 +61,14 @@ extern crate serde_yaml;
 extern crate shlex;
 extern crate url;
 
-pub use util::{Error, err};
 pub use default_tags::DefaultTags;
+pub use errors::*;
 pub use ovr::Override;
 pub use project::{Project, Pods, Overrides};
 pub use pod::{Pod, OverrideFiles, AllFiles};
 pub use repos::{Repos, Repo};
 pub use repos::Iter as RepoIter;
+pub use util::err;
 
 #[macro_use]
 mod util;
@@ -74,6 +77,7 @@ pub mod command_runner;
 pub mod cmd;
 mod default_tags;
 pub mod dir;
+mod errors;
 pub mod exec;
 mod ext;
 mod ovr;

@@ -4,31 +4,32 @@ use compose_yml::v2 as dc;
 use shlex;
 use std::path::{Path, PathBuf};
 
+use errors::*;
 use ext::context::ContextExt;
 #[cfg(test)]
 use project::Project;
-use util::{Error, err};
+use util::err;
 
 /// These methods will appear as regular methods on `Service` in any module
 /// which includes `ServiceExt`.
 pub trait ServiceExt {
     /// The URL for the the git repository associated with this service.
-    fn git_url(&self) -> Result<Option<&dc::GitUrl>, Error>;
+    fn git_url(&self) -> Result<Option<&dc::GitUrl>>;
 
     /// The directory in which to mount our source code if it's checked
     /// out.
-    fn source_mount_dir(&self) -> Result<PathBuf, Error>;
+    fn source_mount_dir(&self) -> Result<PathBuf>;
 
     /// Get the default shell associated with this service.  Used for
     /// getting interactive access to a container.
-    fn shell(&self) -> Result<String, Error>;
+    fn shell(&self) -> Result<String>;
 
     /// Get the test command associated with this service.
-    fn test_command(&self) -> Result<Vec<String>, Error>;
+    fn test_command(&self) -> Result<Vec<String>>;
 }
 
 impl ServiceExt for dc::Service {
-    fn git_url(&self) -> Result<Option<&dc::GitUrl>, Error> {
+    fn git_url(&self) -> Result<Option<&dc::GitUrl>> {
         if let Some(ref build) = self.build {
             Ok(try!(build.context.value()).git_url())
         } else {
@@ -36,21 +37,21 @@ impl ServiceExt for dc::Service {
         }
     }
 
-    fn source_mount_dir(&self) -> Result<PathBuf, Error> {
+    fn source_mount_dir(&self) -> Result<PathBuf> {
         Ok(Path::new(self.labels
                 .get("io.fdy.conductor.srcdir")
                 .map_or_else(|| "/app", |v| v as &str))
             .to_owned())
     }
 
-    fn shell(&self) -> Result<String, Error> {
+    fn shell(&self) -> Result<String> {
         Ok(self.labels
             .get("io.fdy.conductor.shell")
             .cloned()
             .unwrap_or_else(|| "sh".to_owned()))
     }
 
-    fn test_command(&self) -> Result<Vec<String>, Error> {
+    fn test_command(&self) -> Result<Vec<String>> {
         let raw = try!(self.labels.get("io.fdy.conductor.test").ok_or_else(|| {
             err("specify a value for the label io.fdy.conductor.test to run tests")
         }));

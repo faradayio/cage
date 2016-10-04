@@ -1,6 +1,7 @@
 //! Plugin which issues vault tokens to services.
 
 use compose_yml::v2 as dc;
+use std::result;
 use serde_yaml;
 #[cfg(test)]
 use std::cell::RefCell;
@@ -15,10 +16,11 @@ use std::rc::Rc;
 use vault;
 use vault::client::VaultDuration;
 
+use errors::*;
 use plugins;
 use plugins::{Operation, PluginGenerate, PluginNew, PluginTransform};
 use project::Project;
-use util::{Error, err};
+use util::err;
 
 #[cfg(feature = "serde_macros")]
 include!(concat!("vault_config.in.rs"));
@@ -27,7 +29,7 @@ include!(concat!(env!("OUT_DIR"), "/plugins/transform/vault_config.rs"));
 
 /// Load a vault token from `~/.vault-token`, where the command line client
 /// puts it.
-fn load_vault_token_from_file() -> Result<String, Error> {
+fn load_vault_token_from_file() -> Result<String> {
     let path = try!(env::home_dir()
             .ok_or_else(|| err("You do not appear to have a home directory")))
         .join(".vault-token");
@@ -40,7 +42,7 @@ fn load_vault_token_from_file() -> Result<String, Error> {
 }
 
 /// Find the vault token we'll use to generate new tokens.
-fn find_vault_token() -> Result<String, Error> {
+fn find_vault_token() -> Result<String> {
     env::var("VAULT_MASTER_TOKEN")
         .or_else(|_| env::var("VAULT_TOKEN"))
         .or_else(|_| load_vault_token_from_file())
@@ -64,7 +66,7 @@ struct ConfigEnvironment<'a> {
 }
 
 impl<'a> dc::Environment for ConfigEnvironment<'a> {
-    fn var(&self, key: &str) -> Result<String, env::VarError> {
+    fn var(&self, key: &str) -> result::Result<String, env::VarError> {
         let result = match key {
             "PROJECT" => Ok(self.ctx.project.name()),
             "OVERRIDE" => Ok(self.ctx.ovr.name()),
@@ -86,7 +88,7 @@ trait GenerateToken: Debug {
                       display_name: &str,
                       policies: Vec<String>,
                       ttl: VaultDuration)
-                      -> Result<String, Error>;
+                      -> Result<String>;
 }
 
 /// A list of calls made to a `MockVault` instance.
@@ -126,7 +128,7 @@ impl GenerateToken for MockVault {
                       display_name: &str,
                       policies: Vec<String>,
                       ttl: VaultDuration)
-                      -> Result<String, Error> {
+                      -> Result<String> {
         self.calls.borrow_mut().push((display_name.to_owned(), policies, ttl));
         Ok("fake_token".to_owned())
     }
@@ -143,7 +145,7 @@ struct Vault {
 
 impl Vault {
     /// Create a new vault client.
-    fn new() -> Result<Vault, Error> {
+    fn new() -> Result<Vault> {
         let addr = try!(env::var("VAULT_ADDR").map_err(|_| {
             err("Please set the environment variable VAULT_ADDR to the URL of \
                  your vault server")
@@ -165,7 +167,7 @@ impl GenerateToken for Vault {
                       display_name: &str,
                       policies: Vec<String>,
                       ttl: VaultDuration)
-                      -> Result<String, Error> {
+                      -> Result<String> {
         // We can't store `client` in `self`, because it has some obnoxious
         // lifetime parameters.  So we'll just recreate it.  This is
         // probably not the worst idea, because it uses `hyper` for HTTP,
@@ -202,7 +204,7 @@ impl Plugin {
     /// Create a new plugin, specifying an alternate source for tokens.
     fn new_with_generator<G>(project: &Project,
                              generator: Option<G>)
-                             -> Result<Plugin, Error>
+                             -> Result<Plugin>
         where G: GenerateToken + 'static
     {
         let path = Self::config_path(project);
@@ -231,12 +233,12 @@ impl PluginNew for Plugin {
         "vault"
     }
 
-    fn is_configured_for(project: &Project) -> Result<bool, Error> {
+    fn is_configured_for(project: &Project) -> Result<bool> {
         let path = Self::config_path(project);
         Ok(path.exists())
     }
 
-    fn new(project: &Project) -> Result<Self, Error> {
+    fn new(project: &Project) -> Result<Self> {
         // An annoying special case.  We may be called as a code generator,
         // in which case we don't want to try to create a `GenerateToken`
         // instance.
@@ -260,7 +262,7 @@ impl PluginTransform for Plugin {
                  _op: Operation,
                  ctx: &plugins::Context,
                  file: &mut dc::File)
-                 -> Result<(), Error> {
+                 -> Result<()> {
 
         // Get our plugin config.
         let config = self.config
@@ -286,7 +288,7 @@ impl PluginTransform for Plugin {
 
             // Define a local helper function to interpolate
             // `RawOr<String>` values using `env`.
-            let interpolated = |raw_val: &dc::RawOr<String>| -> Result<String, Error> {
+            let interpolated = |raw_val: &dc::RawOr<String>| -> Result<String> {
                 let mut val = raw_val.to_owned();
                 Ok(try!(val.interpolate_env(&env)).to_owned())
             };

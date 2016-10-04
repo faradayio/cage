@@ -2,10 +2,11 @@
 
 use std::cell::{Ref, RefCell};
 use std::ffi::{OsStr, OsString};
-use std::io;
 use std::marker::PhantomData;
 use std::process;
 use std::rc::Rc;
+
+use errors::*;
 
 /// A factory that produces objects conforming to our `Command` wrapper
 /// trait.  During tests, we'll use this to mock out the underlying system
@@ -34,7 +35,7 @@ pub trait Command {
     }
 
     /// Run our command.
-    fn status(&mut self) -> io::Result<process::ExitStatus>;
+    fn status(&mut self) -> Result<process::ExitStatus>;
 }
 
 /// Support for running operating system commands.
@@ -91,9 +92,10 @@ impl Command for OsCommand {
         self
     }
 
-    fn status(&mut self) -> io::Result<process::ExitStatus> {
+    fn status(&mut self) -> Result<process::ExitStatus> {
         debug!("Running {:?}", &self.arg_log);
         self.command.status()
+            .chain_err(|| ErrorKind::CommandFailed(self.arg_log.clone()))
     }
 }
 
@@ -170,13 +172,14 @@ impl Command for TestCommand {
     }
 
     /// Always returns success.
-    fn status(&mut self) -> io::Result<process::ExitStatus> {
+    fn status(&mut self) -> Result<process::ExitStatus> {
         self.record_execution();
 
         // There's no portable way to build an `ExitStatus` in portable
         // Rust without actually running a command, so just choose an
         // inoffensive one with the result we want.
         process::Command::new("true").status()
+            .chain_err(|| ErrorKind::CommandFailed(self.cmd.clone()))
     }
 }
 

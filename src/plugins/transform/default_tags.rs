@@ -3,10 +3,10 @@
 use compose_yml::v2 as dc;
 use std::marker::PhantomData;
 
+use errors::*;
 use plugins;
 use plugins::{Operation, PluginNew, PluginTransform};
 use project::Project;
-use util::Error;
 
 /// Applies `DefaultTags` to `dc::File`.
 #[derive(Debug)]
@@ -28,7 +28,7 @@ impl PluginNew for Plugin {
         "default_tags"
     }
 
-    fn new(_project: &Project) -> Result<Self, Error> {
+    fn new(_project: &Project) -> Result<Self> {
         Ok(Plugin { _placeholder: PhantomData })
     }
 }
@@ -38,7 +38,7 @@ impl PluginTransform for Plugin {
                  _op: Operation,
                  ctx: &plugins::Context,
                  file: &mut dc::File)
-                 -> Result<(), Error> {
+                 -> Result<()> {
         // Do we have any default tags specified for this project?
         if let Some(tags) = ctx.project.default_tags() {
             // Apply the tags to each service.

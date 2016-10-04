@@ -1,6 +1,5 @@
 //! Miscellaneous utility macros and functions.
 
-use compose_yml::v2 as dc;
 use glob;
 use retry::retry;
 use std::env;
@@ -10,21 +9,23 @@ use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
 
-/// We use the same `Error` type as `compose_yml` for simplicity.
-pub type Error = dc::Error;
-
+use errors::*;
 
 /// Create an error using a format string and arguments.
+///
+/// TODO HIGH: Remove `err!` in favor of better error types.
 #[macro_export]
 macro_rules! err {
-    ($( $e:expr ),+) => ($crate::Error::from(format!($( $e ),+)));
+    ($( $e:expr ),+) => ($crate::err(&format!($( $e ),+)))
 }
 
 /// Create an error using a string literal.  (This exists mostly so that
 /// clippy doesn't complain about `err!` expanding to `format!` with no
 /// arguments.)
+///
+/// TODO HIGH: Remove `err` in favor of better error types.
 pub fn err(msg: &str) -> Error {
-    Error::from(msg)
+    msg.into()
 }
 
 /// Trait for things which we really hope are actually UTF-8 strings, and not
@@ -32,11 +33,11 @@ pub fn err(msg: &str) -> Error {
 pub trait ToStrOrErr {
     /// Convert to a Rust string as per `OsStr::to_str`, or return an
     /// error;
-    fn to_str_or_err(&self) -> Result<&str, Error>;
+    fn to_str_or_err(&self) -> Result<&str>;
 }
 
 impl ToStrOrErr for OsStr {
-    fn to_str_or_err(&self) -> Result<&str, Error> {
+    fn to_str_or_err(&self) -> Result<&str> {
         self.to_str().ok_or_else(|| {
             err!("the string {:?} contains non-Unicode characters", self)
         })
@@ -44,7 +45,7 @@ impl ToStrOrErr for OsStr {
 }
 
 impl ToStrOrErr for Path {
-    fn to_str_or_err(&self) -> Result<&str, Error> {
+    fn to_str_or_err(&self) -> Result<&str> {
         self.to_str().ok_or_else(|| {
             err!("the path {} contains non-Unicode characters",
                  self.display())
@@ -55,21 +56,21 @@ impl ToStrOrErr for Path {
 /// Custom methods which we add to `Path` to support common operations.
 pub trait ConductorPathExt: ToStrOrErr {
     /// Glob relative to this path.
-    fn glob(&self, pattern: &str) -> Result<glob::Paths, Error>;
+    fn glob(&self, pattern: &str) -> Result<glob::Paths>;
 
     /// Ensure the directory containing this path exists.  Returns the path
     /// itself so we can chain function calls, which might be too cute.
     /// (And copy it to a fully-owned `PathBuf` to avoid borrow-checker
     /// issues.)
-    fn with_guaranteed_parent(&self) -> Result<PathBuf, Error>;
+    fn with_guaranteed_parent(&self) -> Result<PathBuf>;
 
     /// Convert this path to a relative path, interpreting relative to the
     /// current working directory.
-    fn to_absolute(&self) -> Result<PathBuf, Error>;
+    fn to_absolute(&self) -> Result<PathBuf>;
 }
 
 impl ConductorPathExt for Path {
-    fn glob(&self, pattern: &str) -> Result<glob::Paths, Error> {
+    fn glob(&self, pattern: &str) -> Result<glob::Paths> {
         // We always use the same options.
         let opts = glob::MatchOptions {
             case_sensitive: true,
@@ -82,7 +83,7 @@ impl ConductorPathExt for Path {
         Ok(try!(glob::glob_with(&pat, &opts)))
     }
 
-    fn with_guaranteed_parent(&self) -> Result<PathBuf, Error> {
+    fn with_guaranteed_parent(&self) -> Result<PathBuf> {
         let parent = try!(self.parent()
             .ok_or_else(|| err!("can't find parent path of {}", self.display())));
 
@@ -119,7 +120,7 @@ impl ConductorPathExt for Path {
         Ok(self.to_owned())
     }
 
-    fn to_absolute(&self) -> Result<PathBuf, Error> {
+    fn to_absolute(&self) -> Result<PathBuf> {
         let path = try!(env::current_dir()).join(self);
         assert!(path.is_absolute());
         Ok(path)

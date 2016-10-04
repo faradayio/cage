@@ -7,10 +7,10 @@ use std::collections::BTreeMap;
 use std::fs;
 use std::path::PathBuf;
 
+use errors::*;
 use plugins;
 use plugins::{Operation, PluginGenerate, PluginNew, PluginTransform};
 use project::Project;
-use util::Error;
 
 #[cfg(feature = "serde_macros")]
 include!(concat!("secrets_config.in.rs"));
@@ -44,12 +44,12 @@ impl PluginNew for Plugin {
         "secrets"
     }
 
-    fn is_configured_for(project: &Project) -> Result<bool, Error> {
+    fn is_configured_for(project: &Project) -> Result<bool> {
         let path = Self::config_path(project);
         Ok(path.exists())
     }
 
-    fn new(project: &Project) -> Result<Self, Error> {
+    fn new(project: &Project) -> Result<Self> {
         let path = Self::config_path(project);
         let config = if path.exists() {
             let f = try!(fs::File::open(&path));
@@ -73,7 +73,7 @@ impl PluginTransform for Plugin {
                  _op: Operation,
                  ctx: &plugins::Context,
                  file: &mut dc::File)
-                 -> Result<(), Error> {
+                 -> Result<()> {
 
         let config = self.config
             .as_ref()

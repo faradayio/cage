@@ -3,19 +3,20 @@
 use command_runner::{Command, CommandRunner};
 #[cfg(test)]
 use command_runner::TestCommandRunner;
+use errors::*;
 use ovr::Override;
 use project::Project;
-use util::{Error, err};
+use util::err;
 
 /// We implement `conductor stop` with a trait so we put it in its own module.
 pub trait CommandStop {
     /// Stop all the images associated with a project.
-    fn stop<CR>(&self, runner: &CR, ovr: &Override) -> Result<(), Error>
+    fn stop<CR>(&self, runner: &CR, ovr: &Override) -> Result<()>
         where CR: CommandRunner;
 }
 
 impl CommandStop for Project {
-    fn stop<CR>(&self, runner: &CR, ovr: &Override) -> Result<(), Error>
+    fn stop<CR>(&self, runner: &CR, ovr: &Override) -> Result<()>
         where CR: CommandRunner
     {
         for pod in self.pods() {

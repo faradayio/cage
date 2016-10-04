@@ -3,19 +3,20 @@
 use command_runner::{Command, CommandRunner};
 #[cfg(test)]
 use command_runner::TestCommandRunner;
+use errors::*;
 use ovr::Override;
 use project::Project;
-use util::{Error, err};
+use util::err;
 
 /// We implement `conductor pull` with a trait so we put it in its own module.
 pub trait CommandPull {
     /// Pull all the images associated with a project.
-    fn pull<CR>(&self, runner: &CR, ovr: &Override) -> Result<(), Error>
+    fn pull<CR>(&self, runner: &CR, ovr: &Override) -> Result<()>
         where CR: CommandRunner;
 }
 
 impl CommandPull for Project {
-    fn pull<CR>(&self, runner: &CR, ovr: &Override) -> Result<(), Error>
+    fn pull<CR>(&self, runner: &CR, ovr: &Override) -> Result<()>
         where CR: CommandRunner
     {
         for pod in self.pods() {

@@ -22,7 +22,7 @@ use std::process;
 
 use conductor::command_runner::{Command, CommandRunner, OsCommandRunner};
 use conductor::cmd::*;
-use conductor::Error;
+use conductor::Result;
 
 /// Our version number, set by Cargo at compile time.
 const VERSION: &'static str = env!("CARGO_PKG_VERSION");
@@ -171,7 +171,7 @@ impl Args {
     fn to_exec_target<'a>(&'a self,
                           project: &'a conductor::Project,
                           ovr: &'a conductor::Override)
-                          -> Result<Option<conductor::exec::Target<'a>>, Error> {
+                          -> Result<Option<conductor::exec::Target<'a>>> {
         match (&self.arg_pod, &self.arg_service) {
             (&Some(ref pod), &Some(ref service)) => {
                 Ok(Some(try!(conductor::exec::Target::new(project,
@@ -200,7 +200,7 @@ impl Args {
 
 /// The function which does the real work.  Unlike `main`, we have a return
 /// type of `Result` and may therefore use `try!` to handle errors.
-fn run(args: &Args) -> Result<(), Error> {
+fn run(args: &Args) -> Result<()> {
 
     // Handle any flags or arguments we can handle without a project
     // directory.
@@ -295,7 +295,7 @@ fn version() {
 
 /// Print the version of this executable and also the versions of several
 /// tools we use.
-fn all_versions() -> Result<(), Error> {
+fn all_versions() -> Result<()> {
     version();
 
     let runner = OsCommandRunner::new();

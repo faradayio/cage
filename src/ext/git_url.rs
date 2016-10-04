@@ -5,21 +5,21 @@ use std::ffi::OsString;
 use std::path::Path;
 use url;
 
-use util::Error;
+use errors::*;
 
 /// These methods will appear as regular methods on `Context` in any module
 /// which includes `ContextExt`.
 pub trait GitUrlExt {
     /// Construct a short, easy-to-type alias for this URL, suitable for
     /// use as a command-line argument or a directory name.
-    fn human_alias(&self) -> Result<String, Error>;
+    fn human_alias(&self) -> Result<String>;
 
     /// Turn this URL into arguments to `git clone`.
-    fn clone_args(&self) -> Result<Vec<OsString>, Error>;
+    fn clone_args(&self) -> Result<Vec<OsString>>;
 }
 
 impl GitUrlExt for dc::GitUrl {
-    fn human_alias(&self) -> Result<String, Error> {
+    fn human_alias(&self) -> Result<String> {
         // Convert a regular URL so we can parse it.
         let url: url::Url = try!(self.to_url());
 
@@ -42,7 +42,7 @@ impl GitUrlExt for dc::GitUrl {
         }
     }
 
-    fn clone_args(&self) -> Result<Vec<OsString>, Error> {
+    fn clone_args(&self) -> Result<Vec<OsString>> {
         let url_str: &str = self.as_ref();
         if let Some(pos) = url_str.find('#') {
             let (base, branch) = url_str.split_at(pos);

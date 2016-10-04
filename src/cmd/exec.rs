@@ -3,10 +3,11 @@
 use command_runner::{Command, CommandRunner};
 #[cfg(test)]
 use command_runner::TestCommandRunner;
+use errors::*;
 use exec::{self, ToArgs};
 use ext::service::ServiceExt;
 use project::Project;
-use util::{Error, err};
+use util::err;
 
 /// We implement `conductor exec` with a trait so we can put it in its own
 /// module.
@@ -19,7 +20,7 @@ pub trait CommandExec {
                 target: &exec::Target,
                 command: &exec::Command,
                 opts: &exec::Options)
-                -> Result<(), Error>
+                -> Result<()>
         where CR: CommandRunner;
 
     /// Execute an interactive shell inside a running container.
@@ -27,7 +28,7 @@ pub trait CommandExec {
                  runner: &CR,
                  target: &exec::Target,
                  opts: &exec::Options)
-                 -> Result<(), Error>
+                 -> Result<()>
         where CR: CommandRunner;
 }
 
@@ -37,7 +38,7 @@ impl CommandExec for Project {
                 target: &exec::Target,
                 command: &exec::Command,
                 opts: &exec::Options)
-                -> Result<(), Error>
+                -> Result<()>
         where CR: CommandRunner
     {
 
@@ -59,7 +60,7 @@ impl CommandExec for Project {
                  runner: &CR,
                  target: &exec::Target,
                  opts: &exec::Options)
-                 -> Result<(), Error>
+                 -> Result<()>
         where CR: CommandRunner
     {
         // Sanity-check our arguments.

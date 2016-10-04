@@ -10,11 +10,12 @@ use std::path::{Path, PathBuf};
 use command_runner::{Command, CommandRunner};
 #[cfg(test)]
 use command_runner::TestCommandRunner;
+use errors::*;
 use ext::git_url::GitUrlExt;
 use ext::service::ServiceExt;
 use project::Project;
 use pod::Pod;
-use util::{ConductorPathExt, Error};
+use util::ConductorPathExt;
 
 /// All the git repositories associated with a project.
 #[derive(Debug)]
@@ -30,7 +31,7 @@ impl Repos {
     /// Add a repository to a map, keyed by its alias.  Returns the alias.
     fn add_repo(repos: &mut BTreeMap<String, Repo>,
                 git_url: &dc::GitUrl)
-                -> Result<String, Error> {
+                -> Result<String> {
         // Figure out what alias we want to use.
         let alias = try!(git_url.human_alias());
 
@@ -61,7 +62,7 @@ impl Repos {
 
     /// Create a collection of repositories based on a list of pods.
     #[doc(hidden)]
-    pub fn new(root_dir: &Path, pods: &[Pod]) -> Result<Repos, Error> {
+    pub fn new(root_dir: &Path, pods: &[Pod]) -> Result<Repos> {
         let mut repos: BTreeMap<String, Repo> = BTreeMap::new();
         let mut lib_keys: BTreeMap<String, String> = BTreeMap::new();
 
@@ -178,7 +179,7 @@ impl Repo {
     }
 
     /// Clone the source code of this repository using git.
-    pub fn clone_source<CR>(&self, runner: &CR, project: &Project) -> Result<(), Error>
+    pub fn clone_source<CR>(&self, runner: &CR, project: &Project) -> Result<()>
         where CR: CommandRunner
     {
         let dest = try!(self.path(project).with_guaranteed_parent());
@@ -196,7 +197,7 @@ impl Repo {
     /// (Test mode only.) Pretend to clone the source code for this
     /// repository by creating an empty directory in the right place.
     #[cfg(test)]
-    pub fn fake_clone_source(&self, project: &Project) -> Result<(), Error> {
+    pub fn fake_clone_source(&self, project: &Project) -> Result<()> {
         try!(fs::create_dir_all(self.path(project)));
         Ok(())
     }

@@ -2,11 +2,11 @@
 
 use std::path::{Path, PathBuf};
 
-use util::Error;
+use errors::*;
 
 /// Walk up the directory tree until we find a directory that looks like a
 /// `conductor` project.
-pub fn find_project(start_dir: &Path) -> Result<PathBuf, Error> {
+pub fn find_project(start_dir: &Path) -> Result<PathBuf> {
     // Do this as a loop, not recusively, so we can use `start_dir` in
     // error messages.
     let mut dir = start_dir;

@@ -5,11 +5,11 @@ use std::fmt;
 use std::io;
 use std::marker::PhantomData;
 
+use errors::*;
 use ovr::Override;
 use pod::Pod;
 use project::Project;
 use template::Template;
-use util::Error;
 
 pub mod transform;
 
@@ -74,12 +74,12 @@ pub trait PluginNew: Plugin + Sized + fmt::Debug {
     /// Has this plugin been configured for this project?  This will be
     /// called before instantiating any plugin type except
     /// `PluginGenerate`.
-    fn is_configured_for(_project: &Project) -> Result<bool, Error> {
+    fn is_configured_for(_project: &Project) -> Result<bool> {
         Ok(true)
     }
 
     /// Create a new plugin.
-    fn new(project: &Project) -> Result<Self, Error>;
+    fn new(project: &Project) -> Result<Self>;
 }
 
 /// A plugin which transforms a `dc::File` object.
@@ -89,7 +89,7 @@ pub trait PluginTransform: Plugin {
                  op: Operation,
                  ctx: &Context,
                  file: &mut dc::File)
-                 -> Result<(), Error>;
+                 -> Result<()>;
 }
 
 /// A plugin which can generate source code.
@@ -101,7 +101,7 @@ pub trait PluginGenerate: Plugin {
     /// Generate source code.  The default implementation generates the
     /// template of the same name as the plugin, using the project as
     /// input.  This is a good default.
-    fn generate(&self, project: &Project, out: &mut io::Write) -> Result<(), Error> {
+    fn generate(&self, project: &Project, out: &mut io::Write) -> Result<()> {
         let mut proj_tmpl = try!(Template::new(self.name()));
         try!(proj_tmpl.generate(&project.root_dir(), project, out));
         Ok(())
@@ -119,7 +119,7 @@ pub struct Manager {
 
 impl Manager {
     /// Create a new manager for the specified project.
-    pub fn new(proj: &Project) -> Result<Manager, Error> {
+    pub fn new(proj: &Project) -> Result<Manager> {
         let mut manager = Manager {
             transforms: vec![],
             generators: vec![],
@@ -147,7 +147,7 @@ impl Manager {
 
     /// Create a new plugin, returning a reasonably helpful error if we
     /// fail.
-    fn new_plugin<T>(&self, proj: &Project) -> Result<T, Error>
+    fn new_plugin<T>(&self, proj: &Project) -> Result<T>
         where T: PluginNew + 'static
     {
         T::new(proj)
@@ -155,7 +155,7 @@ impl Manager {
     }
 
     /// Register a generator with this manager.
-    fn register_generator<T>(&mut self, proj: &Project) -> Result<(), Error>
+    fn register_generator<T>(&mut self, proj: &Project) -> Result<()>
         where T: PluginNew + PluginGenerate + 'static
     {
         let plugin: T = try!(self.new_plugin(&proj));
@@ -164,7 +164,7 @@ impl Manager {
     }
 
     /// Register a transform with this manager.
-    fn register_transform<T>(&mut self, proj: &Project) -> Result<(), Error>
+    fn register_transform<T>(&mut self, proj: &Project) -> Result<()>
         where T: PluginNew + PluginTransform + 'static
     {
         if try!(T::is_configured_for(&proj)) {
@@ -179,7 +179,7 @@ impl Manager {
                     project: &Project,
                     name: &str,
                     out: &mut io::Write)
-                    -> Result<(), Error> {
+                    -> Result<()> {
         let generator = try!(self.generators
             .iter()
             .find(|g| g.name() == name)
@@ -193,7 +193,7 @@ impl Manager {
                      op: Operation,
                      ctx: &Context,
                      file: &mut dc::File)
-                     -> Result<(), Error> {
+                     -> Result<()> {
         for plugin in &self.transforms {
             try!(plugin.transform(op, ctx, file)
                 .map_err(|e| err!("Error applying plugin {}: {}", plugin.name(), e)));

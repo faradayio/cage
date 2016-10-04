@@ -3,20 +3,21 @@
 use command_runner::{Command, CommandRunner};
 #[cfg(test)]
 use command_runner::TestCommandRunner;
+use errors::*;
 use ovr::Override;
 use project::Project;
-use util::{Error, err};
+use util::err;
 
 /// We implement `conductor build` with a trait so we put it in its own
 /// module.
 pub trait CommandBuild {
     /// Build all the images associated with this project.
-    fn build<CR>(&self, runner: &CR, ovr: &Override) -> Result<(), Error>
+    fn build<CR>(&self, runner: &CR, ovr: &Override) -> Result<()>
         where CR: CommandRunner;
 }
 
 impl CommandBuild for Project {
-    fn build<CR>(&self, runner: &CR, ovr: &Override) -> Result<(), Error>
+    fn build<CR>(&self, runner: &CR, ovr: &Override) -> Result<()>
         where CR: CommandRunner
     {
         for pod in self.pods() {

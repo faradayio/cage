@@ -9,9 +9,9 @@ use std::ffi::OsString;
 use std::fs;
 use std::path::{Path, PathBuf};
 
+use errors::*;
 use ovr::Override;
 use project::Project;
-use util::Error;
 
 // Include some source code containing data structures we need to run
 // through serde.
@@ -46,7 +46,7 @@ impl FileInfo {
     /// Create a `FileInfo` by either loading `base_dir.join(rel_path)` or
     /// by creating an empty `dc::File` in its place.  Do not perform
     /// normalization.
-    fn unnormalized(base_dir: &Path, rel_path: &Path) -> Result<FileInfo, Error> {
+    fn unnormalized(base_dir: &Path, rel_path: &Path) -> Result<FileInfo> {
         let path = base_dir.join(rel_path);
         Ok(FileInfo {
             rel_path: rel_path.to_owned(),
@@ -117,7 +117,7 @@ impl Pod {
     pub fn new<P, S>(base_dir: P,
                      name: S,
                      overrides: &[Override])
-                     -> Result<Pod, Error>
+                     -> Result<Pod>
         where P: Into<PathBuf>,
               S: Into<String>
     {
@@ -199,25 +199,25 @@ impl Pod {
     /// Look up the file info associated with an override, or return an
     /// error if this override was not specified for this `Pod` at creation
     /// time.
-    fn override_file_info(&self, ovr: &Override) -> Result<&FileInfo, Error> {
+    fn override_file_info(&self, ovr: &Override) -> Result<&FileInfo> {
         self.override_file_infos
             .get(ovr)
             .ok_or_else(|| err!("The override {} is not defined", ovr.name()))
     }
 
     /// The path to the specificied override file for this pod.
-    pub fn override_rel_path(&self, ovr: &Override) -> Result<&Path, Error> {
+    pub fn override_rel_path(&self, ovr: &Override) -> Result<&Path> {
         Ok(&(try!(self.override_file_info(ovr)).rel_path))
     }
 
     /// The `dc::File` for this override.
-    pub fn override_file(&self, ovr: &Override) -> Result<&dc::File, Error> {
+    pub fn override_file(&self, ovr: &Override) -> Result<&dc::File> {
         Ok(&(try!(self.override_file_info(ovr)).file))
     }
 
     /// Return the base file and the override file merged into a single
     /// `docker-compose.yml` file.
-    pub fn merged_file(&self, ovr: &Override) -> Result<dc::File, Error> {
+    pub fn merged_file(&self, ovr: &Override) -> Result<dc::File> {
         // This is expensive so log it.
         debug!("Merging pod {} with override {}", self.name(), ovr.name());
         Ok(self.file().merge_override(try!(self.override_file(ovr))))
@@ -243,7 +243,7 @@ impl Pod {
     pub fn compose_args(&self,
                         proj: &Project,
                         ovr: &Override)
-                        -> Result<Vec<OsString>, Error> {
+                        -> Result<Vec<OsString>> {
         let compose_project_name = ovr.compose_project_name(proj);
         Ok(vec!["-p".into(),
                 compose_project_name.into(),

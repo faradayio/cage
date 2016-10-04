@@ -3,11 +3,12 @@
 use command_runner::{Command, CommandRunner};
 #[cfg(test)]
 use command_runner::TestCommandRunner;
+use errors::*;
 use exec::{self, ToArgs};
 use ext::service::ServiceExt;
 use ovr::Override;
 use project::Project;
-use util::{Error, err};
+use util::err;
 
 /// We implement `conductor run` with a trait so we put it in its own module.
 pub trait CommandRun {
@@ -18,11 +19,11 @@ pub trait CommandRun {
                pod: &str,
                command: Option<&exec::Command>,
                opts: &exec::Options)
-               -> Result<(), Error>
+               -> Result<()>
         where CR: CommandRunner;
 
     /// Execute tests inside a fresh container.
-    fn test<CR>(&self, runner: &CR, target: &exec::Target) -> Result<(), Error>
+    fn test<CR>(&self, runner: &CR, target: &exec::Target) -> Result<()>
         where CR: CommandRunner;
 }
 
@@ -33,7 +34,7 @@ impl CommandRun for Project {
                pod: &str,
                command: Option<&exec::Command>,
                opts: &exec::Options)
-               -> Result<(), Error>
+               -> Result<()>
         where CR: CommandRunner
     {
         let pod = try!(self.pod(pod)
@@ -74,7 +75,7 @@ impl CommandRun for Project {
         Ok(())
     }
 
-    fn test<CR>(&self, runner: &CR, target: &exec::Target) -> Result<(), Error>
+    fn test<CR>(&self, runner: &CR, target: &exec::Target) -> Result<()>
         where CR: CommandRunner
     {
         let status = try!(runner.build("docker-compose")

@@ -4,10 +4,10 @@ use compose_yml::v2 as dc;
 use std::ffi::{OsStr, OsString};
 use std::marker::PhantomData;
 
+use errors::*;
 use ovr::Override;
 use pod::Pod;
 use project::Project;
-use util::Error;
 
 /// Trait for types which can be converted to command-line arguments.
 pub trait ToArgs {
@@ -116,7 +116,7 @@ impl<'a> Target<'a> {
                ovr: &'a Override,
                pod_name: &'a str,
                service_name: &'a str)
-               -> Result<Target<'a>, Error> {
+               -> Result<Target<'a>> {
         let pod = try!(project.pod(pod_name)
             .ok_or_else(|| err!("Cannot find pod {}", pod_name)));
         let file = try!(pod.merged_file(ovr));

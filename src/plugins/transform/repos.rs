@@ -4,11 +4,12 @@
 use compose_yml::v2 as dc;
 use std::marker::PhantomData;
 
+use errors::*;
 use ext::service::ServiceExt;
 use plugins;
 use plugins::{Operation, PluginNew, PluginTransform};
 use project::Project;
-use util::{ConductorPathExt, Error};
+use util::ConductorPathExt;
 
 /// Transforms `dc::File` to point at local clones of GitHub repositories.
 ///
@@ -36,7 +37,7 @@ impl PluginNew for Plugin {
         "repos"
     }
 
-    fn new(_project: &Project) -> Result<Self, Error> {
+    fn new(_project: &Project) -> Result<Self> {
         Ok(Plugin { _placeholder: PhantomData })
     }
 }
@@ -46,7 +47,7 @@ impl PluginTransform for Plugin {
                  op: Operation,
                  ctx: &plugins::Context,
                  file: &mut dc::File)
-                 -> Result<(), Error> {
+                 -> Result<()> {
         // Give up immediately if we're not doing this for local output.
         if op != Operation::Output {
             return Ok(());

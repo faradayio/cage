@@ -9,9 +9,9 @@ use std::fs;
 use std::io;
 use std::path::{PathBuf, Path};
 
+use errors::*;
 use project::Project;
 use template::Template;
-use util::Error;
 
 /// A list of standard overrides to generate.
 const OVERRIDES: &'static [&'static str] = &["development", "production", "test"];
@@ -34,18 +34,18 @@ pub trait CommandGenerate {
     ///       └── test
     ///           └── common.env
     /// ```
-    fn generate_new(parent_dir: &Path, name: &str) -> Result<PathBuf, Error>;
+    fn generate_new(parent_dir: &Path, name: &str) -> Result<PathBuf>;
 
     /// Print our all available generators (excluding the `generate_new`
     /// generator).
-    fn generate_list(&self) -> Result<(), Error>;
+    fn generate_list(&self) -> Result<()>;
 
     /// Run the specified generator.
-    fn generate(&self, name: &str) -> Result<(), Error>;
+    fn generate(&self, name: &str) -> Result<()>;
 }
 
 impl CommandGenerate for Project {
-    fn generate_new(parent_dir: &Path, name: &str) -> Result<PathBuf, Error> {
+    fn generate_new(parent_dir: &Path, name: &str) -> Result<PathBuf> {
         let proj_dir = parent_dir.join(name);
 
         // Generate our top-level files.
@@ -68,7 +68,7 @@ impl CommandGenerate for Project {
         Ok(proj_dir)
     }
 
-    fn generate_list(&self) -> Result<(), Error> {
+    fn generate_list(&self) -> Result<()> {
         for generator in self.plugins().generators() {
             println!("{:19} {}",
                      generator.name(),
@@ -77,7 +77,7 @@ impl CommandGenerate for Project {
         Ok(())
     }
 
-    fn generate(&self, name: &str) -> Result<(), Error> {
+    fn generate(&self, name: &str) -> Result<()> {
         self.plugins().generate(self, name, &mut io::stdout())
     }
 }

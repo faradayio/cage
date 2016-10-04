@@ -13,12 +13,13 @@ use std::slice;
 
 use default_tags::DefaultTags;
 use dir;
+use errors::*;
 use ovr::Override;
 use plugins::{self, Operation};
 use pod::{Pod, PodType};
 use repos::Repos;
 use rustc_serialize::json::{Json, ToJson};
-use util::{ConductorPathExt, Error, ToStrOrErr};
+use util::{ConductorPathExt, ToStrOrErr};
 
 /// A `conductor` project, which is represented as a directory containing a
 /// `pods` subdirectory.
@@ -63,7 +64,7 @@ impl Project {
     fn from_dirs(root_dir: &Path,
                  src_dir: &Path,
                  output_dir: &Path)
-                 -> Result<Project, Error> {
+                 -> Result<Project> {
         let overrides = try!(Project::find_overrides(root_dir));
         let pods = try!(Project::find_pods(root_dir, &overrides));
         let repos = try!(Repos::new(&root_dir, &pods));
@@ -107,7 +108,7 @@ impl Project {
     ///
     /// env::set_current_dir(saved).unwrap();
     /// ```
-    pub fn from_current_dir() -> Result<Project, Error> {
+    pub fn from_current_dir() -> Result<Project> {
         // (We can only test this using a doc test because testing it
         // requires messing with `set_current_dir`, which isn't thread safe
         // and will break parallel tests.)
@@ -121,7 +122,7 @@ impl Project {
     /// (Tests only.) Create a `Project` from a subirectory of `examples`,
     /// with an output directory under `target/test_output/$NAME`.
     #[cfg(test)]
-    pub fn from_example(name: &str) -> Result<Project, Error> {
+    pub fn from_example(name: &str) -> Result<Project> {
         use rand::random;
         let root_dir = Path::new("examples").join(name);
         let rand_name = format!("{}-{}", name, random::<u16>());
@@ -131,7 +132,7 @@ impl Project {
 
     /// (Tests only.) Remove our output directory after a test.
     #[cfg(test)]
-    pub fn remove_test_output(&self) -> Result<(), Error> {
+    pub fn remove_test_output(&self) -> Result<()> {
         if self.output_dir.exists() {
             try!(fs::remove_dir_all(&self.output_dir));
         }
@@ -139,7 +140,7 @@ impl Project {
     }
 
     /// Find all the overrides defined in this project.
-    fn find_overrides(root_dir: &Path) -> Result<Vec<Override>, Error> {
+    fn find_overrides(root_dir: &Path) -> Result<Vec<Override>> {
         let overrides_dir = root_dir.join("pods/overrides");
         let mut overrides = vec![];
         for glob_result in try!(overrides_dir.glob("*")) {
@@ -155,7 +156,7 @@ impl Project {
     }
 
     /// Find all the pods defined in this project.
-    fn find_pods(root_dir: &Path, overrides: &[Override]) -> Result<Vec<Pod>, Error> {
+    fn find_pods(root_dir: &Path, overrides: &[Override]) -> Result<Vec<Pod>> {
         let pods_dir = root_dir.join("pods");
         let mut pods = vec![];
         for glob_result in try!(pods_dir.glob("*.yml")) {
@@ -264,7 +265,7 @@ impl Project {
                      ovr: &Override,
                      op: Operation,
                      export_dir: &Path)
-                     -> Result<(), Error> {
+                     -> Result<()> {
         // Output each pod.
         for pod in &self.pods {
             // Figure out where to put our pod.
@@ -292,7 +293,7 @@ impl Project {
 
     /// Delete our existing output and replace it with a processed and
     /// expanded version of our pod definitions.
-    pub fn output(&self, ovr: &Override) -> Result<(), Error> {
+    pub fn output(&self, ovr: &Override) -> Result<()> {
         // Get a path to our output pods directory (and delete it if it
         // exists).
         let out_pods = self.output_pods_dir();
@@ -307,7 +308,7 @@ impl Project {
     /// Export this project (with the specified override applied) as a set
     /// of standalone `*.yml` files with no environment variable
     /// interpolations and no external dependencies.
-    pub fn export(&self, ovr: &Override, export_dir: &Path) -> Result<(), Error> {
+    pub fn export(&self, ovr: &Override, export_dir: &Path) -> Result<()> {
         // Don't clobber an existing directory.
         if export_dir.exists() {
             return Err(err!("The directory {} already exists", export_dir.display()));
