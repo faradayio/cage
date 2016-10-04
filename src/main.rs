@@ -335,6 +335,9 @@ fn main() {
         // If we can't print a message to stderr without an I/O error,
         // the situation is hopeless.
         write!(io::stderr(), "Error: {}\n", err).unwrap();
+        if let Some(backtrace) = err.backtrace() {
+            write!(io::stderr(), "{:?}\n", backtrace).unwrap();
+        }
         process::exit(1);
     }
 }
