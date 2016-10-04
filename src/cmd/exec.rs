@@ -42,18 +42,13 @@ impl CommandExec for Project {
         where CR: CommandRunner
     {
 
-        let status = try!(runner.build("docker-compose")
+        runner.build("docker-compose")
             .args(&try!(target.pod().compose_args(self, target.ovr())))
             .arg("exec")
             .args(&opts.to_args())
             .arg(target.service_name())
             .args(&command.to_args())
-            .status());
-        if !status.success() {
-            return Err(err("Error running docker-compose"));
-        }
-
-        Ok(())
+            .exec()
     }
 
     fn shell<CR>(&self,

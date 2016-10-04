@@ -36,6 +36,20 @@ pub trait Command {
 
     /// Run our command.
     fn status(&mut self) -> Result<process::ExitStatus>;
+
+    /// Run our command as per `status`, returning an error if the command
+    /// fails.
+    fn exec(&mut self) -> Result<()> {
+        let status = try!(self.status());
+        if status.success() {
+            Ok(())
+        } else {
+            Err(self.command_failed_error().into())
+        }
+    }
+
+    /// Make an error representing a failure of this command.
+    fn command_failed_error(&self) -> ErrorKind;
 }
 
 /// Support for running operating system commands.
@@ -94,8 +108,11 @@ impl Command for OsCommand {
 
     fn status(&mut self) -> Result<process::ExitStatus> {
         debug!("Running {:?}", &self.arg_log);
-        self.command.status()
-            .chain_err(|| ErrorKind::CommandFailed(self.arg_log.clone()))
+        self.command.status().chain_err(|| self.command_failed_error())
+    }
+
+    fn command_failed_error(&self) -> ErrorKind {
+        ErrorKind::CommandFailed(self.arg_log.clone())
     }
 }
 
@@ -165,13 +182,11 @@ impl TestCommand {
 }
 
 impl Command for TestCommand {
-    /// Record the command arguments in our `TestCommandRunner`.
     fn arg<S: AsRef<OsStr>>(&mut self, arg: S) -> &mut Self {
         self.cmd.push(arg.as_ref().to_owned());
         self
     }
 
-    /// Always returns success.
     fn status(&mut self) -> Result<process::ExitStatus> {
         self.record_execution();
 
@@ -179,7 +194,11 @@ impl Command for TestCommand {
         // Rust without actually running a command, so just choose an
         // inoffensive one with the result we want.
         process::Command::new("true").status()
-            .chain_err(|| ErrorKind::CommandFailed(self.cmd.clone()))
+            .chain_err(|| self.command_failed_error())
+    }
+
+    fn command_failed_error(&self) -> ErrorKind {
+        ErrorKind::CommandFailed(self.cmd.clone())
     }
 }
 

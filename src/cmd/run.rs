@@ -62,35 +62,26 @@ impl CommandRun for Project {
         } else {
             vec![]
         };
-        let status = try!(runner.build("docker-compose")
+        runner.build("docker-compose")
             .args(&try!(pod.compose_args(self, ovr)))
             .arg("run")
             .args(&opts.to_args())
             .arg(service)
             .args(&command_args)
-            .status());
-        if !status.success() {
-            return Err(err("Error running docker-compose"));
-        }
-        Ok(())
+            .exec()
     }
 
     fn test<CR>(&self, runner: &CR, target: &exec::Target) -> Result<()>
         where CR: CommandRunner
     {
-        let status = try!(runner.build("docker-compose")
+        runner.build("docker-compose")
             .args(&try!(target.pod().compose_args(self, target.ovr())))
             .arg("run")
             .arg("--rm")
             .arg("--no-deps")
             .arg(target.service_name())
             .args(&try!(target.service().test_command()))
-            .status());
-        if !status.success() {
-            return Err(err("Error running docker-compose"));
-        }
-
-        Ok(())
+            .exec()
     }
 }
 

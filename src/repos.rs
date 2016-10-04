@@ -183,15 +183,11 @@ impl Repo {
         where CR: CommandRunner
     {
         let dest = try!(self.path(project).with_guaranteed_parent());
-        let status = try!(runner.build("git")
+        runner.build("git")
             .arg("clone")
             .args(&try!(self.git_url().clone_args()))
             .arg(&dest)
-            .status());
-        if !status.success() {
-            return Err(err!("Error cloning {} to {}", &self.git_url, dest.display()));
-        }
-        Ok(())
+            .exec()
     }
 
     /// (Test mode only.) Pretend to clone the source code for this

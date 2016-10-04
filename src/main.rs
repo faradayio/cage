@@ -300,12 +300,9 @@ fn all_versions() -> Result<()> {
 
     let runner = OsCommandRunner::new();
     for tool in &["docker", "docker-compose", "git"] {
-        let status = try!(runner.build(tool)
+        try!(runner.build(tool)
             .arg("--version")
-            .status());
-        if !status.success() {
-            return Err(err!("Could not run {} (is it installed?)", tool));
-        }
+            .exec());
     }
     Ok(())
 }

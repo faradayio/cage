@@ -6,7 +6,6 @@ use command_runner::TestCommandRunner;
 use errors::*;
 use ovr::Override;
 use project::Project;
-use util::err;
 
 /// We implement `conductor pull` with a trait so we put it in its own module.
 pub trait CommandPull {
@@ -20,13 +19,10 @@ impl CommandPull for Project {
         where CR: CommandRunner
     {
         for pod in self.pods() {
-            let status = try!(runner.build("docker-compose")
+            try!(runner.build("docker-compose")
                 .args(&try!(pod.compose_args(self, ovr)))
                 .arg("pull")
-                .status());
-            if !status.success() {
-                return Err(err("Error running docker-compose"));
-            }
+                .exec());
         }
         Ok(())
     }

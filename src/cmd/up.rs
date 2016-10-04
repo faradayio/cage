@@ -7,7 +7,6 @@ use errors::*;
 use ovr::Override;
 use pod::PodType;
 use project::Project;
-use util::err;
 
 /// We implement `conductor up` with a trait so we put it in its own module.
 pub trait CommandUp {
@@ -54,14 +53,11 @@ impl CommandUp for Project {
                 // launch the next.  To avoid this, we'd need to use
                 // multiple parallel threads and maybe some intelligent
                 // output buffering.
-                let status = try!(runner.build("docker-compose")
+                try!(runner.build("docker-compose")
                     .args(&try!(pod.compose_args(self, ovr)))
                     .arg("up")
                     .arg("-d")
-                    .status());
-                if !status.success() {
-                    return Err(err("Error running docker-compose"));
-                }
+                    .exec());
             }
         }
         Ok(())
