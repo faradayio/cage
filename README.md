@@ -301,6 +301,16 @@ ahead and fix your pull request, or ask us for help.
 
 [Clippy]: https://github.com/Manishearth/rust-clippy
 
+#### On macOS
+
+When building you may get an error that `'openssl/ssl.hs' file not found`. You
+need to set the following env vars:
+
+```
+export OPENSSL_INCLUDE_DIR=/usr/local/opt/openssl/include
+export DEP_OPENSSL_INCLUDE=/usr/local/opt/openssl/include
+```
+
 ### Official releases
 
 To make an official release, you need to be a maintainer, and you need to
