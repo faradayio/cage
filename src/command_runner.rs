@@ -193,7 +193,8 @@ impl Command for TestCommand {
         // There's no portable way to build an `ExitStatus` in portable
         // Rust without actually running a command, so just choose an
         // inoffensive one with the result we want.
-        process::Command::new("true").status()
+        process::Command::new("true")
+            .status()
             .chain_err(|| self.command_failed_error())
     }
 

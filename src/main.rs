@@ -147,13 +147,10 @@ struct Args {
 impl Args {
     /// Get either the specified override name, or a reasonable default.
     fn override_name(&self) -> &str {
-        self.flag_override.as_ref().map_or_else(|| {
-            if self.cmd_test {
-                "test"
-            } else {
-                "development"
-            }
-        }, |s| &s[..])
+        self.flag_override
+            .as_ref()
+            .map_or_else(|| { if self.cmd_test { "test" } else { "development" } },
+                         |s| &s[..])
     }
 
     /// Extract `exec::Options` from our command-line arguments.

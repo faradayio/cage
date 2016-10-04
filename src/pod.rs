@@ -114,10 +114,7 @@ impl Pod {
     /// Create a new pod, specifying the base directory from which we'll load
     /// pod definitions and the name of the pod.
     #[doc(hidden)]
-    pub fn new<P, S>(base_dir: P,
-                     name: S,
-                     overrides: &[Override])
-                     -> Result<Pod>
+    pub fn new<P, S>(base_dir: P, name: S, overrides: &[Override]) -> Result<Pod>
         where P: Into<PathBuf>,
               S: Into<String>
     {

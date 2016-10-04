@@ -15,11 +15,7 @@ pub trait CommandUp {
         where CR: CommandRunner;
 
     /// Up all the images in the specified pods.
-    fn up<CR>(&self,
-              runner: &CR,
-              ovr: &Override,
-              pod_names: &[&str])
-              -> Result<()>
+    fn up<CR>(&self, runner: &CR, ovr: &Override, pod_names: &[&str]) -> Result<()>
         where CR: CommandRunner;
 }
 
@@ -38,11 +34,7 @@ impl CommandUp for Project {
         up_by_pod_type(PodType::Service)
     }
 
-    fn up<CR>(&self,
-              runner: &CR,
-              ovr: &Override,
-              pods_names: &[&str])
-              -> Result<()>
+    fn up<CR>(&self, runner: &CR, ovr: &Override, pods_names: &[&str]) -> Result<()>
         where CR: CommandRunner
     {
         for pod_name in pods_names {

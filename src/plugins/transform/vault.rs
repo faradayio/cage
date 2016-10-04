@@ -202,9 +202,7 @@ impl Plugin {
     }
 
     /// Create a new plugin, specifying an alternate source for tokens.
-    fn new_with_generator<G>(project: &Project,
-                             generator: Option<G>)
-                             -> Result<Plugin>
+    fn new_with_generator<G>(project: &Project, generator: Option<G>) -> Result<Plugin>
         where G: GenerateToken + 'static
     {
         let path = Self::config_path(project);
