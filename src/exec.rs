@@ -182,12 +182,7 @@ impl ToArgs for Command {
     fn to_args(&self) -> Vec<OsString> {
         let mut result: Vec<OsString> = vec![];
         result.push(self.command.clone());
-        if !self.args.is_empty() {
-            result.push(OsStr::new("--").to_owned());
-            for arg in &self.args {
-                result.push(arg.clone());
-            }
-        }
+        result.extend(self.args.iter().cloned());
         result
     }
 }
@@ -196,5 +191,5 @@ impl ToArgs for Command {
 fn command_to_args_converts_to_arguments() {
     assert_eq!(Command::new("foo").to_args(), vec![OsStr::new("foo")]);
     assert_eq!(Command::new("foo").with_args(&["--opt"]).to_args(),
-               vec![OsStr::new("foo"), OsStr::new("--"), OsStr::new("--opt")]);
+               vec![OsStr::new("foo"), OsStr::new("--opt")]);
 }

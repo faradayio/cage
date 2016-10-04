@@ -118,7 +118,6 @@ fn runs_a_single_service_pod() {
          "-T",
          "migrate",
          "rake",
-         "--",
          "db:migrate"]
     });
     proj.remove_test_output().unwrap();
