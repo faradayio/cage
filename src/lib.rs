@@ -29,7 +29,6 @@
 // working with Regex matches much nicer) and when compiling in test mode
 // (because using it in tests is idiomatic).
 #![cfg_attr(all(not(test), feature="clippy"), warn(result_unwrap_used))]
-#![cfg_attr(feature="clippy", warn(unseparated_literal_suffix))]
 #![cfg_attr(feature="clippy", warn(wrong_pub_self_convention))]
 
 // Fail hard on warnings.  This will be automatically disabled when we're
@@ -38,8 +37,7 @@
 
 // Compiler plugins only work with Rust nightly builds, not with stable
 // compilers.  We want to work with both.
-#![cfg_attr(feature = "serde_macros", feature(custom_derive))]
-#![cfg_attr(feature = "serde_macros", plugin(serde_macros))]
+#![cfg_attr(feature = "serde_derive", feature(rustc_macro))]
 
 extern crate compose_yml;
 #[cfg(test)]
@@ -57,6 +55,9 @@ extern crate phf;
 extern crate rand;
 extern crate retry;
 extern crate rustc_serialize;
+#[cfg(feature = "serde_derive")]
+#[macro_use]
+extern crate serde_derive;
 extern crate serde_yaml;
 extern crate shlex;
 extern crate url;

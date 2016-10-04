@@ -12,7 +12,7 @@ use plugins;
 use plugins::{Operation, PluginGenerate, PluginNew, PluginTransform};
 use project::Project;
 
-#[cfg(feature = "serde_macros")]
+#[cfg(feature = "serde_derive")]
 include!(concat!("secrets_config.in.rs"));
 #[cfg(feature = "serde_codegen")]
 include!(concat!(env!("OUT_DIR"), "/plugins/transform/secrets_config.rs"));

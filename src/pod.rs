@@ -15,7 +15,7 @@ use project::Project;
 
 // Include some source code containing data structures we need to run
 // through serde.
-#[cfg(feature = "serde_macros")]
+#[cfg(feature = "serde_derive")]
 include!(concat!("pod_config.in.rs"));
 #[cfg(feature = "serde_codegen")]
 include!(concat!(env!("OUT_DIR"), "/pod_config.rs"));

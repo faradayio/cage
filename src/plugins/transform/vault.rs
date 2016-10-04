@@ -22,7 +22,7 @@ use plugins::{Operation, PluginGenerate, PluginNew, PluginTransform};
 use project::Project;
 use util::err;
 
-#[cfg(feature = "serde_macros")]
+#[cfg(feature = "serde_derive")]
 include!(concat!("vault_config.in.rs"));
 #[cfg(feature = "serde_codegen")]
 include!(concat!(env!("OUT_DIR"), "/plugins/transform/vault_config.rs"));
