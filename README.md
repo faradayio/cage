@@ -1,7 +1,4 @@
-# Orchestrates `docker-compose` for large, multi-pod apps
-
-**THIS PROJECT WILL BE RENAMED SHORTLY.**  Keep tuned; we'll have an actual
-release fairly soon, with any luck.
+# Develop large, multi-pod, multi-repo `docker-compose` apps
 
 [![Latest version](https://img.shields.io/crates/v/cage.svg)](https://crates.io/crates/cage) [![License](https://img.shields.io/crates/l/cage.svg)](https://opensource.org/licenses/MIT) [![Build Status](https://travis-ci.org/faradayio/cage.svg?branch=master)](https://travis-ci.org/faradayio/cage)
 
@@ -15,6 +12,7 @@ a reimplementation of our internal, _ad hoc_ tools using the new
 ## What's this for?
 
 - Does your app include more than one `docker-compose.yml` file?
+- Are your service implementations spread across multiple git repositories?
 - Does your app contain a mixture of permanently running containers and
   one-shot tasks?
 - Does your app run across more than one cluster of machines?
@@ -22,10 +20,10 @@ a reimplementation of our internal, _ad hoc_ tools using the new
 - When running in development mode, do you need to replace 3rd-party
   services with local containers?
 
-If you answer to one or more of these questions is "yes", then `cage`
-is probably for you.  It provides development and deployment tools for
-complex `docker-compose` apps, following
-a [convention over configuration][coc] philosophy.
+If you answer to one or more of these questions is "yes", then `cage` is
+probably for you.  It provides development and deployment tools for complex
+`docker-compose` apps, following a [convention over configuration][coc]
+philosophy.
 
 [coc]: https://en.wikipedia.org/wiki/Convention_over_configuration
 
