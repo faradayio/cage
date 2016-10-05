@@ -114,9 +114,7 @@ impl Project {
         // and will break parallel tests.)
         let current = try!(env::current_dir());
         let root_dir = try!(dir::find_project(&current));
-        Project::from_dirs(&root_dir,
-                           &root_dir.join("src"),
-                           &root_dir.join(".cage"))
+        Project::from_dirs(&root_dir, &root_dir.join("src"), &root_dir.join(".cage"))
     }
 
     /// (Tests only.) Create a `Project` from a subirectory of `examples`,

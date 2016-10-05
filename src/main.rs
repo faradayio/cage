@@ -177,10 +177,7 @@ impl Args {
                           -> Result<Option<cage::exec::Target<'a>>> {
         match (&self.arg_pod, &self.arg_service) {
             (&Some(ref pod), &Some(ref service)) => {
-                Ok(Some(try!(cage::exec::Target::new(project,
-                                                     ovr,
-                                                     pod,
-                                                     service))))
+                Ok(Some(try!(cage::exec::Target::new(project, ovr, pod, service))))
             }
             _ => Ok(None),
         }

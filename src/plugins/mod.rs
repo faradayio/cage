@@ -150,8 +150,7 @@ impl Manager {
     fn new_plugin<T>(&self, proj: &Project) -> Result<T>
         where T: PluginNew + 'static
     {
-        T::new(proj)
-            .chain_err(|| ErrorKind::PluginFailed(T::plugin_name().to_owned()))
+        T::new(proj).chain_err(|| ErrorKind::PluginFailed(T::plugin_name().to_owned()))
     }
 
     /// Register a generator with this manager.
