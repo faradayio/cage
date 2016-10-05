@@ -314,6 +314,7 @@ impl PluginTransform for Plugin {
                 // We'd like to use std::result::fold here but it's unstable.
                 policies.push(try!(result));
             }
+            debug!("Generating token for '{}' with policies {:?}", name, &policies);
 
             // Generate a VAULT_TOKEN.
             let display_name = format!("{}_{}_{}_{}",
@@ -322,7 +323,8 @@ impl PluginTransform for Plugin {
                                        ctx.pod.name(),
                                        name);
             let ttl = VaultDuration::seconds(config.default_ttl);
-            let token = try!(generator.generate_token(&display_name, policies, ttl));
+            let token = try!(generator.generate_token(&display_name, policies, ttl)
+                .chain_err(|| format!("could not generate token for '{}'", name)));
             service.environment.insert("VAULT_TOKEN".to_owned(), token);
 
             // Add in any extra environment variables.
