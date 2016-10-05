@@ -145,6 +145,12 @@ struct Args {
 }
 
 impl Args {
+    /// Do we need to generate `.conductor/pods`?  This will probably be
+    /// refactored in the future.
+    fn should_output_project(&self) -> bool {
+        !self.cmd_export
+    }
+
     /// Get either the specified override name, or a reasonable default.
     fn override_name(&self) -> &str {
         self.flag_override
@@ -224,9 +230,13 @@ fn run(args: &Args) -> Result<()> {
     let override_name = args.override_name();
     let ovr = try!(proj.ovr(override_name)
         .ok_or_else(|| err!("override {} is not defined", override_name)));
-    try!(proj.output(ovr));
-    let runner = OsCommandRunner::new();
 
+    // Output our `*.yml` files if requested.
+    if args.should_output_project() {
+        try!(proj.output(ovr));
+    }
+
+    let runner = OsCommandRunner::new();
     if args.cmd_pull {
         try!(proj.pull(&runner, &ovr));
     } else if args.cmd_build {
