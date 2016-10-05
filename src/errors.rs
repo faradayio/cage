@@ -40,6 +40,11 @@ error_chain! {
             description("error running external command")
             display("error running '{}'", command_to_string(&command))
         }
+
+        PluginFailed(plugin: String) {
+            description("plugin failed")
+            display("plugin '{}' failed", &plugin)
+        }
     }
 }
 

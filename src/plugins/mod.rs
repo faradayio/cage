@@ -151,7 +151,7 @@ impl Manager {
         where T: PluginNew + 'static
     {
         T::new(proj)
-            .map_err(|e| err!("Error initializing plugin {}: {}", T::plugin_name(), e))
+            .chain_err(|| ErrorKind::PluginFailed(T::plugin_name().to_owned()))
     }
 
     /// Register a generator with this manager.
@@ -196,7 +196,7 @@ impl Manager {
                      -> Result<()> {
         for plugin in &self.transforms {
             try!(plugin.transform(op, ctx, file)
-                .map_err(|e| err!("Error applying plugin {}: {}", plugin.name(), e)));
+                 .chain_err(|| ErrorKind::PluginFailed(plugin.name().to_owned())));
         }
         Ok(())
     }
