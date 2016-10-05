@@ -7,7 +7,7 @@ services:
     # The name of the Docker image.
     image: "faraday/rails_hello"
     # The GitHub repository containing the source code for this image,
-    # for use with `cage2 repo clone`.
+    # for use with `cage repo clone`.
     build: "https://github.com/faradayio/rails_hello.git"
     ports:
     - "3000:3000"
@@ -16,5 +16,5 @@ services:
       io.fdy.cage.srcdir: "/usr/src/app"
       # Choose a more useful shell.
       io.fdy.cage.shell: "bash"
-      # Our test command.  Invoke with `cage2 test frontend web`.
+      # Our test command.  Invoke with `cage test frontend web`.
       io.fdy.cage.test: "bundle exec rake"

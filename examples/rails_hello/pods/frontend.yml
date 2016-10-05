@@ -15,10 +15,10 @@ services:
       # The directory where our source code gets mounted into the container.
       io.fdy.cage.srcdir: "/usr/src/app"
       # We can define libraries in `config/libraries.yml`, clone them
-      # using `cage2 repo clone $KEY`, and mount them into our
+      # using `cage repo clone $KEY`, and mount them into our
       # containers using properties like this one.
       io.fdy.cage.lib.coffee_rails: "/usr/src/app/vendor/coffee-rails"
       # Choose a more useful shell.
       io.fdy.cage.shell: "bash"
-      # Our test command.  Invoke with `cage2 test frontend web`.
+      # Our test command.  Invoke with `cage test frontend web`.
       io.fdy.cage.test: "bundle exec rake"

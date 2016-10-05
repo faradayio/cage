@@ -29,24 +29,24 @@ const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
 /// Our help string.
 const USAGE: &'static str = "
-cage2: Manage large, multi-pod docker-compose apps
+cage: Manage large, multi-pod docker-compose apps
 
 Usage:
-  cage2 [options] new <name>
-  cage2 [options] build
-  cage2 [options] pull
-  cage2 [options] up [<pods>..]
-  cage2 [options] stop
-  cage2 [options] run [exec options] <pod> [<command> [--] [<args>...]]
-  cage2 [options] exec [exec options] <pod> <service> <command> [--] [<args>..]
-  cage2 [options] shell [exec options] <pod> <service>
-  cage2 [options] test <pod> <service>
-  cage2 [options] repo list
-  cage2 [options] repo clone <repo>
-  cage2 [options] generate list
-  cage2 [options] generate <generator>
-  cage2 [options] export <dir>
-  cage2 (--help | --version | --all-versions)
+  cage [options] new <name>
+  cage [options] build
+  cage [options] pull
+  cage [options] up [<pods>..]
+  cage [options] stop
+  cage [options] run [exec options] <pod> [<command> [--] [<args>...]]
+  cage [options] exec [exec options] <pod> <service> <command> [--] [<args>..]
+  cage [options] shell [exec options] <pod> <service>
+  cage [options] test <pod> <service>
+  cage [options] repo list
+  cage [options] repo clone <repo>
+  cage [options] generate list
+  cage [options] generate <generator>
+  cage [options] export <dir>
+  cage (--help | --version | --all-versions)
 
 Commands:
   new               Create a directory containing a new sample project
@@ -94,7 +94,7 @@ General options:
                     A list of tagged image names, one per line, to
                     be used as defaults for images
 
-Run `cage2` in a directory containing a `pods` subdirectory.  For more
+Run `cage` in a directory containing a `pods` subdirectory.  For more
 information, see https://github.com/faradayio/cage.
 ";
 

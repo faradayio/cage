@@ -16,7 +16,7 @@ default = ["serde_codegen", "compose_yml/default"]
 unstable = ["serde_derive", "compose_yml/unstable", "clippy"]
 
 [[bin]]
-name = "cage2"
+name = "cage"
 doc = false
 
 [build-dependencies]

@@ -19,7 +19,7 @@ services:
     # We can use `org.fdy.cage` labels to override some common
     # defaults.
     labels:
-      # Specify the shell used by `cage2 shell`.  Defaults to `sh`.
+      # Specify the shell used by `cage shell`.  Defaults to `sh`.
       io.fdy.cage.shell: "/bin/sh"
       # Specify how to run the service's internal tests.  May use shell
       # quoting but not shell variables.

@@ -58,17 +58,17 @@ Create a new application using `cage`, and list the associated Git
 repositories:
 
 ```sh
-$ cage2 new myapp
+$ cage new myapp
 $ cd myapp
-$ cage2 repo list
+$ cage repo list
 rails_hello               https://github.com/faradayio/rails_hello.git
 ```
 
 Check out the source code for an image locally:
 
 ```sh
-$ cage2 repo clone rails_hello
-$ cage2 repo list
+$ cage repo clone rails_hello
+$ cage repo list
 rails_hello               https://github.com/faradayio/rails_hello.git
   Cloned at src/rails_hello
 ```
@@ -76,7 +76,7 @@ rails_hello               https://github.com/faradayio/rails_hello.git
 Start up your application:
 
 ```sh
-$ cage2 up
+$ cage up
 Starting myapp_db_1
 Starting myapp_web_1
 ```
@@ -89,7 +89,7 @@ Run a command inside the `frontend` pod's `web` container to create a
 database:
 
 ```sh
-$ cage2 exec frontend web rake db:create
+$ cage exec frontend web rake db:create
 Created database 'myapp_development'
 Created database 'db/test.sqlite3'
 ```
@@ -98,7 +98,7 @@ We can also package up frequently-used commands in their own, standalone
 "task" pods, and run them on demand:
 
 ```sh
-$ cage2 run migrate
+$ cage run migrate
 Creating myapp_migrate_1
 Attaching to myapp_migrate_1
 myapp_migrate_1 exited with code 0
@@ -115,13 +115,13 @@ We can run container-specific unit tests, which are specified by the
 container, so that you can invoke any unit test framework of your choice:
 
 ```sh
-$ cage2 test frontend web
+$ cage test frontend web
 ```
 
 And we can access individual containers using a configurable shell:
 
 ```sh
-$ cage2 shell frontend web
+$ cage shell frontend web
 root@21bbbb41ad4a:/usr/src/app#
 ```
 
@@ -131,28 +131,28 @@ containers work.
 
 ## Usage
 
-To see how to use `cage`, run `cage2 --help` (which may be newer
+To see how to use `cage`, run `cage --help` (which may be newer
 than this README during development):
 
 ```
-cage2: Manage large, multi-pod docker-compose apps
+cage: Manage large, multi-pod docker-compose apps
 
 Usage:
-  cage2 [options] new <name>
-  cage2 [options] build
-  cage2 [options] pull
-  cage2 [options] up [<pods>..]
-  cage2 [options] stop
-  cage2 [options] run [exec options] <pod> [<command> [--] [<args>...]]
-  cage2 [options] exec [exec options] <pod> <service> <command> [--] [<args>..]
-  cage2 [options] shell [exec options] <pod> <service>
-  cage2 [options] test <pod> <service>
-  cage2 [options] repo list
-  cage2 [options] repo clone <repo>
-  cage2 [options] generate list
-  cage2 [options] generate <generator>
-  cage2 [options] export <dir>
-  cage2 (--help | --version | --all-versions)
+  cage [options] new <name>
+  cage [options] build
+  cage [options] pull
+  cage [options] up [<pods>..]
+  cage [options] stop
+  cage [options] run [exec options] <pod> [<command> [--] [<args>...]]
+  cage [options] exec [exec options] <pod> <service> <command> [--] [<args>..]
+  cage [options] shell [exec options] <pod> <service>
+  cage [options] test <pod> <service>
+  cage [options] repo list
+  cage [options] repo clone <repo>
+  cage [options] generate list
+  cage [options] generate <generator>
+  cage [options] export <dir>
+  cage (--help | --version | --all-versions)
 
 Commands:
   new               Create a directory containing a new sample project
@@ -200,7 +200,7 @@ General options:
                     A list of tagged image names, one per line, to
                     be used as defaults for images
 
-Run `cage2` in a directory containing a `pods` subdirectory.  For more
+Run `cage` in a directory containing a `pods` subdirectory.  For more
 information, see https://github.com/faradayio/cage.
 ```
 

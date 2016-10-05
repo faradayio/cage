@@ -57,6 +57,6 @@ deploy:
   file: "cage-${TRAVIS_TAG}-${TRAVIS_OS_NAME}.*"
   skip_cleanup: true
   on:
-    repo: faradayio/cage2
+    repo: faradayio/cage
     rust: stable
     tags: true
