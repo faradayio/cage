@@ -328,7 +328,10 @@ fn main() {
         // We use `unwrap` here to turn I/O errors into application panics.
         // If we can't print a message to stderr without an I/O error,
         // the situation is hopeless.
-        write!(io::stderr(), "Error: {}\n", err).unwrap();
+        write!(io::stderr(), "Error: ").unwrap();
+        for e in err.iter() {
+            write!(io::stderr(), "{}\n", e).unwrap();
+        }
         if let Some(backtrace) = err.backtrace() {
             write!(io::stderr(), "{:?}\n", backtrace).unwrap();
         }
