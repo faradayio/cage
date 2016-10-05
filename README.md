@@ -3,14 +3,14 @@
 **THIS PROJECT WILL BE RENAMED SHORTLY.**  Keep tuned; we'll have an actual
 release fairly soon, with any luck.
 
-[![Latest version](https://img.shields.io/crates/v/cage.svg)](https://crates.io/crates/cage) [![License](https://img.shields.io/crates/l/cage.svg)](https://opensource.org/licenses/MIT) [![Build Status](https://travis-ci.org/faradayio/cage2.svg?branch=master)](https://travis-ci.org/faradayio/cage2)
+[![Latest version](https://img.shields.io/crates/v/cage.svg)](https://crates.io/crates/cage) [![License](https://img.shields.io/crates/l/cage.svg)](https://opensource.org/licenses/MIT) [![Build Status](https://travis-ci.org/faradayio/cage.svg?branch=master)](https://travis-ci.org/faradayio/cage)
 
 This is a work in progress using the
 [`compose_yml`](https://github.com/emk/compose_yml) library.  It's
 a reimplementation of our internal, _ad hoc_ tools using the new
 `docker-compose.yml` version 2 format and Rust.
 
-[API Documentation](https://faradayio.github.io/cage2/)
+[API Documentation](https://faradayio.github.io/cage/)
 
 ## What's this for?
 
@@ -48,7 +48,7 @@ The Mac binaries are somewhat experimental because of issues with MacPorts
 and OpenSSL.  If they fail to work, please file a bug and try installing
 with `cargo`.
 
-[releases]: https://github.com/faradayio/cage2/releases
+[releases]: https://github.com/faradayio/cage/releases
 [musl-libc]: https://www.musl-libc.org/
 [rust-musl-builder]: https://github.com/emk/rust-musl-builder
 
@@ -201,7 +201,7 @@ General options:
                     be used as defaults for images
 
 Run `cage2` in a directory containing a `pods` subdirectory.  For more
-information, see https://github.com/faradayio/cage2.
+information, see https://github.com/faradayio/cage.
 ```
 
 ## What's a pod?

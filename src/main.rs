@@ -95,7 +95,7 @@ General options:
                     be used as defaults for images
 
 Run `cage2` in a directory containing a `pods` subdirectory.  For more
-information, see https://github.com/faradayio/cage2.
+information, see https://github.com/faradayio/cage.
 ";
 
 /// Our parsed command-line arguments.  See [docopt.rs][] for an
