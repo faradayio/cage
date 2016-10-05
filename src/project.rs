@@ -268,6 +268,13 @@ impl Project {
                      -> Result<()> {
         // Output each pod.
         for pod in &self.pods {
+            // Don't export pods which aren't enabled.
+            //
+            // TODO MED: Should we exclude these at load time instead?
+            if op == Operation::Export && !pod.enabled_in(ovr) {
+                continue;
+            }
+
             // Figure out where to put our pod.
             let file_name = format!("{}.yml", pod.name());
             let rel_path = match (op, pod.pod_type()) {
@@ -497,10 +504,10 @@ fn export_creates_a_directory_of_flat_yml_files() {
     let _ = env_logger::init();
     let proj = Project::from_example("rails_hello").unwrap();
     let export_dir = proj.output_dir.join("hello_export");
-    let ovr = proj.ovr("development").unwrap();
+    let ovr = proj.ovr("production").unwrap();
     proj.export(ovr, &export_dir).unwrap();
     assert!(export_dir.join("frontend.yml").exists());
-    assert!(export_dir.join("db.yml").exists());
+    assert!(!export_dir.join("db.yml").exists());
     assert!(export_dir.join("tasks/migrate.yml").exists());
     proj.remove_test_output().unwrap();
 }
