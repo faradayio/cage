@@ -1,6 +1,6 @@
 [root]
 name = "cage"
-version = "0.0.17"
+version = "0.0.18"
 dependencies = [
  "clippy 0.0.94 (registry+https://github.com/rust-lang/crates.io-index)",
  "compose_yml 0.0.42 (registry+https://github.com/rust-lang/crates.io-index)",
