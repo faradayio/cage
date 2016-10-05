@@ -21,7 +21,7 @@ enable_in_overrides:
 # token:
 #
 #   To use this, set the environment variables `VAULT_ADDR` and
-#   `VAULT_MASTER_TOKEN` before running conductor.  These values will be
+#   `VAULT_MASTER_TOKEN` before running cage.  These values will be
 #   used to construct per-service `VAULT_TOKEN` values, which be added
 #   to the appropriate services along with `VAULT_ADDR`.
 auth_type: "token"

@@ -1,5 +1,5 @@
 [root]
-name = "conductor"
+name = "cage"
 version = "0.0.15"
 dependencies = [
  "clippy 0.0.94 (registry+https://github.com/rust-lang/crates.io-index)",

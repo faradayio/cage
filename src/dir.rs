@@ -1,11 +1,11 @@
-//! Utilities for finding and working with `conductor` project directories.
+//! Utilities for finding and working with project directories.
 
 use std::path::{Path, PathBuf};
 
 use errors::*;
 
 /// Walk up the directory tree until we find a directory that looks like a
-/// `conductor` project.
+/// project.
 pub fn find_project(start_dir: &Path) -> Result<PathBuf> {
     // Do this as a loop, not recusively, so we can use `start_dir` in
     // error messages.
@@ -16,7 +16,7 @@ pub fn find_project(start_dir: &Path) -> Result<PathBuf> {
         } else if let Some(parent) = dir.parent() {
             dir = parent;
         } else {
-            let err = err!("could not find conductor project in {} or any directory \
+            let err = err!("could not find cage project in {} or any directory \
                             above it",
                            start_dir.display());
             return Err(err);

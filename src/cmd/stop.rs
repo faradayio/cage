@@ -1,4 +1,4 @@
-//! The `conductor stop` command.
+//! The `stop` command.
 
 use command_runner::{Command, CommandRunner};
 #[cfg(test)]
@@ -7,7 +7,7 @@ use errors::*;
 use ovr::Override;
 use project::Project;
 
-/// We implement `conductor stop` with a trait so we put it in its own module.
+/// We implement `stop` with a trait so we put it in its own module.
 pub trait CommandStop {
     /// Stop all the images associated with a project.
     fn stop<CR>(&self, runner: &CR, ovr: &Override) -> Result<()>

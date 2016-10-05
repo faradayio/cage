@@ -80,7 +80,7 @@ impl PluginTransform for Plugin {
 
             // Look for library repos as well.
             for (label, mount_as) in &service.labels {
-                let prefix = "io.fdy.conductor.lib.";
+                let prefix = "io.fdy.cage.lib.";
                 if label.starts_with(prefix) {
                     let key = &label[prefix.len()..];
                     let repo = try!(project.repos()

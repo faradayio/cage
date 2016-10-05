@@ -1,4 +1,4 @@
-//! Plugin support for conductor.
+//! Plugin support.
 
 use compose_yml::v2 as dc;
 use std::fmt;
@@ -42,7 +42,7 @@ impl<'a> Context<'a> {
 /// of operations will be a breaking API change for plugins.)
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Operation {
-    /// We're outputting a file for local development with conductor.
+    /// We're outputting a file for our internal usage.
     Output,
     /// We're exporting a file for use by another tool.
     Export,
@@ -135,7 +135,7 @@ impl Manager {
         try!(manager.register_transform::<transform::secrets::Plugin>(proj));
         try!(manager.register_transform::<transform::vault::Plugin>(proj));
 
-        // TODO LOW: Final plugin to remove `io.fdy.conductor.` labels?
+        // TODO LOW: Final plugin to remove `io.fdy.cage.` labels?
 
         Ok(manager)
     }

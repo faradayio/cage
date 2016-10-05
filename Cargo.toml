@@ -1,13 +1,13 @@
 [package]
-name = "conductor"
-version = "0.0.15"
+name = "cage"
+version = "0.0.16"
 authors = ["Eric Kidd <git@randomhacks.net>"]
 
-description = "(to be renamed) Develop and orchestrate multi-pod docker-compose apps"
+description = "Develop multi-pod docker-compose apps"
 license = "MIT/Apache-2.0"
 readme = "README.md"
-repository = "https://github.com/faradayio/conductor"
-documentation = "https://faradayio.github.io/conductor/"
+repository = "https://github.com/faradayio/cage2"
+documentation = "https://faradayio.github.io/cage2/"
 
 build = "build.rs"
 
@@ -16,7 +16,7 @@ default = ["serde_codegen", "compose_yml/default"]
 unstable = ["serde_derive", "compose_yml/unstable", "clippy"]
 
 [[bin]]
-name = "conductor"
+name = "cage2"
 doc = false
 
 [build-dependencies]

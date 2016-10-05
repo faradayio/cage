@@ -1,10 +1,10 @@
-//! The `conductor repo` subcommand.
+//! The `repo` subcommand.
 
 use command_runner::CommandRunner;
 use errors::*;
 use project::Project;
 
-/// We implement `conductor repo` with a trait so we put it in its own module.
+/// We implement `repo` with a trait so we put it in its own module.
 pub trait CommandRepo {
     /// List all the repositories associated with a project.
     fn repo_list<CR>(&self, runner: &CR) -> Result<()> where CR: CommandRunner;

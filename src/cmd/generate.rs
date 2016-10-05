@@ -1,4 +1,4 @@
-//! The `conductor new` command, and any other file generators.
+//! The `new` and `generate` commands.
 
 use rustc_serialize::json::{Json, ToJson};
 use std::collections::BTreeMap;
@@ -18,8 +18,8 @@ const OVERRIDES: &'static [&'static str] = &["development", "production", "test"
 
 /// Interface to various file-generation commands.
 pub trait CommandGenerate {
-    /// Create a new conductor project skeleton, returning the path of the
-    /// generated project.
+    /// Create a new project skeleton, returning the path of the generated
+    /// project.
     ///
     /// ```text
     /// <name>

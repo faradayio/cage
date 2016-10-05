@@ -1,10 +1,10 @@
-//! Various commands which can be performed on a `conductor` project,
-//! corresponding to CLI entry points.
+//! Various commands which can be performed on a project, corresponding to
+//! CLI entry points.
 //!
 //! To gain access to all commands at once:
 //!
 //! ```
-//! use conductor::cmd::*;
+//! use cage::cmd::*;
 //! ```
 
 // We're allowed to print things to the user in the `cmd` submodule.

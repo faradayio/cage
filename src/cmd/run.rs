@@ -1,4 +1,4 @@
-//! The `conductor run` command.
+//! The `run` command.
 
 use command_runner::{Command, CommandRunner};
 #[cfg(test)]
@@ -10,7 +10,7 @@ use ovr::Override;
 use project::Project;
 use util::err;
 
-/// We implement `conductor run` with a trait so we put it in its own module.
+/// We implement `run` with a trait so we put it in its own module.
 pub trait CommandRun {
     /// Run a specific pod as a one-shot task.
     fn run<CR>(&self,

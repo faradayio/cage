@@ -1,4 +1,4 @@
-//! The `conductor build` command.
+//! The `build` command.
 
 use command_runner::{Command, CommandRunner};
 #[cfg(test)]
@@ -7,7 +7,7 @@ use errors::*;
 use ovr::Override;
 use project::Project;
 
-/// We implement `conductor build` with a trait so we put it in its own
+/// We implement `build` with a trait so we put it in its own
 /// module.
 pub trait CommandBuild {
     /// Build all the images associated with this project.

@@ -1,4 +1,4 @@
-//! The `conductor up` command.
+//! The `up` command.
 
 use command_runner::{Command, CommandRunner};
 #[cfg(test)]
@@ -8,7 +8,7 @@ use ovr::Override;
 use pod::PodType;
 use project::Project;
 
-/// We implement `conductor up` with a trait so we put it in its own module.
+/// We implement `up` with a trait so we put it in its own module.
 pub trait CommandUp {
     /// Up all the images associated with a project.
     fn up_all<CR>(&self, runner: &CR, ovr: &Override) -> Result<()>

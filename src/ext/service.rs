@@ -39,21 +39,21 @@ impl ServiceExt for dc::Service {
 
     fn source_mount_dir(&self) -> Result<PathBuf> {
         Ok(Path::new(self.labels
-                .get("io.fdy.conductor.srcdir")
+                .get("io.fdy.cage.srcdir")
                 .map_or_else(|| "/app", |v| v as &str))
             .to_owned())
     }
 
     fn shell(&self) -> Result<String> {
         Ok(self.labels
-            .get("io.fdy.conductor.shell")
+            .get("io.fdy.cage.shell")
             .cloned()
             .unwrap_or_else(|| "sh".to_owned()))
     }
 
     fn test_command(&self) -> Result<Vec<String>> {
-        let raw = try!(self.labels.get("io.fdy.conductor.test").ok_or_else(|| {
-            err("specify a value for the label io.fdy.conductor.test to run tests")
+        let raw = try!(self.labels.get("io.fdy.cage.test").ok_or_else(|| {
+            err("specify a value for the label io.fdy.cage.test to run tests")
         }));
         let mut lexer = shlex::Shlex::new(raw);
         let result: Vec<String> = lexer.by_ref().map(|w| w.to_owned()).collect();

@@ -1,4 +1,4 @@
-//! The `conductor pull` command.
+//! The `pull` command.
 
 use command_runner::{Command, CommandRunner};
 #[cfg(test)]
@@ -7,7 +7,7 @@ use errors::*;
 use ovr::Override;
 use project::Project;
 
-/// We implement `conductor pull` with a trait so we put it in its own module.
+/// We implement `pull` with a trait so we put it in its own module.
 pub trait CommandPull {
     /// Pull all the images associated with a project.
     fn pull<CR>(&self, runner: &CR, ovr: &Override) -> Result<()>

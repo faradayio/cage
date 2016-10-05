@@ -6,7 +6,7 @@
 #![deny(warnings)]
 
 #[macro_use]
-extern crate conductor;
+extern crate cage;
 extern crate docopt;
 extern crate env_logger;
 #[macro_use]
@@ -20,33 +20,33 @@ use std::io::{self, Write};
 use std::path::Path;
 use std::process;
 
-use conductor::command_runner::{Command, CommandRunner, OsCommandRunner};
-use conductor::cmd::*;
-use conductor::Result;
+use cage::command_runner::{Command, CommandRunner, OsCommandRunner};
+use cage::cmd::*;
+use cage::Result;
 
 /// Our version number, set by Cargo at compile time.
 const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
 /// Our help string.
 const USAGE: &'static str = "
-conductor: Manage large, multi-pod docker-compose apps
+cage2: Manage large, multi-pod docker-compose apps
 
 Usage:
-  conductor [options] new <name>
-  conductor [options] build
-  conductor [options] pull
-  conductor [options] up [<pods>..]
-  conductor [options] stop
-  conductor [options] run [exec options] <pod> [<command> [--] [<args>...]]
-  conductor [options] exec [exec options] <pod> <service> <command> [--] [<args>..]
-  conductor [options] shell [exec options] <pod> <service>
-  conductor [options] test <pod> <service>
-  conductor [options] repo list
-  conductor [options] repo clone <repo>
-  conductor [options] generate list
-  conductor [options] generate <generator>
-  conductor [options] export <dir>
-  conductor (--help | --version | --all-versions)
+  cage2 [options] new <name>
+  cage2 [options] build
+  cage2 [options] pull
+  cage2 [options] up [<pods>..]
+  cage2 [options] stop
+  cage2 [options] run [exec options] <pod> [<command> [--] [<args>...]]
+  cage2 [options] exec [exec options] <pod> <service> <command> [--] [<args>..]
+  cage2 [options] shell [exec options] <pod> <service>
+  cage2 [options] test <pod> <service>
+  cage2 [options] repo list
+  cage2 [options] repo clone <repo>
+  cage2 [options] generate list
+  cage2 [options] generate <generator>
+  cage2 [options] export <dir>
+  cage2 (--help | --version | --all-versions)
 
 Commands:
   new               Create a directory containing a new sample project
@@ -81,8 +81,8 @@ Exec options:
 
 General options:
   -h, --help        Show this message
-  --version         Show the version of conductor
-  --all-versions    Show the version of conductor and supporting tools
+  --version         Show the version of cage
+  --all-versions    Show the version of cage and supporting tools
   -p, --project-name <project_name>
                     The name of this project.  Defaults to the current
                     directory name.
@@ -94,8 +94,8 @@ General options:
                     A list of tagged image names, one per line, to
                     be used as defaults for images
 
-Run conductor in a directory containing a `pods` subdirectory.  For more
-information, see https://github.com/faradayio/conductor.
+Run `cage2` in a directory containing a `pods` subdirectory.  For more
+information, see https://github.com/faradayio/cage2.
 ";
 
 /// Our parsed command-line arguments.  See [docopt.rs][] for an
@@ -145,7 +145,7 @@ struct Args {
 }
 
 impl Args {
-    /// Do we need to generate `.conductor/pods`?  This will probably be
+    /// Do we need to generate `.cage/pods`?  This will probably be
     /// refactored in the future.
     fn should_output_project(&self) -> bool {
         !self.cmd_export
@@ -160,8 +160,8 @@ impl Args {
     }
 
     /// Extract `exec::Options` from our command-line arguments.
-    fn to_exec_options(&self) -> conductor::exec::Options {
-        conductor::exec::Options {
+    fn to_exec_options(&self) -> cage::exec::Options {
+        cage::exec::Options {
             detached: self.flag_d,
             privileged: self.flag_privileged,
             user: self.flag_user.clone(),
@@ -172,29 +172,29 @@ impl Args {
 
     /// Extract `exec::Target` from our command-line arguments.
     fn to_exec_target<'a>(&'a self,
-                          project: &'a conductor::Project,
-                          ovr: &'a conductor::Override)
-                          -> Result<Option<conductor::exec::Target<'a>>> {
+                          project: &'a cage::Project,
+                          ovr: &'a cage::Override)
+                          -> Result<Option<cage::exec::Target<'a>>> {
         match (&self.arg_pod, &self.arg_service) {
             (&Some(ref pod), &Some(ref service)) => {
-                Ok(Some(try!(conductor::exec::Target::new(project,
-                                                          ovr,
-                                                          pod,
-                                                          service))))
+                Ok(Some(try!(cage::exec::Target::new(project,
+                                                     ovr,
+                                                     pod,
+                                                     service))))
             }
             _ => Ok(None),
         }
     }
 
     /// Extract `exec::Command` from our command-line arguments.
-    fn to_exec_command(&self) -> Option<conductor::exec::Command> {
+    fn to_exec_command(&self) -> Option<cage::exec::Command> {
         // We have an `Option<Vec<String>>` and we want a `&[String]`,
         // so do a little munging.
         let args = self.arg_args
             .as_ref()
             .map_or(&[] as &[_], |v| (v as &[_]));
         if let Some(ref command) = self.arg_command {
-            Some(conductor::exec::Command::new(command).with_args(args))
+            Some(cage::exec::Command::new(command).with_args(args))
         } else {
             None
         }
@@ -214,18 +214,18 @@ fn run(args: &Args) -> Result<()> {
         version();
         return Ok(());
     } else if args.cmd_new {
-        try!(conductor::Project::generate_new(&try!(env::current_dir()),
-                                              args.arg_name.as_ref().unwrap()));
+        try!(cage::Project::generate_new(&try!(env::current_dir()),
+                                         args.arg_name.as_ref().unwrap()));
         return Ok(());
     }
 
-    let mut proj = try!(conductor::Project::from_current_dir());
+    let mut proj = try!(cage::Project::from_current_dir());
     if let Some(ref project_name) = args.flag_project_name {
         proj.set_name(project_name);
     }
     if let Some(ref default_tags_path) = args.flag_default_tags {
         let file = try!(fs::File::open(default_tags_path));
-        proj.set_default_tags(try!(conductor::DefaultTags::read(file)));
+        proj.set_default_tags(try!(cage::DefaultTags::read(file)));
     }
     let override_name = args.override_name();
     let ovr = try!(proj.ovr(override_name)
@@ -272,7 +272,7 @@ fn run(args: &Args) -> Result<()> {
         try!(proj.shell(&runner, &target, &opts));
     } else if args.cmd_test {
         let test_ovr = try!(proj.ovr("test")
-            .ok_or_else(|| conductor::err("override test is required to run tests")));
+            .ok_or_else(|| cage::err("override test is required to run tests")));
         let target = try!(args.to_exec_target(&proj, &test_ovr)).unwrap();
         try!(proj.test(&runner, &target));
     } else if args.cmd_repo && args.cmd_list {
@@ -297,7 +297,7 @@ fn run(args: &Args) -> Result<()> {
 
 /// Print the version of this executable.
 fn version() {
-    println!("conductor {}", VERSION);
+    println!("cage {}", VERSION);
 }
 
 /// Print the version of this executable and also the versions of several
@@ -320,7 +320,7 @@ fn main() {
     // our own warnings.
     let mut builder = env_logger::LogBuilder::new();
     builder.filter(Some("compose_yml"), log::LogLevelFilter::Warn);
-    builder.filter(Some("conductor"), log::LogLevelFilter::Warn);
+    builder.filter(Some("cage"), log::LogLevelFilter::Warn);
     if let Ok(config) = env::var("RUST_LOG") {
         builder.parse(&config);
     }

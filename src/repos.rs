@@ -114,7 +114,7 @@ impl Repos {
 
     /// Look up a repository using a "lib key", which is key used in
     /// `config/libraries.yml` and with service labels of the form
-    /// `io.fdy.conductor.lib.<KEY>`.
+    /// `io.fdy.cage.lib.<KEY>`.
     pub fn find_by_lib_key(&self, lib_key: &str) -> Option<&Repo> {
         self.lib_keys
             .get(lib_key)

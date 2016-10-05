@@ -6,7 +6,7 @@
 #     <KEY>: <GIT URL>
 #
 # To specify that a container should mount the checked-out code as a
-# volume, you can use the key `io.fdy.conductor.lib.<KEY>`.  See
+# volume, you can use the key `io.fdy.cage.lib.<KEY>`.  See
 # `pods/frontend.yml` for an example.
 
 coffee_rails: "https://github.com/rails/coffee-rails.git"

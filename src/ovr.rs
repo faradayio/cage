@@ -42,12 +42,12 @@ impl Override {
     /// own.
     ///
     /// ```
-    /// let ovr = conductor::Override::new("development");
+    /// let ovr = cage::Override::new("development");
     /// assert!(ovr.is_enabled_by(&None));
     /// assert!(ovr.is_enabled_by(&Some(vec!["development".to_owned()])));
     /// assert!(!ovr.is_enabled_by(&Some(vec!["production".to_owned()])));
     ///
-    /// let test_ovr = conductor::Override::new("test");
+    /// let test_ovr = cage::Override::new("test");
     /// assert!(!test_ovr.is_enabled_by(&None));
     /// ```
     pub fn is_enabled_by(&self, enable_in_overrides: &Option<Vec<String>>) -> bool {

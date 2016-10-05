@@ -1,4 +1,4 @@
-//! The `conductor exec` command.
+//! The `exec` command.
 
 use command_runner::{Command, CommandRunner};
 #[cfg(test)]
@@ -9,7 +9,7 @@ use ext::service::ServiceExt;
 use project::Project;
 use util::err;
 
-/// We implement `conductor exec` with a trait so we can put it in its own
+/// We implement `exec` with a trait so we can put it in its own
 /// module.
 pub trait CommandExec {
     /// Exectute a command inside a running container.  Even though we

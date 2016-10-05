@@ -1,4 +1,4 @@
-//! A conductor project.
+//! A cage project.
 
 #[cfg(test)]
 use compose_yml::v2 as dc;
@@ -21,7 +21,7 @@ use repos::Repos;
 use rustc_serialize::json::{Json, ToJson};
 use util::{ConductorPathExt, ToStrOrErr};
 
-/// A `conductor` project, which is represented as a directory containing a
+/// A `cage` project, which is represented as a directory containing a
 /// `pods` subdirectory.
 #[derive(Debug)]
 pub struct Project {
@@ -38,7 +38,7 @@ pub struct Project {
     src_dir: PathBuf,
 
     /// The directory to which we'll write our transformed pods.  Defaults
-    /// to `root_dir.join(".conductor")`.
+    /// to `root_dir.join(".cage")`.
     output_dir: PathBuf,
 
     /// All the pods associated with this project.
@@ -91,11 +91,11 @@ impl Project {
     }
 
     /// Create a `Project` using the pre-existing project files in the
-    /// current directory as input and the `.conductor` subdirectory as
+    /// current directory as input and the `.cage` subdirectory as
     /// output.
     ///
     /// ```
-    /// use conductor::Project;
+    /// use cage::Project;
     /// use std::env;
     ///
     /// let saved = env::current_dir().unwrap();
@@ -104,7 +104,7 @@ impl Project {
     /// let proj = Project::from_current_dir().unwrap();
     /// assert_eq!(proj.root_dir(), saved.join("examples/hello"));
     /// assert_eq!(proj.src_dir(), saved.join("examples/hello/src"));
-    /// assert_eq!(proj.output_dir(), saved.join("examples/hello/.conductor"));
+    /// assert_eq!(proj.output_dir(), saved.join("examples/hello/.cage"));
     ///
     /// env::set_current_dir(saved).unwrap();
     /// ```
@@ -116,7 +116,7 @@ impl Project {
         let root_dir = try!(dir::find_project(&current));
         Project::from_dirs(&root_dir,
                            &root_dir.join("src"),
-                           &root_dir.join(".conductor"))
+                           &root_dir.join(".cage"))
     }
 
     /// (Tests only.) Create a `Project` from a subirectory of `examples`,
@@ -178,7 +178,7 @@ impl Project {
     }
 
     /// Set the name of this project.  This should be done before calling
-    /// `output` or any methods in `conductor::cmd`.
+    /// `output` or any methods in `cmd`.
     pub fn set_name(&mut self, name: &str) -> &mut Project {
         self.name = name.to_owned();
         self
@@ -195,7 +195,7 @@ impl Project {
         &self.src_dir
     }
 
-    /// The output directory of this project.  Normally `.conductor` inside
+    /// The output directory of this project.  Normally `.cage` inside
     /// the `root_dir`, but it may be overriden.
     pub fn output_dir(&self) -> &Path {
         &self.output_dir

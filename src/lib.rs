@@ -1,4 +1,4 @@
-//! `conductor` as a reusable API, so that you can call it from other tools.
+//! `cage` as a reusable API, so that you can call it from other tools.
 
 // Enable clippy if our Cargo.toml file asked us to do so.
 #![cfg_attr(feature="clippy", feature(plugin))]

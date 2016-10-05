@@ -3,14 +3,14 @@
 **THIS PROJECT WILL BE RENAMED SHORTLY.**  Keep tuned; we'll have an actual
 release fairly soon, with any luck.
 
-[![Latest version](https://img.shields.io/crates/v/conductor.svg)](https://crates.io/crates/conductor) [![License](https://img.shields.io/crates/l/conductor.svg)](https://opensource.org/licenses/MIT) [![Build Status](https://travis-ci.org/faradayio/conductor.svg?branch=master)](https://travis-ci.org/faradayio/conductor)
+[![Latest version](https://img.shields.io/crates/v/cage.svg)](https://crates.io/crates/cage) [![License](https://img.shields.io/crates/l/cage.svg)](https://opensource.org/licenses/MIT) [![Build Status](https://travis-ci.org/faradayio/cage2.svg?branch=master)](https://travis-ci.org/faradayio/cage2)
 
 This is a work in progress using the
 [`compose_yml`](https://github.com/emk/compose_yml) library.  It's
 a reimplementation of our internal, _ad hoc_ tools using the new
 `docker-compose.yml` version 2 format and Rust.
 
-[API Documentation](https://faradayio.github.io/conductor/)
+[API Documentation](https://faradayio.github.io/cage2/)
 
 ## What's this for?
 
@@ -22,7 +22,7 @@ a reimplementation of our internal, _ad hoc_ tools using the new
 - When running in development mode, do you need to replace 3rd-party
   services with local containers?
 
-If you answer to one or more of these questions is "yes", then `conductor`
+If you answer to one or more of these questions is "yes", then `cage`
 is probably for you.  It provides development and deployment tools for
 complex `docker-compose` apps, following
 a [convention over configuration][coc] philosophy.
@@ -35,7 +35,7 @@ To install, we recommend using `rustup` and `cargo`:
 
 ```sh
 curl https://sh.rustup.rs -sSf | sh
-cargo install conductor
+cargo install cage
 ```
 
 We also provide [official binary releases][releases] for Mac OS X and for
@@ -48,27 +48,27 @@ The Mac binaries are somewhat experimental because of issues with MacPorts
 and OpenSSL.  If they fail to work, please file a bug and try installing
 with `cargo`.
 
-[releases]: https://github.com/faradayio/conductor/releases
+[releases]: https://github.com/faradayio/cage2/releases
 [musl-libc]: https://www.musl-libc.org/
 [rust-musl-builder]: https://github.com/emk/rust-musl-builder
 
 ## Trying it out
 
-Create a new application using conductor, and list the associated Git
+Create a new application using `cage`, and list the associated Git
 repositories:
 
 ```sh
-$ conductor new myapp
+$ cage2 new myapp
 $ cd myapp
-$ conductor repo list
+$ cage2 repo list
 rails_hello               https://github.com/faradayio/rails_hello.git
 ```
 
 Check out the source code for an image locally:
 
 ```sh
-$ conductor repo clone rails_hello
-$ conductor repo list
+$ cage2 repo clone rails_hello
+$ cage2 repo list
 rails_hello               https://github.com/faradayio/rails_hello.git
   Cloned at src/rails_hello
 ```
@@ -76,7 +76,7 @@ rails_hello               https://github.com/faradayio/rails_hello.git
 Start up your application:
 
 ```sh
-$ conductor up
+$ cage2 up
 Starting myapp_db_1
 Starting myapp_web_1
 ```
@@ -89,7 +89,7 @@ Run a command inside the `frontend` pod's `web` container to create a
 database:
 
 ```sh
-$ conductor exec frontend web rake db:create
+$ cage2 exec frontend web rake db:create
 Created database 'myapp_development'
 Created database 'db/test.sqlite3'
 ```
@@ -98,7 +98,7 @@ We can also package up frequently-used commands in their own, standalone
 "task" pods, and run them on demand:
 
 ```sh
-$ conductor run migrate
+$ cage2 run migrate
 Creating myapp_migrate_1
 Attaching to myapp_migrate_1
 myapp_migrate_1 exited with code 0
@@ -115,13 +115,13 @@ We can run container-specific unit tests, which are specified by the
 container, so that you can invoke any unit test framework of your choice:
 
 ```sh
-$ conductor test frontend web
+$ cage2 test frontend web
 ```
 
 And we can access individual containers using a configurable shell:
 
 ```sh
-$ conductor shell frontend web
+$ cage2 shell frontend web
 root@21bbbb41ad4a:/usr/src/app#
 ```
 
@@ -131,25 +131,28 @@ containers work.
 
 ## Usage
 
-To see how to use `conductor`, run `conductor --help` (which may be newer
+To see how to use `cage`, run `cage2 --help` (which may be newer
 than this README during development):
 
 ```
-conductor: Manage large, multi-pod docker-compose apps
+cage2: Manage large, multi-pod docker-compose apps
 
 Usage:
-  conductor [options] new <name>
-  conductor [options] build
-  conductor [options] pull
-  conductor [options] up
-  conductor [options] stop
-  conductor [options] run <pod>
-  conductor [options] exec [exec options] <pod> <service> <command> [--] [<args>..]
-  conductor [options] shell [exec options] <pod> <service>
-  conductor [options] test <pod> <service>
-  conductor [options] repo list
-  conductor [options] repo clone <repo>
-  conductor (--help | --version)
+  cage2 [options] new <name>
+  cage2 [options] build
+  cage2 [options] pull
+  cage2 [options] up [<pods>..]
+  cage2 [options] stop
+  cage2 [options] run [exec options] <pod> [<command> [--] [<args>...]]
+  cage2 [options] exec [exec options] <pod> <service> <command> [--] [<args>..]
+  cage2 [options] shell [exec options] <pod> <service>
+  cage2 [options] test <pod> <service>
+  cage2 [options] repo list
+  cage2 [options] repo clone <repo>
+  cage2 [options] generate list
+  cage2 [options] generate <generator>
+  cage2 [options] export <dir>
+  cage2 (--help | --version | --all-versions)
 
 Commands:
   new               Create a directory containing a new sample project
@@ -164,12 +167,17 @@ Commands:
   repo list         List all git repository aliases and URLs
   repo clone        Clone a git repository using its short alias and mount it
                     into the containers that use it
+  generate list     List all available generators
+  generate          Run the specified generator
+  export            Export to the named directory as flattened *.yml files
 
 Arguments:
+  <dir>             The name of a directory
   <name>            The name of the project directory to create
+  <pod>, <pods>     The name of a pod specified in `pods/`
   <repo>            Short alias for a repo (see `repo list`)
-  <pod>             The name of a pod specified in `pods/`
   <service>         The name of a service in a pod
+  <generator>       The name of a generator
 
 Exec options:
   -d                Run command detached in background
@@ -179,19 +187,21 @@ Exec options:
 
 General options:
   -h, --help        Show this message
-  --version         Show the version of conductor
+  --version         Show the version of cage
+  --all-versions    Show the version of cage and supporting tools
   -p, --project-name <project_name>
                     The name of this project.  Defaults to the current
                     directory name.
   --override=<override>
                     Use overrides from the specified subdirectory of
-                    `pods/overrides` [default: development]
+                    `pods/overrides`.  Defaults to `development` unless
+                    running tests.
   --default-tags=<tag_file>
                     A list of tagged image names, one per line, to
                     be used as defaults for images
 
-Run conductor in a directory containing a `pods` subdirectory.  For more
-information, see https://github.com/faradayio/conductor.
+Run `cage2` in a directory containing a `pods` subdirectory.  For more
+information, see https://github.com/faradayio/cage2.
 ```
 
 ## What's a pod?
@@ -323,10 +333,10 @@ v<VERSION>: <SUMMARY>
 Then run:
 
 ```
+cargo publish
 git tag v$VERSION
 git push; git push --tags
-cargo publish
 ```
 
 This will rebuild the official binaries using Travis CI, and upload a new version of
-the crate to [crates.io](https://crates.io/crates/conductor).
+the crate to [crates.io](https://crates.io/crates/cage).

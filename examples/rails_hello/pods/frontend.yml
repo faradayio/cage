@@ -7,18 +7,18 @@ services:
     # The name of the Docker image.
     image: "faraday/rails_hello"
     # The GitHub repository containing the source code for this image,
-    # for use with `conductor repo clone`.
+    # for use with `cage repo clone`.
     build: "https://github.com/faradayio/rails_hello.git"
     ports:
     - "3000:3000"
     labels:
       # The directory where our source code gets mounted into the container.
-      io.fdy.conductor.srcdir: "/usr/src/app"
+      io.fdy.cage.srcdir: "/usr/src/app"
       # We can define libraries in `config/libraries.yml`, clone them
-      # using `conductor repo clone $KEY`, and mount them into our
+      # using `cage2 repo clone $KEY`, and mount them into our
       # containers using properties like this one.
-      io.fdy.conductor.lib.coffee_rails: "/usr/src/app/vendor/coffee-rails"
+      io.fdy.cage.lib.coffee_rails: "/usr/src/app/vendor/coffee-rails"
       # Choose a more useful shell.
-      io.fdy.conductor.shell: "bash"
-      # Our test command.  Invoke with `conductor test frontend web`.
-      io.fdy.conductor.test: "bundle exec rake"
+      io.fdy.cage.shell: "bash"
+      # Our test command.  Invoke with `cage2 test frontend web`.
+      io.fdy.cage.test: "bundle exec rake"
