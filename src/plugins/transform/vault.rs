@@ -146,10 +146,16 @@ struct Vault {
 impl Vault {
     /// Create a new vault client.
     fn new() -> Result<Vault> {
-        let addr = try!(env::var("VAULT_ADDR").map_err(|_| {
+        let mut addr = try!(env::var("VAULT_ADDR").map_err(|_| {
             err("Please set the environment variable VAULT_ADDR to the URL of \
                  your vault server")
         }));
+        // TODO MED: Temporary fix because of broken URL handling in
+        // hashicorp_vault.  File an upstream bug.
+        if addr.ends_with('/') {
+            let new_len = addr.len() - 1;
+            addr.truncate(new_len);
+        }
         let token = try!(find_vault_token());
         Ok(Vault {
             addr: addr,
