@@ -1,6 +1,6 @@
 [package]
 name = "conductor"
-version = "0.0.14"
+version = "0.0.15"
 authors = ["Eric Kidd <git@randomhacks.net>"]
 
 description = "(to be renamed) Develop and orchestrate multi-pod docker-compose apps"

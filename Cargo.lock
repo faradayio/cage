@@ -1,6 +1,6 @@
 [root]
 name = "conductor"
-version = "0.0.14"
+version = "0.0.15"
 dependencies = [
  "clippy 0.0.94 (registry+https://github.com/rust-lang/crates.io-index)",
  "compose_yml 0.0.42 (registry+https://github.com/rust-lang/crates.io-index)",
