@@ -267,9 +267,7 @@ fn run(args: &Args) -> Result<()> {
         let opts = args.to_exec_options();
         try!(proj.shell(&runner, &target, &opts));
     } else if args.cmd_test {
-        let test_ovr = try!(proj.ovr("test")
-            .ok_or_else(|| cage::err("override test is required to run tests")));
-        let target = try!(args.to_exec_target(&proj, &test_ovr)).unwrap();
+        let target = try!(args.to_exec_target(&proj, &ovr)).unwrap();
         let cmd = args.to_exec_command();
         try!(proj.test(&runner, &target, cmd.as_ref()));
     } else if args.cmd_repo && args.cmd_list {
