@@ -182,7 +182,7 @@ impl GenerateToken for Vault {
         let client = try!(vault::Client::new(&self.addr, &self.token));
         let opts = vault::client::TokenOptions::default()
             .display_name(display_name)
-            .renewable(false)
+            .renewable(true)
             .ttl(ttl)
             .policies(policies);
         let auth = try!(client.create_token(&opts));
