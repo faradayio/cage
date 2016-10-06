@@ -40,7 +40,7 @@ Usage:
   cage [options] run [exec options] <pod> [<command> [--] [<args>...]]
   cage [options] exec [exec options] <pod> <service> <command> [--] [<args>..]
   cage [options] shell [exec options] <pod> <service>
-  cage [options] test <pod> <service>
+  cage [options] test <pod> <service> [<command> [--] [<args>...]]
   cage [options] repo list
   cage [options] repo clone <repo>
   cage [options] generate list
@@ -187,9 +187,8 @@ impl Args {
     fn to_exec_command(&self) -> Option<cage::exec::Command> {
         // We have an `Option<Vec<String>>` and we want a `&[String]`,
         // so do a little munging.
-        let args = self.arg_args
-            .as_ref()
-            .map_or(&[] as &[_], |v| (v as &[_]));
+        let default_args = vec![];
+        let args = self.arg_args.as_ref().unwrap_or(&default_args);
         if let Some(ref command) = self.arg_command {
             Some(cage::exec::Command::new(command).with_args(args))
         } else {
@@ -271,7 +270,8 @@ fn run(args: &Args) -> Result<()> {
         let test_ovr = try!(proj.ovr("test")
             .ok_or_else(|| cage::err("override test is required to run tests")));
         let target = try!(args.to_exec_target(&proj, &test_ovr)).unwrap();
-        try!(proj.test(&runner, &target));
+        let cmd = args.to_exec_command();
+        try!(proj.test(&runner, &target, cmd.as_ref()));
     } else if args.cmd_repo && args.cmd_list {
         try!(proj.repo_list(&runner));
     } else if args.cmd_repo && args.cmd_clone {

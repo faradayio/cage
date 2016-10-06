@@ -172,8 +172,11 @@ impl Command {
 
     /// Add arguments to a `Command` object.  This is meant to be chained
     /// immediately after `new`, and it consumes `self` and returns it.
-    pub fn with_args<S: AsRef<OsStr>>(mut self, args: &[S]) -> Command {
-        self.args = args.iter().map(|a| a.as_ref().to_owned()).collect();
+    pub fn with_args<A>(mut self, args: A) -> Command
+        where A: IntoIterator,
+              A::Item: Into<OsString>
+    {
+        self.args = args.into_iter().map(|arg| arg.into()).collect();
         self
     }
 }
