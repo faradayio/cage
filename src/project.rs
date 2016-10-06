@@ -535,4 +535,10 @@ fn export_applies_expected_transforms() {
     let url = "https://github.com/docker/dockercloud-hello-world.git";
     assert_eq!(web.build.as_ref().unwrap().context.value().unwrap(),
                &dc::Context::new(dc::GitUrl::new(url).unwrap()));
+
+    // Make sure we've added our custom labels.
+    assert_eq!(web.labels.get("io.fdy.cage.override"),
+               Some(&"development".to_owned()));
+    assert_eq!(web.labels.get("io.fdy.cage.pod"),
+               Some(&"frontend".to_owned()));
 }

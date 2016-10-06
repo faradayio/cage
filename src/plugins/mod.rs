@@ -135,7 +135,9 @@ impl Manager {
         try!(manager.register_transform::<transform::secrets::Plugin>(proj));
         try!(manager.register_transform::<transform::vault::Plugin>(proj));
 
-        // TODO LOW: Final plugin to remove `io.fdy.cage.` labels?
+        // Run this last, in case it wants to remove any labels used by
+        // other plugins.
+        try!(manager.register_transform::<transform::labels::Plugin>(proj));
 
         Ok(manager)
     }
@@ -195,7 +197,7 @@ impl Manager {
                      -> Result<()> {
         for plugin in &self.transforms {
             try!(plugin.transform(op, ctx, file)
-                 .chain_err(|| ErrorKind::PluginFailed(plugin.name().to_owned())));
+                .chain_err(|| ErrorKind::PluginFailed(plugin.name().to_owned())));
         }
         Ok(())
     }

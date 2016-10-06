@@ -314,7 +314,9 @@ impl PluginTransform for Plugin {
                 // We'd like to use std::result::fold here but it's unstable.
                 policies.push(try!(result));
             }
-            debug!("Generating token for '{}' with policies {:?}", name, &policies);
+            debug!("Generating token for '{}' with policies {:?}",
+                   name,
+                   &policies);
 
             // Generate a VAULT_TOKEN.
             let display_name = format!("{}_{}_{}_{}",
