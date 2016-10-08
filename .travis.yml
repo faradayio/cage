@@ -44,7 +44,7 @@ script:
   travis-cargo bench $EXTRA_ARGS &&
   travis-cargo doc $EXTRA_ARGS
 after_success:
-- travis-cargo --only nightly doc-upload
+- travis-cargo --only beta doc-upload
 before_deploy: "./build-release cage ${TRAVIS_TAG}-${TRAVIS_OS_NAME}"
 env:
   global:
