@@ -18,6 +18,7 @@ unstable = ["serde_derive", "compose_yml/unstable", "clippy"]
 [[bin]]
 name = "cage"
 doc = false
+test = true
 
 [build-dependencies]
 glob = "0.2.11"
@@ -34,11 +35,13 @@ glob = "0.2.11"
 handlebars = "0.21.0"
 hashicorp_vault = "0.6.1"
 includedir = "0.2.1"
+lazy_static = "0.2.1"
 log = "0.3.6"
 phf = "0.7.16"
 rand = "0.3.14"
 retry = "0.4.0"
 rustc-serialize = "0.3.19"
+semver = "0.4.1"
 serde = "0.8"
 serde_derive = { version = "0.8", optional = true }
 serde_yaml = "0.4.0"

@@ -10,11 +10,15 @@
 
 use compose_yml::v2 as dc;
 use glob;
+use semver;
 use std::ffi::OsString;
 use std::io;
-use std::path::StripPrefixError;
+use std::path::{PathBuf, StripPrefixError};
 use std::string::FromUtf8Error;
 use vault;
+
+use project::PROJECT_CONFIG_PATH;
+use version;
 
 error_chain! {
     // Hook up to other libraries which also use `error_chain`.  These
@@ -41,6 +45,21 @@ error_chain! {
             display("error running '{}'", command_to_string(&command))
         }
 
+        /// An error occurred reading a file.
+        CouldNotReadFile(path: PathBuf) {
+            description("could not read a file")
+            display("could not read '{}'", path.display())
+        }
+
+        /// This project specified that it required a different version of
+        /// this tool.
+        MismatchedVersion(required: semver::VersionReq) {
+            description("incompatible cage version")
+            display("{} specifies cage {}, but you have {}",
+                    PROJECT_CONFIG_PATH.display(), &required, version())
+        }
+
+        /// An error occurred applying a plugin.
         PluginFailed(plugin: String) {
             description("plugin failed")
             display("plugin '{}' failed", &plugin)

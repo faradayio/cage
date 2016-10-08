@@ -24,9 +24,6 @@ use cage::command_runner::{Command, CommandRunner, OsCommandRunner};
 use cage::cmd::*;
 use cage::Result;
 
-/// Our version number, set by Cargo at compile time.
-const VERSION: &'static str = env!("CARGO_PKG_VERSION");
-
 /// Our help string.
 const USAGE: &'static str = "
 cage: Manage large, multi-pod docker-compose apps
@@ -292,7 +289,7 @@ fn run(args: &Args) -> Result<()> {
 
 /// Print the version of this executable.
 fn version() {
-    println!("cage {}", VERSION);
+    println!("cage {}", cage::version());
 }
 
 /// Print the version of this executable and also the versions of several

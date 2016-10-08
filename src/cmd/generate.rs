@@ -12,6 +12,7 @@ use std::path::{PathBuf, Path};
 use errors::*;
 use project::Project;
 use template::Template;
+use version;
 
 /// A list of standard overrides to generate.
 const OVERRIDES: &'static [&'static str] = &["development", "production", "test"];
@@ -50,7 +51,10 @@ impl CommandGenerate for Project {
 
         // Generate our top-level files.
         let mut proj_tmpl = try!(Template::new("new"));
-        let proj_info = ProjectInfo { name: name };
+        let proj_info = ProjectInfo {
+            name: name,
+            cage_version: &version().to_string(),
+        };
         try!(proj_tmpl.generate(&proj_dir, &proj_info, &mut io::stdout()));
 
         // Generate files for each override.
@@ -104,6 +108,9 @@ fn generate_new_creates_a_project() {
 /// our templates.
 #[derive(Debug)]
 struct ProjectInfo<'a> {
+    /// The current version of cage.
+    cage_version: &'a str,
+
     /// The name of this project.
     name: &'a str,
 }
@@ -114,6 +121,8 @@ struct ProjectInfo<'a> {
 impl<'a> ToJson for ProjectInfo<'a> {
     fn to_json(&self) -> Json {
         let mut info: BTreeMap<String, Json> = BTreeMap::new();
+        info.insert("cage_version".to_string(),
+                    self.cage_version.to_string().to_json());
         info.insert("name".to_string(), self.name.to_json());
         info.to_json()
     }

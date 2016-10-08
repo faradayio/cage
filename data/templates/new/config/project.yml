@@ -1,0 +1,7 @@
+# Configuration for this project.
+
+# The version of `cage` to use with this project.  This will be interpreted
+# as a `semver` version requirement as described at
+# https://docs.rs/crate/semver/, allowing you to specify a range of
+# compatible versions.
+cage_version: "{{cage_version}}"

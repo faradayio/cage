@@ -33,7 +33,7 @@
 
 // Fail hard on warnings.  This will be automatically disabled when we're
 // used as a dependency by other crates, thanks to Cargo magic.
-#![deny(warnings)]
+// #![deny(warnings)]
 
 // Compiler plugins only work with Rust nightly builds, not with stable
 // compilers.  We want to work with both.
@@ -49,12 +49,16 @@ extern crate handlebars;
 extern crate hashicorp_vault as vault;
 extern crate includedir;
 #[macro_use]
+extern crate lazy_static;
+#[macro_use]
 extern crate log;
 extern crate phf;
 #[cfg(test)]
 extern crate rand;
 extern crate retry;
 extern crate rustc_serialize;
+extern crate semver;
+extern crate serde;
 #[cfg(feature = "serde_derive")]
 #[macro_use]
 extern crate serde_derive;
@@ -65,7 +69,7 @@ extern crate url;
 pub use default_tags::DefaultTags;
 pub use errors::*;
 pub use ovr::Override;
-pub use project::{Project, Pods, Overrides};
+pub use project::{Project, ProjectConfig, Pods, Overrides};
 pub use pod::{Pod, OverrideFiles, AllFiles};
 pub use repos::{Repos, Repo};
 pub use repos::Iter as RepoIter;
@@ -86,6 +90,7 @@ pub mod plugins;
 mod pod;
 mod project;
 mod repos;
+mod serde_helpers;
 mod template;
 
 /// Include raw data files into our binary at compile time using the
@@ -93,4 +98,14 @@ mod template;
 /// generation is performed by our top-level `build.rs` script.
 mod data {
     include!(concat!(env!("OUT_DIR"), "/data.rs"));
+}
+
+/// The version of this crate.
+pub fn version() -> &'static semver::Version {
+    lazy_static! {
+        static ref VERSION: semver::Version =
+            semver::Version::parse(env!("CARGO_PKG_VERSION"))
+                .expect("package version should be a valid semver");
+    }
+    &VERSION
 }

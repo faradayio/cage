@@ -2,14 +2,20 @@
 
 #[cfg(test)]
 use compose_yml::v2 as dc;
+use semver;
+use serde_yaml;
 use std::collections::BTreeMap;
 use std::env;
 use std::fs;
 #[cfg(test)]
 use std::io;
+use std::io::Read;
+use std::marker::PhantomData;
+use std::ops::Deref;
 use std::path::Path;
 use std::path::PathBuf;
 use std::slice;
+use std::str;
 
 use default_tags::DefaultTags;
 use dir;
@@ -19,7 +25,16 @@ use plugins::{self, Operation};
 use pod::{Pod, PodType};
 use repos::Repos;
 use rustc_serialize::json::{Json, ToJson};
+use serde_helpers::deserialize_parsable_opt;
 use util::{ConductorPathExt, ToStrOrErr};
+use version;
+
+// Include some source code containing data structures we need to run
+// through serde.
+#[cfg(feature = "serde_derive")]
+include!(concat!("project_config.in.rs"));
+#[cfg(feature = "serde_codegen")]
+include!(concat!(env!("OUT_DIR"), "/project_config.rs"));
 
 /// A `cage` project, which is represented as a directory containing a
 /// `pods` subdirectory.
@@ -50,6 +65,9 @@ pub struct Project {
     /// All the repositories associated with this project.
     repos: Repos,
 
+    /// The main configuration for this project.
+    config: ProjectConfig,
+
     /// Docker image tags to use for images that don't have them.
     /// Typically used to lock down versions supplied by a CI system.
     default_tags: Option<DefaultTags>,
@@ -68,6 +86,8 @@ impl Project {
         let overrides = try!(Project::find_overrides(root_dir));
         let pods = try!(Project::find_pods(root_dir, &overrides));
         let repos = try!(Repos::new(&root_dir, &pods));
+        let config_path = root_dir.join(PROJECT_CONFIG_PATH.deref());
+        let config = try!(ProjectConfig::new(&config_path));
         let absolute_root = try!(root_dir.to_absolute());
         let name = try!(absolute_root.file_name()
                 .and_then(|s| s.to_str())
@@ -82,6 +102,7 @@ impl Project {
             pods: pods,
             overrides: overrides,
             repos: repos,
+            config: config,
             default_tags: None,
             plugins: None,
         };
