@@ -41,7 +41,7 @@ phf = "0.7.16"
 rand = "0.3.14"
 retry = "0.4.0"
 rustc-serialize = "0.3.19"
-semver = "0.4.1"
+semver = "0.5.0"
 serde = "0.8"
 serde_derive = { version = "0.8", optional = true }
 serde_yaml = "0.4.0"
