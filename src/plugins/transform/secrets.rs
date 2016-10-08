@@ -2,15 +2,16 @@
 //! project.
 
 use compose_yml::v2 as dc;
-use serde_yaml;
 use std::collections::BTreeMap;
-use std::fs;
+#[cfg(test)]
+use std::path::Path;
 use std::path::PathBuf;
 
 use errors::*;
 use plugins;
 use plugins::{Operation, PluginGenerate, PluginNew, PluginTransform};
 use project::Project;
+use serde_helpers::load_yaml;
 
 #[cfg(feature = "serde_derive")]
 include!(concat!("secrets_config.in.rs"));
@@ -52,9 +53,7 @@ impl PluginNew for Plugin {
     fn new(project: &Project) -> Result<Self> {
         let path = Self::config_path(project);
         let config = if path.exists() {
-            let f = try!(fs::File::open(&path));
-            Some(try!(serde_yaml::from_reader(f)
-                .map_err(|e| err!("Error reading {}: {}", path.display(), e))))
+            Some(try!(load_yaml(&path)))
         } else {
             None
         };

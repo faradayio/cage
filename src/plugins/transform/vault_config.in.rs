@@ -51,7 +51,7 @@ struct Config {
 
 #[test]
 fn can_deserialize_config() {
-    let f = fs::File::open("examples/vault_integration/config/vault.yml").unwrap();
-    let config: Config = serde_yaml::from_reader(f).unwrap();
+    let path = Path::new("examples/vault_integration/config/vault.yml");
+    let config: Config = load_yaml(&path).unwrap();
     assert_eq!(config.auth_type, AuthType::Token);
 }

@@ -2,16 +2,15 @@
 
 use compose_yml::v2 as dc;
 use compose_yml::v2::MergeOverride;
-use serde_yaml;
 use std::collections::BTreeMap;
 use std::collections::btree_map;
 use std::ffi::OsString;
-use std::fs;
 use std::path::{Path, PathBuf};
 
 use errors::*;
 use ovr::Override;
 use project::Project;
+use serde_helpers::load_yaml;
 
 // Include some source code containing data structures we need to run
 // through serde.
@@ -124,10 +123,7 @@ impl Pod {
         // Load our `*.metadata.yml` file, if any.
         let config_path = base_dir.join(&format!("{}.metadata.yml", &name));
         let config: Config = if config_path.exists() {
-            let f = try!(fs::File::open(&config_path)
-                .map_err(|e| err!("Error opening {}: {}", &config_path.display(), e)));
-            try!(serde_yaml::from_reader(f)
-                .map_err(|e| err!("Error reading {}: {}", &config_path.display(), e)))
+            try!(load_yaml(&config_path))
         } else {
             Config::default()
         };

@@ -36,7 +36,7 @@ struct Config {
 
 #[test]
 fn can_deserialize_config() {
-    let f = fs::File::open("examples/rails_hello/config/secrets.yml").unwrap();
-    let config: Config = serde_yaml::from_reader(f).unwrap();
+    let path = Path::new("examples/rails_hello/config/secrets.yml");
+    let config: Config = load_yaml(path).unwrap();
     assert_eq!(config.common.get("GLOBAL_PASSWORD").unwrap(), "magic");
 }

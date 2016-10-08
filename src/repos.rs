@@ -1,9 +1,9 @@
 //! APIs for working with the git repositories associated with a `Project`.
 
 use compose_yml::v2 as dc;
-use serde_yaml;
 use std::collections::BTreeMap;
 use std::collections::btree_map;
+#[cfg(test)]
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -15,6 +15,7 @@ use ext::git_url::GitUrlExt;
 use ext::service::ServiceExt;
 use project::Project;
 use pod::Pod;
+use serde_helpers::load_yaml;
 use util::ConductorPathExt;
 
 /// All the git repositories associated with a project.
@@ -80,10 +81,7 @@ impl Repos {
         // Scan our config files for repositories.
         let path = root_dir.join("config/libraries.yml");
         if path.exists() {
-            let f = try!(fs::File::open(&path)
-                .map_err(|e| err!("Error opening {}: {}", &path.display(), e)));
-            let libs: BTreeMap<String, String> = try!(serde_yaml::from_reader(f)
-                .map_err(|e| err!("Error reading {}: {}", &path.display(), e)));
+            let libs: BTreeMap<String, String> = try!(load_yaml(&path));
             for (lib_key, lib_src) in &libs {
                 let git_url: dc::GitUrl = try!(dc::GitUrl::new(&lib_src[..]));
                 let alias = try!(Self::add_repo(&mut repos, &git_url));

@@ -2,9 +2,24 @@
 
 use serde::{self, Deserialize, Deserializer};
 use serde::de::Visitor;
+use serde_yaml;
 use std::fmt::Display;
+use std::fs;
 use std::marker::PhantomData;
+use std::path::Path;
 use std::str::FromStr;
+
+use errors::{self, ChainErr, ErrorKind};
+
+/// Load a YAML file using `serde`, and generate the best error we can if
+/// it fails.
+pub fn load_yaml<T>(path: &Path) -> Result<T, errors::Error>
+    where T: Deserialize
+{
+    let mkerr = || ErrorKind::CouldNotReadFile(path.to_owned());
+    let f = try!(fs::File::open(&path).chain_err(&mkerr));
+    serde_yaml::from_reader(f).chain_err(&mkerr)
+}
 
 /// Deserialize a type that we can parse using `FromStr`.
 pub fn deserialize_parsable<D, T>(deserializer: &mut D) -> Result<T, D::Error>

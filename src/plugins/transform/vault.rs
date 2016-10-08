@@ -2,7 +2,6 @@
 
 use compose_yml::v2 as dc;
 use std::result;
-use serde_yaml;
 #[cfg(test)]
 use std::cell::RefCell;
 use std::collections::BTreeMap;
@@ -10,6 +9,8 @@ use std::env;
 use std::fmt::Debug;
 use std::fs;
 use std::io::Read;
+#[cfg(test)]
+use std::path::Path;
 use std::path::PathBuf;
 #[cfg(test)]
 use std::rc::Rc;
@@ -20,6 +21,7 @@ use errors::*;
 use plugins;
 use plugins::{Operation, PluginGenerate, PluginNew, PluginTransform};
 use project::Project;
+use serde_helpers::load_yaml;
 use util::err;
 
 #[cfg(feature = "serde_derive")]
@@ -213,9 +215,7 @@ impl Plugin {
     {
         let path = Self::config_path(project);
         let config = if path.exists() {
-            let f = try!(fs::File::open(&path));
-            Some(try!(serde_yaml::from_reader(f)
-                .map_err(|e| err!("Error reading {}: {}", path.display(), e))))
+            Some(try!(load_yaml(&path)))
         } else {
             None
         };
