@@ -153,7 +153,8 @@ impl Vault {
                  your vault server")
         }));
         // TODO MED: Temporary fix because of broken URL handling in
-        // hashicorp_vault.  File an upstream bug.
+        // hashicorp_vault.  Upstream bug:
+        // https://github.com/ChrisMacNaughton/vault-rs/issues/14
         if addr.ends_with('/') {
             let new_len = addr.len() - 1;
             addr.truncate(new_len);
