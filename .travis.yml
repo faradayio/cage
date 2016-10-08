@@ -42,7 +42,9 @@ script:
   travis-cargo test $EXTRA_ARGS &&
   (cargo fmt -- --write-mode=diff || true) &&
   travis-cargo bench $EXTRA_ARGS &&
-  travis-cargo doc $EXTRA_ARGS
+  if [[ "$TRAVIS_RUST_VERSION" != nightly ]]; then
+    travis-cargo doc $EXTRA_ARGS
+  fi
 after_success:
 - travis-cargo --only beta doc-upload
 before_deploy: "./build-release cage ${TRAVIS_TAG}-${TRAVIS_OS_NAME}"
