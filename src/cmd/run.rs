@@ -8,7 +8,6 @@ use exec::{self, ToArgs};
 use ext::service::ServiceExt;
 use ovr::Override;
 use project::Project;
-use util::err;
 
 /// We implement `run` with a trait so we put it in its own module.
 pub trait CommandRun {
@@ -18,7 +17,7 @@ pub trait CommandRun {
                ovr: &Override,
                pod: &str,
                command: Option<&exec::Command>,
-               opts: &exec::Options)
+               opts: &exec::RunOptions)
                -> Result<()>
         where CR: CommandRunner;
 
@@ -37,19 +36,12 @@ impl CommandRun for Project {
                ovr: &Override,
                pod: &str,
                command: Option<&exec::Command>,
-               opts: &exec::Options)
+               opts: &exec::RunOptions)
                -> Result<()>
         where CR: CommandRunner
     {
         let pod = try!(self.pod(pod)
             .ok_or_else(|| err!("Cannot find pod {}", pod)));
-
-        // There's no reason docker-compose couldn't support this in the
-        // future (it works fine for `exec`), but apparently nobody has
-        // gotten around to implementing it.
-        if opts.privileged {
-            return Err(err("`run` does not currently support `--privileged`"));
-        }
 
         // Get the single service in our pod.
         let file = try!(pod.merged_file(ovr));
@@ -119,7 +111,8 @@ fn runs_a_single_service_pod() {
     let runner = TestCommandRunner::new();
     proj.output(ovr).unwrap();
     let cmd = exec::Command::new("rake").with_args(&["db:migrate"]);
-    let opts = exec::Options { allocate_tty: false, ..Default::default() };
+    let mut opts = exec::RunOptions::default();
+    opts.allocate_tty = false;
     proj.run(&runner, ovr, "migrate", Some(&cmd), &opts).unwrap();
     assert_ran!(runner, {
         ["docker-compose",

@@ -19,7 +19,7 @@ pub trait CommandExec {
                 runner: &CR,
                 target: &exec::Target,
                 command: &exec::Command,
-                opts: &exec::Options)
+                opts: &exec::ExecOptions)
                 -> Result<()>
         where CR: CommandRunner;
 
@@ -27,7 +27,7 @@ pub trait CommandExec {
     fn shell<CR>(&self,
                  runner: &CR,
                  target: &exec::Target,
-                 opts: &exec::Options)
+                 opts: &exec::ExecOptions)
                  -> Result<()>
         where CR: CommandRunner;
 }
@@ -37,7 +37,7 @@ impl CommandExec for Project {
                 runner: &CR,
                 target: &exec::Target,
                 command: &exec::Command,
-                opts: &exec::Options)
+                opts: &exec::ExecOptions)
                 -> Result<()>
         where CR: CommandRunner
     {
@@ -54,7 +54,7 @@ impl CommandExec for Project {
     fn shell<CR>(&self,
                  runner: &CR,
                  target: &exec::Target,
-                 opts: &exec::Options)
+                 opts: &exec::ExecOptions)
                  -> Result<()>
         where CR: CommandRunner
     {
@@ -82,7 +82,8 @@ fn invokes_docker_exec() {
     let target = exec::Target::new(&proj, ovr, "frontend", "web").unwrap();
 
     let command = exec::Command::new("true");
-    let opts = exec::Options { allocate_tty: false, ..Default::default() };
+    let mut opts = exec::ExecOptions::default();
+    opts.allocate_tty = false;
     proj.exec(&runner, &target, &command, &opts).unwrap();
 
     assert_ran!(runner, {

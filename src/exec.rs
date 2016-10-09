@@ -1,8 +1,10 @@
 //! Options which can be passed to `docker-compose exec`.
 
 use compose_yml::v2 as dc;
+use std::collections::BTreeMap;
 use std::ffi::{OsStr, OsString};
 use std::marker::PhantomData;
+use std::ops::{Deref, DerefMut};
 
 use errors::*;
 use ovr::Override;
@@ -11,18 +13,16 @@ use project::Project;
 
 /// Trait for types which can be converted to command-line arguments.
 pub trait ToArgs {
-    /// Convert this type to command-line arguments.
+    /// Convert to arguments suitable for `std::process::Command` or our
+    /// `CommandBuilder`.
     fn to_args(&self) -> Vec<OsString>;
 }
 
 /// Command-line flags which can be passed to `docker-compose exec`.
 #[derive(Debug, Clone)]
-pub struct Options {
+pub struct CommonOptions {
     /// Should we execute this command in the background?
     pub detached: bool,
-
-    /// Should we run this command with elevated privileges?
-    pub privileged: bool,
 
     /// An optional user as whom we should run the command.
     ///
@@ -40,16 +40,11 @@ pub struct Options {
     pub _nonexhaustive: PhantomData<()>,
 }
 
-impl ToArgs for Options {
-    /// Convert to arguments suitable for `std::process::Command` or our
-    /// `CommandBuilder`.
+impl ToArgs for CommonOptions {
     fn to_args(&self) -> Vec<OsString> {
         let mut args: Vec<OsString> = vec![];
         if self.detached {
             args.push(OsStr::new("-d").to_owned());
-        }
-        if self.privileged {
-            args.push(OsStr::new("--privileged").to_owned());
         }
         if let Some(ref user) = self.user {
             args.push(OsStr::new("--user").to_owned());
@@ -63,36 +58,146 @@ impl ToArgs for Options {
 }
 
 #[test]
-fn options_to_args_returns_empty_for_default_opts() {
-    assert_eq!(Options::default().to_args(), Vec::<OsString>::new());
+fn common_options_to_args_returns_empty_for_default_opts() {
+    assert_eq!(CommonOptions::default().to_args(), Vec::<OsString>::new());
 }
 
 #[test]
-fn options_to_args_returns_appropriate_flags() {
-    let opts = Options {
+fn common_options_to_args_returns_appropriate_flags() {
+    let opts = CommonOptions {
         detached: true,
-        privileged: true,
         user: Some("root".to_owned()),
         allocate_tty: false,
         ..Default::default()
     };
-    let raw_expected = &["-d", "--privileged", "--user", "root", "-T"];
+    let raw_expected = &["-d", "--user", "root", "-T"];
     let expected: Vec<OsString> = raw_expected.iter()
         .map(|s| OsStr::new(s).to_owned())
         .collect();
     assert_eq!(opts.to_args(), expected);
 }
 
-impl Default for Options {
-    fn default() -> Options {
-        Options {
+impl Default for CommonOptions {
+    fn default() -> CommonOptions {
+        CommonOptions {
             detached: false,
-            privileged: false,
             user: None,
             allocate_tty: true, // Not false!
             _nonexhaustive: PhantomData,
         }
     }
+}
+
+/// Options for `docker_compose exec`.
+#[derive(Debug, Clone, Default)]
+pub struct ExecOptions {
+    /// Our "superclass", faked using `Deref`.
+    pub common: CommonOptions,
+
+    /// Should we run this command with elevated privileges?
+    pub privileged: bool,
+
+    /// PRIVATE: This field is a stand-in for future options.
+    /// See http://stackoverflow.com/q/39277157/12089
+    #[doc(hidden)]
+    pub _nonexhaustive: PhantomData<()>,
+}
+
+impl Deref for ExecOptions {
+    type Target = CommonOptions;
+
+    fn deref(&self) -> &Self::Target {
+        &self.common
+    }
+}
+
+impl DerefMut for ExecOptions {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.common
+    }
+}
+
+impl ToArgs for ExecOptions {
+    fn to_args(&self) -> Vec<OsString> {
+        let mut args = self.common.to_args();
+        if self.privileged {
+            args.push(OsStr::new("--privileged").to_owned());
+        }
+        args
+    }
+}
+
+#[test]
+fn exec_options_to_args_returns_appropriate_flags() {
+    let mut opts = ExecOptions::default();
+    opts.detached = true;
+    opts.privileged = true;
+    let raw_expected = &["-d", "--privileged"];
+    let expected: Vec<OsString> = raw_expected.iter()
+        .map(|s| OsStr::new(s).to_owned())
+        .collect();
+    assert_eq!(opts.to_args(), expected);
+}
+
+/// Options for `docker_compose exec`.
+#[derive(Debug, Clone, Default)]
+pub struct RunOptions {
+    /// Our "superclass", faked using `Deref`.
+    pub common: CommonOptions,
+
+    /// Extra environment variables to pass in.
+    pub environment: BTreeMap<String, String>,
+
+    /// Override the container's entrypoint.  Specify `Some("".to_owned())`
+    /// to reset the entrypoint to the default.
+    pub entrypoint: Option<String>,
+
+    /// PRIVATE: This field is a stand-in for future options.
+    /// See http://stackoverflow.com/q/39277157/12089
+    #[doc(hidden)]
+    pub _nonexhaustive: PhantomData<()>,
+}
+
+impl Deref for RunOptions {
+    type Target = CommonOptions;
+
+    fn deref(&self) -> &Self::Target {
+        &self.common
+    }
+}
+
+impl DerefMut for RunOptions {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.common
+    }
+}
+
+impl ToArgs for RunOptions {
+    fn to_args(&self) -> Vec<OsString> {
+        let mut args = self.common.to_args();
+        for (var, val) in &self.environment {
+            args.push(OsStr::new("-e").to_owned());
+            args.push(format!("{}={}", var, val).into());
+        }
+        if let Some(ref entrypoint) = self.entrypoint {
+            args.push(OsStr::new("--entrypoint").to_owned());
+            args.push(entrypoint.into());
+        }
+        args
+    }
+}
+
+#[test]
+fn run_options_to_args_returns_appropriate_flags() {
+    let mut opts = RunOptions::default();
+    opts.detached = true;
+    opts.environment.insert("FOO".to_owned(), "foo".to_owned());
+    opts.entrypoint = Some("/helper.sh".to_owned());
+    let raw_expected = &["-d", "-e", "FOO=foo", "--entrypoint", "/helper.sh"];
+    let expected: Vec<OsString> = raw_expected.iter()
+        .map(|s| OsStr::new(s).to_owned())
+        .collect();
+    assert_eq!(opts.to_args(), expected);
 }
 
 /// The pod and service within which to execute a command.  The lifetime

@@ -76,6 +76,11 @@ Exec options:
   --user <user>     User as which to run a command
   -T                Do not allocate a TTY when running a command
 
+Run options:
+  --entrypoint <entrypoint>
+                    Override the service's default `--entrypoint` setting.
+                    Passing the empty string will use a default entrypoint.
+
 General options:
   -h, --help        Show this message
   --version         Show the version of cage
@@ -127,11 +132,12 @@ struct Args {
     arg_repo: Option<String>,
     arg_service: Option<String>,
 
-    // Exec options.
+    // Exec and run options.
     flag_d: bool,
-    flag_privileged: bool,
     flag_user: Option<String>,
     flag_T: bool,
+    flag_privileged: bool,
+    flag_entrypoint: Option<String>,
 
     // General options.
     flag_version: bool,
@@ -156,15 +162,31 @@ impl Args {
                          |s| &s[..])
     }
 
-    /// Extract `exec::Options` from our command-line arguments.
-    fn to_exec_options(&self) -> cage::exec::Options {
-        cage::exec::Options {
-            detached: self.flag_d,
-            privileged: self.flag_privileged,
-            user: self.flag_user.clone(),
-            allocate_tty: !self.flag_T,
-            ..Default::default()
-        }
+    /// Extract options shared by `exec` and `run` from our command-line
+    /// arguments.
+    fn to_common_options(&self) -> cage::exec::CommonOptions {
+        let mut opts = cage::exec::CommonOptions::default();
+        opts.detached = self.flag_d;
+        opts.user = self.flag_user.clone();
+        opts.allocate_tty = !self.flag_T;
+        opts
+    }
+
+    /// Extract `exec` options from our command-line arguments.
+    fn to_exec_options(&self) -> cage::exec::ExecOptions {
+        let mut opts = cage::exec::ExecOptions::default();
+        opts.common = self.to_common_options();
+        opts.privileged = self.flag_privileged;
+        opts
+    }
+
+    /// Extract `run` options from our command-line arguments.
+    fn to_run_options(&self) -> cage::exec::RunOptions {
+        let mut opts = cage::exec::RunOptions::default();
+        opts.common = self.to_common_options();
+        opts.entrypoint = self.flag_entrypoint.clone();
+        // TODO: environment
+        opts
     }
 
     /// Extract `exec::Target` from our command-line arguments.
@@ -247,7 +269,7 @@ fn run(args: &Args) -> Result<()> {
     } else if args.cmd_stop {
         try!(proj.stop(&runner, &ovr));
     } else if args.cmd_run {
-        let opts = args.to_exec_options();
+        let opts = args.to_run_options();
         let cmd = args.to_exec_command();
         try!(proj.run(&runner,
                       &ovr,
