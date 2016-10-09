@@ -1,0 +1,172 @@
+name: "cage"
+global_settings:
+  - "VersionlessSubcommands"
+  - "ColoredHelp"
+settings:
+  - "SubcommandRequiredElseHelp"
+args:
+  - all-versions:
+      long: "all-versions"
+      help: "Show the version of cage and supporting tools"
+  - project-name:
+      short: "p"
+      long: "project-name"
+      value_name: "PROJECT_NAME"
+      help: "The name of this project.  Defaults to the current directory name."
+  - override:
+      long: "override"
+      value_name: "OVERRIDE"
+      help: "Use overrides from the specified subdirectory of `pods/overrides`.  Defaults to `development` unless running tests."
+  - default-tags:
+      long: "default-tags"
+      value_name: "TAG_FILE"
+      help: "A list of tagged image names, one per line, to be used as defaults for images."
+about: "Develop complex projects with lots of Docker services"
+after_help: |
+  To create a new project:
+
+      cage new myproj
+
+  From inside a project directory:
+
+      cage pull         # Download images associated with a project
+      cage up           # Start the application running
+      cage run migrate  # Run the task in 'pods/migrate.yml'
+
+  For more information, see https://github.com/faradayio/cage. Cage is
+  copyright 2016 by Faraday, Inc., and distributed under either the Apache
+  2.0 or MIT license.
+subcommands:
+  - new:
+      about: "Create a directory containing a new project"
+      args:
+        - name:
+            value_name: "NAME"
+            help: "The name of the new project"
+  - build:
+      about: "Build images for the containers associated with this project"
+  - pull:
+      about: "Build images for the containers associated with this project"
+  - up:
+      about: "Run project"
+      args:
+        - name:
+            value_name: "POD"
+            multiple: true
+            help: "The names of specific pods to start.  Defaults to all."
+  - stop:
+      about: "Stop all containers associated with project"
+  - run:
+      about: "Run a specific pod as a one-shot task"
+      settings:
+        - "TrailingVarArg"
+      args:
+        - detached: &detached
+            short: "d"
+            help: "Run command detached in background"
+        - user: &user
+            long: "user"
+            value_name: "USER"
+            help: "User as which to run a command"
+        - no-allocate-tty: &notty
+            short: "T"
+            help: "Do not allocate a TTY when running a command"
+        - entrypoint: &entrypoint
+            long: "entrypoint"
+            value_name: "ENTRYPOINT"
+            help: "Override the entrypoint of the service"
+        - environment: &environment
+            short: "e"
+            value_names: ["KEY", "VAL"]
+            multiple: true
+            number_of_values: 2
+            value_delimiter: "="
+            help: "Set an environment variable in the container"
+        - POD: &pod
+            value_name: "POD"
+            required: true
+            help: "The name of the pod"
+        - COMMAND: &command
+            value_name: "COMMAND"
+            required: false
+            multiple: true
+            help: "The command to run, with any arguments"
+  - exec:
+      about: "Run a command inside an existing container"
+      settings:
+        - "TrailingVarArg"
+      args:
+        - detached: *detached
+        - user: *user
+        - no-allocate-tty: *notty
+        - privileged: &privileged
+            long: "privileged"
+            help: "Run a command with elevated privileges"
+        - POD: &pod
+            value_name: "POD"
+            required: true
+            help: "The name of the pod in which to run a command"
+        - SERVICE: &service
+            value_name: "SERVICE"
+            required: true
+            help: "The name of the service in which to run a command"
+        - COMMAND: *command
+  - shell:
+      about: "Run an interactive shell inside a running container"
+      args:
+        - detached: *detached
+        - user: *user
+        - no-allocate-tty: *notty
+        - privileged: *privileged
+        - POD: *pod
+        - SERVICE: *service
+  - test:
+      about: "Run the tests associated with a service, if any"
+      settings:
+        - "TrailingVarArg"
+      args:
+        - detached: *detached
+        - user: *user
+        - no-allocate-tty: *notty
+        - entrypoint: *entrypoint
+        - environment: *environment
+        - POD: *pod
+        - SERVICE: *service
+        - COMMAND: *command
+  - repo:
+      about: "Commands for working with git repositories"
+      settings:
+        - "SubcommandRequiredElseHelp"
+      subcommands:
+        - list:
+            about: "List all known git repository aliases and URLs"
+        - clone:
+            about: "Clone a git repository using its short alias and mount it into the containers that use it"
+            args:
+              - ALIAS:
+                  value_name: "ALIAS"
+                  required: true
+                  help: "The short alias of the repo to clone (see `repo list`)"
+  - generate:
+      about: "Commands for generating new source files"
+      settings:
+        - "SubcommandRequiredElseHelp"
+      subcommands:
+        - secrets:
+            about: "Generate config/secrets.yml for local secret storage"
+        - vault:
+            about: "Generate config/vault.yml for fetching secrets from vault"
+  - export:
+      about: "Export project as flattened *.yml files"
+      args:
+        - DIR:
+            value_name: "DIR"
+            required: true
+            help: "The name of the directory to create"
+  - completion:
+      about: "Generate shell autocompletion support"
+      args:
+        - SHELL:
+            value_name: "SHELL"
+            required: true
+            help: "The name of shell for which to generate an autocompletion script"
