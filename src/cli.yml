@@ -164,6 +164,21 @@ subcommands:
                     - "fish"
                   required: true
                   help: "The name of shell for which to generate an autocompletion script"
+            after_help: |
+              To set up shell auto-completion for bash:
+
+                  cage generate completion bash
+                  source cage.bash-completion
+
+              And set up your ~/.profile or ~/.bash_profile to source this file on
+              each login.
+
+              To set up shell auto-completion for fish:
+
+                  cage generate completion fish
+                  source cage.fish
+                  mkdir -p ~/.config/fish/completions
+                  mv cage.fish ~/.config/fish/completions
         - secrets:
             about: "Generate config/secrets.yml for local secret storage"
         - vault:
