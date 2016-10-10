@@ -30,11 +30,8 @@ use cage::Result;
 /// YAML file.  We could create these using code, but at the cost of more
 /// verbosity.
 fn cli(yaml: &yaml::Yaml) -> clap::App {
-    clap::App::from_yaml(yaml)
-        .version(crate_version!())
+    clap::App::from_yaml(yaml).version(crate_version!())
 }
-
-//cli.gen_completions_to("cage", Shell::Fish, &mut std::io::stdout());
 
 /// Custom methods we want to add to `clap::App`.
 trait ArgMatchesExt {
@@ -107,8 +104,7 @@ impl<'a> ArgMatchesExt for clap::ArgMatches<'a> {
                     // Clap should prevent this.
                     panic!("Environment binding '{}' has no value", env_val[0]);
                 }
-                opts.environment.insert(env_val[0].to_owned(),
-                                        env_val[1].to_owned());
+                opts.environment.insert(env_val[0].to_owned(), env_val[1].to_owned());
             }
         }
         opts
@@ -157,7 +153,7 @@ fn run(matches: &clap::ArgMatches) -> Result<()> {
                                              sc_matches.value_of("NAME").unwrap()));
             return Ok(());
         }
-        _ => {},
+        _ => {}
     }
 
     // Handle our standard arguments that apply to all subcommands.
