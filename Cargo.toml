@@ -20,12 +20,6 @@ name = "cage"
 doc = false
 test = true
 
-[[bin]]
-name = "arg_test"
-doc = false
-test = false
-path = "src/bin/arg_test.rs"
-
 [build-dependencies]
 glob = "0.2.11"
 includedir_codegen = "0.2.1"
@@ -35,7 +29,6 @@ serde_codegen = { version = "0.8", optional = true }
 clap = { version = "2.14.0", features = ["yaml"] }
 clippy = { version = "0.0.*", optional = true }
 compose_yml = { version = "0.0.42", default-features = false }
-docopt = "0.6.83"
 env_logger = "0.3.4"
 error-chain = "0.5.0"
 glob = "0.2.11"
@@ -54,3 +47,4 @@ serde_derive = { version = "0.8", optional = true }
 serde_yaml = "0.4.0"
 shlex = "0.1.1"
 url = "1.2.0"
+yaml-rust = "0.3.3"

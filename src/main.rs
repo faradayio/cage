@@ -7,209 +7,120 @@
 
 #[macro_use]
 extern crate cage;
-extern crate docopt;
+#[macro_use]
+extern crate clap;
 extern crate env_logger;
 #[macro_use]
 extern crate log;
 extern crate rustc_serialize;
+extern crate yaml_rust;
 
-use docopt::Docopt;
 use std::env;
 use std::fs;
 use std::io::{self, Write};
 use std::path::Path;
 use std::process;
+use yaml_rust::yaml;
 
 use cage::command_runner::{Command, CommandRunner, OsCommandRunner};
 use cage::cmd::*;
 use cage::Result;
 
-/// Our help string.
-const USAGE: &'static str = "
-cage: Manage large, multi-pod docker-compose apps
-
-Usage:
-  cage [options] new <name>
-  cage [options] build
-  cage [options] pull
-  cage [options] up [<pods>..]
-  cage [options] stop
-  cage [options] run [exec options] <pod> [<command> [--] [<args>...]]
-  cage [options] exec [exec options] <pod> <service> <command> [--] [<args>..]
-  cage [options] shell [exec options] <pod> <service>
-  cage [options] test <pod> <service> [<command> [--] [<args>...]]
-  cage [options] repo list
-  cage [options] repo clone <repo>
-  cage [options] generate list
-  cage [options] generate <generator>
-  cage [options] export <dir>
-  cage (--help | --version | --all-versions)
-
-Commands:
-  new               Create a directory containing a new sample project
-  build             Build images for the containers associated with this project
-  pull              Pull Docker images used by project
-  up                Run project
-  stop              Stop all containers associated with project
-  run               Run a specific pod as a one-shot task
-  exec              Run a command inside a container
-  shell             Run an interactive shell inside a running container
-  test              Run the tests associated with a service, if any
-  repo list         List all git repository aliases and URLs
-  repo clone        Clone a git repository using its short alias and mount it
-                    into the containers that use it
-  generate list     List all available generators
-  generate          Run the specified generator
-  export            Export to the named directory as flattened *.yml files
-
-Arguments:
-  <dir>             The name of a directory
-  <name>            The name of the project directory to create
-  <pod>, <pods>     The name of a pod specified in `pods/`
-  <repo>            Short alias for a repo (see `repo list`)
-  <service>         The name of a service in a pod
-  <generator>       The name of a generator
-
-Exec options:
-  -d                Run command detached in background
-  --privileged      Run a command with elevated privileges
-  --user <user>     User as which to run a command
-  -T                Do not allocate a TTY when running a command
-
-Run options:
-  --entrypoint <entrypoint>
-                    Override the service's default `--entrypoint` setting.
-                    Passing the empty string will use a default entrypoint.
-
-General options:
-  -h, --help        Show this message
-  --version         Show the version of cage
-  --all-versions    Show the version of cage and supporting tools
-  -p, --project-name <project_name>
-                    The name of this project.  Defaults to the current
-                    directory name.
-  --override=<override>
-                    Use overrides from the specified subdirectory of
-                    `pods/overrides`.  Defaults to `development` unless
-                    running tests.
-  --default-tags=<tag_file>
-                    A list of tagged image names, one per line, to
-                    be used as defaults for images
-
-Run `cage` in a directory containing a `pods` subdirectory.  For more
-information, see https://github.com/faradayio/cage.
-";
-
-/// Our parsed command-line arguments.  See [docopt.rs][] for an
-/// explanation of how this works.
-///
-/// [docopt.rs]: https://github.com/docopt/docopt.rs
-#[derive(Debug, RustcDecodable)]
-#[allow(non_snake_case)] // Allow uppercase options without warnings.
-struct Args {
-    cmd_build: bool,
-    cmd_pull: bool,
-    cmd_up: bool,
-    cmd_stop: bool,
-    cmd_run: bool,
-    cmd_exec: bool,
-    cmd_shell: bool,
-    cmd_test: bool,
-    cmd_repo: bool,
-    cmd_list: bool,
-    cmd_clone: bool,
-    cmd_new: bool,
-    cmd_generate: bool,
-    cmd_export: bool,
-
-    arg_args: Option<Vec<String>>,
-    arg_command: Option<String>,
-    arg_dir: Option<String>,
-    arg_generator: Option<String>,
-    arg_name: Option<String>,
-    arg_pod: Option<String>,
-    arg_pods: Vec<String>,
-    arg_repo: Option<String>,
-    arg_service: Option<String>,
-
-    // Exec and run options.
-    flag_d: bool,
-    flag_user: Option<String>,
-    flag_T: bool,
-    flag_privileged: bool,
-    flag_entrypoint: Option<String>,
-
-    // General options.
-    flag_version: bool,
-    flag_all_versions: bool,
-    flag_default_tags: Option<String>,
-    flag_override: Option<String>,
-    flag_project_name: Option<String>,
+/// Load our command-line interface definitions from an external `clap`
+/// YAML file.  We could create these using code, but at the cost of more
+/// verbosity.
+fn cli(yaml: &yaml::Yaml) -> clap::App {
+    clap::App::from_yaml(yaml)
+        .version(crate_version!())
 }
 
-impl Args {
+//cli.gen_completions_to("cage", Shell::Fish, &mut std::io::stdout());
+
+/// Custom methods we want to add to `clap::App`.
+trait ArgMatchesExt {
     /// Do we need to generate `.cage/pods`?  This will probably be
     /// refactored in the future.
-    fn should_output_project(&self) -> bool {
-        !self.cmd_export
-    }
+    fn should_output_project(&self) -> bool;
 
     /// Get either the specified override name, or a reasonable default.
-    fn override_name(&self) -> &str {
-        self.flag_override
-            .as_ref()
-            .map_or_else(|| { if self.cmd_test { "test" } else { "development" } },
-                         |s| &s[..])
-    }
+    fn override_name(&self) -> &str;
 
     /// Extract options shared by `exec` and `run` from our command-line
     /// arguments.
-    fn to_common_options(&self) -> cage::exec::CommonOptions {
-        let mut opts = cage::exec::CommonOptions::default();
-        opts.detached = self.flag_d;
-        opts.user = self.flag_user.clone();
-        opts.allocate_tty = !self.flag_T;
-        opts
-    }
+    fn to_common_options(&self) -> cage::exec::CommonOptions;
 
     /// Extract `exec` options from our command-line arguments.
-    fn to_exec_options(&self) -> cage::exec::ExecOptions {
-        let mut opts = cage::exec::ExecOptions::default();
-        opts.common = self.to_common_options();
-        opts.privileged = self.flag_privileged;
-        opts
-    }
+    fn to_exec_options(&self) -> cage::exec::ExecOptions;
 
     /// Extract `run` options from our command-line arguments.
-    fn to_run_options(&self) -> cage::exec::RunOptions {
-        let mut opts = cage::exec::RunOptions::default();
-        opts.common = self.to_common_options();
-        opts.entrypoint = self.flag_entrypoint.clone();
-        // TODO: environment
-        opts
-    }
+    fn to_run_options(&self) -> cage::exec::RunOptions;
 
     /// Extract `exec::Target` from our command-line arguments.
     fn to_exec_target<'a>(&'a self,
                           project: &'a cage::Project,
                           ovr: &'a cage::Override)
-                          -> Result<Option<cage::exec::Target<'a>>> {
-        match (&self.arg_pod, &self.arg_service) {
-            (&Some(ref pod), &Some(ref service)) => {
+                          -> Result<Option<cage::exec::Target<'a>>>;
+
+    /// Extract `exec::Command` from our command-line arguments.
+    fn to_exec_command(&self) -> Option<cage::exec::Command>;
+}
+
+impl<'a> ArgMatchesExt for clap::ArgMatches<'a> {
+    fn should_output_project(&self) -> bool {
+        self.subcommand_name() != Some("export")
+    }
+
+    fn override_name(&self) -> &str {
+        self.value_of("override")
+            .unwrap_or_else(|| {
+                if self.subcommand_name() == Some("test") {
+                    "test"
+                } else {
+                    "development"
+                }
+            })
+    }
+
+    fn to_common_options(&self) -> cage::exec::CommonOptions {
+        let mut opts = cage::exec::CommonOptions::default();
+        opts.detached = self.is_present("detached");
+        opts.user = self.value_of("user").map(|v| v.to_owned());
+        opts.allocate_tty = !self.is_present("no-allocate-tty");
+        opts
+    }
+
+    fn to_exec_options(&self) -> cage::exec::ExecOptions {
+        let mut opts = cage::exec::ExecOptions::default();
+        opts.common = self.to_common_options();
+        opts.privileged = self.is_present("privileged");
+        opts
+    }
+
+    fn to_run_options(&self) -> cage::exec::RunOptions {
+        let mut opts = cage::exec::RunOptions::default();
+        opts.common = self.to_common_options();
+        opts.entrypoint = self.value_of("entrypoint").map(|v| v.to_owned());
+        // TODO: environment
+        opts
+    }
+
+    fn to_exec_target<'b>(&'b self,
+                          project: &'b cage::Project,
+                          ovr: &'b cage::Override)
+                          -> Result<Option<cage::exec::Target<'b>>> {
+        match (self.value_of("POD"), self.value_of("SERVICE")) {
+            (Some(pod), Some(service)) => {
                 Ok(Some(try!(cage::exec::Target::new(project, ovr, pod, service))))
             }
             _ => Ok(None),
         }
     }
 
-    /// Extract `exec::Command` from our command-line arguments.
     fn to_exec_command(&self) -> Option<cage::exec::Command> {
-        // We have an `Option<Vec<String>>` and we want a `&[String]`,
-        // so do a little munging.
-        let default_args = vec![];
-        let args = self.arg_args.as_ref().unwrap_or(&default_args);
-        if let Some(ref command) = self.arg_command {
-            Some(cage::exec::Command::new(command).with_args(args))
+        if self.is_present("COMMAND") {
+            let values: Vec<&str> = self.values_of("COMMAND").unwrap().collect();
+            assert!(values.len() >= 1, "too few values from CLI parser");
+            Some(cage::exec::Command::new(values[0]).with_args(&values[1..]))
         } else {
             None
         }
@@ -218,93 +129,104 @@ impl Args {
 
 /// The function which does the real work.  Unlike `main`, we have a return
 /// type of `Result` and may therefore use `try!` to handle errors.
-fn run(args: &Args) -> Result<()> {
+fn run(matches: &clap::ArgMatches) -> Result<()> {
+    // We know that we always have a subcommand because our `cli.yml`
+    // requires this and `clap` is supposed to enforce it.
+    let sc_name = matches.subcommand_name().unwrap();
+    let sc_matches: &clap::ArgMatches = matches.subcommand_matches(sc_name).unwrap();
 
-    // Handle any flags or arguments we can handle without a project
+    // Handle any subcommands that we can handle without a project
     // directory.
-    if args.flag_all_versions {
-        try!(all_versions());
-        return Ok(());
-    } else if args.flag_version {
-        version();
-        return Ok(());
-    } else if args.cmd_new {
-        try!(cage::Project::generate_new(&try!(env::current_dir()),
-                                         args.arg_name.as_ref().unwrap()));
-        return Ok(());
+    match sc_name {
+        "sysinfo" => {
+            try!(all_versions());
+            return Ok(());
+        }
+        "new" => {
+            try!(cage::Project::generate_new(&try!(env::current_dir()),
+                                             sc_matches.value_of("NAME").unwrap()));
+            return Ok(());
+        }
+        _ => {},
     }
 
+    // Handle our standard arguments that apply to all subcommands.
     let mut proj = try!(cage::Project::from_current_dir());
-    if let Some(ref project_name) = args.flag_project_name {
+    if let Some(project_name) = matches.value_of("project-name") {
         proj.set_name(project_name);
     }
-    if let Some(ref default_tags_path) = args.flag_default_tags {
+    if let Some(default_tags_path) = matches.value_of("default-tags") {
         let file = try!(fs::File::open(default_tags_path));
         proj.set_default_tags(try!(cage::DefaultTags::read(file)));
     }
-    let override_name = args.override_name();
+    let override_name = matches.override_name();
     let ovr = try!(proj.ovr(override_name)
         .ok_or_else(|| err!("override {} is not defined", override_name)));
 
-    // Output our `*.yml` files if requested.
-    if args.should_output_project() {
+    // Output our project's `*.yml` files for `docker-compose` if we'll
+    // need it.
+    if matches.should_output_project() {
         try!(proj.output(ovr));
     }
 
+    // Handle our subcommands that require a `Project`.
     let runner = OsCommandRunner::new();
-    if args.cmd_pull {
-        try!(proj.pull(&runner, &ovr));
-    } else if args.cmd_build {
-        try!(proj.build(&runner, &ovr));
-    } else if args.cmd_up {
-        if args.arg_pods.is_empty() {
-            try!(proj.up_all(&runner, &ovr));
-        } else {
-            let pods: Vec<&str> = args.arg_pods
-                .iter()
-                .map(|p| &p[..])
-                .collect();
-            try!(proj.up(&runner, &ovr, &pods));
+    match sc_name {
+        "pull" => try!(proj.pull(&runner, &ovr)),
+        "build" => try!(proj.build(&runner, &ovr)),
+        "up" => {
+            let pods: Vec<&str> = sc_matches.values_of("POD")
+                .map_or_else(|| vec![], |p| p.collect());
+            if pods.is_empty() {
+                try!(proj.up_all(&runner, &ovr));
+            } else {
+                try!(proj.up(&runner, &ovr, &pods));
+            }
         }
-    } else if args.cmd_stop {
-        try!(proj.stop(&runner, &ovr));
-    } else if args.cmd_run {
-        let opts = args.to_run_options();
-        let cmd = args.to_exec_command();
-        try!(proj.run(&runner,
-                      &ovr,
-                      args.arg_pod.as_ref().unwrap(),
-                      cmd.as_ref(),
-                      &opts));
-    } else if args.cmd_exec {
-        let target = try!(args.to_exec_target(&proj, &ovr)).unwrap();
-        let opts = args.to_exec_options();
-        let cmd = args.to_exec_command().unwrap();
-        try!(proj.exec(&runner, &target, &cmd, &opts));
-    } else if args.cmd_shell {
-        let target = try!(args.to_exec_target(&proj, &ovr)).unwrap();
-        let opts = args.to_exec_options();
-        try!(proj.shell(&runner, &target, &opts));
-    } else if args.cmd_test {
-        let target = try!(args.to_exec_target(&proj, &ovr)).unwrap();
-        let cmd = args.to_exec_command();
-        try!(proj.test(&runner, &target, cmd.as_ref()));
-    } else if args.cmd_repo && args.cmd_list {
-        try!(proj.repo_list(&runner));
-    } else if args.cmd_repo && args.cmd_clone {
-        try!(proj.repo_clone(&runner, args.arg_repo.as_ref().unwrap()));
-        // Regenerate our output now that we've cloned.
-        try!(proj.output(ovr));
-    } else if args.cmd_generate && args.cmd_list {
-        try!(proj.generate_list())
-    } else if args.cmd_generate {
-        try!(proj.generate(&args.arg_generator.as_ref().unwrap()))
-    } else if args.cmd_export {
-        try!(proj.export(&ovr, &Path::new(args.arg_dir.as_ref().unwrap())));
-    } else {
-        // The above cases should be exhaustive.
-        unreachable!()
+        "stop" => try!(proj.stop(&runner, &ovr)),
+        "run" => {
+            let opts = sc_matches.to_run_options();
+            let cmd = sc_matches.to_exec_command();
+            let pod = sc_matches.value_of("POD").unwrap();
+            try!(proj.run(&runner, &ovr, pod, cmd.as_ref(), &opts));
+        }
+        "exec" => {
+            let target = try!(sc_matches.to_exec_target(&proj, &ovr)).unwrap();
+            let opts = sc_matches.to_exec_options();
+            let cmd = sc_matches.to_exec_command().unwrap();
+            try!(proj.exec(&runner, &target, &cmd, &opts));
+        }
+        "shell" => {
+            let target = try!(sc_matches.to_exec_target(&proj, &ovr)).unwrap();
+            let opts = sc_matches.to_exec_options();
+            try!(proj.shell(&runner, &target, &opts));
+        }
+        "test" => {
+            let target = try!(sc_matches.to_exec_target(&proj, &ovr)).unwrap();
+            let cmd = sc_matches.to_exec_command();
+            try!(proj.test(&runner, &target, cmd.as_ref()));
+        }
+        "repo" => { unimplemented!() },
+        "generate" => { unimplemented!() },
+        "export" => {
+            let dir = sc_matches.value_of("DIR").unwrap();
+            try!(proj.export(&ovr, &Path::new(dir)));
+        }
+        unknown => {
+            unreachable!("Unexpected subcommand '{}'", unknown);
+        }
     }
+
+    //} else if args.cmd_repo && args.cmd_list {
+    //    try!(proj.repo_list(&runner));
+    //} else if args.cmd_repo && args.cmd_clone {
+    //    try!(proj.repo_clone(&runner, args.arg_repo.as_ref().unwrap()));
+    //    // Regenerate our output now that we've cloned.
+    //    try!(proj.output(ovr));
+    //} else if args.cmd_generate && args.cmd_list {
+    //    try!(proj.generate_list())
+    //} else if args.cmd_generate {
+    //    try!(proj.generate(&args.arg_generator.as_ref().unwrap()))
 
     Ok(())
 }
@@ -340,15 +262,14 @@ fn main() {
     }
     builder.init().unwrap();
 
-    // Parse our args using docopt.rs.
-    let args: Args = Docopt::new(USAGE)
-        .and_then(|d| d.decode())
-        .unwrap_or_else(|e| e.exit());
-    debug!("Arguments: {:?}", &args);
+    // Parse our command-line arguments.
+    let cli_yaml = load_yaml!("cli.yml");
+    let matches: clap::ArgMatches = cli(cli_yaml).get_matches();
+    debug!("Arguments: {:?}", &matches);
 
     // Defer all our real work to `run`, and handle any errors.  This is a
     // standard Rust pattern to make error-handling in `main` nicer.
-    if let Err(ref err) = run(&args) {
+    if let Err(ref err) = run(&matches) {
         // We use `unwrap` here to turn I/O errors into application panics.
         // If we can't print a message to stderr without an I/O error,
         // the situation is hopeless.

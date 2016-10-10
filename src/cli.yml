@@ -5,9 +5,6 @@ global_settings:
 settings:
   - "SubcommandRequiredElseHelp"
 args:
-  - all-versions:
-      long: "all-versions"
-      help: "Show the version of cage and supporting tools"
   - project-name:
       short: "p"
       long: "project-name"
@@ -33,15 +30,20 @@ after_help: |
       cage up           # Start the application running
       cage run migrate  # Run the task in 'pods/migrate.yml'
 
-  For more information, see https://github.com/faradayio/cage. Cage is
-  copyright 2016 by Faraday, Inc., and distributed under either the Apache
-  2.0 or MIT license.
+  Cage is copyright 2016 by Faraday, Inc., and distributed under either the
+  Apache 2.0 or MIT license. For more information, see
+  https://github.com/faradayio/cage.
 subcommands:
+  - sysinfo:
+      about: "Print information about the system"
+      # Hide this for now until we decide what form it should take.
+      hidden: true
   - new:
       about: "Create a directory containing a new project"
       args:
-        - name:
+        - NAME:
             value_name: "NAME"
+            required: true
             help: "The name of the new project"
   - build:
       about: "Build images for the containers associated with this project"
@@ -50,7 +52,7 @@ subcommands:
   - up:
       about: "Run project"
       args:
-        - name:
+        - POD:
             value_name: "POD"
             multiple: true
             help: "The names of specific pods to start.  Defaults to all."
@@ -152,6 +154,16 @@ subcommands:
       settings:
         - "SubcommandRequiredElseHelp"
       subcommands:
+        - completion:
+            about: "Generate shell autocompletion support"
+            args:
+              - SHELL:
+                  value_name: "SHELL"
+                  possible_values:
+                    - "bash"
+                    - "fish"
+                  required: true
+                  help: "The name of shell for which to generate an autocompletion script"
         - secrets:
             about: "Generate config/secrets.yml for local secret storage"
         - vault:
@@ -163,10 +175,3 @@ subcommands:
             value_name: "DIR"
             required: true
             help: "The name of the directory to create"
-  - completion:
-      about: "Generate shell autocompletion support"
-      args:
-        - SHELL:
-            value_name: "SHELL"
-            required: true
-            help: "The name of shell for which to generate an autocompletion script"
