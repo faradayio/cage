@@ -206,28 +206,71 @@ fn run(matches: &clap::ArgMatches) -> Result<()> {
             let cmd = sc_matches.to_exec_command();
             try!(proj.test(&runner, &target, cmd.as_ref()));
         }
-        "repo" => { unimplemented!() },
-        "generate" => { unimplemented!() },
+        "repo" => try!(run_repo(&runner, &proj, &ovr, sc_matches)),
+        "generate" => try!(run_generate(&runner, &proj, &ovr, sc_matches)),
         "export" => {
             let dir = sc_matches.value_of("DIR").unwrap();
             try!(proj.export(&ovr, &Path::new(dir)));
         }
-        unknown => {
-            unreachable!("Unexpected subcommand '{}'", unknown);
-        }
+        unknown => unreachable!("Unexpected subcommand '{}'", unknown),
     }
 
-    //} else if args.cmd_repo && args.cmd_list {
-    //    try!(proj.repo_list(&runner));
-    //} else if args.cmd_repo && args.cmd_clone {
-    //    try!(proj.repo_clone(&runner, args.arg_repo.as_ref().unwrap()));
-    //    // Regenerate our output now that we've cloned.
-    //    try!(proj.output(ovr));
-    //} else if args.cmd_generate && args.cmd_list {
-    //    try!(proj.generate_list())
-    //} else if args.cmd_generate {
-    //    try!(proj.generate(&args.arg_generator.as_ref().unwrap()))
+    Ok(())
+}
 
+/// Our `repo` subcommand.
+fn run_repo<R>(runner: &R,
+               proj: &cage::Project,
+               ovr: &cage::Override,
+               matches: &clap::ArgMatches)
+               -> Result<()>
+    where R: CommandRunner
+{
+    // We know that we always have a subcommand because our `cli.yml`
+    // requires this and `clap` is supposed to enforce it.
+    let sc_name = matches.subcommand_name().unwrap();
+    let sc_matches: &clap::ArgMatches = matches.subcommand_matches(sc_name).unwrap();
+
+    // Dispatch our subcommand.
+    match sc_name {
+        "list" => try!(proj.repo_list(runner)),
+        "clone" => {
+            let alias = sc_matches.value_of("ALIAS").unwrap();
+            try!(proj.repo_clone(runner, alias));
+            // Regenerate our output now that we've cloned.
+            try!(proj.output(ovr));
+        }
+        unknown => unreachable!("Unexpected subcommand '{}'", unknown),
+    }
+    Ok(())
+}
+
+/// Our `generate` subcommand.
+fn run_generate<R>(_runner: &R,
+                   proj: &cage::Project,
+                   _ovr: &cage::Override,
+                   matches: &clap::ArgMatches)
+                   -> Result<()>
+    where R: CommandRunner
+{
+    // We know that we always have a subcommand because our `cli.yml`
+    // requires this and `clap` is supposed to enforce it.
+    let sc_name = matches.subcommand_name().unwrap();
+    let sc_matches: &clap::ArgMatches = matches.subcommand_matches(sc_name).unwrap();
+
+    match sc_name {
+        // TODO LOW: Allow running this without a project?
+        "completion" => {
+            let shell = match sc_matches.value_of("SHELL").unwrap() {
+                "bash" => clap::Shell::Bash,
+                "fish" => clap::Shell::Fish,
+                unknown => unreachable!("Unknown shell '{}'", unknown),
+            };
+            let cli_yaml = load_yaml!("cli.yml");
+            cli(cli_yaml).gen_completions("cage", shell, proj.root_dir());
+        }
+        other => try!(proj.generate(other)),
+    }
     Ok(())
 }
 
