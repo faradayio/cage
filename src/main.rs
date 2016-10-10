@@ -100,7 +100,17 @@ impl<'a> ArgMatchesExt for clap::ArgMatches<'a> {
         let mut opts = cage::exec::RunOptions::default();
         opts.common = self.to_common_options();
         opts.entrypoint = self.value_of("entrypoint").map(|v| v.to_owned());
-        // TODO: environment
+        if let Some(environment) = self.values_of("environment") {
+            let environment: Vec<&str> = environment.collect();
+            for env_val in environment.chunks(2) {
+                if env_val.len() != 2 {
+                    // Clap should prevent this.
+                    panic!("Environment binding '{}' has no value", env_val[0]);
+                }
+                opts.environment.insert(env_val[0].to_owned(),
+                                        env_val[1].to_owned());
+            }
+        }
         opts
     }
 
