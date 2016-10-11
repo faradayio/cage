@@ -8,7 +8,7 @@ use std::collections::BTreeMap;
 use std::env;
 use std::fmt::Debug;
 use std::fs;
-use std::io::Read;
+use std::io::{self, Read};
 #[cfg(test)]
 use std::path::Path;
 use std::path::PathBuf;
@@ -35,11 +35,11 @@ fn load_vault_token_from_file() -> Result<String> {
     let path = try!(env::home_dir()
             .ok_or_else(|| err("You do not appear to have a home directory")))
         .join(".vault-token");
-    let mut f = try!(fs::File::open(&path)
-        .map_err(|e| err!("Error opening {}: {}", path.display(), e)));
+    let mkerr = || ErrorKind::CouldNotReadFile(path.clone());
+    let f = try!(fs::File::open(&path).chain_err(&mkerr));
+    let mut reader = io::BufReader::new(f);
     let mut result = String::new();
-    try!(f.read_to_string(&mut result)
-        .map_err(|e| err!("Error reading {}: {}", path.display(), e)));
+    try!(reader.read_to_string(&mut result).chain_err(&mkerr));
     Ok(result.trim().to_owned())
 }
 

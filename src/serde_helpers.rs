@@ -5,6 +5,7 @@ use serde::de::Visitor;
 use serde_yaml;
 use std::fmt::Display;
 use std::fs;
+use std::io;
 use std::marker::PhantomData;
 use std::path::Path;
 use std::str::FromStr;
@@ -18,7 +19,7 @@ pub fn load_yaml<T>(path: &Path) -> Result<T, errors::Error>
 {
     let mkerr = || ErrorKind::CouldNotReadFile(path.to_owned());
     let f = try!(fs::File::open(&path).chain_err(&mkerr));
-    serde_yaml::from_reader(f).chain_err(&mkerr)
+    serde_yaml::from_reader(io::BufReader::new(f)).chain_err(&mkerr)
 }
 
 /// Deserialize a type that we can parse using `FromStr`.

@@ -144,8 +144,9 @@ fn run(matches: &clap::ArgMatches) -> Result<()> {
         proj.set_name(project_name);
     }
     if let Some(default_tags_path) = matches.value_of("default-tags") {
-        let file = try!(fs::File::open(default_tags_path));
-        proj.set_default_tags(try!(cage::DefaultTags::read(file)));
+        let f = try!(fs::File::open(default_tags_path));
+        let reader = io::BufReader::new(f);
+        proj.set_default_tags(try!(cage::DefaultTags::read(reader)));
     }
     let override_name = matches.override_name();
     let ovr = try!(proj.ovr(override_name)

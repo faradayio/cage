@@ -51,6 +51,12 @@ error_chain! {
             display("could not read '{}'", path.display())
         }
 
+        /// An error occurred writing a file.
+        CouldNotWriteFile(path: PathBuf) {
+            description("could not write to a file")
+            display("could not write to '{}'", path.display())
+        }
+
         /// This project specified that it required a different version of
         /// this tool.
         MismatchedVersion(required: semver::VersionReq) {

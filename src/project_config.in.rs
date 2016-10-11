@@ -29,9 +29,10 @@ impl ProjectConfig {
     pub fn new(path: &Path) -> Result<Self> {
         if path.exists() {
             let mkerr = || ErrorKind::CouldNotReadFile(path.to_owned());
-            let mut f = try!(fs::File::open(path).chain_err(&mkerr));
+            let f = try!(fs::File::open(path).chain_err(&mkerr));
+            let mut reader = io::BufReader::new(f);
             let mut yaml = String::new();
-            try!(f.read_to_string(&mut yaml).chain_err(&mkerr));
+            try!(reader.read_to_string(&mut yaml).chain_err(&mkerr));
             try!(Self::check_config_version(&path, &yaml));
             serde_yaml::from_str(&yaml).chain_err(&mkerr)
         } else {

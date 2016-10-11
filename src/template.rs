@@ -86,20 +86,20 @@ impl Template {
             let path = target_dir.join(rel_path);
             debug!("Output {}", path.display());
             try!(writeln!(out, "Generating: {}", rel_path.display()));
+            let mkerr = || ErrorKind::CouldNotWriteFile(path.clone());
 
             // Make sure our parent directory exists.
             try!(path.with_guaranteed_parent());
 
             // Create our output file.
-            let mut out = try!(fs::File::create(&path).map_err(|e| {
-                    err!("Unable to create file {}: {}", path.display(), &e)
-                }));
+            let out = try!(fs::File::create(&path).chain_err(&mkerr));
+            let mut writer = io::BufWriter::new(out);
 
             // Render our template to the file.
             let ctx = hb::Context::wraps(&json);
             try!(self.handlebars
-                .template_renderw(tmpl, &ctx, &mut out)
-                .map_err(|e| err!("Unable to generate {}: {}", path.display(), &e)));
+                .template_renderw(tmpl, &ctx, &mut writer)
+                .chain_err(&mkerr));
         }
         Ok(())
     }

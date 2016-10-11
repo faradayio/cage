@@ -7,7 +7,6 @@ use serde_yaml;
 use std::collections::BTreeMap;
 use std::env;
 use std::fs;
-#[cfg(test)]
 use std::io;
 use std::io::Read;
 use std::marker::PhantomData;
