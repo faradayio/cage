@@ -72,6 +72,12 @@ error_chain! {
             display("services {:?} present in {} but not in {}",
                     &names, base.display(), ovr.display())
         }
+
+        /// The requested service does not appear to exist.
+        UnknownService(service_name: String) {
+            description("unknown service")
+            display("unknown service '{}'", &service_name)
+        }
     }
 }
 

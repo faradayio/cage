@@ -87,10 +87,13 @@ Run a command inside the `frontend` pod's `web` container to create a
 database:
 
 ```sh
-$ cage exec frontend web rake db:create
+$ cage exec frontend/web rake db:create
 Created database 'myapp_development'
 Created database 'db/test.sqlite3'
 ```
+
+We could also just specify the service name `web` instead of the full
+`frontend/web`, as long as `web` is unique across all pods.
 
 We can also package up frequently-used commands in their own, standalone
 "task" pods, and run them on demand:
@@ -113,13 +116,13 @@ We can run container-specific unit tests, which are specified by the
 container, so that you can invoke any unit test framework of your choice:
 
 ```sh
-$ cage test frontend web
+$ cage test web
 ```
 
 And we can access individual containers using a configurable shell:
 
 ```sh
-$ cage shell frontend web
+$ cage shell web
 root@21bbbb41ad4a:/usr/src/app#
 ```
 
@@ -129,77 +132,27 @@ containers work.
 
 ## Usage
 
-To see how to use `cage`, run `cage --help` (which may be newer
-than this README during development):
+To see how to use `cage`, run `cage` with no arguments.  It supports a
+fairly long list of subcommands:
 
 ```
-cage: Manage large, multi-pod docker-compose apps
-
-Usage:
-  cage [options] new <name>
-  cage [options] build
-  cage [options] pull
-  cage [options] up [<pods>..]
-  cage [options] stop
-  cage [options] run [exec options] <pod> [<command> [--] [<args>...]]
-  cage [options] exec [exec options] <pod> <service> <command> [--] [<args>..]
-  cage [options] shell [exec options] <pod> <service>
-  cage [options] test <pod> <service>
-  cage [options] repo list
-  cage [options] repo clone <repo>
-  cage [options] generate list
-  cage [options] generate <generator>
-  cage [options] export <dir>
-  cage (--help | --version | --all-versions)
-
-Commands:
-  new               Create a directory containing a new sample project
-  build             Build images for the containers associated with this project
-  pull              Pull Docker images used by project
-  up                Run project
-  stop              Stop all containers associated with project
-  run               Run a specific pod as a one-shot task
-  exec              Run a command inside a container
-  shell             Run an interactive shell inside a running container
-  test              Run the tests associated with a service, if any
-  repo list         List all git repository aliases and URLs
-  repo clone        Clone a git repository using its short alias and mount it
-                    into the containers that use it
-  generate list     List all available generators
-  generate          Run the specified generator
-  export            Export to the named directory as flattened *.yml files
-
-Arguments:
-  <dir>             The name of a directory
-  <name>            The name of the project directory to create
-  <pod>, <pods>     The name of a pod specified in `pods/`
-  <repo>            Short alias for a repo (see `repo list`)
-  <service>         The name of a service in a pod
-  <generator>       The name of a generator
-
-Exec options:
-  -d                Run command detached in background
-  --privileged      Run a command with elevated privileges
-  --user <user>     User as which to run a command
-  -T                Do not allocate a TTY when running a command
-
-General options:
-  -h, --help        Show this message
-  --version         Show the version of cage
-  --all-versions    Show the version of cage and supporting tools
-  -p, --project-name <project_name>
-                    The name of this project.  Defaults to the current
-                    directory name.
-  --override=<override>
-                    Use overrides from the specified subdirectory of
-                    `pods/overrides`.  Defaults to `development` unless
-                    running tests.
-  --default-tags=<tag_file>
-                    A list of tagged image names, one per line, to
-                    be used as defaults for images
-
-Run `cage` in a directory containing a `pods` subdirectory.  For more
-information, see https://github.com/faradayio/cage.
+SUBCOMMANDS:
+    build       Build images for the containers associated with this
+                project
+    exec        Run a command inside an existing container
+    export      Export project as flattened *.yml files
+    generate    Commands for generating new source files
+    help        Prints this message or the help of the given subcommand(s)
+    new         Create a directory containing a new project
+    pull        Build images for the containers associated with this
+                project
+    repo        Commands for working with git repositories
+    run         Run a specific pod as a one-shot task
+    shell       Run an interactive shell inside a running container
+    stop        Stop all containers associated with project
+    sysinfo     Print information about the system
+    test        Run the tests associated with a service, if any
+    up          Run project
 ```
 
 ## What's a pod?

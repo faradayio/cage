@@ -251,14 +251,19 @@ impl Project {
 
     /// Look up the named service.  Returns the pod containing the service
     /// and the name of the service within that pod.
-    pub fn service<'a>(&self, name: &'a str)
-                       -> Result<Option<(&Pod, &str)>> {
+    pub fn service<'a>(&self, name: &'a str) -> Option<(&Pod, &str)> {
         if let Some((pod_name, service_name)) = self.service_locations.find(name) {
             let pod = self.pod(pod_name).expect("pod should exist");
-            Ok(Some((pod, service_name)))
+            Some((pod, service_name))
         } else {
-            Ok(None)
+            None
         }
+    }
+
+    /// Like `service`, but returns an error if the service is unknown.
+    pub fn service_or_err<'a>(&self, name: &'a str) -> Result<(&Pod, &str)> {
+        self.service(name)
+            .ok_or_else(|| { ErrorKind::UnknownService(name.to_owned()).into() })
     }
 
     /// Iterate over all overrides in this project.

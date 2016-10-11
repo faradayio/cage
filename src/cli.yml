@@ -104,15 +104,15 @@ subcommands:
         - privileged: &privileged
             long: "privileged"
             help: "Run a command with elevated privileges"
-        - POD: &pod
-            value_name: "POD"
-            required: true
-            help: "The name of the pod in which to run a command"
         - SERVICE: &service
             value_name: "SERVICE"
             required: true
-            help: "The name of the service in which to run a command"
-        - COMMAND: *command
+            help: "The name of the service, either as `pod/service`, or as just `service` if unique"
+        - COMMAND:
+            value_name: "COMMAND"
+            required: true
+            multiple: true
+            help: "The command to run, with any arguments"
   - shell:
       about: "Run an interactive shell inside a running container"
       args:
@@ -120,7 +120,6 @@ subcommands:
         - user: *user
         - no-allocate-tty: *notty
         - privileged: *privileged
-        - POD: *pod
         - SERVICE: *service
   - test:
       about: "Run the tests associated with a service, if any"
@@ -132,7 +131,6 @@ subcommands:
         - no-allocate-tty: *notty
         - entrypoint: *entrypoint
         - environment: *environment
-        - POD: *pod
         - SERVICE: *service
         - COMMAND: *command
   - repo:

@@ -52,12 +52,6 @@ trait ArgMatchesExt {
     /// Extract `run` options from our command-line arguments.
     fn to_run_options(&self) -> cage::args::opts::Run;
 
-    /// Extract `exec::Target` from our command-line arguments.
-    fn to_exec_target<'a>(&'a self,
-                          project: &'a cage::Project,
-                          ovr: &'a cage::Override)
-                          -> Result<Option<cage::args::Target<'a>>>;
-
     /// Extract `exec::Command` from our command-line arguments.
     fn to_exec_command(&self) -> Option<cage::args::Command>;
 }
@@ -108,18 +102,6 @@ impl<'a> ArgMatchesExt for clap::ArgMatches<'a> {
             }
         }
         opts
-    }
-
-    fn to_exec_target<'b>(&'b self,
-                          project: &'b cage::Project,
-                          ovr: &'b cage::Override)
-                          -> Result<Option<cage::args::Target<'b>>> {
-        match (self.value_of("POD"), self.value_of("SERVICE")) {
-            (Some(pod), Some(service)) => {
-                Ok(Some(try!(cage::args::Target::new(project, ovr, pod, service))))
-            }
-            _ => Ok(None),
-        }
     }
 
     fn to_exec_command(&self) -> Option<cage::args::Command> {
@@ -197,20 +179,20 @@ fn run(matches: &clap::ArgMatches) -> Result<()> {
             try!(proj.run(&runner, &ovr, pod, cmd.as_ref(), &opts));
         }
         "exec" => {
-            let target = try!(sc_matches.to_exec_target(&proj, &ovr)).unwrap();
+            let service = sc_matches.value_of("SERVICE").unwrap();
             let opts = sc_matches.to_exec_options();
             let cmd = sc_matches.to_exec_command().unwrap();
-            try!(proj.exec(&runner, &target, &cmd, &opts));
+            try!(proj.exec(&runner, &ovr, &service, &cmd, &opts));
         }
         "shell" => {
-            let target = try!(sc_matches.to_exec_target(&proj, &ovr)).unwrap();
+            let service = sc_matches.value_of("SERVICE").unwrap();
             let opts = sc_matches.to_exec_options();
-            try!(proj.shell(&runner, &target, &opts));
+            try!(proj.shell(&runner, &ovr, &service, &opts));
         }
         "test" => {
-            let target = try!(sc_matches.to_exec_target(&proj, &ovr)).unwrap();
+            let service = sc_matches.value_of("SERVICE").unwrap();
             let cmd = sc_matches.to_exec_command();
-            try!(proj.test(&runner, &target, cmd.as_ref()));
+            try!(proj.test(&runner, &ovr, &service, cmd.as_ref()));
         }
         "repo" => try!(run_repo(&runner, &proj, &ovr, sc_matches)),
         "generate" => try!(run_generate(&runner, &proj, &ovr, sc_matches)),

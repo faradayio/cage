@@ -24,7 +24,8 @@ pub trait CommandRun {
     /// Execute tests inside a fresh container.
     fn test<CR>(&self,
                 runner: &CR,
-                target: &args::Target,
+                ovr: &Override,
+                service: &str,
                 command: Option<&args::Command>)
                 -> Result<()>
         where CR: CommandRunner;
@@ -69,22 +70,26 @@ impl CommandRun for Project {
 
     fn test<CR>(&self,
                 runner: &CR,
-                target: &args::Target,
+                ovr: &Override,
+                service_name: &str,
                 command: Option<&args::Command>)
                 -> Result<()>
         where CR: CommandRunner
     {
+        let (pod, service_name) = try!(self.service_or_err(service_name));
+
         let command_args = if let Some(c) = command {
             c.to_args()
         } else {
-            try!(target.service().test_command()).iter().map(|s| s.into()).collect()
+            let service = try!(pod.service_or_err(ovr, service_name));
+            try!(service.test_command()).iter().map(|s| s.into()).collect()
         };
         runner.build("docker-compose")
-            .args(&try!(target.pod().compose_args(self, target.ovr())))
+            .args(&try!(pod.compose_args(self, ovr)))
             .arg("run")
             .arg("--rm")
             .arg("--no-deps")
-            .arg(target.service_name())
+            .arg(service_name)
             .args(&command_args)
             .exec()
     }
@@ -137,9 +142,8 @@ fn runs_tests() {
     let ovr = proj.ovr("test").unwrap();
     let runner = TestCommandRunner::new();
     proj.output(ovr).unwrap();
-    let target = args::Target::new(&proj, ovr, "frontend", "proxy").unwrap();
 
-    proj.test(&runner, &target, None).unwrap();
+    proj.test(&runner, ovr, "frontend/proxy", None).unwrap();
 
     assert_ran!(runner, {
         ["docker-compose",
@@ -166,10 +170,9 @@ fn runs_tests_with_custom_command() {
     let ovr = proj.ovr("test").unwrap();
     let runner = TestCommandRunner::new();
     proj.output(ovr).unwrap();
-    let target = args::Target::new(&proj, ovr, "frontend", "proxy").unwrap();
 
     let cmd = args::Command::new("rspec").with_args(&["-t", "foo"]);
-    proj.test(&runner, &target, Some(&cmd)).unwrap();
+    proj.test(&runner, ovr, "proxy", Some(&cmd)).unwrap();
 
     assert_ran!(runner, {
         ["docker-compose",

@@ -4,11 +4,9 @@
 use std::ffi::OsString;
 
 pub use self::cmd::*;
-pub use self::target::*;
 
 mod cmd;
 pub mod opts;
-mod target;
 
 /// Trait for types which can be converted to command-line arguments.
 pub trait ToArgs {

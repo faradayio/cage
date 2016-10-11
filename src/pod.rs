@@ -264,6 +264,12 @@ impl Pod {
         Ok(file.services.get(name).cloned())
     }
 
+    /// Like `service`, but returns an error if the service can't be found.
+    pub fn service_or_err(&self, ovr: &Override, name: &str) -> Result<dc::Service> {
+        try!(self.service(ovr, name))
+            .ok_or_else(|| { ErrorKind::UnknownService(name.to_owned()).into() })
+    }
+
     /// Command-line `-p` and `-f` arguments that we'll pass to
     /// `docker-compose` to describe this file.
     pub fn compose_args(&self,
