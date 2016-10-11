@@ -14,7 +14,7 @@ use pod::Pod;
 #[derive(Debug)]
 pub struct ServiceLocations {
     /// Our location information.
-    locations: BTreeMap<String, (String, String)>
+    locations: BTreeMap<String, (String, String)>,
 }
 
 impl ServiceLocations {
@@ -65,7 +65,8 @@ impl ServiceLocations {
 
     /// Find a service by name.
     pub fn find<'a>(&self, service_name: &'a str) -> Option<(&str, &str)> {
-        self.locations.get(service_name)
+        self.locations
+            .get(service_name)
             .map(|&(ref pod, ref service)| (&pod[..], &service[..]))
     }
 }

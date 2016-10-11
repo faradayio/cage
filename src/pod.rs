@@ -74,11 +74,13 @@ impl FileInfo {
         // confusing and unmaintanable overrides, and (2) the rest of this
         // program's design assumes it doesn't have to worry about them.
         let ours: BTreeSet<String> = self.file.services.keys().cloned().collect();
-        let introduced: Vec<String> = ours.difference(service_names).cloned().collect();
+        let introduced: Vec<String> =
+            ours.difference(service_names).cloned().collect();
         if !introduced.is_empty() {
             return Err(ErrorKind::ServicesAddedInOverride(base_file.to_owned(),
                                                           self.rel_path.clone(),
-                                                          introduced).into())
+                                                          introduced)
+                .into());
         }
 
         // Add any missing services.
@@ -258,8 +260,7 @@ impl Pod {
     }
 
     /// Look up a service by name.
-    pub fn service(&self, ovr: &Override, name: &str)
-                   -> Result<Option<dc::Service>> {
+    pub fn service(&self, ovr: &Override, name: &str) -> Result<Option<dc::Service>> {
         let file = try!(self.merged_file(ovr));
         Ok(file.services.get(name).cloned())
     }
@@ -267,7 +268,7 @@ impl Pod {
     /// Like `service`, but returns an error if the service can't be found.
     pub fn service_or_err(&self, ovr: &Override, name: &str) -> Result<dc::Service> {
         try!(self.service(ovr, name))
-            .ok_or_else(|| { ErrorKind::UnknownService(name.to_owned()).into() })
+            .ok_or_else(|| ErrorKind::UnknownService(name.to_owned()).into())
     }
 
     /// Command-line `-p` and `-f` arguments that we'll pass to

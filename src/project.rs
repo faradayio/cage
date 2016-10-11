@@ -263,7 +263,7 @@ impl Project {
     /// Like `service`, but returns an error if the service is unknown.
     pub fn service_or_err<'a>(&self, name: &'a str) -> Result<(&Pod, &str)> {
         self.service(name)
-            .ok_or_else(|| { ErrorKind::UnknownService(name.to_owned()).into() })
+            .ok_or_else(|| ErrorKind::UnknownService(name.to_owned()).into())
     }
 
     /// Iterate over all overrides in this project.
