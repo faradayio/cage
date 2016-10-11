@@ -26,6 +26,7 @@ use pod::{Pod, PodType};
 use repos::Repos;
 use rustc_serialize::json::{Json, ToJson};
 use serde_helpers::deserialize_parsable_opt;
+use service_locations::ServiceLocations;
 use util::{ConductorPathExt, ToStrOrErr};
 use version;
 
@@ -59,6 +60,9 @@ pub struct Project {
     /// All the pods associated with this project.
     pods: Vec<Pod>,
 
+    /// Mappings from user-visible service names to `(pod, service)` pairs.
+    service_locations: ServiceLocations,
+
     /// All the overrides associated with this project.
     overrides: Vec<Override>,
 
@@ -85,6 +89,7 @@ impl Project {
                  -> Result<Project> {
         let overrides = try!(Project::find_overrides(root_dir));
         let pods = try!(Project::find_pods(root_dir, &overrides));
+        let service_locations = ServiceLocations::new(&pods);
         let repos = try!(Repos::new(&root_dir, &pods));
         let config_path = root_dir.join(PROJECT_CONFIG_PATH.deref());
         let config = try!(ProjectConfig::new(&config_path));
@@ -100,6 +105,7 @@ impl Project {
             src_dir: src_dir.to_owned(),
             output_dir: output_dir.to_owned(),
             pods: pods,
+            service_locations: service_locations,
             overrides: overrides,
             repos: repos,
             config: config,
@@ -241,6 +247,18 @@ impl Project {
     pub fn pod(&self, name: &str) -> Option<&Pod> {
         // TODO LOW: Do we want to store pods in a BTreeMap by name?
         self.pods().find(|pod| pod.name() == name)
+    }
+
+    /// Look up the named service.  Returns the pod containing the service
+    /// and the name of the service within that pod.
+    pub fn service<'a>(&self, name: &'a str)
+                       -> Result<Option<(&Pod, &str)>> {
+        if let Some((pod_name, service_name)) = self.service_locations.find(name) {
+            let pod = self.pod(pod_name).expect("pod should exist");
+            Ok(Some((pod, service_name)))
+        } else {
+            Ok(None)
+        }
     }
 
     /// Iterate over all overrides in this project.

@@ -186,6 +186,11 @@ impl Pod {
         self.config.pod_type.unwrap_or(PodType::Service)
     }
 
+    /// Get the names of the services declared in this pod.
+    pub fn service_names(&self) -> &BTreeSet<String> {
+        &self.service_names
+    }
+
     /// Is this pod enabled in the specified override?
     pub fn enabled_in(&self, ovr: &Override) -> bool {
         ovr.is_enabled_by(&self.config.enable_in_overrides)
@@ -250,6 +255,13 @@ impl Pod {
             pod: self,
             state: AllFilesState::TopLevelFile,
         }
+    }
+
+    /// Look up a service by name.
+    pub fn service(&self, ovr: &Override, name: &str)
+                   -> Result<Option<dc::Service>> {
+        let file = try!(self.merged_file(ovr));
+        Ok(file.services.get(name).cloned())
     }
 
     /// Command-line `-p` and `-f` arguments that we'll pass to

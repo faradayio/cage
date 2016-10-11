@@ -94,6 +94,7 @@ mod pod;
 mod project;
 mod repos;
 mod serde_helpers;
+mod service_locations;
 mod template;
 
 /// Include raw data files into our binary at compile time using the
