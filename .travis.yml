@@ -18,8 +18,6 @@ matrix:
     rust: beta
   - os: linux
     rust: nightly
-  allow_failures:
-  - rust: nightly
 services:
 - docker
 before_install:
