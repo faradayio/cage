@@ -39,6 +39,9 @@
 // compilers.  We want to work with both.
 #![cfg_attr(feature = "serde_derive", feature(proc_macro))]
 
+// The `error_chain` documentation says we need this.
+#![recursion_limit = "1024"]
+
 extern crate compose_yml;
 #[cfg(test)]
 extern crate env_logger;

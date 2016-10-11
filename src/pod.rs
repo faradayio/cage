@@ -2,7 +2,7 @@
 
 use compose_yml::v2 as dc;
 use compose_yml::v2::MergeOverride;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::collections::btree_map;
 use std::ffi::OsString;
 use std::path::{Path, PathBuf};
@@ -65,13 +65,30 @@ impl FileInfo {
     /// Make sure that all services from `base` are also present in this
     /// file.  If you're going tp call this, it must be called after
     /// `finish_normalization`
-    fn ensure_all_services_from(&mut self, base: &dc::File) {
-        for name in base.services.keys() {
+    fn ensure_same_services(&mut self,
+                            base_file: &Path,
+                            service_names: &BTreeSet<String>)
+                            -> Result<()> {
+        // Check for any newly-introduced services.  These are problematic
+        // because (1) in our previous experience, they lead to really
+        // confusing and unmaintanable overrides, and (2) the rest of this
+        // program's design assumes it doesn't have to worry about them.
+        let ours: BTreeSet<String> = self.file.services.keys().cloned().collect();
+        let introduced: Vec<String> = ours.difference(service_names).cloned().collect();
+        if !introduced.is_empty() {
+            return Err(ErrorKind::ServicesAddedInOverride(base_file.to_owned(),
+                                                          self.rel_path.clone(),
+                                                          introduced).into())
+        }
+
+        // Add any missing services.
+        for name in service_names {
             self.file
                 .services
                 .entry(name.to_owned())
                 .or_insert_with(Default::default);
         }
+        Ok(())
     }
 
     /// Finish normalizing this file by inserting things like `env_file`
@@ -107,6 +124,9 @@ pub struct Pod {
 
     /// Per-pod configuration.
     config: Config,
+
+    /// The names of all the services in this pod.
+    service_names: BTreeSet<String>,
 }
 
 impl Pod {
@@ -132,6 +152,7 @@ impl Pod {
         let rel_path = Path::new(&format!("{}.yml", &name)).to_owned();
         let mut file_info = try!(FileInfo::unnormalized(&base_dir, &rel_path));
         file_info.finish_normalization();
+        let service_names = file_info.file.services.keys().cloned().collect();
 
         // Load our override `*.yml` files.
         let mut ovr_infos = BTreeMap::new();
@@ -140,11 +161,10 @@ impl Pod {
                 Path::new(&format!("overrides/{}/{}.yml", ovr.name(), &name))
                     .to_owned();
             let mut ovr_info = try!(FileInfo::unnormalized(&base_dir, &ovr_rel_path));
-            ovr_info.ensure_all_services_from(&file_info.file);
+            try!(ovr_info.ensure_same_services(&rel_path, &service_names));
             ovr_info.finish_normalization();
             ovr_infos.insert(ovr.to_owned(), ovr_info);
         }
-
 
         Ok(Pod {
             base_dir: base_dir,
@@ -152,6 +172,7 @@ impl Pod {
             file_info: file_info,
             override_file_infos: ovr_infos,
             config: config,
+            service_names: service_names,
         })
     }
 

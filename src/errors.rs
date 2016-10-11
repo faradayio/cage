@@ -64,6 +64,14 @@ error_chain! {
             description("plugin failed")
             display("plugin '{}' failed", &plugin)
         }
+
+        /// An override file tried to add new services that weren't present in
+        /// the file it was overriding.
+        ServicesAddedInOverride(base: PathBuf, ovr: PathBuf, names: Vec<String>) {
+            description("services present in override but not in base")
+            display("services {:?} present in {} but not in {}",
+                    &names, base.display(), ovr.display())
+        }
     }
 }
 
