@@ -37,7 +37,7 @@
 
 // Compiler plugins only work with Rust nightly builds, not with stable
 // compilers.  We want to work with both.
-#![cfg_attr(feature = "serde_derive", feature(rustc_macro))]
+#![cfg_attr(feature = "serde_derive", feature(proc_macro))]
 
 extern crate compose_yml;
 #[cfg(test)]
