@@ -1,10 +1,10 @@
 //! The `exec` command.
 
+use args::{self, ToArgs};
 use command_runner::{Command, CommandRunner};
 #[cfg(test)]
 use command_runner::TestCommandRunner;
 use errors::*;
-use exec::{self, ToArgs};
 use ext::service::ServiceExt;
 use project::Project;
 use util::err;
@@ -17,17 +17,17 @@ pub trait CommandExec {
     /// ridiculous number of arguments.
     fn exec<CR>(&self,
                 runner: &CR,
-                target: &exec::Target,
-                command: &exec::Command,
-                opts: &exec::ExecOptions)
+                target: &args::Target,
+                command: &args::Command,
+                opts: &args::opts::Exec)
                 -> Result<()>
         where CR: CommandRunner;
 
     /// Execute an interactive shell inside a running container.
     fn shell<CR>(&self,
                  runner: &CR,
-                 target: &exec::Target,
-                 opts: &exec::ExecOptions)
+                 target: &args::Target,
+                 opts: &args::opts::Exec)
                  -> Result<()>
         where CR: CommandRunner;
 }
@@ -35,9 +35,9 @@ pub trait CommandExec {
 impl CommandExec for Project {
     fn exec<CR>(&self,
                 runner: &CR,
-                target: &exec::Target,
-                command: &exec::Command,
-                opts: &exec::ExecOptions)
+                target: &args::Target,
+                command: &args::Command,
+                opts: &args::opts::Exec)
                 -> Result<()>
         where CR: CommandRunner
     {
@@ -53,8 +53,8 @@ impl CommandExec for Project {
 
     fn shell<CR>(&self,
                  runner: &CR,
-                 target: &exec::Target,
-                 opts: &exec::ExecOptions)
+                 target: &args::Target,
+                 opts: &args::opts::Exec)
                  -> Result<()>
         where CR: CommandRunner
     {
@@ -67,7 +67,7 @@ impl CommandExec for Project {
         }
 
         let shell = try!(target.service().shell());
-        self.exec(runner, target, &exec::Command::new(shell), opts)
+        self.exec(runner, target, &args::Command::new(shell), opts)
     }
 }
 
@@ -79,10 +79,10 @@ fn invokes_docker_exec() {
     let ovr = proj.ovr("development").unwrap();
     let runner = TestCommandRunner::new();
     proj.output(ovr).unwrap();
-    let target = exec::Target::new(&proj, ovr, "frontend", "web").unwrap();
+    let target = args::Target::new(&proj, ovr, "frontend", "web").unwrap();
 
-    let command = exec::Command::new("true");
-    let mut opts = exec::ExecOptions::default();
+    let command = args::Command::new("true");
+    let mut opts = args::opts::Exec::default();
     opts.allocate_tty = false;
     proj.exec(&runner, &target, &command, &opts).unwrap();
 
@@ -109,7 +109,7 @@ fn runs_shells() {
     let ovr = proj.ovr("development").unwrap();
     let runner = TestCommandRunner::new();
     proj.output(ovr).unwrap();
-    let target = exec::Target::new(&proj, ovr, "frontend", "web").unwrap();
+    let target = args::Target::new(&proj, ovr, "frontend", "web").unwrap();
 
     proj.shell(&runner, &target, &Default::default()).unwrap();
 

@@ -1,10 +1,10 @@
 //! The `run` command.
 
+use args::{self, ToArgs};
 use command_runner::{Command, CommandRunner};
 #[cfg(test)]
 use command_runner::TestCommandRunner;
 use errors::*;
-use exec::{self, ToArgs};
 use ext::service::ServiceExt;
 use ovr::Override;
 use project::Project;
@@ -16,16 +16,16 @@ pub trait CommandRun {
                runner: &CR,
                ovr: &Override,
                pod: &str,
-               command: Option<&exec::Command>,
-               opts: &exec::RunOptions)
+               command: Option<&args::Command>,
+               opts: &args::opts::Run)
                -> Result<()>
         where CR: CommandRunner;
 
     /// Execute tests inside a fresh container.
     fn test<CR>(&self,
                 runner: &CR,
-                target: &exec::Target,
-                command: Option<&exec::Command>)
+                target: &args::Target,
+                command: Option<&args::Command>)
                 -> Result<()>
         where CR: CommandRunner;
 }
@@ -35,8 +35,8 @@ impl CommandRun for Project {
                runner: &CR,
                ovr: &Override,
                pod: &str,
-               command: Option<&exec::Command>,
-               opts: &exec::RunOptions)
+               command: Option<&args::Command>,
+               opts: &args::opts::Run)
                -> Result<()>
         where CR: CommandRunner
     {
@@ -69,8 +69,8 @@ impl CommandRun for Project {
 
     fn test<CR>(&self,
                 runner: &CR,
-                target: &exec::Target,
-                command: Option<&exec::Command>)
+                target: &args::Target,
+                command: Option<&args::Command>)
                 -> Result<()>
         where CR: CommandRunner
     {
@@ -110,8 +110,8 @@ fn runs_a_single_service_pod() {
     let ovr = proj.ovr("development").unwrap();
     let runner = TestCommandRunner::new();
     proj.output(ovr).unwrap();
-    let cmd = exec::Command::new("rake").with_args(&["db:migrate"]);
-    let mut opts = exec::RunOptions::default();
+    let cmd = args::Command::new("rake").with_args(&["db:migrate"]);
+    let mut opts = args::opts::Run::default();
     opts.allocate_tty = false;
     proj.run(&runner, ovr, "migrate", Some(&cmd), &opts).unwrap();
     assert_ran!(runner, {
@@ -137,7 +137,7 @@ fn runs_tests() {
     let ovr = proj.ovr("test").unwrap();
     let runner = TestCommandRunner::new();
     proj.output(ovr).unwrap();
-    let target = exec::Target::new(&proj, ovr, "frontend", "proxy").unwrap();
+    let target = args::Target::new(&proj, ovr, "frontend", "proxy").unwrap();
 
     proj.test(&runner, &target, None).unwrap();
 
@@ -166,9 +166,9 @@ fn runs_tests_with_custom_command() {
     let ovr = proj.ovr("test").unwrap();
     let runner = TestCommandRunner::new();
     proj.output(ovr).unwrap();
-    let target = exec::Target::new(&proj, ovr, "frontend", "proxy").unwrap();
+    let target = args::Target::new(&proj, ovr, "frontend", "proxy").unwrap();
 
-    let cmd = exec::Command::new("rspec").with_args(&["-t", "foo"]);
+    let cmd = args::Command::new("rspec").with_args(&["-t", "foo"]);
     proj.test(&runner, &target, Some(&cmd)).unwrap();
 
     assert_ran!(runner, {

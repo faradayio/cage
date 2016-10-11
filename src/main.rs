@@ -44,22 +44,22 @@ trait ArgMatchesExt {
 
     /// Extract options shared by `exec` and `run` from our command-line
     /// arguments.
-    fn to_common_options(&self) -> cage::exec::CommonOptions;
+    fn to_process_options(&self) -> cage::args::opts::Process;
 
     /// Extract `exec` options from our command-line arguments.
-    fn to_exec_options(&self) -> cage::exec::ExecOptions;
+    fn to_exec_options(&self) -> cage::args::opts::Exec;
 
     /// Extract `run` options from our command-line arguments.
-    fn to_run_options(&self) -> cage::exec::RunOptions;
+    fn to_run_options(&self) -> cage::args::opts::Run;
 
     /// Extract `exec::Target` from our command-line arguments.
     fn to_exec_target<'a>(&'a self,
                           project: &'a cage::Project,
                           ovr: &'a cage::Override)
-                          -> Result<Option<cage::exec::Target<'a>>>;
+                          -> Result<Option<cage::args::Target<'a>>>;
 
     /// Extract `exec::Command` from our command-line arguments.
-    fn to_exec_command(&self) -> Option<cage::exec::Command>;
+    fn to_exec_command(&self) -> Option<cage::args::Command>;
 }
 
 impl<'a> ArgMatchesExt for clap::ArgMatches<'a> {
@@ -78,24 +78,24 @@ impl<'a> ArgMatchesExt for clap::ArgMatches<'a> {
             })
     }
 
-    fn to_common_options(&self) -> cage::exec::CommonOptions {
-        let mut opts = cage::exec::CommonOptions::default();
+    fn to_process_options(&self) -> cage::args::opts::Process {
+        let mut opts = cage::args::opts::Process::default();
         opts.detached = self.is_present("detached");
         opts.user = self.value_of("user").map(|v| v.to_owned());
         opts.allocate_tty = !self.is_present("no-allocate-tty");
         opts
     }
 
-    fn to_exec_options(&self) -> cage::exec::ExecOptions {
-        let mut opts = cage::exec::ExecOptions::default();
-        opts.common = self.to_common_options();
+    fn to_exec_options(&self) -> cage::args::opts::Exec {
+        let mut opts = cage::args::opts::Exec::default();
+        opts.process = self.to_process_options();
         opts.privileged = self.is_present("privileged");
         opts
     }
 
-    fn to_run_options(&self) -> cage::exec::RunOptions {
-        let mut opts = cage::exec::RunOptions::default();
-        opts.common = self.to_common_options();
+    fn to_run_options(&self) -> cage::args::opts::Run {
+        let mut opts = cage::args::opts::Run::default();
+        opts.process = self.to_process_options();
         opts.entrypoint = self.value_of("entrypoint").map(|v| v.to_owned());
         if let Some(environment) = self.values_of("environment") {
             let environment: Vec<&str> = environment.collect();
@@ -113,20 +113,20 @@ impl<'a> ArgMatchesExt for clap::ArgMatches<'a> {
     fn to_exec_target<'b>(&'b self,
                           project: &'b cage::Project,
                           ovr: &'b cage::Override)
-                          -> Result<Option<cage::exec::Target<'b>>> {
+                          -> Result<Option<cage::args::Target<'b>>> {
         match (self.value_of("POD"), self.value_of("SERVICE")) {
             (Some(pod), Some(service)) => {
-                Ok(Some(try!(cage::exec::Target::new(project, ovr, pod, service))))
+                Ok(Some(try!(cage::args::Target::new(project, ovr, pod, service))))
             }
             _ => Ok(None),
         }
     }
 
-    fn to_exec_command(&self) -> Option<cage::exec::Command> {
+    fn to_exec_command(&self) -> Option<cage::args::Command> {
         if self.is_present("COMMAND") {
             let values: Vec<&str> = self.values_of("COMMAND").unwrap().collect();
             assert!(values.len() >= 1, "too few values from CLI parser");
-            Some(cage::exec::Command::new(values[0]).with_args(&values[1..]))
+            Some(cage::args::Command::new(values[0]).with_args(&values[1..]))
         } else {
             None
         }
