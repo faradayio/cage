@@ -44,7 +44,7 @@ rustc-serialize = "0.3.19"
 semver = "0.5.0"
 serde = "0.8"
 serde_derive = { version = "0.8", optional = true }
-serde_yaml = "0.4.0"
+serde_yaml = "0.4.1"
 shlex = "0.1.1"
 url = "1.2.0"
 yaml-rust = "0.3.3"
