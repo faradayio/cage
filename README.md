@@ -198,6 +198,15 @@ hello
             └── common.env
 ```
 
+## Reporting issues
+
+If you encounter an issue, it might help to set the following shell
+variables and re-run the command:
+
+```sh
+export RUST_BACKTRACE=1 RUST_LOG=cage=debug,compose_yml=debug
+```
+
 ## Development notes
 
 Pull requests are welcome!  If you're not sure whether your idea would fit
