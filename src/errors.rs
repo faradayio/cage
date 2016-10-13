@@ -79,6 +79,12 @@ error_chain! {
                     &names, base.display(), ovr.display())
         }
 
+        /// The requested pod or service does not appear to exist.
+        UnknownPodOrService(pod_or_service_name: String) {
+            description("unknown pod or service")
+            display("unknown pod or service '{}'", &pod_or_service_name)
+        }
+
         /// The requested service does not appear to exist.
         UnknownService(service_name: String) {
             description("unknown service")

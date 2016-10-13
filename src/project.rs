@@ -36,6 +36,15 @@ include!(concat!("project_config.in.rs"));
 #[cfg(feature = "serde_codegen")]
 include!(concat!(env!("OUT_DIR"), "/project_config.rs"));
 
+/// Represents either a `Pod` object or a `Service` object.
+#[derive(Debug)]
+pub enum PodOrService<'a> {
+    /// A `Pod`.
+    Pod(&'a Pod),
+    /// A `Pod` and the name of one of its `Service` objects.
+    Service(&'a Pod, &'a str),
+}
+
 /// A `cage` project, which is represented as a directory containing a
 /// `pods` subdirectory.
 #[derive(Debug)]
@@ -265,6 +274,27 @@ impl Project {
             .ok_or_else(|| ErrorKind::UnknownService(name.to_owned()).into())
     }
 
+    /// Look for a name as a pod first, and if that fails, look for it as a
+    /// service.
+    pub fn pod_or_service<'a, 'b>(&'a self, name: &'b str)
+                                  -> Option<PodOrService<'a>> {
+        if let Some(pod) = self.pod(name) {
+            Some(PodOrService::Pod(pod))
+        } else if let Some((pod, service_name)) = self.service(name) {
+            Some(PodOrService::Service(pod, service_name))
+        } else {
+            None
+        }
+    }
+
+    /// Like `pod_or_service`, but returns an error if no pod or service of
+    /// that name can be found.
+    pub fn pod_or_service_or_err<'a, 'b>(&'a self, name: &'b str)
+                                         -> Result<PodOrService<'a>> {
+        self.pod_or_service(name)
+            .ok_or_else(|| ErrorKind::UnknownPodOrService(name.to_owned()).into())
+    }
+
     /// Iterate over all overrides in this project.
     pub fn overrides(&self) -> Overrides {
         Overrides { iter: self.overrides.iter() }
@@ -432,6 +462,26 @@ fn name_defaults_to_project_dir_but_can_be_overridden() {
     assert_eq!(proj.name(), "hello");
     proj.set_name("hi");
     assert_eq!(proj.name(), "hi");
+}
+
+#[test]
+fn pod_or_service_finds_either() {
+    use env_logger;
+    let _ = env_logger::init();
+    let proj = Project::from_example("hello").unwrap();
+
+    match proj.pod_or_service("frontend").unwrap() {
+        PodOrService::Pod(pod) => assert_eq!(pod.name(), "frontend"),
+        _ => panic!("Did not find pod 'frontend'"),
+    }
+    match proj.pod_or_service("frontend/web").unwrap() {
+        PodOrService::Service(pod, "web") => assert_eq!(pod.name(), "frontend"),
+        _ => panic!("Did not find service 'frontend/web'"),
+    }
+    match proj.pod_or_service("web").unwrap() {
+        PodOrService::Service(pod, "web") => assert_eq!(pod.name(), "frontend"),
+        _ => panic!("Did not find service 'web'"),
+    }
 }
 
 #[test]

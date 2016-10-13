@@ -72,7 +72,7 @@ extern crate url;
 pub use default_tags::DefaultTags;
 pub use errors::*;
 pub use ovr::Override;
-pub use project::{Project, ProjectConfig, Pods, Overrides};
+pub use project::{PodOrService, Project, ProjectConfig, Pods, Overrides};
 pub use pod::{Pod, OverrideFiles, AllFiles};
 pub use repos::{Repos, Repo};
 pub use repos::Iter as RepoIter;
