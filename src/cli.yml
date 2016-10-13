@@ -133,6 +133,22 @@ subcommands:
         - environment: *environment
         - SERVICE: *service
         - COMMAND: *command
+      after_help: |
+        To enable tests for a service, add a label with the test command.
+        Assuming your service uses rspec, this might look like:
+
+            myservice:
+              labels:
+                io.fdy.cage.test: "rspec"
+
+        Run this test command using:
+
+            cage test myservice
+
+        To run only a subset of your tests, you can also pass a custom test
+        command:
+
+            cage test myservice rspec spec/my_new_feature_spec.rb
   - repo:
       about: "Commands for working with git repositories"
       settings:
