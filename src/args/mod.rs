@@ -14,3 +14,12 @@ pub trait ToArgs {
     /// `CommandBuilder`.
     fn to_args(&self) -> Vec<OsString>;
 }
+
+/// The names of pods, services or both to pass to one of our commands.
+#[derive(Debug)]
+pub enum ActOn {
+    /// Act upon all the pods and/or services associated with this project.
+    All,
+    /// Act upon only the named pods and/or services.
+    Named(Vec<String>),
+}

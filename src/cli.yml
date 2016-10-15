@@ -47,8 +47,15 @@ subcommands:
             help: "The name of the new project"
   - build:
       about: "Build images for the containers associated with this project"
+      args:
+        - POD_OR_SERVICE: &pod_or_service
+            value_name: "POD_OR_SERVICE"
+            multiple: true
+            help: "Pod or service names.  Defaults to all."
   - pull:
       about: "Build images for the containers associated with this project"
+      args:
+        - POD_OR_SERVICE: *pod_or_service
   - up:
       about: "Run project"
       args:
@@ -58,6 +65,12 @@ subcommands:
             help: "The names of specific pods to start.  Defaults to all."
   - stop:
       about: "Stop all containers associated with project"
+      args:
+        - POD_OR_SERVICE: *pod_or_service
+  - rm:
+      about: "Remove the containers associated with a pod or service"
+      args:
+        - POD_OR_SERVICE: *pod_or_service
   - run:
       about: "Run a specific pod as a one-shot task"
       settings:

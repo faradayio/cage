@@ -7,6 +7,17 @@ use std::ops::{Deref, DerefMut};
 
 use args::ToArgs;
 
+/// An empty set of options, used for `docker-compose` subcommands for
+/// which don't need any.
+#[derive(Debug, Clone, Copy)]
+pub struct Empty;
+
+impl ToArgs for Empty {
+    fn to_args(&self) -> Vec<OsString> {
+        vec![]
+    }
+}
+
 /// Command-line flags which can be passed to `docker-compose exec`.
 #[derive(Debug, Clone)]
 pub struct Process {
