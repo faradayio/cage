@@ -59,10 +59,7 @@ subcommands:
   - up:
       about: "Run project"
       args:
-        - POD:
-            value_name: "POD"
-            multiple: true
-            help: "The names of specific pods to start.  Defaults to all."
+        - POD_OR_SERVICE: *pod_or_service
   - stop:
       about: "Stop all containers associated with project"
       args:

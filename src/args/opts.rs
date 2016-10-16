@@ -2,7 +2,6 @@
 
 use std::collections::BTreeMap;
 use std::ffi::{OsStr, OsString};
-use std::marker::PhantomData;
 use std::ops::{Deref, DerefMut};
 
 use args::ToArgs;
@@ -10,6 +9,7 @@ use args::ToArgs;
 /// An empty set of options, used for `docker-compose` subcommands for
 /// which don't need any.
 #[derive(Debug, Clone, Copy)]
+#[allow(missing_copy_implementations)]
 pub struct Empty;
 
 impl ToArgs for Empty {
@@ -18,7 +18,27 @@ impl ToArgs for Empty {
     }
 }
 
-/// Command-line flags which can be passed to `docker-compose exec`.
+/// Command-line flags with for `docker-compose up`.
+#[derive(Debug, Default, Clone)]
+#[allow(missing_copy_implementations)]
+pub struct Up {
+    /// PRIVATE: This field is a stand-in for future options.
+    /// See http://stackoverflow.com/q/39277157/12089
+    #[doc(hidden)]
+    _nonexhaustive: (),
+}
+
+impl ToArgs for Up {
+    fn to_args(&self) -> Vec<OsString> {
+        // For now, this one is hard-coded.  We always pass `-d` because we
+        // need to detach from each pod to launch the next.  To avoid this,
+        // we'd need to use multiple parallel threads and maybe some
+        // intelligent output buffering.
+        vec!["-d".into()]
+    }
+}
+
+/// Command-line flags which can be passed to `docker-compose exec` and `run`.
 #[derive(Debug, Clone)]
 pub struct Process {
     /// Should we execute this command in the background?
@@ -37,7 +57,7 @@ pub struct Process {
     /// PRIVATE: This field is a stand-in for future options.
     /// See http://stackoverflow.com/q/39277157/12089
     #[doc(hidden)]
-    pub _nonexhaustive: PhantomData<()>,
+    pub _nonexhaustive: (),
 }
 
 impl ToArgs for Process {
@@ -83,7 +103,7 @@ impl Default for Process {
             detached: false,
             user: None,
             allocate_tty: true, // Not false!
-            _nonexhaustive: PhantomData,
+            _nonexhaustive: (),
         }
     }
 }
@@ -100,7 +120,7 @@ pub struct Exec {
     /// PRIVATE: This field is a stand-in for future options.
     /// See http://stackoverflow.com/q/39277157/12089
     #[doc(hidden)]
-    pub _nonexhaustive: PhantomData<()>,
+    pub _nonexhaustive: (),
 }
 
 impl Deref for Exec {
@@ -155,7 +175,7 @@ pub struct Run {
     /// PRIVATE: This field is a stand-in for future options.
     /// See http://stackoverflow.com/q/39277157/12089
     #[doc(hidden)]
-    pub _nonexhaustive: PhantomData<()>,
+    pub _nonexhaustive: (),
 }
 
 impl Deref for Run {

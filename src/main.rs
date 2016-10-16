@@ -180,31 +180,27 @@ fn run(matches: &clap::ArgMatches) -> Result<()> {
         "pull" => {
             let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE");
             let opts = cage::args::opts::Empty;
-            try!(proj.compose(&runner, &ovr, "pull", &acts_on, &opts));
+            try!(proj.compose(&runner, &ovr, "pull", &acts_on, |_| true, &opts));
         }
         "build" => {
             let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE");
             let opts = cage::args::opts::Empty;
-            try!(proj.compose(&runner, &ovr, "build", &acts_on, &opts));
+            try!(proj.compose(&runner, &ovr, "build", &acts_on, |_| true, &opts));
         }
         "up" => {
-            let pods: Vec<&str> = sc_matches.values_of("POD")
-                .map_or_else(|| vec![], |p| p.collect());
-            if pods.is_empty() {
-                try!(proj.up_all(&runner, &ovr));
-            } else {
-                try!(proj.up(&runner, &ovr, &pods));
-            }
+            let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE");
+            let opts = cage::args::opts::Up::default();
+            try!(proj.up(&runner, &ovr, &acts_on, &opts));
         }
         "stop" => {
             let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE");
             let opts = cage::args::opts::Empty;
-            try!(proj.compose(&runner, &ovr, "stop", &acts_on, &opts));
+            try!(proj.compose(&runner, &ovr, "stop", &acts_on, |_| true, &opts));
         }
         "rm" => {
             let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE");
             let opts = cage::args::opts::Empty;
-            try!(proj.compose(&runner, &ovr, "rm", &acts_on, &opts));
+            try!(proj.compose(&runner, &ovr, "rm", &acts_on, |_| true, &opts));
         }
         "run" => {
             let opts = sc_matches.to_run_options();

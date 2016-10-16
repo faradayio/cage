@@ -8,41 +8,52 @@ use command_runner::{Command, CommandRunner};
 use command_runner::TestCommandRunner;
 use errors::*;
 use ovr::Override;
+use pod::Pod;
 use project::{PodOrService, Project};
 
 /// Pass simple commands directly through to `docker-compose`.
 pub trait CommandCompose {
     /// Pass simple commands directly through to `docker-compose`.
-    fn compose<CR>(&self,
-                   runner: &CR,
-                   ovr: &Override,
-                   command: &str,
-                   act_on: &args::ActOn,
-                   opts: &args::ToArgs)
-                   -> Result<()>
-        where CR: CommandRunner;
+    fn compose<CR, F>(&self,
+                      runner: &CR,
+                      ovr: &Override,
+                      command: &str,
+                      act_on: &args::ActOn,
+                      matching: F,
+                      opts: &args::ToArgs)
+                      -> Result<()>
+        where CR: CommandRunner,
+              F: Fn(&Pod) -> bool;
 }
 
 impl CommandCompose for Project {
-    fn compose<CR>(&self,
-                   runner: &CR,
-                   ovr: &Override,
-                   command: &str,
-                   act_on: &args::ActOn,
-                   opts: &args::ToArgs)
-                   -> Result<()>
-        where CR: CommandRunner
+    fn compose<CR, F>(&self,
+                      runner: &CR,
+                      ovr: &Override,
+                      command: &str,
+                      act_on: &args::ActOn,
+                      matching: F,
+                      opts: &args::ToArgs)
+                      -> Result<()>
+        where CR: CommandRunner,
+              F: Fn(&Pod) -> bool
     {
 
         let names = match *act_on {
             args::ActOn::Named(ref names) => names.to_owned(),
-            args::ActOn::All => self.pods().map(|p| p.name().to_owned()).collect(),
+            args::ActOn::All => {
+                let mut pods: Vec<_> = self.pods().collect();
+                // Sort so that placeholders come before other pod types,
+                // which is important for the `up` command.
+                pods.sort_by_key(|p| (p.pod_type(), p.name()));
+                pods.iter().map(|p| p.name().to_owned()).collect()
+            }
         };
 
         for name in names.deref() {
             match try!(self.pod_or_service_or_err(name)) {
                 PodOrService::Pod(pod) => {
-                    if pod.enabled_in(ovr) {
+                    if pod.enabled_in(ovr) && matching(pod) {
                         try!(runner.build("docker-compose")
                             .args(&try!(pod.compose_args(self, ovr)))
                             .arg(command)
@@ -51,7 +62,7 @@ impl CommandCompose for Project {
                     }
                 }
                 PodOrService::Service(pod, service_name) => {
-                    if pod.enabled_in(ovr) {
+                    if pod.enabled_in(ovr) && matching(pod) {
                         try!(runner.build("docker-compose")
                             .args(&try!(pod.compose_args(self, ovr)))
                             .arg(command)
@@ -77,7 +88,7 @@ fn runs_docker_compose_on_all_pods() {
     proj.output(ovr).unwrap();
 
     let opts = args::opts::Empty;
-    proj.compose(&runner, ovr, "stop", &args::ActOn::All, &opts).unwrap();
+    proj.compose(&runner, ovr, "stop", &args::ActOn::All, |_| true, &opts).unwrap();
     assert_ran!(runner, {
         ["docker-compose",
          "-p",
@@ -113,7 +124,7 @@ fn runs_docker_compose_on_named_pods_and_services() {
 
     let act_on = args::ActOn::Named(vec!("db".to_owned(), "web".to_owned()));
     let opts = args::opts::Empty;
-    proj.compose(&runner, ovr, "stop", &act_on, &opts).unwrap();
+    proj.compose(&runner, ovr, "stop", &act_on, |_| true, &opts).unwrap();
     assert_ran!(runner, {
         ["docker-compose",
          "-p",
