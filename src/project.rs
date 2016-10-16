@@ -281,7 +281,8 @@ impl Project {
 
     /// Look for a name as a pod first, and if that fails, look for it as a
     /// service.
-    pub fn pod_or_service<'a, 'b>(&'a self, name: &'b str)
+    pub fn pod_or_service<'a, 'b>(&'a self,
+                                  name: &'b str)
                                   -> Option<PodOrService<'a>> {
         if let Some(pod) = self.pod(name) {
             Some(PodOrService::Pod(pod))
@@ -294,7 +295,8 @@ impl Project {
 
     /// Like `pod_or_service`, but returns an error if no pod or service of
     /// that name can be found.
-    pub fn pod_or_service_or_err<'a, 'b>(&'a self, name: &'b str)
+    pub fn pod_or_service_or_err<'a, 'b>(&'a self,
+                                         name: &'b str)
                                          -> Result<PodOrService<'a>> {
         self.pod_or_service(name)
             .ok_or_else(|| ErrorKind::UnknownPodOrService(name.to_owned()).into())

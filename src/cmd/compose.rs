@@ -31,13 +31,12 @@ impl CommandCompose for Project {
                    act_on: &args::ActOn,
                    opts: &args::ToArgs)
                    -> Result<()>
-        where CR: CommandRunner {
+        where CR: CommandRunner
+    {
 
         let names = match *act_on {
             args::ActOn::Named(ref names) => names.to_owned(),
-            args::ActOn::All => {
-                self.pods().map(|p| p.name().to_owned()).collect()
-            }
+            args::ActOn::All => self.pods().map(|p| p.name().to_owned()).collect(),
         };
 
         for name in names.deref() {
@@ -45,20 +44,20 @@ impl CommandCompose for Project {
                 PodOrService::Pod(pod) => {
                     if pod.enabled_in(ovr) {
                         try!(runner.build("docker-compose")
-                             .args(&try!(pod.compose_args(self, ovr)))
-                             .arg(command)
-                             .args(&opts.to_args())
-                             .exec());
+                            .args(&try!(pod.compose_args(self, ovr)))
+                            .arg(command)
+                            .args(&opts.to_args())
+                            .exec());
                     }
                 }
                 PodOrService::Service(pod, service_name) => {
                     if pod.enabled_in(ovr) {
                         try!(runner.build("docker-compose")
-                             .args(&try!(pod.compose_args(self, ovr)))
-                             .arg(command)
-                             .args(&opts.to_args())
-                             .arg(service_name)
-                             .exec());
+                            .args(&try!(pod.compose_args(self, ovr)))
+                            .arg(command)
+                            .args(&opts.to_args())
+                            .arg(service_name)
+                            .exec());
                     }
                 }
             }

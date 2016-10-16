@@ -177,7 +177,7 @@ fn run(matches: &clap::ArgMatches) -> Result<()> {
     // Handle our subcommands that require a `Project`.
     let runner = OsCommandRunner::new();
     match sc_name {
-        "pull" =>  {
+        "pull" => {
             let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE");
             let opts = cage::args::opts::Empty;
             try!(proj.compose(&runner, &ovr, "pull", &acts_on, &opts));
