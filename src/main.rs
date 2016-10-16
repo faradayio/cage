@@ -179,8 +179,7 @@ fn run(matches: &clap::ArgMatches) -> Result<()> {
     match sc_name {
         "pull" => {
             let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE");
-            let opts = cage::args::opts::Empty;
-            try!(proj.compose(&runner, &ovr, "pull", &acts_on, |_| true, &opts));
+            try!(proj.pull(&runner, &ovr, &acts_on));
         }
         "build" => {
             let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE");

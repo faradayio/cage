@@ -88,9 +88,9 @@ fn runs_requested_hook_scripts() {
     let runner = TestCommandRunner::new();
     proj.output(ovr).unwrap();
 
-    proj.hooks().invoke(&runner, "up", &BTreeMap::default()).unwrap();
+    proj.hooks().invoke(&runner, "pull", &BTreeMap::default()).unwrap();
     assert_ran!(runner, {
-        [proj.root_dir().join("config/hooks/up.d/hello.hook")]
+        [proj.root_dir().join("config/hooks/pull.d/hello.hook")]
     });
 
     proj.remove_test_output().unwrap();
