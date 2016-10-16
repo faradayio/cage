@@ -45,6 +45,12 @@ error_chain! {
             display("error running '{}'", command_to_string(&command))
         }
 
+        /// An error occurred reading a directory.
+        CouldNotReadDirectory(path: PathBuf) {
+            description("could not read a directory")
+            display("could not read '{}'", path.display())
+        }
+
         /// An error occurred reading a file.
         CouldNotReadFile(path: PathBuf) {
             description("could not read a file")

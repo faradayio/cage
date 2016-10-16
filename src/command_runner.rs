@@ -34,6 +34,11 @@ pub trait Command {
         self
     }
 
+    /// Set an environment variable for the process we're about to run.
+    fn env<K, V>(&mut self, key: K, val: V) -> &mut Self
+        where K: AsRef<OsStr>,
+              V: AsRef<OsStr>;
+
     /// Run our command.
     fn status(&mut self) -> Result<process::ExitStatus>;
 
@@ -103,6 +108,14 @@ impl Command for OsCommand {
         let args: Vec<_> = args.iter().map(|a| a.as_ref().to_owned()).collect();
         self.arg_log.extend_from_slice(&args);
         self.command.args(&args);
+        self
+    }
+
+    fn env<K, V>(&mut self, key: K, val: V) -> &mut Self
+        where K: AsRef<OsStr>,
+              V: AsRef<OsStr>
+    {
+        self.command.env(key, val);
         self
     }
 
@@ -184,6 +197,14 @@ impl TestCommand {
 impl Command for TestCommand {
     fn arg<S: AsRef<OsStr>>(&mut self, arg: S) -> &mut Self {
         self.cmd.push(arg.as_ref().to_owned());
+        self
+    }
+
+    fn env<K, V>(&mut self, _key: K, _val: V) -> &mut Self
+        where K: AsRef<OsStr>,
+              V: AsRef<OsStr>
+    {
+        // Just ignore this in test mode.
         self
     }
 

@@ -19,6 +19,7 @@ use std::str;
 use default_tags::DefaultTags;
 use dir;
 use errors::*;
+use hook::HookManager;
 use ovr::Override;
 use plugins::{self, Operation};
 use pod::{Pod, PodType};
@@ -77,6 +78,9 @@ pub struct Project {
     /// All the repositories associated with this project.
     repos: Repos,
 
+    /// User-specific hooks that we can call before or after certain actions.
+    hooks: HookManager,
+
     /// The main configuration for this project.
     config: ProjectConfig,
 
@@ -116,6 +120,7 @@ impl Project {
             service_locations: service_locations,
             overrides: overrides,
             repos: repos,
+            hooks: try!(HookManager::new(root_dir.join("config/hooks"))),
             config: config,
             default_tags: None,
             plugins: None,
@@ -310,6 +315,11 @@ impl Project {
     /// project.
     pub fn repos(&self) -> &Repos {
         &self.repos
+    }
+
+    /// Get our available hooks.
+    pub fn hooks(&self) -> &HookManager {
+        &self.hooks
     }
 
     /// Get the default tags associated with this project, if any.

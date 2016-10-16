@@ -88,6 +88,7 @@ mod default_tags;
 pub mod dir;
 mod errors;
 mod ext;
+pub mod hook;
 mod ovr;
 pub mod plugins;
 mod pod;

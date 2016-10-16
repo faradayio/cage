@@ -1,0 +1,9 @@
+#!/bin/sh
+#
+# A sample cage hook script.
+
+# We recommend setting these flags for all hook scripts so that they abort
+# immediately on common kinds of shell errors.
+set -euo pipefail
+
+echo "Example hook script"

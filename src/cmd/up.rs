@@ -1,5 +1,7 @@
 //! The `up` command.
 
+use std::collections::BTreeMap;
+
 use command_runner::{Command, CommandRunner};
 #[cfg(test)]
 use command_runner::TestCommandRunner;
@@ -23,6 +25,12 @@ impl CommandUp for Project {
     fn up_all<CR>(&self, runner: &CR, ovr: &Override) -> Result<()>
         where CR: CommandRunner
     {
+        // Invoke our `up` hook.
+        //
+        // TODO: Do this before regular `up` method, too.  We need to
+        // refactor this.
+        try!(self.hooks().invoke(runner, "up", &BTreeMap::default()));
+
         let up_by_pod_type = |ty: PodType| -> Result<()> {
             let pod_names: Vec<_> = self.pods()
                 .filter(|p| p.pod_type() == ty)
@@ -66,6 +74,7 @@ fn runs_docker_compose_up_on_all_pods() {
     proj.output(ovr).unwrap();
     proj.up_all(&runner, ovr).unwrap();
     assert_ran!(runner, {
+        [proj.root_dir().join("config/hooks/up.d/hello.hook")],
         ["docker-compose",
          "-p",
          "hello",
