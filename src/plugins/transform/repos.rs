@@ -90,9 +90,11 @@ impl PluginTransform for Plugin {
                                  key)
                         }));
 
-                    let path = try!(repo.path(project).to_absolute());
-                    let mount = dc::VolumeMount::host(&path, mount_as);
-                    service.volumes.push(dc::value(mount));
+                    if repo.is_cloned(project) {
+                        let path = try!(repo.path(project).to_absolute());
+                        let mount = dc::VolumeMount::host(&path, mount_as);
+                        service.volumes.push(dc::value(mount));
+                    }
                 }
             }
         }
