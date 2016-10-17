@@ -39,7 +39,9 @@ impl ContextExt for dc::Context {
 
             dc::Context::Dir(ref path) => {
                 let file_stem = try!(path.file_stem()
-                    .ok_or_else(|| err!("Can't get repo name from {}", &path.display())));
+                    .ok_or_else(|| {
+                        err!("Can't get repo name from {}", &path.display())
+                    }));
                 Ok(try!(file_stem.to_str_or_err()).to_owned())
             }
         }

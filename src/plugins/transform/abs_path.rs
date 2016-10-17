@@ -53,7 +53,8 @@ impl PluginTransform for Plugin {
             if let Some(ref mut build) = service.build {
                 let context: &mut _ = try!(build.context.value_mut());
                 if let dc::Context::Dir(ref mut path) = *context {
-                    let new_path = try!(ctx.project.pods_dir()
+                    let new_path = try!(ctx.project
+                        .pods_dir()
                         .join(&path)
                         .to_absolute());
                     *path = new_path;

@@ -214,9 +214,10 @@ fn are_loaded_with_projects() {
     let hello = repos.find_by_alias("dockercloud-hello-world")
         .expect("repos should include dockercloud-hello-world");
     assert_eq!(hello.alias(), "dockercloud-hello-world");
-    assert_eq!(hello.context(),
-               &dc::Context::new("https://github.com/docker/dockercloud-hello-world.git"));
-    assert_eq!(hello.path(&proj), proj.src_dir().join("dockercloud-hello-world"));
+    let url = "https://github.com/docker/dockercloud-hello-world.git";
+    assert_eq!(hello.context(), &dc::Context::new(url));
+    assert_eq!(hello.path(&proj),
+               proj.src_dir().join("dockercloud-hello-world"));
 }
 
 #[test]
@@ -241,8 +242,9 @@ fn can_be_cloned() {
     let repo = proj.repos().find_by_alias("dockercloud-hello-world").unwrap();
     let runner = TestCommandRunner::new();
     repo.clone_source(&runner, &proj).unwrap();
+    let url = "https://github.com/docker/dockercloud-hello-world.git";
     assert_ran!(runner, {
-        ["git", "clone", "https://github.com/docker/dockercloud-hello-world.git", repo.path(&proj)]
+        ["git", "clone", url, repo.path(&proj)]
     });
     proj.remove_test_output().unwrap();
 }
