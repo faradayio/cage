@@ -1,5 +1,6 @@
 //! Plugin which transforms `dc::File` to point at local clones of GitHub
-//! repositories.
+//! repositories, and which handles mounting local source trees into
+//! containers.
 
 use compose_yml::v2 as dc;
 use std::marker::PhantomData;
@@ -11,13 +12,13 @@ use plugins::{Operation, PluginNew, PluginTransform};
 use project::Project;
 use util::ConductorPathExt;
 
-/// Transforms `dc::File` to point at local clones of GitHub repositories.
+/// Transforms `dc::File` to point at local source trees.
 ///
-/// Note that this is only part of our repository support—this plugin
-/// doesn't load repositories or check them out.  (That's the job of our
-/// top-level `repos` module.)  Rather, this plugin uses information that
-/// we already know about repositories in order to transform a `dc::File`
-/// for local development purposes.
+/// Note that this is only part of our source tree support—this plugin
+/// doesn't load source trees or check them out using git.  (That's the job
+/// of our top-level `sources` module.)  Rather, this plugin uses
+/// information that we already know about source trees in order to
+/// transform a `dc::File` for local development purposes.
 #[derive(Debug)]
 #[allow(missing_copy_implementations)]
 pub struct Plugin {
@@ -34,7 +35,7 @@ impl plugins::Plugin for Plugin {
 
 impl PluginNew for Plugin {
     fn plugin_name() -> &'static str {
-        "repos"
+        "sources"
     }
 
     fn new(_project: &Project) -> Result<Self> {
@@ -53,16 +54,17 @@ impl PluginTransform for Plugin {
             return Ok(());
         }
 
-        // Update each service to point to our locally cloned repos.
+        // Update each service to point to our locally cloned sources.
         let project = ctx.project;
         for service in &mut file.services.values_mut() {
 
-            // Handle the main repo associated with this service.
+            // Handle the main source associated with this service.
             if let Some(context) = try!(service.context()).cloned() {
-                if let Some(repo) = project.repos().find_by_context(&context) {
-                    if repo.is_available_locally(project) {
-                        // Build an absolute path to our repo's clone directory.
-                        let path = try!(repo.path(project).to_absolute());
+                if let Some(source) = project.sources().find_by_context(&context) {
+                    if source.is_available_locally(project) {
+                        // Build an absolute path to our source's local
+                        // directory.
+                        let path = try!(source.path(project).to_absolute());
 
                         // Mount the local build directory inside the
                         // container.
@@ -78,20 +80,20 @@ impl PluginTransform for Plugin {
                 }
             }
 
-            // Look for library repos as well.
+            // Look for library sources as well.
             for (label, mount_as) in &service.labels {
                 let prefix = "io.fdy.cage.lib.";
                 if label.starts_with(prefix) {
                     let key = &label[prefix.len()..];
-                    let repo = try!(project.repos()
+                    let source = try!(project.sources()
                         .find_by_lib_key(key)
                         .ok_or_else(|| {
                             err!("no library <{}> defined in `config/libraries.yml`",
                                  key)
                         }));
 
-                    if repo.is_available_locally(project) {
-                        let path = try!(repo.path(project).to_absolute());
+                    if source.is_available_locally(project) {
+                        let path = try!(source.path(project).to_absolute());
                         let mount = dc::VolumeMount::host(&path, mount_as);
                         service.volumes.push(dc::value(mount));
                     }

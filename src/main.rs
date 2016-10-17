@@ -223,7 +223,7 @@ fn run(matches: &clap::ArgMatches) -> Result<()> {
             let cmd = sc_matches.to_exec_command();
             try!(proj.test(&runner, &ovr, &service, cmd.as_ref()));
         }
-        "repo" => try!(run_repo(&runner, &proj, &ovr, sc_matches)),
+        "source" => try!(run_source(&runner, &proj, &ovr, sc_matches)),
         "generate" => try!(run_generate(&runner, &proj, &ovr, sc_matches)),
         "export" => {
             let dir = sc_matches.value_of("DIR").unwrap();
@@ -235,12 +235,12 @@ fn run(matches: &clap::ArgMatches) -> Result<()> {
     Ok(())
 }
 
-/// Our `repo` subcommand.
-fn run_repo<R>(runner: &R,
-               proj: &cage::Project,
-               ovr: &cage::Override,
-               matches: &clap::ArgMatches)
-               -> Result<()>
+/// Our `source` subcommand.
+fn run_source<R>(runner: &R,
+                 proj: &cage::Project,
+                 ovr: &cage::Override,
+                 matches: &clap::ArgMatches)
+                 -> Result<()>
     where R: CommandRunner
 {
     // We know that we always have a subcommand because our `cli.yml`
@@ -250,10 +250,10 @@ fn run_repo<R>(runner: &R,
 
     // Dispatch our subcommand.
     match sc_name {
-        "list" => try!(proj.repo_list(runner)),
+        "ls" => try!(proj.source_list(runner)),
         "clone" => {
             let alias = sc_matches.value_of("ALIAS").unwrap();
-            try!(proj.repo_clone(runner, alias));
+            try!(proj.source_clone(runner, alias));
             // Regenerate our output now that we've cloned.
             try!(proj.output(ovr));
         }

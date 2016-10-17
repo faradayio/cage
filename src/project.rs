@@ -23,7 +23,7 @@ use hook::HookManager;
 use ovr::Override;
 use plugins::{self, Operation};
 use pod::{Pod, PodType};
-use repos::Repos;
+use sources::Sources;
 use rustc_serialize::json::{Json, ToJson};
 use serde_helpers::deserialize_parsable_opt;
 use service_locations::ServiceLocations;
@@ -75,8 +75,8 @@ pub struct Project {
     /// All the overrides associated with this project.
     overrides: Vec<Override>,
 
-    /// All the repositories associated with this project.
-    repos: Repos,
+    /// All the source trees associated with this project.
+    sources: Sources,
 
     /// User-specific hooks that we can call before or after certain actions.
     hooks: HookManager,
@@ -102,7 +102,7 @@ impl Project {
         let overrides = try!(Project::find_overrides(root_dir));
         let pods = try!(Project::find_pods(root_dir, &overrides));
         let service_locations = ServiceLocations::new(&pods);
-        let repos = try!(Repos::new(&root_dir, &pods));
+        let sources = try!(Sources::new(&root_dir, &pods));
         let config_path = root_dir.join(PROJECT_CONFIG_PATH.deref());
         let config = try!(ProjectConfig::new(&config_path));
         let absolute_root = try!(root_dir.to_absolute());
@@ -119,7 +119,7 @@ impl Project {
             pods: pods,
             service_locations: service_locations,
             overrides: overrides,
-            repos: repos,
+            sources: sources,
             hooks: try!(HookManager::new(root_dir.join("config/hooks"))),
             config: config,
             default_tags: None,
@@ -228,7 +228,7 @@ impl Project {
     }
 
     /// The source directory of this project, where we can put cloned git
-    /// repositories.
+    /// repositories, and where our local source trees are typically found.
     pub fn src_dir(&self) -> &Path {
         &self.src_dir
     }
@@ -313,10 +313,10 @@ impl Project {
         self.overrides().find(|ovr| ovr.name() == name)
     }
 
-    /// Return the collection of git repositories associated with this
-    /// project.
-    pub fn repos(&self) -> &Repos {
-        &self.repos
+    /// Return the collection of source trees associated with this project,
+    /// including both extern git repositories and local source trees.
+    pub fn sources(&self) -> &Sources {
+        &self.sources
     }
 
     /// Get our available hooks.
@@ -538,15 +538,15 @@ fn output_applies_expected_transforms() {
     let mut proj = Project::from_example("hello").unwrap();
     proj.set_default_tags(default_tags);
     let ovr = proj.ovr("development").unwrap();
-    let repo = proj.repos().find_by_alias("dockercloud-hello-world").unwrap();
-    repo.fake_clone_source(&proj).unwrap();
+    let source = proj.sources().find_by_alias("dockercloud-hello-world").unwrap();
+    source.fake_clone_source(&proj).unwrap();
     proj.output(ovr).unwrap();
 
     // Load the generated file and look at the `web` service we cloned.
     let frontend_file = proj.output_dir().join("pods/frontend.yml");
     let file = dc::File::read_from_path(frontend_file).unwrap();
     let web = file.services.get("web").unwrap();
-    let src_path = repo.path(&proj).to_absolute().unwrap();
+    let src_path = source.path(&proj).to_absolute().unwrap();
 
     // Make sure our `build` entry has been pointed at the local source
     // directory.
@@ -577,17 +577,17 @@ fn output_mounts_cloned_libraries() {
 
     let proj = Project::from_example("rails_hello").unwrap();
     let ovr = proj.ovr("development").unwrap();
-    let repo = proj.repos()
+    let source = proj.sources()
         .find_by_lib_key("coffee_rails")
         .expect("should define lib coffee_rails");
-    repo.fake_clone_source(&proj).unwrap();
+    source.fake_clone_source(&proj).unwrap();
     proj.output(ovr).unwrap();
 
     // Load the generated file and look at the `web` service we cloned.
     let frontend_file = proj.output_dir().join("pods/frontend.yml");
     let file = dc::File::read_from_path(frontend_file).unwrap();
     let web = file.services.get("web").unwrap();
-    let src_path = repo.path(&proj).to_absolute().unwrap();
+    let src_path = source.path(&proj).to_absolute().unwrap();
 
     // Make sure the local source directory is being mounted into the
     // container.
@@ -642,8 +642,8 @@ fn export_applies_expected_transforms() {
 
     let proj = Project::from_example("hello").unwrap();
     let ovr = proj.ovr("development").unwrap();
-    let repo = proj.repos().find_by_alias("dockercloud-hello-world").unwrap();
-    repo.fake_clone_source(&proj).unwrap();
+    let source = proj.sources().find_by_alias("dockercloud-hello-world").unwrap();
+    source.fake_clone_source(&proj).unwrap();
     let export_dir = proj.output_dir.join("hello_export");
     proj.export(ovr, &export_dir).unwrap();
 

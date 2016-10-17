@@ -131,7 +131,7 @@ impl Manager {
 
         try!(manager.register_transform::<transform::abs_path::Plugin>(proj));
         try!(manager.register_transform::<transform::default_tags::Plugin>(proj));
-        try!(manager.register_transform::<transform::repos::Plugin>(proj));
+        try!(manager.register_transform::<transform::sources::Plugin>(proj));
         try!(manager.register_transform::<transform::secrets::Plugin>(proj));
         try!(manager.register_transform::<transform::vault::Plugin>(proj));
 

@@ -104,8 +104,8 @@ pub use errors::*;
 pub use ovr::Override;
 pub use project::{PodOrService, Project, ProjectConfig, Pods, Overrides};
 pub use pod::{Pod, PodType, OverrideFiles, AllFiles};
-pub use repos::{Repos, Repo};
-pub use repos::Iter as RepoIter;
+pub use sources::{Sources, Source};
+pub use sources::Iter as SourceIter;
 pub use util::err;
 
 #[macro_use]
@@ -123,9 +123,9 @@ mod ovr;
 pub mod plugins;
 mod pod;
 mod project;
-mod repos;
 mod serde_helpers;
 mod service_locations;
+mod sources;
 mod template;
 
 /// Include raw data files into our binary at compile time using the
