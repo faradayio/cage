@@ -22,7 +22,7 @@ impl CommandSource for Project {
         for source in self.sources().iter() {
             println!("{:25} {}", source.alias(), source.context());
             if source.is_available_locally(self) {
-                let path = try!(source.path(self)
+                let path = try!(try!(source.path(self).canonicalize())
                         .strip_prefix(self.root_dir()))
                     .to_owned();
                 println!("  Available at {}", path.display());
