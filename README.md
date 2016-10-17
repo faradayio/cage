@@ -64,7 +64,7 @@ repositories:
 ```sh
 $ cage new myapp
 $ cd myapp
-$ cage repo list
+$ cage source ls
 rails_hello               https://github.com/faradayio/rails_hello.git
 ```
 
@@ -77,8 +77,8 @@ $ cage pull
 Trying checking out the source code for an image locally:
 
 ```sh
-$ cage repo clone rails_hello
-$ cage repo list
+$ cage source clone rails_hello
+$ cage source ls
 rails_hello               https://github.com/faradayio/rails_hello.git
   Cloned at src/rails_hello
 ```
