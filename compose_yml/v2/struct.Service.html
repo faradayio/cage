@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `Service` struct in crate `compose_yml`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, Service">
+
+    <title>compose_yml::v2::Service - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'><a href='../index.html'>compose_yml</a>::<wbr><a href='index.html'>v2</a></p><script>window.sidebarCurrent = {name: 'Service', ty: 'struct', relpath: ''};</script><script defer src="sidebar-items.js"></script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content struct">
+<h1 class='fqn'><span class='in-band'>Struct <a href='../index.html'>compose_yml</a>::<wbr><a href='index.html'>v2</a>::<wbr><a class='struct' href=''>Service</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a id='src-3485' class='srclink' href='../../src/compose_yml/home/travis/build/faradayio/cage/target/debug/build/compose_yml-fee2806b71cd4973/out/v2/service.rs.html#2497-2616' title='goto source code'>[src]</a></span></h1>
+<pre class='rust struct'>pub struct Service {
+    pub build: <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.Build.html' title='compose_yml::v2::Build'>Build</a>&gt;,
+    pub cap_add: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>&gt;&gt;,
+    pub cap_drop: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>&gt;&gt;,
+    pub command: <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='enum' href='../../compose_yml/v2/enum.CommandLine.html' title='compose_yml::v2::CommandLine'>CommandLine</a>&gt;,
+    pub cgroup_parent: <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>&gt;&gt;,
+    pub container_name: <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>&gt;&gt;,
+    pub devices: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.AliasedName.html' title='compose_yml::v2::AliasedName'>AliasedName</a>&gt;&gt;,
+    pub depends_on: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>&gt;&gt;,
+    pub dns: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>&gt;&gt;,
+    pub dns_search: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>&gt;&gt;,
+    pub tmpfs: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>&gt;&gt;,
+    pub entrypoint: <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='enum' href='../../compose_yml/v2/enum.CommandLine.html' title='compose_yml::v2::CommandLine'>CommandLine</a>&gt;,
+    pub env_files: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/std/path/struct.PathBuf.html' title='std::path::PathBuf'>PathBuf</a>&gt;&gt;,
+    pub environment: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/btree/map/struct.BTreeMap.html' title='collections::btree::map::BTreeMap'>BTreeMap</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>,&nbsp;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>&gt;,
+    pub expose: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>&gt;&gt;,
+    pub extends: <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.Extends.html' title='compose_yml::v2::Extends'>Extends</a>&gt;,
+    pub external_links: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.AliasedName.html' title='compose_yml::v2::AliasedName'>AliasedName</a>&gt;&gt;,
+    pub extra_hosts: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.HostMapping.html' title='compose_yml::v2::HostMapping'>HostMapping</a>&gt;&gt;,
+    pub image: <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.Image.html' title='compose_yml::v2::Image'>Image</a>&gt;&gt;,
+    pub labels: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/btree/map/struct.BTreeMap.html' title='collections::btree::map::BTreeMap'>BTreeMap</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>,&nbsp;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>&gt;,
+    pub links: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.AliasedName.html' title='compose_yml::v2::AliasedName'>AliasedName</a>&gt;&gt;,
+    pub logging: <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.Logging.html' title='compose_yml::v2::Logging'>Logging</a>&gt;,
+    pub network_mode: <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='enum' href='../../compose_yml/v2/enum.NetworkMode.html' title='compose_yml::v2::NetworkMode'>NetworkMode</a>&gt;&gt;,
+    pub networks: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/btree/map/struct.BTreeMap.html' title='collections::btree::map::BTreeMap'>BTreeMap</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>,&nbsp;<a class='struct' href='../../compose_yml/v2/struct.NetworkInterface.html' title='compose_yml::v2::NetworkInterface'>NetworkInterface</a>&gt;,
+    pub pid: <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='enum' href='../../compose_yml/v2/enum.PidMode.html' title='compose_yml::v2::PidMode'>PidMode</a>&gt;&gt;,
+    pub ports: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.PortMapping.html' title='compose_yml::v2::PortMapping'>PortMapping</a>&gt;&gt;,
+    pub security_opt: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>&gt;&gt;,
+    pub stop_signal: <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>&gt;&gt;,
+    pub volumes: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.VolumeMount.html' title='compose_yml::v2::VolumeMount'>VolumeMount</a>&gt;&gt;,
+    pub volumes_from: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.VolumesFrom.html' title='compose_yml::v2::VolumesFrom'>VolumesFrom</a>&gt;&gt;,
+    pub volume_driver: <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>&gt;&gt;,
+    pub cpu_shares: <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u32.html'>u32</a>&gt;,
+    pub cpu_quota: <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u32.html'>u32</a>&gt;,
+    pub domainname: <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>&gt;&gt;,
+    pub hostname: <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>&gt;&gt;,
+    pub ipc: <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='enum' href='../../compose_yml/v2/enum.IpcMode.html' title='compose_yml::v2::IpcMode'>IpcMode</a>&gt;&gt;,
+    pub mac_address: <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>&gt;&gt;,
+    pub mem_limit: <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.MemorySize.html' title='compose_yml::v2::MemorySize'>MemorySize</a>&gt;&gt;,
+    pub memswap_limit: <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.MemorySize.html' title='compose_yml::v2::MemorySize'>MemorySize</a>&gt;&gt;,
+    pub privileged: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a>,
+    pub restart: <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='enum' href='../../compose_yml/v2/enum.RestartMode.html' title='compose_yml::v2::RestartMode'>RestartMode</a>&gt;&gt;,
+    pub shm_size: <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.MemorySize.html' title='compose_yml::v2::MemorySize'>MemorySize</a>&gt;&gt;,
+    pub stdin_open: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a>,
+    pub tty: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a>,
+    pub user: <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>&gt;&gt;,
+    pub working_dir: <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/std/path/struct.PathBuf.html' title='std::path::PathBuf'>PathBuf</a>&gt;&gt;,
+    // some fields omitted
+}</pre><div class='docblock'><p>A service which will be managed by <code>docker-compose</code>.</p>
+</div><h2 class='fields'>Fields</h2><span id='structfield.build' class='structfield'>
+                           <span id='build.v' class='invisible'>
+                           <code>build: <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.Build.html' title='compose_yml::v2::Build'>Build</a>&gt;</code>
+                           </span></span><span class='stab '></span><div class='docblock'><p>How to build an image for this service.</p>
+</div><span id='structfield.cap_add' class='structfield'>
+                           <span id='cap_add.v' class='invisible'>
+                           <code>cap_add: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>&gt;&gt;</code>
+                           </span></span><span class='stab '></span><div class='docblock'><p>A list of capability names to grant to this container.</p>
+</div><span id='structfield.cap_drop' class='structfield'>
+                           <span id='cap_drop.v' class='invisible'>
+                           <code>cap_drop: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>&gt;&gt;</code>
+                           </span></span><span class='stab '></span><div class='docblock'><p>A list of capability names to revoke from this container.</p>
+</div><span id='structfield.command' class='structfield'>
+                           <span id='command.v' class='invisible'>
+                           <code>command: <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='enum' href='../../compose_yml/v2/enum.CommandLine.html' title='compose_yml::v2::CommandLine'>CommandLine</a>&gt;</code>
+                           </span></span><span class='stab '></span><div class='docblock'><p>The command-line to run when launching the container.</p>
+</div><span id='structfield.cgroup_parent' class='structfield'>
+                           <span id='cgroup_parent.v' class='invisible'>
+                           <code>cgroup_parent: <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>&gt;&gt;</code>
+                           </span></span><span class='stab '></span><div class='docblock'><p>The name of an optional parent cgroup.  (Mysterious.)</p>
+</div><span id='structfield.container_name' class='structfield'>
+                           <span id='container_name.v' class='invisible'>
+                           <code>container_name: <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>&gt;&gt;</code>
+                           </span></span><span class='stab '></span><div class='docblock'><p>An optional (global, non-scalable) container name.</p>
+</div><span id='structfield.devices' class='structfield'>
+                           <span id='devices.v' class='invisible'>
+                           <code>devices: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.AliasedName.html' title='compose_yml::v2::AliasedName'>AliasedName</a>&gt;&gt;</code>
+                           </span></span><span class='stab '></span><div class='docblock'><p>A list of devices to map into this container.</p>
+
+<p>TODO LOW: Add DevicePermissions and make both host and container
+mandatory.</p>
+</div><span id='structfield.depends_on' class='structfield'>
+                           <span id='depends_on.v' class='invisible'>
+                           <code>depends_on: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>&gt;&gt;</code>
+                           </span></span><span class='stab '></span><div class='docblock'><p>A list of other containers to start first.</p>
+</div><span id='structfield.dns' class='structfield'>
+                           <span id='dns.v' class='invisible'>
+                           <code>dns: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>&gt;&gt;</code>
+                           </span></span><span class='stab '></span><div class='docblock'><p>DNS servers.</p>
+</div><span id='structfield.dns_search' class='structfield'>
+                           <span id='dns_search.v' class='invisible'>
+                           <code>dns_search: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>&gt;&gt;</code>
+                           </span></span><span class='stab '></span><div class='docblock'><p>Domains to search for hostnames.</p>
+</div><span id='structfield.tmpfs' class='structfield'>
+                           <span id='tmpfs.v' class='invisible'>
+                           <code>tmpfs: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>&gt;&gt;</code>
+                           </span></span><span class='stab '></span><div class='docblock'><p>Locations to mount temporary file systems.</p>
+</div><span id='structfield.entrypoint' class='structfield'>
+                           <span id='entrypoint.v' class='invisible'>
+                           <code>entrypoint: <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='enum' href='../../compose_yml/v2/enum.CommandLine.html' title='compose_yml::v2::CommandLine'>CommandLine</a>&gt;</code>
+                           </span></span><span class='stab '></span><div class='docblock'><p>The entrypoint for the container (wraps <code>command</code>, basically).</p>
+</div><span id='structfield.env_files' class='structfield'>
+                           <span id='env_files.v' class='invisible'>
+                           <code>env_files: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/std/path/struct.PathBuf.html' title='std::path::PathBuf'>PathBuf</a>&gt;&gt;</code>
+                           </span></span><span class='stab '></span><div class='docblock'><p>Environment files used to supply variables to the container.  Note
+that this is <code>env_file</code> in the underlying Docker format, but the
+singular form looks weird at the API level.</p>
+</div><span id='structfield.environment' class='structfield'>
+                           <span id='environment.v' class='invisible'>
+                           <code>environment: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/btree/map/struct.BTreeMap.html' title='collections::btree::map::BTreeMap'>BTreeMap</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>,&nbsp;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>&gt;</code>
+                           </span></span><span class='stab '></span><div class='docblock'><p>Environment variables and values to supply to the container.</p>
+</div><span id='structfield.expose' class='structfield'>
+                           <span id='expose.v' class='invisible'>
+                           <code>expose: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>&gt;&gt;</code>
+                           </span></span><span class='stab '></span><div class='docblock'><p>Expose a list of ports to any containers that link to us.</p>
+</div><span id='structfield.extends' class='structfield'>
+                           <span id='extends.v' class='invisible'>
+                           <code>extends: <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.Extends.html' title='compose_yml::v2::Extends'>Extends</a>&gt;</code>
+                           </span></span><span class='stab '></span><div class='docblock'><p>Extend another service, either in this file or another.</p>
+</div><span id='structfield.external_links' class='structfield'>
+                           <span id='external_links.v' class='invisible'>
+                           <code>external_links: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.AliasedName.html' title='compose_yml::v2::AliasedName'>AliasedName</a>&gt;&gt;</code>
+                           </span></span><span class='stab '></span><div class='docblock'><p>Links to external containers.</p>
+</div><span id='structfield.extra_hosts' class='structfield'>
+                           <span id='extra_hosts.v' class='invisible'>
+                           <code>extra_hosts: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.HostMapping.html' title='compose_yml::v2::HostMapping'>HostMapping</a>&gt;&gt;</code>
+                           </span></span><span class='stab '></span><div class='docblock'><p>Mappings for extra hosts in /etc/hosts.</p>
+</div><span id='structfield.image' class='structfield'>
+                           <span id='image.v' class='invisible'>
+                           <code>image: <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.Image.html' title='compose_yml::v2::Image'>Image</a>&gt;&gt;</code>
+                           </span></span><span class='stab '></span><div class='docblock'><p>The name of the image to build or pull for this container.</p>
+</div><span id='structfield.labels' class='structfield'>
+                           <span id='labels.v' class='invisible'>
+                           <code>labels: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/btree/map/struct.BTreeMap.html' title='collections::btree::map::BTreeMap'>BTreeMap</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>,&nbsp;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>&gt;</code>
+                           </span></span><span class='stab '></span><div class='docblock'><p>Docker labels for this container, specifying various sorts of
+custom metadata.</p>
+
+<p>TODO MED: Deal with RawOr in deserialize_map_or_key_value_list.</p>
+</div><span id='structfield.links' class='structfield'>
+                           <span id='links.v' class='invisible'>
+                           <code>links: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.AliasedName.html' title='compose_yml::v2::AliasedName'>AliasedName</a>&gt;&gt;</code>
+                           </span></span><span class='stab '></span><div class='docblock'><p>Links to other services in this file.</p>
+</div><span id='structfield.logging' class='structfield'>
+                           <span id='logging.v' class='invisible'>
+                           <code>logging: <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.Logging.html' title='compose_yml::v2::Logging'>Logging</a>&gt;</code>
+                           </span></span><span class='stab '></span><div class='docblock'><p>Logging options for this container.</p>
+</div><span id='structfield.network_mode' class='structfield'>
+                           <span id='network_mode.v' class='invisible'>
+                           <code>network_mode: <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='enum' href='../../compose_yml/v2/enum.NetworkMode.html' title='compose_yml::v2::NetworkMode'>NetworkMode</a>&gt;&gt;</code>
+                           </span></span><span class='stab '></span><div class='docblock'><p>What networking mode should we use?</p>
+</div><span id='structfield.networks' class='structfield'>
+                           <span id='networks.v' class='invisible'>
+                           <code>networks: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/btree/map/struct.BTreeMap.html' title='collections::btree::map::BTreeMap'>BTreeMap</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>,&nbsp;<a class='struct' href='../../compose_yml/v2/struct.NetworkInterface.html' title='compose_yml::v2::NetworkInterface'>NetworkInterface</a>&gt;</code>
+                           </span></span><span class='stab '></span><div class='docblock'><p>Networks to which this container is attached.</p>
+</div><span id='structfield.pid' class='structfield'>
+                           <span id='pid.v' class='invisible'>
+                           <code>pid: <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='enum' href='../../compose_yml/v2/enum.PidMode.html' title='compose_yml::v2::PidMode'>PidMode</a>&gt;&gt;</code>
+                           </span></span><span class='stab '></span><div class='docblock'><p>What PID namespacing mode should we use?</p>
+</div><span id='structfield.ports' class='structfield'>
+                           <span id='ports.v' class='invisible'>
+                           <code>ports: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.PortMapping.html' title='compose_yml::v2::PortMapping'>PortMapping</a>&gt;&gt;</code>
+                           </span></span><span class='stab '></span><div class='docblock'><p>What ports do we want to map to our host system?</p>
+</div><span id='structfield.security_opt' class='structfield'>
+                           <span id='security_opt.v' class='invisible'>
+                           <code>security_opt: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>&gt;&gt;</code>
+                           </span></span><span class='stab '></span><div class='docblock'><p>Security options for AppArmor or SELinux.</p>
+</div><span id='structfield.stop_signal' class='structfield'>
+                           <span id='stop_signal.v' class='invisible'>
+                           <code>stop_signal: <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>&gt;&gt;</code>
+                           </span></span><span class='stab '></span><div class='docblock'><p>The name of the Unix signal which will be sent to stop this
+container.  Defaults to SIGTERM if not specified.</p>
+</div><span id='structfield.volumes' class='structfield'>
+                           <span id='volumes.v' class='invisible'>
+                           <code>volumes: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.VolumeMount.html' title='compose_yml::v2::VolumeMount'>VolumeMount</a>&gt;&gt;</code>
+                           </span></span><span class='stab '></span><div class='docblock'><p>Volumes associated with this service.</p>
+</div><span id='structfield.volumes_from' class='structfield'>
+                           <span id='volumes_from.v' class='invisible'>
+                           <code>volumes_from: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.VolumesFrom.html' title='compose_yml::v2::VolumesFrom'>VolumesFrom</a>&gt;&gt;</code>
+                           </span></span><span class='stab '></span><div class='docblock'><p>Other places to get volumes from.</p>
+</div><span id='structfield.volume_driver' class='structfield'>
+                           <span id='volume_driver.v' class='invisible'>
+                           <code>volume_driver: <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>&gt;&gt;</code>
+                           </span></span><span class='stab '></span><div class='docblock'><p>This will only apply to volumes with no host path and no mapping to
+a volume declared under the <code>volumes</code> key at the top level of this
+file.</p>
+</div><span id='structfield.cpu_shares' class='structfield'>
+                           <span id='cpu_shares.v' class='invisible'>
+                           <code>cpu_shares: <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u32.html'>u32</a>&gt;</code>
+                           </span></span><span class='stab '></span><div class='docblock'><p>The relative number of CPU shares to give to this container.</p>
+</div><span id='structfield.cpu_quota' class='structfield'>
+                           <span id='cpu_quota.v' class='invisible'>
+                           <code>cpu_quota: <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u32.html'>u32</a>&gt;</code>
+                           </span></span><span class='stab '></span><div class='docblock'><p>Limit the CFS CPU quota.</p>
+</div><span id='structfield.domainname' class='structfield'>
+                           <span id='domainname.v' class='invisible'>
+                           <code>domainname: <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>&gt;&gt;</code>
+                           </span></span><span class='stab '></span><div class='docblock'><p>The domain name to use for this container.</p>
+</div><span id='structfield.hostname' class='structfield'>
+                           <span id='hostname.v' class='invisible'>
+                           <code>hostname: <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>&gt;&gt;</code>
+                           </span></span><span class='stab '></span><div class='docblock'><p>The hostname to use for this container.</p>
+</div><span id='structfield.ipc' class='structfield'>
+                           <span id='ipc.v' class='invisible'>
+                           <code>ipc: <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='enum' href='../../compose_yml/v2/enum.IpcMode.html' title='compose_yml::v2::IpcMode'>IpcMode</a>&gt;&gt;</code>
+                           </span></span><span class='stab '></span><div class='docblock'><p>What IPC namespacing mode should we use?</p>
+</div><span id='structfield.mac_address' class='structfield'>
+                           <span id='mac_address.v' class='invisible'>
+                           <code>mac_address: <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>&gt;&gt;</code>
+                           </span></span><span class='stab '></span><div class='docblock'><p>The MAC address to use for this container&#39;s network interface.</p>
+</div><span id='structfield.mem_limit' class='structfield'>
+                           <span id='mem_limit.v' class='invisible'>
+                           <code>mem_limit: <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.MemorySize.html' title='compose_yml::v2::MemorySize'>MemorySize</a>&gt;&gt;</code>
+                           </span></span><span class='stab '></span><div class='docblock'><p>The maximum amount of memory which this container may use, in
+bytes.</p>
+</div><span id='structfield.memswap_limit' class='structfield'>
+                           <span id='memswap_limit.v' class='invisible'>
+                           <code>memswap_limit: <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.MemorySize.html' title='compose_yml::v2::MemorySize'>MemorySize</a>&gt;&gt;</code>
+                           </span></span><span class='stab '></span><div class='docblock'><p>The maximum amount of swap space which this container may use, in
+bytes.</p>
+</div><span id='structfield.privileged' class='structfield'>
+                           <span id='privileged.v' class='invisible'>
+                           <code>privileged: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a></code>
+                           </span></span><span class='stab '></span><div class='docblock'><p>The MAC address to use for this container&#39;s network interface.</p>
+</div><span id='structfield.restart' class='structfield'>
+                           <span id='restart.v' class='invisible'>
+                           <code>restart: <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='enum' href='../../compose_yml/v2/enum.RestartMode.html' title='compose_yml::v2::RestartMode'>RestartMode</a>&gt;&gt;</code>
+                           </span></span><span class='stab '></span><div class='docblock'><p>What should we do when the container exits?</p>
+</div><span id='structfield.shm_size' class='structfield'>
+                           <span id='shm_size.v' class='invisible'>
+                           <code>shm_size: <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.MemorySize.html' title='compose_yml::v2::MemorySize'>MemorySize</a>&gt;&gt;</code>
+                           </span></span><span class='stab '></span><div class='docblock'><p>The amount of shared memory to allocate for this container, in
+bytes.</p>
+</div><span id='structfield.stdin_open' class='structfield'>
+                           <span id='stdin_open.v' class='invisible'>
+                           <code>stdin_open: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a></code>
+                           </span></span><span class='stab '></span><div class='docblock'><p>Should STDIN be left open when running the container?  Corresponds
+to <code>docker run -i</code>.</p>
+</div><span id='structfield.tty' class='structfield'>
+                           <span id='tty.v' class='invisible'>
+                           <code>tty: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a></code>
+                           </span></span><span class='stab '></span><div class='docblock'><p>Should a TTY be be allocated for the container?  Corresponds to
+<code>docker run -t</code>.</p>
+</div><span id='structfield.user' class='structfield'>
+                           <span id='user.v' class='invisible'>
+                           <code>user: <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>&gt;&gt;</code>
+                           </span></span><span class='stab '></span><div class='docblock'><p>The user name (or UID) of the user under which to execute the
+container&#39;s command.  May optionally be followed by <code>:group</code> or
+<code>:gid</code> to specific the group or group ID.</p>
+
+<p>TODO LOW: Parse out optional group field separately?</p>
+</div><span id='structfield.working_dir' class='structfield'>
+                           <span id='working_dir.v' class='invisible'>
+                           <code>working_dir: <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='struct' href='../../compose_yml/v2/struct.RawOr.html' title='compose_yml::v2::RawOr'>RawOr</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/std/path/struct.PathBuf.html' title='std::path::PathBuf'>PathBuf</a>&gt;&gt;</code>
+                           </span></span><span class='stab '></span><div class='docblock'><p>The working directory to use for this container.</p>
+</div><h2 id='methods'>Methods</h2><h3 class='impl'><span class='in-band'><code>impl <a class='struct' href='../../compose_yml/v2/struct.Service.html' title='compose_yml::v2::Service'>Service</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-3936' class='srclink' href='../../src/compose_yml/home/travis/build/faradayio/cage/target/debug/build/compose_yml-fee2806b71cd4973/out/v2/service.rs.html#2630-2646' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.inline_all' class='method'><span id='inline_all.v' class='invisible'><code>fn <a href='#method.inline_all' class='fnname'>inline_all</a>(&amp;mut self, base: &amp;<a class='struct' href='https://doc.rust-lang.org/nightly/std/path/struct.Path.html' title='std::path::Path'>Path</a>) -&gt; <a class='type' href='../../compose_yml/errors/type.Result.html' title='compose_yml::errors::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>&gt;</code></span></h4>
+<div class='docblock'><p>Inline all our external resources, such as <code>env_files</code>, looking up
+paths relative to <code>base</code>.</p>
+</div></div><h2 id='implementations'>Trait Implementations</h2><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='https://doc.rust-lang.org/nightly/core/default/trait.Default.html' title='core::default::Default'>Default</a> for <a class='struct' href='../../compose_yml/v2/struct.Service.html' title='compose_yml::v2::Service'>Service</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-3533' class='srclink' href='../../src/compose_yml/home/travis/build/faradayio/cage/target/debug/build/compose_yml-fee2806b71cd4973/out/v2/service.rs.html#2496' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.default' class='method'><span id='default.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/default/trait.Default.html#tymethod.default' class='fnname'>default</a>() -&gt; <a class='struct' href='../../compose_yml/v2/struct.Service.html' title='compose_yml::v2::Service'>Service</a></code></span></h4>
+<div class='docblock'><p>Returns the &quot;default value&quot; for a type. <a href="https://doc.rust-lang.org/nightly/core/default/trait.Default.html#tymethod.default">Read more</a></p>
+</div></div><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='https://doc.rust-lang.org/nightly/core/cmp/trait.Eq.html' title='core::cmp::Eq'>Eq</a> for <a class='struct' href='../../compose_yml/v2/struct.Service.html' title='compose_yml::v2::Service'>Service</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-3535' class='srclink' href='../../src/compose_yml/home/travis/build/faradayio/cage/target/debug/build/compose_yml-fee2806b71cd4973/out/v2/service.rs.html#2496' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'></div><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='https://doc.rust-lang.org/nightly/core/cmp/trait.PartialEq.html' title='core::cmp::PartialEq'>PartialEq</a> for <a class='struct' href='../../compose_yml/v2/struct.Service.html' title='compose_yml::v2::Service'>Service</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-3538' class='srclink' href='../../src/compose_yml/home/travis/build/faradayio/cage/target/debug/build/compose_yml-fee2806b71cd4973/out/v2/service.rs.html#2496' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.eq' class='method'><span id='eq.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/cmp/trait.PartialEq.html#tymethod.eq' class='fnname'>eq</a>(&amp;self, __arg_0: &amp;<a class='struct' href='../../compose_yml/v2/struct.Service.html' title='compose_yml::v2::Service'>Service</a>) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a></code></span></h4>
+<div class='docblock'><p>This method tests for <code>self</code> and <code>other</code> values to be equal, and is used by <code>==</code>. <a href="https://doc.rust-lang.org/nightly/core/cmp/trait.PartialEq.html#tymethod.eq">Read more</a></p>
+</div><h4 id='method.ne' class='method'><span id='ne.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/cmp/trait.PartialEq.html#method.ne' class='fnname'>ne</a>(&amp;self, __arg_0: &amp;<a class='struct' href='../../compose_yml/v2/struct.Service.html' title='compose_yml::v2::Service'>Service</a>) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a></code></span></h4>
+<div class='docblock'><p>This method tests for <code>!=</code>.</p>
+</div></div><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html' title='core::clone::Clone'>Clone</a> for <a class='struct' href='../../compose_yml/v2/struct.Service.html' title='compose_yml::v2::Service'>Service</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-3733' class='srclink' href='../../src/compose_yml/home/travis/build/faradayio/cage/target/debug/build/compose_yml-fee2806b71cd4973/out/v2/service.rs.html#2496' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.clone' class='method'><span id='clone.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#tymethod.clone' class='fnname'>clone</a>(&amp;self) -&gt; <a class='struct' href='../../compose_yml/v2/struct.Service.html' title='compose_yml::v2::Service'>Service</a></code></span></h4>
+<div class='docblock'><p>Returns a copy of the value. <a href="https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#tymethod.clone">Read more</a></p>
+</div><h4 id='method.clone_from' class='method'><span id='clone_from.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#method.clone_from' class='fnname'>clone_from</a>(&amp;mut self, source: &amp;Self)</code><div class='since' title='Stable since Rust version 1.0.0'>1.0.0</div></span></h4>
+<div class='docblock'><p>Performs copy-assignment from <code>source</code>. <a href="https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#method.clone_from">Read more</a></p>
+</div></div><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html' title='core::fmt::Debug'>Debug</a> for <a class='struct' href='../../compose_yml/v2/struct.Service.html' title='compose_yml::v2::Service'>Service</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-3783' class='srclink' href='../../src/compose_yml/home/travis/build/faradayio/cage/target/debug/build/compose_yml-fee2806b71cd4973/out/v2/service.rs.html#2496' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.fmt' class='method'><span id='fmt.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html#tymethod.fmt' class='fnname'>fmt</a>(&amp;self, __arg_0: &amp;mut <a class='struct' href='https://doc.rust-lang.org/nightly/core/fmt/struct.Formatter.html' title='core::fmt::Formatter'>Formatter</a>) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/core/fmt/type.Result.html' title='core::fmt::Result'>Result</a></code></span></h4>
+<div class='docblock'><p>Formats the value using the given formatter.</p>
+</div></div><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='../../compose_yml/v2/trait.InterpolateAll.html' title='compose_yml::v2::InterpolateAll'>InterpolateAll</a> for <a class='struct' href='../../compose_yml/v2/struct.Service.html' title='compose_yml::v2::Service'>Service</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-3835' class='srclink' href='../../src/compose_yml/v2/interpolation.rs.html#655-661' title='goto source code'>[src]</a></span></h3>
+<div class='docblock'><p>Recursive merge all fields in the structure.</p>
+</div><div class='impl-items'><h4 id='method.interpolate_all' class='method'><span id='interpolate_all.v' class='invisible'><code>fn <a href='../../compose_yml/v2/trait.InterpolateAll.html#method.interpolate_all' class='fnname'>interpolate_all</a>(&amp;mut self) -&gt; <a class='type' href='../../compose_yml/errors/type.Result.html' title='compose_yml::errors::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>&gt;</code></span></h4>
+<div class='docblock'><p>Recursively walk over this type, interpolating all <code>RawOr</code> values containing references to the environment.  The default implementation leaves a value unchanged. <a href="../../compose_yml/v2/trait.InterpolateAll.html#method.interpolate_all">Read more</a></p>
+</div></div><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='../../compose_yml/v2/trait.MergeOverride.html' title='compose_yml::v2::MergeOverride'>MergeOverride</a> for <a class='struct' href='../../compose_yml/v2/struct.Service.html' title='compose_yml::v2::Service'>Service</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-3932' class='srclink' href='../../src/compose_yml/v2/merge_override.rs.html#122-128' title='goto source code'>[src]</a></span></h3>
+<div class='docblock'><p>Recursive merge all fields in the structure.</p>
+</div><div class='impl-items'><h4 id='method.merge_override' class='method'><span id='merge_override.v' class='invisible'><code>fn <a href='../../compose_yml/v2/trait.MergeOverride.html#method.merge_override' class='fnname'>merge_override</a>(&amp;self, ovr: &amp;Self) -&gt; Self</code></span></h4>
+<div class='docblock'><p>Given this value and an override value, merge the override value into this one, producing a new value. <a href="../../compose_yml/v2/trait.MergeOverride.html#method.merge_override">Read more</a></p>
+</div></div></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../../";
+        window.currentCrate = "compose_yml";
+        window.playgroundUrl = "";
+    </script>
+    <script src="../../jquery.js"></script>
+    <script src="../../main.js"></script>
+    
+    <script defer src="../../search-index.js"></script>
+</body>
+</html>

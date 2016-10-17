@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `client` mod in crate `hashicorp_vault`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, client">
+
+    <title>hashicorp_vault::client - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'><a href='../index.html'>hashicorp_vault</a></p><script>window.sidebarCurrent = {name: 'client', ty: 'mod', relpath: '../'};</script><script defer src="../sidebar-items.js"></script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content mod">
+<h1 class='fqn'><span class='in-band'>Module <a href='../index.html'>hashicorp_vault</a>::<wbr><a class='mod' href=''>client</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a id='src-9' class='srclink' href='../../src/hashicorp_vault/client/mod.rs.html#1-785' title='goto source code'>[src]</a></span></h1>
+<div class='docblock'><p>vault client</p>
+</div><h2 id='modules' class='section-header'><a href="#modules">Modules</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class='mod' href='error/index.html'
+                                  title='hashicorp_vault::client::error'>error</a></td>
+                           <td class='docblock-short'>
+                                <p>Errors</p>
+                           </td>
+                       </tr></table><h2 id='structs' class='section-header'><a href="#structs">Structs</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.Auth.html'
+                                  title='hashicorp_vault::client::Auth'>Auth</a></td>
+                           <td class='docblock-short'>
+                                <p>Vault auth</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.PostgresqlLogin.html'
+                                  title='hashicorp_vault::client::PostgresqlLogin'>PostgresqlLogin</a></td>
+                           <td class='docblock-short'>
+                                <p>Postgresql secret backend</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.TokenData.html'
+                                  title='hashicorp_vault::client::TokenData'>TokenData</a></td>
+                           <td class='docblock-short'>
+                                <p>Token data, used in <code>VaultResponse</code></p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.TokenOptions.html'
+                                  title='hashicorp_vault::client::TokenOptions'>TokenOptions</a></td>
+                           <td class='docblock-short'>
+                                <p>Options for creating a token.  This is intended to be used as a
+&quot;builder&quot;-style interface, where you create a new <code>TokenOptions</code>
+object, call a bunch of chained methods on it, and then pass the result
+to <code>Client::create_token</code>.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.VaultClient.html'
+                                  title='hashicorp_vault::client::VaultClient'>VaultClient</a></td>
+                           <td class='docblock-short'>
+                                <p>Vault client used to make API requests to the vault</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.VaultDateTime.html'
+                                  title='hashicorp_vault::client::VaultDateTime'>VaultDateTime</a></td>
+                           <td class='docblock-short'>
+                                <p>Used for responses that return RFC 3339 timestamps
+See: <a href="https://github.com/hashicorp/vault/issues/1654">https://github.com/hashicorp/vault/issues/1654</a></p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.VaultDuration.html'
+                                  title='hashicorp_vault::client::VaultDuration'>VaultDuration</a></td>
+                           <td class='docblock-short'>
+                                <p>Lease duration.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.VaultNaiveDateTime.html'
+                                  title='hashicorp_vault::client::VaultNaiveDateTime'>VaultNaiveDateTime</a></td>
+                           <td class='docblock-short'>
+                                <p>Used for vault responses that return seconds since unix epoch
+See: <a href="https://github.com/hashicorp/vault/issues/1654">https://github.com/hashicorp/vault/issues/1654</a></p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.VaultResponse.html'
+                                  title='hashicorp_vault::client::VaultResponse'>VaultResponse</a></td>
+                           <td class='docblock-short'>
+                                <p>Vault response. Different vault responses have different <code>data</code> types, so <code>D</code> is used to
+represent this.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.WrapData.html'
+                                  title='hashicorp_vault::client::WrapData'>WrapData</a></td>
+                           <td class='docblock-short'>
+                                <p>Wrapped response is serialized json</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.WrapInfo.html'
+                                  title='hashicorp_vault::client::WrapInfo'>WrapInfo</a></td>
+                           <td class='docblock-short'>
+                                <p>Information provided to retrieve a wrapped response</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.XVaultToken.html'
+                                  title='hashicorp_vault::client::XVaultToken'>XVaultToken</a></td>
+                           <td class='docblock-short'>
+                                <p>Token used to authenticate with the vault API</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.XVaultWrapTTL.html'
+                                  title='hashicorp_vault::client::XVaultWrapTTL'>XVaultWrapTTL</a></td>
+                           <td class='docblock-short'>
+                                <p>The TTL for the token is set by the client using the X-Vault-Wrap-TTL header and can be
+either an integer number of seconds or a string duration of seconds (15s), minutes (20m),
+or hours (25h). When using the Vault CLI, you can set this via the -wrap-ttl parameter.
+Response wrapping is per-request; it is the presence of a value in this header that
+activates wrapping of the response.</p>
+                           </td>
+                       </tr></table></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../../";
+        window.currentCrate = "hashicorp_vault";
+        window.playgroundUrl = "";
+    </script>
+    <script src="../../jquery.js"></script>
+    <script src="../../main.js"></script>
+    
+    <script defer src="../../search-index.js"></script>
+</body>
+</html>

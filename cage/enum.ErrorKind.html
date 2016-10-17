@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `ErrorKind` enum in crate `cage`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, ErrorKind">
+
+    <title>cage::ErrorKind - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'><a href='index.html'>cage</a></p><script>window.sidebarCurrent = {name: 'ErrorKind', ty: 'enum', relpath: ''};</script><script defer src="sidebar-items.js"></script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content enum">
+<h1 class='fqn'><span class='in-band'>Enum <a href='index.html'>cage</a>::<wbr><a class='enum' href=''>ErrorKind</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span></span></h1>
+<pre class='rust enum'>pub enum ErrorKind {
+    Msg(<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>),
+    Compose(<a class='enum' href='../compose_yml/errors/enum.ErrorKind.html' title='compose_yml::errors::ErrorKind'>ErrorKind</a>),
+    Utf8Error(<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.FromUtf8Error.html' title='collections::string::FromUtf8Error'>FromUtf8Error</a>),
+    Glob(<a class='struct' href='../glob/struct.GlobError.html' title='glob::GlobError'>GlobError</a>),
+    GlobPattern(<a class='struct' href='../glob/struct.PatternError.html' title='glob::PatternError'>PatternError</a>),
+    Io(<a class='struct' href='https://doc.rust-lang.org/nightly/std/io/error/struct.Error.html' title='std::io::error::Error'>Error</a>),
+    StripPrefix(<a class='struct' href='https://doc.rust-lang.org/nightly/std/path/struct.StripPrefixError.html' title='std::path::StripPrefixError'>StripPrefixError</a>),
+    Vault(<a class='enum' href='../hashicorp_vault/client/error/enum.Error.html' title='hashicorp_vault::client::error::Error'>Error</a>),
+    CommandFailed(<a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/std/ffi/os_str/struct.OsString.html' title='std::ffi::os_str::OsString'>OsString</a>&gt;),
+    CouldNotReadDirectory(<a class='struct' href='https://doc.rust-lang.org/nightly/std/path/struct.PathBuf.html' title='std::path::PathBuf'>PathBuf</a>),
+    CouldNotReadFile(<a class='struct' href='https://doc.rust-lang.org/nightly/std/path/struct.PathBuf.html' title='std::path::PathBuf'>PathBuf</a>),
+    CouldNotWriteFile(<a class='struct' href='https://doc.rust-lang.org/nightly/std/path/struct.PathBuf.html' title='std::path::PathBuf'>PathBuf</a>),
+    MismatchedVersion(<a class='struct' href='../semver/version_req/struct.VersionReq.html' title='semver::version_req::VersionReq'>VersionReq</a>),
+    PluginFailed(<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>),
+    ServicesAddedInOverride(<a class='struct' href='https://doc.rust-lang.org/nightly/std/path/struct.PathBuf.html' title='std::path::PathBuf'>PathBuf</a>,&nbsp;<a class='struct' href='https://doc.rust-lang.org/nightly/std/path/struct.PathBuf.html' title='std::path::PathBuf'>PathBuf</a>,&nbsp;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>&gt;),
+    UnknownPodOrService(<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>),
+    UnknownService(<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>),
+}</pre><h2 class='variants'>Variants</h2>
+<span id='variant.Msg' class='variant'><span id='Msg.v' class='invisible'><code>Msg(<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>)</code></span></span><span id='variant.Compose' class='variant'><span id='Compose.v' class='invisible'><code>Compose(<a class='enum' href='../compose_yml/errors/enum.ErrorKind.html' title='compose_yml::errors::ErrorKind'>ErrorKind</a>)</code></span></span><span id='variant.Utf8Error' class='variant'><span id='Utf8Error.v' class='invisible'><code>Utf8Error(<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.FromUtf8Error.html' title='collections::string::FromUtf8Error'>FromUtf8Error</a>)</code></span></span><span id='variant.Glob' class='variant'><span id='Glob.v' class='invisible'><code>Glob(<a class='struct' href='../glob/struct.GlobError.html' title='glob::GlobError'>GlobError</a>)</code></span></span><span id='variant.GlobPattern' class='variant'><span id='GlobPattern.v' class='invisible'><code>GlobPattern(<a class='struct' href='../glob/struct.PatternError.html' title='glob::PatternError'>PatternError</a>)</code></span></span><span id='variant.Io' class='variant'><span id='Io.v' class='invisible'><code>Io(<a class='struct' href='https://doc.rust-lang.org/nightly/std/io/error/struct.Error.html' title='std::io::error::Error'>Error</a>)</code></span></span><span id='variant.StripPrefix' class='variant'><span id='StripPrefix.v' class='invisible'><code>StripPrefix(<a class='struct' href='https://doc.rust-lang.org/nightly/std/path/struct.StripPrefixError.html' title='std::path::StripPrefixError'>StripPrefixError</a>)</code></span></span><span id='variant.Vault' class='variant'><span id='Vault.v' class='invisible'><code>Vault(<a class='enum' href='../hashicorp_vault/client/error/enum.Error.html' title='hashicorp_vault::client::error::Error'>Error</a>)</code></span></span><span id='variant.CommandFailed' class='variant'><span id='CommandFailed.v' class='invisible'><code>CommandFailed(<a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/std/ffi/os_str/struct.OsString.html' title='std::ffi::os_str::OsString'>OsString</a>&gt;)</code></span></span><div class='docblock'><p>An error occurred running an external command.</p>
+</div><span id='variant.CouldNotReadDirectory' class='variant'><span id='CouldNotReadDirectory.v' class='invisible'><code>CouldNotReadDirectory(<a class='struct' href='https://doc.rust-lang.org/nightly/std/path/struct.PathBuf.html' title='std::path::PathBuf'>PathBuf</a>)</code></span></span><div class='docblock'><p>An error occurred reading a directory.</p>
+</div><span id='variant.CouldNotReadFile' class='variant'><span id='CouldNotReadFile.v' class='invisible'><code>CouldNotReadFile(<a class='struct' href='https://doc.rust-lang.org/nightly/std/path/struct.PathBuf.html' title='std::path::PathBuf'>PathBuf</a>)</code></span></span><div class='docblock'><p>An error occurred reading a file.</p>
+</div><span id='variant.CouldNotWriteFile' class='variant'><span id='CouldNotWriteFile.v' class='invisible'><code>CouldNotWriteFile(<a class='struct' href='https://doc.rust-lang.org/nightly/std/path/struct.PathBuf.html' title='std::path::PathBuf'>PathBuf</a>)</code></span></span><div class='docblock'><p>An error occurred writing a file.</p>
+</div><span id='variant.MismatchedVersion' class='variant'><span id='MismatchedVersion.v' class='invisible'><code>MismatchedVersion(<a class='struct' href='../semver/version_req/struct.VersionReq.html' title='semver::version_req::VersionReq'>VersionReq</a>)</code></span></span><div class='docblock'><p>This project specified that it required a different version of
+this tool.</p>
+</div><span id='variant.PluginFailed' class='variant'><span id='PluginFailed.v' class='invisible'><code>PluginFailed(<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>)</code></span></span><div class='docblock'><p>An error occurred applying a plugin.</p>
+</div><span id='variant.ServicesAddedInOverride' class='variant'><span id='ServicesAddedInOverride.v' class='invisible'><code>ServicesAddedInOverride(<a class='struct' href='https://doc.rust-lang.org/nightly/std/path/struct.PathBuf.html' title='std::path::PathBuf'>PathBuf</a>,&nbsp;<a class='struct' href='https://doc.rust-lang.org/nightly/std/path/struct.PathBuf.html' title='std::path::PathBuf'>PathBuf</a>,&nbsp;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>&gt;)</code></span></span><div class='docblock'><p>An override file tried to add new services that weren&#39;t present in
+the file it was overriding.</p>
+</div><span id='variant.UnknownPodOrService' class='variant'><span id='UnknownPodOrService.v' class='invisible'><code>UnknownPodOrService(<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>)</code></span></span><div class='docblock'><p>The requested pod or service does not appear to exist.</p>
+</div><span id='variant.UnknownService' class='variant'><span id='UnknownService.v' class='invisible'><code>UnknownService(<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>)</code></span></span><div class='docblock'><p>The requested service does not appear to exist.</p>
+</div><h2 id='methods'>Methods</h2><h3 class='impl'><span class='in-band'><code>impl <a class='enum' href='../cage/enum.ErrorKind.html' title='cage::ErrorKind'>ErrorKind</a></code></span><span class='out-of-band'></span></h3>
+<div class='impl-items'><h4 id='method.description' class='method'><span id='description.v' class='invisible'><code>fn <a href='#method.description' class='fnname'>description</a>(&amp;self) -&gt; &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a></code></span></h4>
+</div><h2 id='implementations'>Trait Implementations</h2><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html' title='core::fmt::Debug'>Debug</a> for <a class='enum' href='../cage/enum.ErrorKind.html' title='cage::ErrorKind'>ErrorKind</a></code></span><span class='out-of-band'></span></h3>
+<div class='impl-items'><h4 id='method.fmt' class='method'><span id='fmt.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html#tymethod.fmt' class='fnname'>fmt</a>(&amp;self, __arg_0: &amp;mut <a class='struct' href='https://doc.rust-lang.org/nightly/core/fmt/struct.Formatter.html' title='core::fmt::Formatter'>Formatter</a>) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/core/fmt/type.Result.html' title='core::fmt::Result'>Result</a></code></span></h4>
+<div class='docblock'><p>Formats the value using the given formatter.</p>
+</div></div><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='https://doc.rust-lang.org/nightly/core/fmt/trait.Display.html' title='core::fmt::Display'>Display</a> for <a class='enum' href='../cage/enum.ErrorKind.html' title='cage::ErrorKind'>ErrorKind</a></code></span><span class='out-of-band'></span></h3>
+<div class='impl-items'><h4 id='method.fmt-1' class='method'><span id='fmt.v-1' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/fmt/trait.Display.html#tymethod.fmt' class='fnname'>fmt</a>(&amp;self, fmt: &amp;mut <a class='struct' href='https://doc.rust-lang.org/nightly/core/fmt/struct.Formatter.html' title='core::fmt::Formatter'>Formatter</a>) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/core/fmt/type.Result.html' title='core::fmt::Result'>Result</a></code></span></h4>
+<div class='docblock'><p>Formats the value using the given formatter.</p>
+</div></div><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='https://doc.rust-lang.org/nightly/core/convert/trait.From.html' title='core::convert::From'>From</a>&lt;<a class='enum' href='../compose_yml/errors/enum.ErrorKind.html' title='compose_yml::errors::ErrorKind'>ErrorKind</a>&gt; for <a class='enum' href='../cage/enum.ErrorKind.html' title='cage::ErrorKind'>ErrorKind</a></code></span><span class='out-of-band'></span></h3>
+<div class='impl-items'><h4 id='method.from' class='method'><span id='from.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/convert/trait.From.html#tymethod.from' class='fnname'>from</a>(e: <a class='enum' href='../compose_yml/errors/enum.ErrorKind.html' title='compose_yml::errors::ErrorKind'>ErrorKind</a>) -&gt; Self</code></span></h4>
+<div class='docblock'><p>Performs the conversion.</p>
+</div></div><h3 class='impl'><span class='in-band'><code>impl&lt;'a&gt; <a class='trait' href='https://doc.rust-lang.org/nightly/core/convert/trait.From.html' title='core::convert::From'>From</a>&lt;&amp;'a <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>&gt; for <a class='enum' href='../cage/enum.ErrorKind.html' title='cage::ErrorKind'>ErrorKind</a></code></span><span class='out-of-band'></span></h3>
+<div class='impl-items'><h4 id='method.from-1' class='method'><span id='from.v-1' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/convert/trait.From.html#tymethod.from' class='fnname'>from</a>(s: &amp;'a <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>) -&gt; Self</code></span></h4>
+<div class='docblock'><p>Performs the conversion.</p>
+</div></div><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='https://doc.rust-lang.org/nightly/core/convert/trait.From.html' title='core::convert::From'>From</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>&gt; for <a class='enum' href='../cage/enum.ErrorKind.html' title='cage::ErrorKind'>ErrorKind</a></code></span><span class='out-of-band'></span></h3>
+<div class='impl-items'><h4 id='method.from-2' class='method'><span id='from.v-2' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/convert/trait.From.html#tymethod.from' class='fnname'>from</a>(s: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>) -&gt; Self</code></span></h4>
+<div class='docblock'><p>Performs the conversion.</p>
+</div></div></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../";
+        window.currentCrate = "cage";
+        window.playgroundUrl = "";
+    </script>
+    <script src="../jquery.js"></script>
+    <script src="../main.js"></script>
+    
+    <script defer src="../search-index.js"></script>
+</body>
+</html>

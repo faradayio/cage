@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `Project` struct in crate `cage`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, Project">
+
+    <title>cage::Project - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'><a href='index.html'>cage</a></p><script>window.sidebarCurrent = {name: 'Project', ty: 'struct', relpath: ''};</script><script defer src="sidebar-items.js"></script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content struct">
+<h1 class='fqn'><span class='in-band'>Struct <a href='index.html'>cage</a>::<wbr><a class='struct' href=''>Project</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a id='src-3240' class='srclink' href='../src/cage/src/project.rs.html#52-94' title='goto source code'>[src]</a></span></h1>
+<pre class='rust struct'>pub struct Project { /* fields omitted */ }</pre><div class='docblock'><p>A <code>cage</code> project, which is represented as a directory containing a
+<code>pods</code> subdirectory.</p>
+</div><h2 id='methods'>Methods</h2><h3 class='impl'><span class='in-band'><code>impl <a class='struct' href='../cage/struct.Project.html' title='cage::Project'>Project</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-3270' class='srclink' href='../src/cage/src/project.rs.html#96-414' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.from_current_dir' class='method'><span id='from_current_dir.v' class='invisible'><code>fn <a href='#method.from_current_dir' class='fnname'>from_current_dir</a>() -&gt; <a class='type' href='../cage/type.Result.html' title='cage::Result'>Result</a>&lt;<a class='struct' href='../cage/struct.Project.html' title='cage::Project'>Project</a>&gt;</code></span></h4>
+<div class='docblock'><p>Create a <code>Project</code> using the pre-existing project files in the
+current directory as input and the <code>.cage</code> subdirectory as
+output.</p>
+
+<pre class='rust rust-example-rendered'>
+<span class='kw'>use</span> <span class='ident'>cage</span>::<span class='ident'>Project</span>;
+<span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>env</span>;
+
+<span class='kw'>let</span> <span class='ident'>saved</span> <span class='op'>=</span> <span class='ident'>env</span>::<span class='ident'>current_dir</span>().<span class='ident'>unwrap</span>();
+<span class='ident'>env</span>::<span class='ident'>set_current_dir</span>(<span class='string'>&quot;examples/hello/pods&quot;</span>).<span class='ident'>unwrap</span>();
+
+<span class='kw'>let</span> <span class='ident'>proj</span> <span class='op'>=</span> <span class='ident'>Project</span>::<span class='ident'>from_current_dir</span>().<span class='ident'>unwrap</span>();
+<span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>proj</span>.<span class='ident'>root_dir</span>(), <span class='ident'>saved</span>.<span class='ident'>join</span>(<span class='string'>&quot;examples/hello&quot;</span>));
+<span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>proj</span>.<span class='ident'>src_dir</span>(), <span class='ident'>saved</span>.<span class='ident'>join</span>(<span class='string'>&quot;examples/hello/src&quot;</span>));
+<span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>proj</span>.<span class='ident'>output_dir</span>(), <span class='ident'>saved</span>.<span class='ident'>join</span>(<span class='string'>&quot;examples/hello/.cage&quot;</span>));
+
+<span class='ident'>env</span>::<span class='ident'>set_current_dir</span>(<span class='ident'>saved</span>).<span class='ident'>unwrap</span>();<a class='test-arrow' target='_blank' href=''>Run</a></pre>
+</div><h4 id='method.name' class='method'><span id='name.v' class='invisible'><code>fn <a href='#method.name' class='fnname'>name</a>(&amp;self) -&gt; &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a></code></span></h4>
+<div class='docblock'><p>The name of this project.  This defaults to the name of the current
+directory.</p>
+</div><h4 id='method.set_name' class='method'><span id='set_name.v' class='invisible'><code>fn <a href='#method.set_name' class='fnname'>set_name</a>(&amp;mut self, name: &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>) -&gt; &amp;mut <a class='struct' href='../cage/struct.Project.html' title='cage::Project'>Project</a></code></span></h4>
+<div class='docblock'><p>Set the name of this project.  This should be done before calling
+<code>output</code> or any methods in <code>cmd</code>.</p>
+</div><h4 id='method.root_dir' class='method'><span id='root_dir.v' class='invisible'><code>fn <a href='#method.root_dir' class='fnname'>root_dir</a>(&amp;self) -&gt; &amp;<a class='struct' href='https://doc.rust-lang.org/nightly/std/path/struct.Path.html' title='std::path::Path'>Path</a></code></span></h4>
+<div class='docblock'><p>The root directory of this project.</p>
+</div><h4 id='method.src_dir' class='method'><span id='src_dir.v' class='invisible'><code>fn <a href='#method.src_dir' class='fnname'>src_dir</a>(&amp;self) -&gt; &amp;<a class='struct' href='https://doc.rust-lang.org/nightly/std/path/struct.Path.html' title='std::path::Path'>Path</a></code></span></h4>
+<div class='docblock'><p>The source directory of this project, where we can put cloned git
+repositories.</p>
+</div><h4 id='method.output_dir' class='method'><span id='output_dir.v' class='invisible'><code>fn <a href='#method.output_dir' class='fnname'>output_dir</a>(&amp;self) -&gt; &amp;<a class='struct' href='https://doc.rust-lang.org/nightly/std/path/struct.Path.html' title='std::path::Path'>Path</a></code></span></h4>
+<div class='docblock'><p>The output directory of this project.  Normally <code>.cage</code> inside
+the <code>root_dir</code>, but it may be overriden.</p>
+</div><h4 id='method.pods_dir' class='method'><span id='pods_dir.v' class='invisible'><code>fn <a href='#method.pods_dir' class='fnname'>pods_dir</a>(&amp;self) -&gt; <a class='struct' href='https://doc.rust-lang.org/nightly/std/path/struct.PathBuf.html' title='std::path::PathBuf'>PathBuf</a></code></span></h4>
+<div class='docblock'><p>The directory in which are pods are defined, and relative to which
+all <code>docker-compose.yml</code> paths should be interpreted.</p>
+</div><h4 id='method.output_pods_dir' class='method'><span id='output_pods_dir.v' class='invisible'><code>fn <a href='#method.output_pods_dir' class='fnname'>output_pods_dir</a>(&amp;self) -&gt; <a class='struct' href='https://doc.rust-lang.org/nightly/std/path/struct.PathBuf.html' title='std::path::PathBuf'>PathBuf</a></code></span></h4>
+<div class='docblock'><p>The path relative to which our pods will be output.  This can be
+joined with <code>Pod::rel_path</code> to get an output path for a specific pod.</p>
+</div><h4 id='method.pods' class='method'><span id='pods.v' class='invisible'><code>fn <a href='#method.pods' class='fnname'>pods</a>(&amp;self) -&gt; <a class='struct' href='../cage/struct.Pods.html' title='cage::Pods'>Pods</a></code></span></h4>
+<div class='docblock'><p>Iterate over all pods in this project.</p>
+</div><h4 id='method.pod' class='method'><span id='pod.v' class='invisible'><code>fn <a href='#method.pod' class='fnname'>pod</a>(&amp;self, name: &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>) -&gt; <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;&amp;<a class='struct' href='../cage/struct.Pod.html' title='cage::Pod'>Pod</a>&gt;</code></span></h4>
+<div class='docblock'><p>Look up the named pod.</p>
+</div><h4 id='method.service' class='method'><span id='service.v' class='invisible'><code>fn <a href='#method.service' class='fnname'>service</a>&lt;'a&gt;(&amp;self, name: &amp;'a <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>) -&gt; <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>(</a>&amp;<a class='struct' href='../cage/struct.Pod.html' title='cage::Pod'>Pod</a>, &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>)</a>&gt;</code></span></h4>
+<div class='docblock'><p>Look up the named service.  Returns the pod containing the service
+and the name of the service within that pod.</p>
+</div><h4 id='method.service_or_err' class='method'><span id='service_or_err.v' class='invisible'><code>fn <a href='#method.service_or_err' class='fnname'>service_or_err</a>&lt;'a&gt;(&amp;self, name: &amp;'a <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>) -&gt; <a class='type' href='../cage/type.Result.html' title='cage::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>(</a>&amp;<a class='struct' href='../cage/struct.Pod.html' title='cage::Pod'>Pod</a>, &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>)</a>&gt;</code></span></h4>
+<div class='docblock'><p>Like <code>service</code>, but returns an error if the service is unknown.</p>
+</div><h4 id='method.pod_or_service' class='method'><span id='pod_or_service.v' class='invisible'><code>fn <a href='#method.pod_or_service' class='fnname'>pod_or_service</a>&lt;'a,&nbsp;'b&gt;(&amp;'a self, name: &amp;'b <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>) -&gt; <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='enum' href='../cage/enum.PodOrService.html' title='cage::PodOrService'>PodOrService</a>&lt;'a&gt;&gt;</code></span></h4>
+<div class='docblock'><p>Look for a name as a pod first, and if that fails, look for it as a
+service.</p>
+</div><h4 id='method.pod_or_service_or_err' class='method'><span id='pod_or_service_or_err.v' class='invisible'><code>fn <a href='#method.pod_or_service_or_err' class='fnname'>pod_or_service_or_err</a>&lt;'a,&nbsp;'b&gt;(&amp;'a self, name: &amp;'b <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>) -&gt; <a class='type' href='../cage/type.Result.html' title='cage::Result'>Result</a>&lt;<a class='enum' href='../cage/enum.PodOrService.html' title='cage::PodOrService'>PodOrService</a>&lt;'a&gt;&gt;</code></span></h4>
+<div class='docblock'><p>Like <code>pod_or_service</code>, but returns an error if no pod or service of
+that name can be found.</p>
+</div><h4 id='method.overrides' class='method'><span id='overrides.v' class='invisible'><code>fn <a href='#method.overrides' class='fnname'>overrides</a>(&amp;self) -&gt; <a class='struct' href='../cage/struct.Overrides.html' title='cage::Overrides'>Overrides</a></code></span></h4>
+<div class='docblock'><p>Iterate over all overrides in this project.</p>
+</div><h4 id='method.ovr' class='method'><span id='ovr.v' class='invisible'><code>fn <a href='#method.ovr' class='fnname'>ovr</a>(&amp;self, name: &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>) -&gt; <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;&amp;<a class='struct' href='../cage/struct.Override.html' title='cage::Override'>Override</a>&gt;</code></span></h4>
+<div class='docblock'><p>Look up the named override.  We name this function <code>ovr</code> instead of
+<code>override</code> to avoid a keyword clash.</p>
+</div><h4 id='method.repos' class='method'><span id='repos.v' class='invisible'><code>fn <a href='#method.repos' class='fnname'>repos</a>(&amp;self) -&gt; &amp;<a class='struct' href='../cage/struct.Repos.html' title='cage::Repos'>Repos</a></code></span></h4>
+<div class='docblock'><p>Return the collection of git repositories associated with this
+project.</p>
+</div><h4 id='method.hooks' class='method'><span id='hooks.v' class='invisible'><code>fn <a href='#method.hooks' class='fnname'>hooks</a>(&amp;self) -&gt; &amp;<a class='struct' href='../cage/hook/struct.HookManager.html' title='cage::hook::HookManager'>HookManager</a></code></span></h4>
+<div class='docblock'><p>Get our available hooks.</p>
+</div><h4 id='method.default_tags' class='method'><span id='default_tags.v' class='invisible'><code>fn <a href='#method.default_tags' class='fnname'>default_tags</a>(&amp;self) -&gt; <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;&amp;<a class='struct' href='../cage/struct.DefaultTags.html' title='cage::DefaultTags'>DefaultTags</a>&gt;</code></span></h4>
+<div class='docblock'><p>Get the default tags associated with this project, if any.</p>
+</div><h4 id='method.set_default_tags' class='method'><span id='set_default_tags.v' class='invisible'><code>fn <a href='#method.set_default_tags' class='fnname'>set_default_tags</a>(&amp;mut self, tags: <a class='struct' href='../cage/struct.DefaultTags.html' title='cage::DefaultTags'>DefaultTags</a>) -&gt; &amp;mut <a class='struct' href='../cage/struct.Project.html' title='cage::Project'>Project</a></code></span></h4>
+<div class='docblock'><p>Set the default tags associated with this project.</p>
+</div><h4 id='method.plugins' class='method'><span id='plugins.v' class='invisible'><code>fn <a href='#method.plugins' class='fnname'>plugins</a>(&amp;self) -&gt; &amp;<a class='struct' href='../cage/plugins/struct.Manager.html' title='cage::plugins::Manager'>Manager</a></code></span></h4>
+<div class='docblock'><p>Our plugin manager.</p>
+</div><h4 id='method.output' class='method'><span id='output.v' class='invisible'><code>fn <a href='#method.output' class='fnname'>output</a>(&amp;self, ovr: &amp;<a class='struct' href='../cage/struct.Override.html' title='cage::Override'>Override</a>) -&gt; <a class='type' href='../cage/type.Result.html' title='cage::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>&gt;</code></span></h4>
+<div class='docblock'><p>Delete our existing output and replace it with a processed and
+expanded version of our pod definitions.</p>
+</div><h4 id='method.export' class='method'><span id='export.v' class='invisible'><code>fn <a href='#method.export' class='fnname'>export</a>(&amp;self, ovr: &amp;<a class='struct' href='../cage/struct.Override.html' title='cage::Override'>Override</a>, export_dir: &amp;<a class='struct' href='https://doc.rust-lang.org/nightly/std/path/struct.Path.html' title='std::path::Path'>Path</a>) -&gt; <a class='type' href='../cage/type.Result.html' title='cage::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>&gt;</code></span></h4>
+<div class='docblock'><p>Export this project (with the specified override applied) as a set
+of standalone <code>*.yml</code> files with no environment variable
+interpolations and no external dependencies.</p>
+</div></div><h2 id='implementations'>Trait Implementations</h2><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='../cage/cmd/trait.CommandCompose.html' title='cage::cmd::CommandCompose'>CommandCompose</a> for <a class='struct' href='../cage/struct.Project.html' title='cage::Project'>Project</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-460' class='srclink' href='../src/cage/src/cmd/compose.rs.html#29-79' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.compose' class='method'><span id='compose.v' class='invisible'><code>fn <a href='../cage/cmd/trait.CommandCompose.html#tymethod.compose' class='fnname'>compose</a>&lt;CR,&nbsp;F&gt;(&amp;self, runner: &amp;CR, ovr: &amp;<a class='struct' href='../cage/struct.Override.html' title='cage::Override'>Override</a>, command: &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>, act_on: &amp;<a class='enum' href='../cage/args/enum.ActOn.html' title='cage::args::ActOn'>ActOn</a>, matching: F, opts: &amp;<a class='trait' href='../cage/args/trait.ToArgs.html' title='cage::args::ToArgs'>ToArgs</a>) -&gt; <a class='type' href='../cage/type.Result.html' title='cage::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>&gt; <span class='where'>where CR: <a class='trait' href='../cage/command_runner/trait.CommandRunner.html' title='cage::command_runner::CommandRunner'>CommandRunner</a>, F: <a class='trait' href='https://doc.rust-lang.org/nightly/core/ops/trait.Fn.html' title='core::ops::Fn'>Fn</a>(&amp;<a class='struct' href='../cage/struct.Pod.html' title='cage::Pod'>Pod</a>) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a></span></code></span></h4>
+<div class='docblock'><p>Pass simple commands directly through to <code>docker-compose</code>.</p>
+</div></div><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='../cage/cmd/trait.CommandExec.html' title='cage::cmd::CommandExec'>CommandExec</a> for <a class='struct' href='../cage/struct.Project.html' title='cage::Project'>Project</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-516' class='srclink' href='../src/cage/src/cmd/exec.rs.html#38-79' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.exec' class='method'><span id='exec.v' class='invisible'><code>fn <a href='../cage/cmd/trait.CommandExec.html#tymethod.exec' class='fnname'>exec</a>&lt;CR&gt;(&amp;self, runner: &amp;CR, ovr: &amp;<a class='struct' href='../cage/struct.Override.html' title='cage::Override'>Override</a>, service_name: &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>, command: &amp;<a class='struct' href='../cage/args/struct.Command.html' title='cage::args::Command'>Command</a>, opts: &amp;<a class='struct' href='../cage/args/opts/struct.Exec.html' title='cage::args::opts::Exec'>Exec</a>) -&gt; <a class='type' href='../cage/type.Result.html' title='cage::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>&gt; <span class='where'>where CR: <a class='trait' href='../cage/command_runner/trait.CommandRunner.html' title='cage::command_runner::CommandRunner'>CommandRunner</a></span></code></span></h4>
+<div class='docblock'><p>Exectute a command inside a running container.  Even though we package up most of our arguments into structs, we still have a ridiculous number of arguments. <a href="../cage/cmd/trait.CommandExec.html#tymethod.exec">Read more</a></p>
+</div><h4 id='method.shell' class='method'><span id='shell.v' class='invisible'><code>fn <a href='../cage/cmd/trait.CommandExec.html#tymethod.shell' class='fnname'>shell</a>&lt;CR&gt;(&amp;self, runner: &amp;CR, ovr: &amp;<a class='struct' href='../cage/struct.Override.html' title='cage::Override'>Override</a>, service_name: &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>, opts: &amp;<a class='struct' href='../cage/args/opts/struct.Exec.html' title='cage::args::opts::Exec'>Exec</a>) -&gt; <a class='type' href='../cage/type.Result.html' title='cage::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>&gt; <span class='where'>where CR: <a class='trait' href='../cage/command_runner/trait.CommandRunner.html' title='cage::command_runner::CommandRunner'>CommandRunner</a></span></code></span></h4>
+<div class='docblock'><p>Execute an interactive shell inside a running container.</p>
+</div></div><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='../cage/cmd/trait.CommandGenerate.html' title='cage::cmd::CommandGenerate'>CommandGenerate</a> for <a class='struct' href='../cage/struct.Project.html' title='cage::Project'>Project</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-567' class='srclink' href='../src/cage/src/cmd/generate.rs.html#49-92' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.generate_new' class='method'><span id='generate_new.v' class='invisible'><code>fn <a href='../cage/cmd/trait.CommandGenerate.html#tymethod.generate_new' class='fnname'>generate_new</a>(parent_dir: &amp;<a class='struct' href='https://doc.rust-lang.org/nightly/std/path/struct.Path.html' title='std::path::Path'>Path</a>, name: &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>) -&gt; <a class='type' href='../cage/type.Result.html' title='cage::Result'>Result</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/std/path/struct.PathBuf.html' title='std::path::PathBuf'>PathBuf</a>&gt;</code></span></h4>
+<div class='docblock'><p>Create a new project skeleton, returning the path of the generated project. <a href="../cage/cmd/trait.CommandGenerate.html#tymethod.generate_new">Read more</a></p>
+</div><h4 id='method.generate_list' class='method'><span id='generate_list.v' class='invisible'><code>fn <a href='../cage/cmd/trait.CommandGenerate.html#tymethod.generate_list' class='fnname'>generate_list</a>(&amp;self) -&gt; <a class='type' href='../cage/type.Result.html' title='cage::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>&gt;</code></span></h4>
+<div class='docblock'><p>Print our all available generators (excluding the <code>generate_new</code> generator). <a href="../cage/cmd/trait.CommandGenerate.html#tymethod.generate_list">Read more</a></p>
+</div><h4 id='method.generate' class='method'><span id='generate.v' class='invisible'><code>fn <a href='../cage/cmd/trait.CommandGenerate.html#tymethod.generate' class='fnname'>generate</a>(&amp;self, name: &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>) -&gt; <a class='type' href='../cage/type.Result.html' title='cage::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>&gt;</code></span></h4>
+<div class='docblock'><p>Run the specified generator.</p>
+</div></div><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='../cage/cmd/trait.CommandPull.html' title='cage::cmd::CommandPull'>CommandPull</a> for <a class='struct' href='../cage/struct.Project.html' title='cage::Project'>Project</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-651' class='srclink' href='../src/cage/src/cmd/pull.rs.html#25-40' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.pull' class='method'><span id='pull.v' class='invisible'><code>fn <a href='../cage/cmd/trait.CommandPull.html#tymethod.pull' class='fnname'>pull</a>&lt;CR&gt;(&amp;self, runner: &amp;CR, ovr: &amp;<a class='struct' href='../cage/struct.Override.html' title='cage::Override'>Override</a>, act_on: &amp;<a class='enum' href='../cage/args/enum.ActOn.html' title='cage::args::ActOn'>ActOn</a>) -&gt; <a class='type' href='../cage/type.Result.html' title='cage::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>&gt; <span class='where'>where CR: <a class='trait' href='../cage/command_runner/trait.CommandRunner.html' title='cage::command_runner::CommandRunner'>CommandRunner</a></span></code></span></h4>
+<div class='docblock'><p>Pull all the images associated with a project.</p>
+</div></div><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='../cage/cmd/trait.CommandRepo.html' title='cage::cmd::CommandRepo'>CommandRepo</a> for <a class='struct' href='../cage/struct.Project.html' title='cage::Project'>Project</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-676' class='srclink' href='../src/cage/src/cmd/repo.rs.html#18-47' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.repo_list' class='method'><span id='repo_list.v' class='invisible'><code>fn <a href='../cage/cmd/trait.CommandRepo.html#tymethod.repo_list' class='fnname'>repo_list</a>&lt;CR&gt;(&amp;self, _runner: &amp;CR) -&gt; <a class='type' href='../cage/type.Result.html' title='cage::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>&gt; <span class='where'>where CR: <a class='trait' href='../cage/command_runner/trait.CommandRunner.html' title='cage::command_runner::CommandRunner'>CommandRunner</a></span></code></span></h4>
+<div class='docblock'><p>List all the repositories associated with a project.</p>
+</div><h4 id='method.repo_clone' class='method'><span id='repo_clone.v' class='invisible'><code>fn <a href='../cage/cmd/trait.CommandRepo.html#tymethod.repo_clone' class='fnname'>repo_clone</a>&lt;CR&gt;(&amp;self, runner: &amp;CR, alias: &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>) -&gt; <a class='type' href='../cage/type.Result.html' title='cage::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>&gt; <span class='where'>where CR: <a class='trait' href='../cage/command_runner/trait.CommandRunner.html' title='cage::command_runner::CommandRunner'>CommandRunner</a></span></code></span></h4>
+<div class='docblock'><p>Clone the specified repository.</p>
+</div></div><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='../cage/cmd/trait.CommandRun.html' title='cage::cmd::CommandRun'>CommandRun</a> for <a class='struct' href='../cage/struct.Project.html' title='cage::Project'>Project</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-727' class='srclink' href='../src/cage/src/cmd/run.rs.html#34-96' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.run' class='method'><span id='run.v' class='invisible'><code>fn <a href='../cage/cmd/trait.CommandRun.html#tymethod.run' class='fnname'>run</a>&lt;CR&gt;(&amp;self, runner: &amp;CR, ovr: &amp;<a class='struct' href='../cage/struct.Override.html' title='cage::Override'>Override</a>, pod: &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>, command: <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;&amp;<a class='struct' href='../cage/args/struct.Command.html' title='cage::args::Command'>Command</a>&gt;, opts: &amp;<a class='struct' href='../cage/args/opts/struct.Run.html' title='cage::args::opts::Run'>Run</a>) -&gt; <a class='type' href='../cage/type.Result.html' title='cage::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>&gt; <span class='where'>where CR: <a class='trait' href='../cage/command_runner/trait.CommandRunner.html' title='cage::command_runner::CommandRunner'>CommandRunner</a></span></code></span></h4>
+<div class='docblock'><p>Run a specific pod as a one-shot task.</p>
+</div><h4 id='method.test' class='method'><span id='test.v' class='invisible'><code>fn <a href='../cage/cmd/trait.CommandRun.html#tymethod.test' class='fnname'>test</a>&lt;CR&gt;(&amp;self, runner: &amp;CR, ovr: &amp;<a class='struct' href='../cage/struct.Override.html' title='cage::Override'>Override</a>, service_name: &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>, command: <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;&amp;<a class='struct' href='../cage/args/struct.Command.html' title='cage::args::Command'>Command</a>&gt;) -&gt; <a class='type' href='../cage/type.Result.html' title='cage::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>&gt; <span class='where'>where CR: <a class='trait' href='../cage/command_runner/trait.CommandRunner.html' title='cage::command_runner::CommandRunner'>CommandRunner</a></span></code></span></h4>
+<div class='docblock'><p>Execute tests inside a fresh container.</p>
+</div></div><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='../cage/cmd/trait.CommandUp.html' title='cage::cmd::CommandUp'>CommandUp</a> for <a class='struct' href='../cage/struct.Project.html' title='cage::Project'>Project</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-791' class='srclink' href='../src/cage/src/cmd/up.rs.html#25-37' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.up' class='method'><span id='up.v' class='invisible'><code>fn <a href='../cage/cmd/trait.CommandUp.html#tymethod.up' class='fnname'>up</a>&lt;CR&gt;(&amp;self, runner: &amp;CR, ovr: &amp;<a class='struct' href='../cage/struct.Override.html' title='cage::Override'>Override</a>, act_on: &amp;<a class='enum' href='../cage/args/enum.ActOn.html' title='cage::args::ActOn'>ActOn</a>, opts: &amp;<a class='struct' href='../cage/args/opts/struct.Up.html' title='cage::args::opts::Up'>Up</a>) -&gt; <a class='type' href='../cage/type.Result.html' title='cage::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>&gt; <span class='where'>where CR: <a class='trait' href='../cage/command_runner/trait.CommandRunner.html' title='cage::command_runner::CommandRunner'>CommandRunner</a></span></code></span></h4>
+<div class='docblock'><p>Up all the images in the specified pods.</p>
+</div></div><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html' title='core::fmt::Debug'>Debug</a> for <a class='struct' href='../cage/struct.Project.html' title='cage::Project'>Project</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-3253' class='srclink' href='../src/cage/src/project.rs.html#51' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.fmt' class='method'><span id='fmt.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html#tymethod.fmt' class='fnname'>fmt</a>(&amp;self, __arg_0: &amp;mut <a class='struct' href='https://doc.rust-lang.org/nightly/core/fmt/struct.Formatter.html' title='core::fmt::Formatter'>Formatter</a>) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/core/fmt/type.Result.html' title='core::fmt::Result'>Result</a></code></span></h4>
+<div class='docblock'><p>Formats the value using the given formatter.</p>
+</div></div><h3 class='impl'><span class='in-band'><code>impl&lt;'a&gt; <a class='trait' href='../rustc_serialize/json/trait.ToJson.html' title='rustc_serialize::json::ToJson'>ToJson</a> for <a class='struct' href='../cage/struct.Project.html' title='cage::Project'>Project</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-3455' class='srclink' href='../src/cage/src/project.rs.html#417-423' title='goto source code'>[src]</a></span></h3>
+<div class='docblock'><p>Convert to JSON for use in generator templates.</p>
+</div><div class='impl-items'><h4 id='method.to_json' class='method'><span id='to_json.v' class='invisible'><code>fn <a href='../rustc_serialize/json/trait.ToJson.html#tymethod.to_json' class='fnname'>to_json</a>(&amp;self) -&gt; <a class='enum' href='../rustc_serialize/json/enum.Json.html' title='rustc_serialize::json::Json'>Json</a></code></span></h4>
+<div class='docblock'><p>Converts the value of <code>self</code> to an instance of JSON</p>
+</div></div></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../";
+        window.currentCrate = "cage";
+        window.playgroundUrl = "";
+    </script>
+    <script src="../jquery.js"></script>
+    <script src="../main.js"></script>
+    
+    <script defer src="../search-index.js"></script>
+</body>
+</html>

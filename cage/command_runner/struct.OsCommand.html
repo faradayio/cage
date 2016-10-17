@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `OsCommand` struct in crate `cage`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, OsCommand">
+
+    <title>cage::command_runner::OsCommand - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'><a href='../index.html'>cage</a>::<wbr><a href='index.html'>command_runner</a></p><script>window.sidebarCurrent = {name: 'OsCommand', ty: 'struct', relpath: ''};</script><script defer src="sidebar-items.js"></script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content struct">
+<h1 class='fqn'><span class='in-band'>Struct <a href='../index.html'>cage</a>::<wbr><a href='index.html'>command_runner</a>::<wbr><a class='struct' href=''>OsCommand</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a id='src-346' class='srclink' href='../../src/cage/src/command_runner.rs.html#91-97' title='goto source code'>[src]</a></span></h1>
+<pre class='rust struct'>pub struct OsCommand { /* fields omitted */ }</pre><div class='docblock'><p>A wrapper around <code>std::process:Command</code> which logs the commands run.</p>
+</div><h2 id='implementations'>Trait Implementations</h2><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html' title='core::fmt::Debug'>Debug</a> for <a class='struct' href='../../cage/command_runner/struct.OsCommand.html' title='cage::command_runner::OsCommand'>OsCommand</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-349' class='srclink' href='../../src/cage/src/command_runner.rs.html#90' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.fmt' class='method'><span id='fmt.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html#tymethod.fmt' class='fnname'>fmt</a>(&amp;self, __arg_0: &amp;mut <a class='struct' href='https://doc.rust-lang.org/nightly/core/fmt/struct.Formatter.html' title='core::fmt::Formatter'>Formatter</a>) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/core/fmt/type.Result.html' title='core::fmt::Result'>Result</a></code></span></h4>
+<div class='docblock'><p>Formats the value using the given formatter.</p>
+</div></div><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='../../cage/command_runner/trait.Command.html' title='cage::command_runner::Command'>Command</a> for <a class='struct' href='../../cage/command_runner/struct.OsCommand.html' title='cage::command_runner::OsCommand'>OsCommand</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-356' class='srclink' href='../../src/cage/src/command_runner.rs.html#99-130' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.arg' class='method'><span id='arg.v' class='invisible'><code>fn <a href='../../cage/command_runner/trait.Command.html#tymethod.arg' class='fnname'>arg</a>&lt;S:&nbsp;<a class='trait' href='https://doc.rust-lang.org/nightly/core/convert/trait.AsRef.html' title='core::convert::AsRef'>AsRef</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/std/ffi/os_str/struct.OsStr.html' title='std::ffi::os_str::OsStr'>OsStr</a>&gt;&gt;(&amp;mut self, arg: S) -&gt; &amp;mut Self</code></span></h4>
+<div class='docblock'><p>Add an arugment to our command.</p>
+</div><h4 id='method.args' class='method'><span id='args.v' class='invisible'><code>fn <a href='../../cage/command_runner/trait.Command.html#method.args' class='fnname'>args</a>&lt;S:&nbsp;<a class='trait' href='https://doc.rust-lang.org/nightly/core/convert/trait.AsRef.html' title='core::convert::AsRef'>AsRef</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/std/ffi/os_str/struct.OsStr.html' title='std::ffi::os_str::OsStr'>OsStr</a>&gt;&gt;(&amp;mut self, args: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>&amp;[</a>S<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>]</a>) -&gt; &amp;mut Self</code></span></h4>
+<div class='docblock'><p>Add several arguments to our command.</p>
+</div><h4 id='method.env' class='method'><span id='env.v' class='invisible'><code>fn <a href='../../cage/command_runner/trait.Command.html#tymethod.env' class='fnname'>env</a>&lt;K,&nbsp;V&gt;(&amp;mut self, key: K, val: V) -&gt; &amp;mut Self <span class='where'>where K: <a class='trait' href='https://doc.rust-lang.org/nightly/core/convert/trait.AsRef.html' title='core::convert::AsRef'>AsRef</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/std/ffi/os_str/struct.OsStr.html' title='std::ffi::os_str::OsStr'>OsStr</a>&gt;, V: <a class='trait' href='https://doc.rust-lang.org/nightly/core/convert/trait.AsRef.html' title='core::convert::AsRef'>AsRef</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/std/ffi/os_str/struct.OsStr.html' title='std::ffi::os_str::OsStr'>OsStr</a>&gt;</span></code></span></h4>
+<div class='docblock'><p>Set an environment variable for the process we&#39;re about to run.</p>
+</div><h4 id='method.status' class='method'><span id='status.v' class='invisible'><code>fn <a href='../../cage/command_runner/trait.Command.html#tymethod.status' class='fnname'>status</a>(&amp;mut self) -&gt; <a class='type' href='../../cage/type.Result.html' title='cage::Result'>Result</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/std/process/struct.ExitStatus.html' title='std::process::ExitStatus'>ExitStatus</a>&gt;</code></span></h4>
+<div class='docblock'><p>Run our command.</p>
+</div><h4 id='method.command_failed_error' class='method'><span id='command_failed_error.v' class='invisible'><code>fn <a href='../../cage/command_runner/trait.Command.html#tymethod.command_failed_error' class='fnname'>command_failed_error</a>(&amp;self) -&gt; <a class='enum' href='../../cage/enum.ErrorKind.html' title='cage::ErrorKind'>ErrorKind</a></code></span></h4>
+<div class='docblock'><p>Make an error representing a failure of this command.</p>
+</div><h4 id='method.exec' class='method'><span id='exec.v' class='invisible'><code>fn <a href='../../cage/command_runner/trait.Command.html#method.exec' class='fnname'>exec</a>(&amp;mut self) -&gt; <a class='type' href='../../cage/type.Result.html' title='cage::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>&gt;</code></span></h4>
+<div class='docblock'><p>Run our command as per <code>status</code>, returning an error if the command fails. <a href="../../cage/command_runner/trait.Command.html#method.exec">Read more</a></p>
+</div></div></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../../";
+        window.currentCrate = "cage";
+        window.playgroundUrl = "";
+    </script>
+    <script src="../../jquery.js"></script>
+    <script src="../../main.js"></script>
+    
+    <script defer src="../../search-index.js"></script>
+</body>
+</html>

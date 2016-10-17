@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["Value","A YAML node is stored as this `Yaml` enumeration, which provides an easy way to access your YAML document."]],"fn":[["from_value","Shortcut function to decode a YAML `Value` into a `T`."],["to_value","Shortcut function to encode a `T` into a YAML `Value`."]]});

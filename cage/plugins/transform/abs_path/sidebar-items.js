@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Plugin","Plugin which converts all paths in a `dc::File` to absolute."]]});

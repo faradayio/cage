@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Plugin","Updates the `labels` in a `dc::File`."]]});

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `TokenOptions` struct in crate `hashicorp_vault`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, TokenOptions">
+
+    <title>hashicorp_vault::client::TokenOptions - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'><a href='../index.html'>hashicorp_vault</a>::<wbr><a href='index.html'>client</a></p><script>window.sidebarCurrent = {name: 'TokenOptions', ty: 'struct', relpath: ''};</script><script defer src="sidebar-items.js"></script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content struct">
+<h1 class='fqn'><span class='in-band'>Struct <a href='../index.html'>hashicorp_vault</a>::<wbr><a href='index.html'>client</a>::<wbr><a class='struct' href=''>TokenOptions</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a id='src-602' class='srclink' href='../../src/hashicorp_vault/client/mod.rs.html#278-289' title='goto source code'>[src]</a></span></h1>
+<pre class='rust struct'>pub struct TokenOptions { /* fields omitted */ }</pre><div class='docblock'><p>Options for creating a token.  This is intended to be used as a
+&quot;builder&quot;-style interface, where you create a new <code>TokenOptions</code>
+object, call a bunch of chained methods on it, and then pass the result
+to <code>Client::create_token</code>.</p>
+
+<pre class='rust rust-example-rendered'>
+<span class='kw'>use</span> <span class='ident'>hashicorp_vault</span>::<span class='ident'>client</span>::{<span class='ident'>TokenOptions</span>, <span class='ident'>VaultDuration</span>};
+
+<span class='kw'>let</span> _ <span class='op'>=</span> <span class='ident'>TokenOptions</span>::<span class='ident'>default</span>()
+  .<span class='ident'>id</span>(<span class='string'>&quot;test12345&quot;</span>)
+  .<span class='ident'>policies</span>(<span class='macro'>vec</span><span class='macro'>!</span>(<span class='string'>&quot;root&quot;</span>))
+  .<span class='ident'>default_policy</span>(<span class='bool-val'>false</span>)
+  .<span class='ident'>orphan</span>(<span class='bool-val'>true</span>)
+  .<span class='ident'>renewable</span>(<span class='bool-val'>false</span>)
+  .<span class='ident'>display_name</span>(<span class='string'>&quot;jdoe-temp&quot;</span>)
+  .<span class='ident'>number_of_uses</span>(<span class='number'>10</span>)
+  .<span class='ident'>ttl</span>(<span class='ident'>VaultDuration</span>::<span class='ident'>hours</span>(<span class='number'>3</span>))
+  .<span class='ident'>explicit_max_ttl</span>(<span class='ident'>VaultDuration</span>::<span class='ident'>hours</span>(<span class='number'>13</span>));<a class='test-arrow' target='_blank' href=''>Run</a></pre>
+
+<p>If an option is not specified, it will be set accordinding to <a href="https://www.vaultproject.io/docs/auth/token.html">Vault&#39;s
+standard defaults for newly-created tokens</a>.</p>
+</div><h2 id='methods'>Methods</h2><h3 class='impl'><span class='in-band'><code>impl <a class='struct' href='../../hashicorp_vault/client/struct.TokenOptions.html' title='hashicorp_vault::client::TokenOptions'>TokenOptions</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-678' class='srclink' href='../../src/hashicorp_vault/client/mod.rs.html#291-357' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.id' class='method'><span id='id.v' class='invisible'><code>fn <a href='#method.id' class='fnname'>id</a>&lt;S:&nbsp;<a class='trait' href='https://doc.rust-lang.org/nightly/core/convert/trait.Into.html' title='core::convert::Into'>Into</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>&gt;&gt;(self, id: S) -&gt; Self</code></span></h4>
+<div class='docblock'><p>Set the <code>id</code> of the created token to the specified value.  <strong>This
+may make it easy for attackers to guess your token.</strong> Typically,
+this is used for testing and similar purposes.</p>
+</div><h4 id='method.policies' class='method'><span id='policies.v' class='invisible'><code>fn <a href='#method.policies' class='fnname'>policies</a>&lt;'a,&nbsp;I&gt;(self, policies: I) -&gt; Self <span class='where'>where I: <a class='trait' href='https://doc.rust-lang.org/nightly/core/iter/traits/trait.IntoIterator.html' title='core::iter::traits::IntoIterator'>IntoIterator</a>, I::Item: <a class='trait' href='https://doc.rust-lang.org/nightly/core/convert/trait.Into.html' title='core::convert::Into'>Into</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>&gt;</span></code></span></h4>
+<div class='docblock'><p>Supply a list of policies that will be used to grant permissions to
+the created token.  Unless you also call <code>default_policy(false)</code>, the
+policy <code>default</code> will be added to this list in modern versions of
+vault.</p>
+</div><h4 id='method.default_policy' class='method'><span id='default_policy.v' class='invisible'><code>fn <a href='#method.default_policy' class='fnname'>default_policy</a>(self, enable: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a>) -&gt; Self</code></span></h4>
+<div class='docblock'><p>Should we grant access to the <code>default</code> policy?  Defaults to true.</p>
+</div><h4 id='method.orphan' class='method'><span id='orphan.v' class='invisible'><code>fn <a href='#method.orphan' class='fnname'>orphan</a>(self, orphan: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a>) -&gt; Self</code></span></h4>
+<div class='docblock'><p>Should this token be an &quot;orphan&quot;, allowing it to survive even when
+the token that created it expires or is revoked?</p>
+</div><h4 id='method.renewable' class='method'><span id='renewable.v' class='invisible'><code>fn <a href='#method.renewable' class='fnname'>renewable</a>(self, renewable: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a>) -&gt; Self</code></span></h4>
+<div class='docblock'><p>Should the token be renewable?</p>
+</div><h4 id='method.display_name' class='method'><span id='display_name.v' class='invisible'><code>fn <a href='#method.display_name' class='fnname'>display_name</a>&lt;S&gt;(self, name: S) -&gt; Self <span class='where'>where S: <a class='trait' href='https://doc.rust-lang.org/nightly/core/convert/trait.Into.html' title='core::convert::Into'>Into</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>&gt;</span></code></span></h4>
+<div class='docblock'><p>For various logging purposes, what should this token be called?</p>
+</div><h4 id='method.number_of_uses' class='method'><span id='number_of_uses.v' class='invisible'><code>fn <a href='#method.number_of_uses' class='fnname'>number_of_uses</a>(self, uses: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u64.html'>u64</a>) -&gt; Self</code></span></h4>
+<div class='docblock'><p>How many times can this token be used before it stops working?</p>
+</div><h4 id='method.ttl' class='method'><span id='ttl.v' class='invisible'><code>fn <a href='#method.ttl' class='fnname'>ttl</a>&lt;D:&nbsp;<a class='trait' href='https://doc.rust-lang.org/nightly/core/convert/trait.Into.html' title='core::convert::Into'>Into</a>&lt;<a class='struct' href='../../hashicorp_vault/client/struct.VaultDuration.html' title='hashicorp_vault::client::VaultDuration'>VaultDuration</a>&gt;&gt;(self, ttl: D) -&gt; Self</code></span></h4>
+<div class='docblock'><p>How long should this token remain valid for?</p>
+</div><h4 id='method.explicit_max_ttl' class='method'><span id='explicit_max_ttl.v' class='invisible'><code>fn <a href='#method.explicit_max_ttl' class='fnname'>explicit_max_ttl</a>&lt;D:&nbsp;<a class='trait' href='https://doc.rust-lang.org/nightly/core/convert/trait.Into.html' title='core::convert::Into'>Into</a>&lt;<a class='struct' href='../../hashicorp_vault/client/struct.VaultDuration.html' title='hashicorp_vault::client::VaultDuration'>VaultDuration</a>&gt;&gt;(self, ttl: D) -&gt; Self</code></span></h4>
+<div class='docblock'><p>How long should this token remain valid for, even if it is renewed
+repeatedly?</p>
+</div></div><h2 id='implementations'>Trait Implementations</h2><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='https://doc.rust-lang.org/nightly/core/default/trait.Default.html' title='core::default::Default'>Default</a> for <a class='struct' href='../../hashicorp_vault/client/struct.TokenOptions.html' title='hashicorp_vault::client::TokenOptions'>TokenOptions</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-612' class='srclink' href='../../src/hashicorp_vault/client/mod.rs.html#277' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.default' class='method'><span id='default.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/default/trait.Default.html#tymethod.default' class='fnname'>default</a>() -&gt; <a class='struct' href='../../hashicorp_vault/client/struct.TokenOptions.html' title='hashicorp_vault::client::TokenOptions'>TokenOptions</a></code></span></h4>
+<div class='docblock'><p>Returns the &quot;default value&quot; for a type. <a href="https://doc.rust-lang.org/nightly/core/default/trait.Default.html#tymethod.default">Read more</a></p>
+</div></div><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='../../rustc_serialize/serialize/trait.Encodable.html' title='rustc_serialize::serialize::Encodable'>Encodable</a> for <a class='struct' href='../../hashicorp_vault/client/struct.TokenOptions.html' title='hashicorp_vault::client::TokenOptions'>TokenOptions</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-614' class='srclink' href='../../src/hashicorp_vault/client/mod.rs.html#277' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.encode' class='method'><span id='encode.v' class='invisible'><code>fn <a href='../../rustc_serialize/serialize/trait.Encodable.html#tymethod.encode' class='fnname'>encode</a>&lt;__S:&nbsp;<a class='trait' href='../../rustc_serialize/serialize/trait.Encoder.html' title='rustc_serialize::serialize::Encoder'>Encoder</a>&gt;(&amp;self, __arg_0: &amp;mut __S) -&gt; <a class='enum' href='https://doc.rust-lang.org/nightly/core/result/enum.Result.html' title='core::result::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>,&nbsp;__S::Error&gt;</code></span></h4>
+</div><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html' title='core::fmt::Debug'>Debug</a> for <a class='struct' href='../../hashicorp_vault/client/struct.TokenOptions.html' title='hashicorp_vault::client::TokenOptions'>TokenOptions</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-664' class='srclink' href='../../src/hashicorp_vault/client/mod.rs.html#277' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.fmt' class='method'><span id='fmt.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html#tymethod.fmt' class='fnname'>fmt</a>(&amp;self, __arg_0: &amp;mut <a class='struct' href='https://doc.rust-lang.org/nightly/core/fmt/struct.Formatter.html' title='core::fmt::Formatter'>Formatter</a>) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/core/fmt/type.Result.html' title='core::fmt::Result'>Result</a></code></span></h4>
+<div class='docblock'><p>Formats the value using the given formatter.</p>
+</div></div></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../../";
+        window.currentCrate = "hashicorp_vault";
+        window.playgroundUrl = "";
+    </script>
+    <script src="../../jquery.js"></script>
+    <script src="../../main.js"></script>
+    
+    <script defer src="../../search-index.js"></script>
+</body>
+</html>

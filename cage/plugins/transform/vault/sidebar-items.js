@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Plugin","Issues `VAULT_TOKEN` values to services."]]});

@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["to_string",""],["to_vec",""],["to_writer",""]],"struct":[["Serializer","A structure for serializing a Rust value into a YAML value."]]});

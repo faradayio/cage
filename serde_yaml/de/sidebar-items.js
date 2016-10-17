@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["from_iter",""],["from_reader",""],["from_slice",""],["from_str","Decodes a YAML value from a `&str`."]],"struct":[["Deserializer","A structure for deserializing a YAML value into a Rust value."]]});

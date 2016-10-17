@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["Error","This type represents all possible errors that can occur when serializing or deserializing a value using YAML."]],"type":[["Result","Helper alias for `Result` objects that return a YAML `Error`."]]});

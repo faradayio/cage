@@ -1,0 +1,1 @@
+initSidebarItems({"mod":[["errors","We provide fancy error-handling support thanks to the [`error_chain` crate][error_chain].  The primary advantage of `error_chain` is that it provides support for backtraces.  The secondary advantage of this crate is that it gives us nice, structured error types."],["v2","Support for the `docker-compose.yml` version 2 file format."]]});

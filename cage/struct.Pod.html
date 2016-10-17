@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `Pod` struct in crate `cage`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, Pod">
+
+    <title>cage::Pod - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'><a href='index.html'>cage</a></p><script>window.sidebarCurrent = {name: 'Pod', ty: 'struct', relpath: ''};</script><script defer src="sidebar-items.js"></script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content struct">
+<h1 class='fqn'><span class='in-band'>Struct <a href='index.html'>cage</a>::<wbr><a class='struct' href=''>Pod</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a id='src-2817' class='srclink' href='../src/cage/src/pod.rs.html#111-132' title='goto source code'>[src]</a></span></h1>
+<pre class='rust struct'>pub struct Pod { /* fields omitted */ }</pre><div class='docblock'><p>A pod, specified by <code>pods/$NAME.yml</code> and zero or more
+<code>pods/overrides/*/*.yml</code> overrides that we can apply to it.</p>
+</div><h2 id='methods'>Methods</h2><h3 class='impl'><span class='in-band'><code>impl <a class='struct' href='../cage/struct.Pod.html' title='cage::Pod'>Pod</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-2835' class='srclink' href='../src/cage/src/pod.rs.html#134-286' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.name' class='method'><span id='name.v' class='invisible'><code>fn <a href='#method.name' class='fnname'>name</a>(&amp;self) -&gt; &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a></code></span></h4>
+<div class='docblock'><p>Get the name of this pod.</p>
+</div><h4 id='method.pod_type' class='method'><span id='pod_type.v' class='invisible'><code>fn <a href='#method.pod_type' class='fnname'>pod_type</a>(&amp;self) -&gt; <a class='enum' href='../cage/enum.PodType.html' title='cage::PodType'>PodType</a></code></span></h4>
+<div class='docblock'><p>Get the type of this pod.</p>
+</div><h4 id='method.service_names' class='method'><span id='service_names.v' class='invisible'><code>fn <a href='#method.service_names' class='fnname'>service_names</a>(&amp;self) -&gt; &amp;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/btree/set/struct.BTreeSet.html' title='collections::btree::set::BTreeSet'>BTreeSet</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>&gt;</code></span></h4>
+<div class='docblock'><p>Get the names of the services declared in this pod.</p>
+</div><h4 id='method.enabled_in' class='method'><span id='enabled_in.v' class='invisible'><code>fn <a href='#method.enabled_in' class='fnname'>enabled_in</a>(&amp;self, ovr: &amp;<a class='struct' href='../cage/struct.Override.html' title='cage::Override'>Override</a>) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a></code></span></h4>
+<div class='docblock'><p>Is this pod enabled in the specified override?</p>
+</div><h4 id='method.base_dir' class='method'><span id='base_dir.v' class='invisible'><code>fn <a href='#method.base_dir' class='fnname'>base_dir</a>(&amp;self) -&gt; &amp;<a class='struct' href='https://doc.rust-lang.org/nightly/std/path/struct.Path.html' title='std::path::Path'>Path</a></code></span></h4>
+<div class='docblock'><p>The base directory for our relative paths.</p>
+</div><h4 id='method.rel_path' class='method'><span id='rel_path.v' class='invisible'><code>fn <a href='#method.rel_path' class='fnname'>rel_path</a>(&amp;self) -&gt; &amp;<a class='struct' href='https://doc.rust-lang.org/nightly/std/path/struct.Path.html' title='std::path::Path'>Path</a></code></span></h4>
+<div class='docblock'><p>The path to the top-level file defining this pod, relative to the
+<code>base_dir</code> specified at creation time.</p>
+</div><h4 id='method.file' class='method'><span id='file.v' class='invisible'><code>fn <a href='#method.file' class='fnname'>file</a>(&amp;self) -&gt; &amp;<a class='struct' href='../compose_yml/v2/struct.File.html' title='compose_yml::v2::File'>File</a></code></span></h4>
+<div class='docblock'><p>The top-level file defining this pod.  This is normalized to
+include the appropriate <code>env_file</code> entries, but if you want to do
+more complicated transformations, you&#39;ll need to clone it with
+<code>to_owned()</code> first.</p>
+</div><h4 id='method.override_rel_path' class='method'><span id='override_rel_path.v' class='invisible'><code>fn <a href='#method.override_rel_path' class='fnname'>override_rel_path</a>(&amp;self, ovr: &amp;<a class='struct' href='../cage/struct.Override.html' title='cage::Override'>Override</a>) -&gt; <a class='type' href='../cage/type.Result.html' title='cage::Result'>Result</a>&lt;&amp;<a class='struct' href='https://doc.rust-lang.org/nightly/std/path/struct.Path.html' title='std::path::Path'>Path</a>&gt;</code></span></h4>
+<div class='docblock'><p>The path to the specificied override file for this pod.</p>
+</div><h4 id='method.override_file' class='method'><span id='override_file.v' class='invisible'><code>fn <a href='#method.override_file' class='fnname'>override_file</a>(&amp;self, ovr: &amp;<a class='struct' href='../cage/struct.Override.html' title='cage::Override'>Override</a>) -&gt; <a class='type' href='../cage/type.Result.html' title='cage::Result'>Result</a>&lt;&amp;<a class='struct' href='../compose_yml/v2/struct.File.html' title='compose_yml::v2::File'>File</a>&gt;</code></span></h4>
+<div class='docblock'><p>The <code>dc::File</code> for this override.</p>
+</div><h4 id='method.merged_file' class='method'><span id='merged_file.v' class='invisible'><code>fn <a href='#method.merged_file' class='fnname'>merged_file</a>(&amp;self, ovr: &amp;<a class='struct' href='../cage/struct.Override.html' title='cage::Override'>Override</a>) -&gt; <a class='type' href='../cage/type.Result.html' title='cage::Result'>Result</a>&lt;<a class='struct' href='../compose_yml/v2/struct.File.html' title='compose_yml::v2::File'>File</a>&gt;</code></span></h4>
+<div class='docblock'><p>Return the base file and the override file merged into a single
+<code>docker-compose.yml</code> file.</p>
+</div><h4 id='method.override_files' class='method'><span id='override_files.v' class='invisible'><code>fn <a href='#method.override_files' class='fnname'>override_files</a>(&amp;self) -&gt; <a class='struct' href='../cage/struct.OverrideFiles.html' title='cage::OverrideFiles'>OverrideFiles</a></code></span></h4>
+<div class='docblock'><p>All the overrides associated with this pod.</p>
+</div><h4 id='method.all_files' class='method'><span id='all_files.v' class='invisible'><code>fn <a href='#method.all_files' class='fnname'>all_files</a>(&amp;self) -&gt; <a class='struct' href='../cage/struct.AllFiles.html' title='cage::AllFiles'>AllFiles</a></code></span></h4>
+<div class='docblock'><p>Iterate over all <code>dc::File</code> objects associated with this pod, including
+both the main <code>file()</code> and all the files in <code>override_files()</code>.</p>
+</div><h4 id='method.service' class='method'><span id='service.v' class='invisible'><code>fn <a href='#method.service' class='fnname'>service</a>(&amp;self, ovr: &amp;<a class='struct' href='../cage/struct.Override.html' title='cage::Override'>Override</a>, name: &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>) -&gt; <a class='type' href='../cage/type.Result.html' title='cage::Result'>Result</a>&lt;<a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='struct' href='../compose_yml/v2/struct.Service.html' title='compose_yml::v2::Service'>Service</a>&gt;&gt;</code></span></h4>
+<div class='docblock'><p>Look up a service by name.</p>
+</div><h4 id='method.service_or_err' class='method'><span id='service_or_err.v' class='invisible'><code>fn <a href='#method.service_or_err' class='fnname'>service_or_err</a>(&amp;self, ovr: &amp;<a class='struct' href='../cage/struct.Override.html' title='cage::Override'>Override</a>, name: &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>) -&gt; <a class='type' href='../cage/type.Result.html' title='cage::Result'>Result</a>&lt;<a class='struct' href='../compose_yml/v2/struct.Service.html' title='compose_yml::v2::Service'>Service</a>&gt;</code></span></h4>
+<div class='docblock'><p>Like <code>service</code>, but returns an error if the service can&#39;t be found.</p>
+</div><h4 id='method.compose_args' class='method'><span id='compose_args.v' class='invisible'><code>fn <a href='#method.compose_args' class='fnname'>compose_args</a>(&amp;self, proj: &amp;<a class='struct' href='../cage/struct.Project.html' title='cage::Project'>Project</a>, ovr: &amp;<a class='struct' href='../cage/struct.Override.html' title='cage::Override'>Override</a>) -&gt; <a class='type' href='../cage/type.Result.html' title='cage::Result'>Result</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/std/ffi/os_str/struct.OsString.html' title='std::ffi::os_str::OsString'>OsString</a>&gt;&gt;</code></span></h4>
+<div class='docblock'><p>Command-line <code>-p</code> and <code>-f</code> arguments that we&#39;ll pass to
+<code>docker-compose</code> to describe this file.</p>
+</div></div><h2 id='implementations'>Trait Implementations</h2><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html' title='core::fmt::Debug'>Debug</a> for <a class='struct' href='../cage/struct.Pod.html' title='cage::Pod'>Pod</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-2824' class='srclink' href='../src/cage/src/pod.rs.html#110' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.fmt' class='method'><span id='fmt.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html#tymethod.fmt' class='fnname'>fmt</a>(&amp;self, __arg_0: &amp;mut <a class='struct' href='https://doc.rust-lang.org/nightly/core/fmt/struct.Formatter.html' title='core::fmt::Formatter'>Formatter</a>) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/core/fmt/type.Result.html' title='core::fmt::Result'>Result</a></code></span></h4>
+<div class='docblock'><p>Formats the value using the given formatter.</p>
+</div></div></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../";
+        window.currentCrate = "cage";
+        window.playgroundUrl = "";
+    </script>
+    <script src="../jquery.js"></script>
+    <script src="../main.js"></script>
+    
+    <script defer src="../search-index.js"></script>
+</body>
+</html>

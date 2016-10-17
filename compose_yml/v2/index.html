@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `v2` mod in crate `compose_yml`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, v2">
+
+    <title>compose_yml::v2 - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'><a href='../index.html'>compose_yml</a></p><script>window.sidebarCurrent = {name: 'v2', ty: 'mod', relpath: '../'};</script><script defer src="../sidebar-items.js"></script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content mod">
+<h1 class='fqn'><span class='in-band'>Module <a href='../index.html'>compose_yml</a>::<wbr><a class='mod' href=''>v2</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a id='src-231' class='srclink' href='../../src/compose_yml/v2/mod.rs.html#1-106' title='goto source code'>[src]</a></span></h1>
+<div class='docblock'><p>Support for the <code>docker-compose.yml</code> version 2 file format.</p>
+</div><h2 id='reexports' class='section-header'><a href="#reexports">Reexports</a></h2>
+<table><tr><td><code>pub use <a class='mod' href='../../compose_yml/errors/index.html' title='compose_yml::errors'>errors</a>::*;</code></td></tr></table><h2 id='structs' class='section-header'><a href="#structs">Structs</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.AliasedName.html'
+                                  title='compose_yml::v2::AliasedName'>AliasedName</a></td>
+                           <td class='docblock-short'>
+                                <p>The name of an external resource, and an optional local alias to which
+it is mapped inside a container.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.Build.html'
+                                  title='compose_yml::v2::Build'>Build</a></td>
+                           <td class='docblock-short'>
+                                <p>Information on how to build a Docker image.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.DevicePermissions.html'
+                                  title='compose_yml::v2::DevicePermissions'>DevicePermissions</a></td>
+                           <td class='docblock-short'>
+                                <p>Permissions on devices that are mapped into the Docker container.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.Extends.html'
+                                  title='compose_yml::v2::Extends'>Extends</a></td>
+                           <td class='docblock-short'>
+                                <p>Specify another service which should be used as the base for this
+service.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.ExternalNetwork.html'
+                                  title='compose_yml::v2::ExternalNetwork'>ExternalNetwork</a></td>
+                           <td class='docblock-short'>
+                                <p>Information about an external network.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.File.html'
+                                  title='compose_yml::v2::File'>File</a></td>
+                           <td class='docblock-short'>
+                                <p>A <code>docker-compose.yml</code> file.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.GitUrl.html'
+                                  title='compose_yml::v2::GitUrl'>GitUrl</a></td>
+                           <td class='docblock-short'>
+                                <p>URL of a Git repository.  Git repositories may be specified as either
+ordinary <code>http</code> or <code>https</code> URLs, or as <code>scp</code>-style remote directory
+specifiers.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.HostMapping.html'
+                                  title='compose_yml::v2::HostMapping'>HostMapping</a></td>
+                           <td class='docblock-short'>
+                                <p>A host mapping to add to <code>/etc/hosts</code>.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.Image.html'
+                                  title='compose_yml::v2::Image'>Image</a></td>
+                           <td class='docblock-short'>
+                                <p>The name of an external resource, and an optional local alias to which
+it is mapped inside a container.  Our fields names are based on the
+<code>docker</code> documentation.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.Logging.html'
+                                  title='compose_yml::v2::Logging'>Logging</a></td>
+                           <td class='docblock-short'>
+                                <p>Logging configuration.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.MemorySize.html'
+                                  title='compose_yml::v2::MemorySize'>MemorySize</a></td>
+                           <td class='docblock-short'>
+                                <p>The size of a block of memory. This can be serialized as a
+Docker-compatible size string using specifiers like <code>k</code>, <code>m</code> and <code>g</code>.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.Network.html'
+                                  title='compose_yml::v2::Network'>Network</a></td>
+                           <td class='docblock-short'>
+                                <p>A service which will be managed by <code>docker-compose</code>.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.NetworkInterface.html'
+                                  title='compose_yml::v2::NetworkInterface'>NetworkInterface</a></td>
+                           <td class='docblock-short'>
+                                <p>A connection from a <code>Service</code> to a <code>Network</code>.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.OsEnvironment.html'
+                                  title='compose_yml::v2::OsEnvironment'>OsEnvironment</a></td>
+                           <td class='docblock-short'>
+                                <p>Fetches environment variables from <code>std::env</code>.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.PortMapping.html'
+                                  title='compose_yml::v2::PortMapping'>PortMapping</a></td>
+                           <td class='docblock-short'>
+                                <p>Specify how to map container ports to the host.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.RawOr.html'
+                                  title='compose_yml::v2::RawOr'>RawOr</a></td>
+                           <td class='docblock-short'>
+                                <p>Either an unparsed interpolation string, or a fully-parsed value.  We
+use this representation because:</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.RegistryHost.html'
+                                  title='compose_yml::v2::RegistryHost'>RegistryHost</a></td>
+                           <td class='docblock-short'>
+                                <p>A server running a Docker registry.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.Service.html'
+                                  title='compose_yml::v2::Service'>Service</a></td>
+                           <td class='docblock-short'>
+                                <p>A service which will be managed by <code>docker-compose</code>.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.VolumeMount.html'
+                                  title='compose_yml::v2::VolumeMount'>VolumeMount</a></td>
+                           <td class='docblock-short'>
+                                <p>A volume associated with a service.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.VolumesFrom.html'
+                                  title='compose_yml::v2::VolumesFrom'>VolumesFrom</a></td>
+                           <td class='docblock-short'>
+                                <p>Mount the volumes defined by another container into this one.</p>
+                           </td>
+                       </tr></table><h2 id='enums' class='section-header'><a href="#enums">Enums</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class='enum' href='enum.CommandLine.html'
+                                  title='compose_yml::v2::CommandLine'>CommandLine</a></td>
+                           <td class='docblock-short'>
+                                <p>A command line to be executed by Docker.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='enum' href='enum.Context.html'
+                                  title='compose_yml::v2::Context'>Context</a></td>
+                           <td class='docblock-short'>
+                                <p>Either a local directory path, or a Git-format &quot;URL&quot; (not necessarily a
+real URL, alas).</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='enum' href='enum.HostVolume.html'
+                                  title='compose_yml::v2::HostVolume'>HostVolume</a></td>
+                           <td class='docblock-short'>
+                                <p>Where can we find the volume we want to map into a container?</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='enum' href='enum.IpcMode.html'
+                                  title='compose_yml::v2::IpcMode'>IpcMode</a></td>
+                           <td class='docblock-short'>
+                                <p>What IPC namespace should we use for our container?</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='enum' href='enum.NetworkMode.html'
+                                  title='compose_yml::v2::NetworkMode'>NetworkMode</a></td>
+                           <td class='docblock-short'>
+                                <p>How should we configure the container&#39;s networking?</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='enum' href='enum.PidMode.html'
+                                  title='compose_yml::v2::PidMode'>PidMode</a></td>
+                           <td class='docblock-short'>
+                                <p>What process ID namespace should we use?</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='enum' href='enum.Ports.html'
+                                  title='compose_yml::v2::Ports'>Ports</a></td>
+                           <td class='docblock-short'>
+                                <p>Either a port, or a range of ports.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='enum' href='enum.RestartMode.html'
+                                  title='compose_yml::v2::RestartMode'>RestartMode</a></td>
+                           <td class='docblock-short'>
+                                <p>What should Docker do when the container stops running?</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='enum' href='enum.ServiceOrContainer.html'
+                                  title='compose_yml::v2::ServiceOrContainer'>ServiceOrContainer</a></td>
+                           <td class='docblock-short'>
+                                <p>The name of either a service or a container.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='enum' href='enum.VolumePermissions.html'
+                                  title='compose_yml::v2::VolumePermissions'>VolumePermissions</a></td>
+                           <td class='docblock-short'>
+                                <p>Permissions on volumes that are mapped into the Docker container.</p>
+                           </td>
+                       </tr></table><h2 id='traits' class='section-header'><a href="#traits">Traits</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class='trait' href='trait.Environment.html'
+                                  title='compose_yml::v2::Environment'>Environment</a></td>
+                           <td class='docblock-short'>
+                                <p>A source of environment variable values.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='trait' href='trait.InterpolateAll.html'
+                                  title='compose_yml::v2::InterpolateAll'>InterpolateAll</a></td>
+                           <td class='docblock-short'>
+                                <p>Support for environment variable interpolation.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='trait' href='trait.MergeOverride.html'
+                                  title='compose_yml::v2::MergeOverride'>MergeOverride</a></td>
+                           <td class='docblock-short'>
+                                <p>This trait is implemented by types that can be merged</p>
+                           </td>
+                       </tr></table><h2 id='functions' class='section-header'><a href="#functions">Functions</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class='fn' href='fn.escape.html'
+                                  title='compose_yml::v2::escape'>escape</a></td>
+                           <td class='docblock-short'>
+                                <p>Escape a string and convert it into a <code>RawOr&lt;T&gt;</code> value.  See <code>RawOr&lt;T&gt;</code>
+for examples of how to use this API.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='fn' href='fn.raw.html'
+                                  title='compose_yml::v2::raw'>raw</a></td>
+                           <td class='docblock-short'>
+                                <p>Convert a raw string containing variable interpolations into a
+<code>RawOr&lt;T&gt;</code> value.  See <code>RawOr&lt;T&gt;</code> for examples of how to use this API.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='fn' href='fn.value.html'
+                                  title='compose_yml::v2::value'>value</a></td>
+                           <td class='docblock-short'>
+                                <p>Convert a value into a <code>RawOr&lt;T&gt;</code> value, taking ownership of the
+original value.  See <code>RawOr&lt;T&gt;</code> for examples of how to use this API.</p>
+                           </td>
+                       </tr></table></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../../";
+        window.currentCrate = "compose_yml";
+        window.playgroundUrl = "";
+    </script>
+    <script src="../../jquery.js"></script>
+    <script src="../../main.js"></script>
+    
+    <script defer src="../../search-index.js"></script>
+</body>
+</html>

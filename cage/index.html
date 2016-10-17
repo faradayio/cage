@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `cage` crate.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, cage">
+
+    <title>cage - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'></p><script>window.sidebarCurrent = {name: 'cage', ty: 'mod', relpath: '../'};</script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content mod">
+<h1 class='fqn'><span class='in-band'>Crate <a class='mod' href=''>cage</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a id='src-0' class='srclink' href='../src/cage/src/lib.rs.html#1-116' title='goto source code'>[src]</a></span></h1>
+<div class='docblock'><p><code>cage</code> as a reusable API, so that you can call it from other tools.</p>
+</div><h2 id='modules' class='section-header'><a href="#modules">Modules</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class='mod' href='args/index.html'
+                                  title='cage::args'>args</a></td>
+                           <td class='docblock-short'>
+                                <p>Data structures representing arguments that we can pass to
+<code>docker-compose</code> and other command-line tools.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='mod' href='cmd/index.html'
+                                  title='cage::cmd'>cmd</a></td>
+                           <td class='docblock-short'>
+                                <p>Various commands which can be performed on a project, corresponding to
+CLI entry points.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='mod' href='command_runner/index.html'
+                                  title='cage::command_runner'>command_runner</a></td>
+                           <td class='docblock-short'>
+                                <p>Utilities for running and testing shell commands.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='mod' href='dir/index.html'
+                                  title='cage::dir'>dir</a></td>
+                           <td class='docblock-short'>
+                                <p>Utilities for finding and working with project directories.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='mod' href='hook/index.html'
+                                  title='cage::hook'>hook</a></td>
+                           <td class='docblock-short'>
+                                <p>Hooks that are run during cage execution.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='mod' href='plugins/index.html'
+                                  title='cage::plugins'>plugins</a></td>
+                           <td class='docblock-short'>
+                                <p>Plugin support.</p>
+                           </td>
+                       </tr></table><h2 id='macros' class='section-header'><a href="#macros">Macros</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class='macro' href='macro.err.html'
+                                  title='cage::err'>err</a></td>
+                           <td class='docblock-short'>
+                                <p>Create an error using a format string and arguments.</p>
+                           </td>
+                       </tr></table><h2 id='structs' class='section-header'><a href="#structs">Structs</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.AllFiles.html'
+                                  title='cage::AllFiles'>AllFiles</a></td>
+                           <td class='docblock-short'>
+                                <p>An iterator over all the <code>dc::File</code> objects associated with a pod, in
+all overrides.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.DefaultTags.html'
+                                  title='cage::DefaultTags'>DefaultTags</a></td>
+                           <td class='docblock-short'>
+                                <p>This is typically used to incorporate image tags for specific builds
+generated by a continuous integration system (such as <a href="https://www.go.cd/">Go</a>).</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.Error.html'
+                                  title='cage::Error'>Error</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.Override.html'
+                                  title='cage::Override'>Override</a></td>
+                           <td class='docblock-short'>
+                                <p>An <code>Override</code> is a collection of extensions to a project&#39;s basic pods.
+Overrides are typically used to represent deployment environments: test,
+development and production.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.OverrideFiles.html'
+                                  title='cage::OverrideFiles'>OverrideFiles</a></td>
+                           <td class='docblock-short'>
+                                <p>An iterator over this pods overrides and their associated files.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.Overrides.html'
+                                  title='cage::Overrides'>Overrides</a></td>
+                           <td class='docblock-short'>
+                                <p>An iterator over the overrides in a project.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.Pod.html'
+                                  title='cage::Pod'>Pod</a></td>
+                           <td class='docblock-short'>
+                                <p>A pod, specified by <code>pods/$NAME.yml</code> and zero or more
+<code>pods/overrides/*/*.yml</code> overrides that we can apply to it.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.Pods.html'
+                                  title='cage::Pods'>Pods</a></td>
+                           <td class='docblock-short'>
+                                <p>An iterator over the pods in a project.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.Project.html'
+                                  title='cage::Project'>Project</a></td>
+                           <td class='docblock-short'>
+                                <p>A <code>cage</code> project, which is represented as a directory containing a
+<code>pods</code> subdirectory.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.ProjectConfig.html'
+                                  title='cage::ProjectConfig'>ProjectConfig</a></td>
+                           <td class='docblock-short'>
+                                <p>Configuration information about a project, read in from
+<code>PROJECT_CONFIG_PATH</code>.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.Repo.html'
+                                  title='cage::Repo'>Repo</a></td>
+                           <td class='docblock-short'>
+                                <p>A single repository.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.RepoIter.html'
+                                  title='cage::RepoIter'>RepoIter</a></td>
+                           <td class='docblock-short'>
+                                <p>An iterator over all repositories associated with this project.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.Repos.html'
+                                  title='cage::Repos'>Repos</a></td>
+                           <td class='docblock-short'>
+                                <p>All the git repositories associated with a project.</p>
+                           </td>
+                       </tr></table><h2 id='enums' class='section-header'><a href="#enums">Enums</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class='enum' href='enum.ErrorKind.html'
+                                  title='cage::ErrorKind'>ErrorKind</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='enum' href='enum.PodOrService.html'
+                                  title='cage::PodOrService'>PodOrService</a></td>
+                           <td class='docblock-short'>
+                                <p>Represents either a <code>Pod</code> object or a <code>Service</code> object.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='enum' href='enum.PodType.html'
+                                  title='cage::PodType'>PodType</a></td>
+                           <td class='docblock-short'>
+                                <p>Indicates whether a pod is a regular service or a one-shot task.</p>
+                           </td>
+                       </tr></table><h2 id='traits' class='section-header'><a href="#traits">Traits</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class='trait' href='trait.ChainErr.html'
+                                  title='cage::ChainErr'>ChainErr</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr></table><h2 id='functions' class='section-header'><a href="#functions">Functions</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class='fn' href='fn.err.html'
+                                  title='cage::err'>err</a></td>
+                           <td class='docblock-short'>
+                                <p>Create an error using a string literal.  (This exists mostly so that
+clippy doesn&#39;t complain about <code>err!</code> expanding to <code>format!</code> with no
+arguments.)</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='fn' href='fn.version.html'
+                                  title='cage::version'>version</a></td>
+                           <td class='docblock-short'>
+                                <p>The version of this crate.</p>
+                           </td>
+                       </tr></table><h2 id='types' class='section-header'><a href="#types">Type Definitions</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class='type' href='type.Result.html'
+                                  title='cage::Result'>Result</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr></table></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../";
+        window.currentCrate = "cage";
+        window.playgroundUrl = "";
+    </script>
+    <script src="../jquery.js"></script>
+    <script src="../main.js"></script>
+    
+    <script defer src="../search-index.js"></script>
+</body>
+</html>

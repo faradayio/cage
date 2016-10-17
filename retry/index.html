@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `retry` crate.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, retry">
+
+    <title>retry - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'></p><script>window.sidebarCurrent = {name: 'retry', ty: 'mod', relpath: '../'};</script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content mod">
+<h1 class='fqn'><span class='in-band'>Crate <a class='mod' href=''>retry</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a id='src-0' class='srclink' href='../src/retry/lib.rs.html#1-344' title='goto source code'>[src]</a></span></h1>
+<div class='docblock'><p>Crate retry provides functionality for retrying an operation until its return value satisfies a
+specific condition.</p>
+
+<h1 id='usage' class='section-header'><a href='#usage'>Usage</a></h1>
+<p>Retry an operation by calling the <code>retry</code> function, supplying a maximum number of times to try,
+the number of milliseconds to wait after each unsuccessful try, a closure that produces a value,
+and a closure that takes a reference to that value and returns a boolean indicating the success
+or failure of the operation. The function will return a <code>Result</code> containing either the value
+that satisfied the condition or an error indicating that a satisfactory value could not be
+produced.</p>
+
+<p>You can also construct a retryable operation incrementally using the <code>Retry</code> type. <code>Retry::new</code>
+takes the same two closures as mutable references, and returns a <code>Retry</code> value. You can then
+call the <code>try</code> and <code>wait</code> methods on this value to add a maximum number of tries and a wait
+time, respectively. Finally, run the <code>execute</code> method to produce the <code>Result</code>.</p>
+
+<p>If a maximum number of tries is not supplied, the operation will be executed infinitely or until
+success. If a wait time is not supplied, there will be no wait between attempts.</p>
+
+<h1 id='failures' class='section-header'><a href='#failures'>Failures</a></h1>
+<p>Retrying will fail when:</p>
+
+<ol>
+<li>The operation reaches the maximum number of tries without success.</li>
+<li>A value of 0 is supplied for the maximum number of tries. It must be at least 1.</li>
+</ol>
+
+<h1 id='examples' class='section-header'><a href='#examples'>Examples</a></h1>
+<p>Imagine an HTTP API with an endpoint that returns 204 No Content while a job is processing, and
+eventually 200 OK when the job has completed. Retrying until the job is finished would be
+written:</p>
+
+<pre class='rust rust-example-rendered'>
+<span class='kw'>match</span> <span class='ident'>retry</span>(<span class='number'>10</span>, <span class='number'>500</span>, <span class='op'>||</span> <span class='ident'>api_client</span>.<span class='ident'>query_job_status</span>(), <span class='op'>|</span><span class='ident'>response</span><span class='op'>|</span> <span class='ident'>response</span>.<span class='ident'>code</span> <span class='op'>==</span> <span class='number'>200</span>) {
+    <span class='prelude-val'>Ok</span>(<span class='ident'>response</span>) <span class='op'>=&gt;</span> <span class='macro'>println</span><span class='macro'>!</span>(<span class='string'>&quot;Job completed with result: {}&quot;</span>, <span class='ident'>response</span>.<span class='ident'>body</span>),
+    <span class='prelude-val'>Err</span>(<span class='ident'>error</span>) <span class='op'>=&gt;</span> <span class='macro'>println</span><span class='macro'>!</span>(<span class='string'>&quot;Job completion could not be verified: {}&quot;</span>, <span class='ident'>error</span>),
+}<a class='test-arrow' target='_blank' href=''>Run</a></pre>
+
+<p>This retries the API call up to 10 times, waiting 500 milliseconds after each unsuccessful
+attempt. The same result can be achieved by building a <code>Retry</code> object incrementally:</p>
+
+<pre class='rust rust-example-rendered'>
+<span class='kw'>match</span> <span class='ident'>Retry</span>::<span class='ident'>new</span>(
+    <span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='op'>||</span> <span class='ident'>api_client</span>.<span class='ident'>query_job_status</span>(),
+    <span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='op'>|</span><span class='ident'>response</span><span class='op'>|</span> <span class='ident'>response</span>.<span class='ident'>code</span> <span class='op'>==</span> <span class='number'>200</span>
+).<span class='ident'>try</span>(<span class='number'>10</span>).<span class='ident'>wait</span>(<span class='number'>500</span>).<span class='ident'>execute</span>() {
+    <span class='prelude-val'>Ok</span>(<span class='ident'>response</span>) <span class='op'>=&gt;</span> <span class='macro'>println</span><span class='macro'>!</span>(<span class='string'>&quot;Job completed with result: {}&quot;</span>, <span class='ident'>response</span>.<span class='ident'>body</span>),
+    <span class='prelude-val'>Err</span>(<span class='ident'>error</span>) <span class='op'>=&gt;</span> <span class='macro'>println</span><span class='macro'>!</span>(<span class='string'>&quot;Job completion could not be verified: {}&quot;</span>, <span class='ident'>error</span>),
+}<a class='test-arrow' target='_blank' href=''>Run</a></pre>
+</div><h2 id='structs' class='section-header'><a href="#structs">Structs</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.Retry.html'
+                                  title='retry::Retry'>Retry</a></td>
+                           <td class='docblock-short'>
+                                <p>Builder object for a retryable operation.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.RetryError.html'
+                                  title='retry::RetryError'>RetryError</a></td>
+                           <td class='docblock-short'>
+                                <p>An error indicating that a retry call failed.</p>
+                           </td>
+                       </tr></table><h2 id='functions' class='section-header'><a href="#functions">Functions</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class='fn' href='fn.retry.html'
+                                  title='retry::retry'>retry</a></td>
+                           <td class='docblock-short'>
+                                <p>Invokes a function a certain number of times or until a condition is satisfied with a fixed
+wait after each unsuccessful try.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='fn' href='fn.retry_exponentially.html'
+                                  title='retry::retry_exponentially'>retry_exponentially</a></td>
+                           <td class='docblock-short'>
+                                <p>Invokes a function a certain number of times or until a condition is satisfied
+with an exponential backoff after each unsuccessful try.</p>
+                           </td>
+                       </tr></table></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../";
+        window.currentCrate = "retry";
+        window.playgroundUrl = "";
+    </script>
+    <script src="../jquery.js"></script>
+    <script src="../main.js"></script>
+    
+    <script defer src="../search-index.js"></script>
+</body>
+</html>

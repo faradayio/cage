@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["make_backtrace","Returns a backtrace of the current call stack if `RUST_BACKTRACE` is set to anything but ``0``, and `None` otherwise.  This is used in the generated error implementations."]],"macro":[["error_chain",""],["quick_error",""]],"struct":[["Backtrace","Representation of an owned and self-contained backtrace."],["ErrorChainIter",""]]});

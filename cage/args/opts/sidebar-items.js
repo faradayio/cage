@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Empty","An empty set of options, used for `docker-compose` subcommands for which don't need any."],["Exec","Options for `docker_compose exec`."],["Process","Command-line flags which can be passed to `docker-compose exec` and `run`."],["Run","Options for `docker_compose exec`."],["Up","Command-line flags with for `docker-compose up`."]]});

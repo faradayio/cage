@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["ActOn","The names of pods, services or both to pass to one of our commands."]],"mod":[["opts","Command-line options which can be passed to `docker-compose`."]],"struct":[["Command","A command which can be executed."]],"trait":[["ToArgs","Trait for types which can be converted to command-line arguments."]]});

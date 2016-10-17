@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `plugins` mod in crate `cage`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, plugins">
+
+    <title>cage::plugins - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'><a href='../index.html'>cage</a></p><script>window.sidebarCurrent = {name: 'plugins', ty: 'mod', relpath: '../'};</script><script defer src="../sidebar-items.js"></script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content mod">
+<h1 class='fqn'><span class='in-band'>Module <a href='../index.html'>cage</a>::<wbr><a class='mod' href=''>plugins</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a id='src-1427' class='srclink' href='../../src/cage/src/plugins/mod.rs.html#1-215' title='goto source code'>[src]</a></span></h1>
+<div class='docblock'><p>Plugin support.</p>
+</div><h2 id='modules' class='section-header'><a href="#modules">Modules</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class='mod' href='transform/index.html'
+                                  title='cage::plugins::transform'>transform</a></td>
+                           <td class='docblock-short'>
+                                <p>Plugins which transform <code>dc::File</code> objects.</p>
+                           </td>
+                       </tr></table><h2 id='structs' class='section-header'><a href="#structs">Structs</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.Context.html'
+                                  title='cage::plugins::Context'>Context</a></td>
+                           <td class='docblock-short'>
+                                <p>The context in which a plugin is being applied.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='struct' href='struct.Manager.html'
+                                  title='cage::plugins::Manager'>Manager</a></td>
+                           <td class='docblock-short'>
+                                <p>A collection of plugins, normally associated with a project.</p>
+                           </td>
+                       </tr></table><h2 id='enums' class='section-header'><a href="#enums">Enums</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class='enum' href='enum.Operation.html'
+                                  title='cage::plugins::Operation'>Operation</a></td>
+                           <td class='docblock-short'>
+                                <p>What kind of transform operation are we performing?  (Adding new kinds
+of operations will be a breaking API change for plugins.)</p>
+                           </td>
+                       </tr></table><h2 id='traits' class='section-header'><a href="#traits">Traits</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class='trait' href='trait.Plugin.html'
+                                  title='cage::plugins::Plugin'>Plugin</a></td>
+                           <td class='docblock-short'>
+                                <p>The &quot;super-trait&quot; of all our specific plugin traits.  This needs to be
+usable as a <a href="https://doc.rust-lang.org/book/trait-objects.html">trait object</a>, so it may not contain any static &quot;class&quot;
+methods or methods with type parameters.  Those can be found in
+<code>PluginNew</code> instead.  This trait needs to be usable as a trait object
+so that we can create a <code>Vec</code> containing multiple different plugin
+implementations.  Trait objects are as close as Rust comes to object
+orientation.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='trait' href='trait.PluginGenerate.html'
+                                  title='cage::plugins::PluginGenerate'>PluginGenerate</a></td>
+                           <td class='docblock-short'>
+                                <p>A plugin which can generate source code.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='trait' href='trait.PluginNew.html'
+                                  title='cage::plugins::PluginNew'>PluginNew</a></td>
+                           <td class='docblock-short'>
+                                <p>Initialization for <code>Plugin</code>.  These methods can&#39;t be part of <code>Plugin</code>
+itself, because they would prevent us from using <code>Plugin</code> as a <a href="https://doc.rust-lang.org/book/trait-objects.html">trait
+object</a>.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='trait' href='trait.PluginTransform.html'
+                                  title='cage::plugins::PluginTransform'>PluginTransform</a></td>
+                           <td class='docblock-short'>
+                                <p>A plugin which transforms a <code>dc::File</code> object.</p>
+                           </td>
+                       </tr></table></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../../";
+        window.currentCrate = "cage";
+        window.playgroundUrl = "";
+    </script>
+    <script src="../../jquery.js"></script>
+    <script src="../../main.js"></script>
+    
+    <script defer src="../../search-index.js"></script>
+</body>
+</html>

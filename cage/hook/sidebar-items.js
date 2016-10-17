@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["HookManager","Keeps track of hook scripts and invokes them at appropriate times."]]});

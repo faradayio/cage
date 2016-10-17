@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["Compression",""]],"struct":[["FileNames","Iterates over the file names available for `Files` object."],["Files","Runtime access to the included files"]]});

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `Plugin` struct in crate `cage`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, Plugin">
+
+    <title>cage::plugins::transform::abs_path::Plugin - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../../../../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../../../../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'><a href='../../../index.html'>cage</a>::<wbr><a href='../../index.html'>plugins</a>::<wbr><a href='../index.html'>transform</a>::<wbr><a href='index.html'>abs_path</a></p><script>window.sidebarCurrent = {name: 'Plugin', ty: 'struct', relpath: ''};</script><script defer src="sidebar-items.js"></script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content struct">
+<h1 class='fqn'><span class='in-band'>Struct <a href='../../../index.html'>cage</a>::<wbr><a href='../../index.html'>plugins</a>::<wbr><a href='../index.html'>transform</a>::<wbr><a href='index.html'>abs_path</a>::<wbr><a class='struct' href=''>Plugin</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a id='src-1447' class='srclink' href='../../../../src/cage/src/plugins/transform/abs_path.rs.html#16-20' title='goto source code'>[src]</a></span></h1>
+<pre class='rust struct'>pub struct Plugin { /* fields omitted */ }</pre><div class='docblock'><p>Plugin which converts all paths in a <code>dc::File</code> to absolute.</p>
+</div><h2 id='implementations'>Trait Implementations</h2><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html' title='core::fmt::Debug'>Debug</a> for <a class='struct' href='../../../../cage/plugins/transform/abs_path/struct.Plugin.html' title='cage::plugins::transform::abs_path::Plugin'>Plugin</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-1449' class='srclink' href='../../../../src/cage/src/plugins/transform/abs_path.rs.html#14' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.fmt' class='method'><span id='fmt.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html#tymethod.fmt' class='fnname'>fmt</a>(&amp;self, __arg_0: &amp;mut <a class='struct' href='https://doc.rust-lang.org/nightly/core/fmt/struct.Formatter.html' title='core::fmt::Formatter'>Formatter</a>) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/core/fmt/type.Result.html' title='core::fmt::Result'>Result</a></code></span></h4>
+<div class='docblock'><p>Formats the value using the given formatter.</p>
+</div></div><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='../../../../cage/plugins/trait.Plugin.html' title='cage::plugins::Plugin'>Plugin</a> for <a class='struct' href='../../../../cage/plugins/transform/abs_path/struct.Plugin.html' title='cage::plugins::transform::abs_path::Plugin'>Plugin</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-1455' class='srclink' href='../../../../src/cage/src/plugins/transform/abs_path.rs.html#22-26' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.name' class='method'><span id='name.v' class='invisible'><code>fn <a href='../../../../cage/plugins/trait.Plugin.html#tymethod.name' class='fnname'>name</a>(&amp;self) -&gt; &amp;'static <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a></code></span></h4>
+<div class='docblock'><p>The name of this plugin (available after we create an instance).</p>
+</div></div><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='../../../../cage/plugins/trait.PluginNew.html' title='cage::plugins::PluginNew'>PluginNew</a> for <a class='struct' href='../../../../cage/plugins/transform/abs_path/struct.Plugin.html' title='cage::plugins::transform::abs_path::Plugin'>Plugin</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-1458' class='srclink' href='../../../../src/cage/src/plugins/transform/abs_path.rs.html#28-36' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.plugin_name' class='method'><span id='plugin_name.v' class='invisible'><code>fn <a href='../../../../cage/plugins/trait.PluginNew.html#tymethod.plugin_name' class='fnname'>plugin_name</a>() -&gt; &amp;'static <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a></code></span></h4>
+<div class='docblock'><p>The name of this plugin (available before we create an instance).</p>
+</div><h4 id='method.new' class='method'><span id='new.v' class='invisible'><code>fn <a href='../../../../cage/plugins/trait.PluginNew.html#tymethod.new' class='fnname'>new</a>(_project: &amp;<a class='struct' href='../../../../cage/struct.Project.html' title='cage::Project'>Project</a>) -&gt; <a class='type' href='../../../../cage/type.Result.html' title='cage::Result'>Result</a>&lt;Self&gt;</code></span></h4>
+<div class='docblock'><p>Create a new plugin.</p>
+</div><h4 id='method.is_configured_for' class='method'><span id='is_configured_for.v' class='invisible'><code>fn <a href='../../../../cage/plugins/trait.PluginNew.html#method.is_configured_for' class='fnname'>is_configured_for</a>(_project: &amp;<a class='struct' href='../../../../cage/struct.Project.html' title='cage::Project'>Project</a>) -&gt; <a class='type' href='../../../../cage/type.Result.html' title='cage::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a>&gt;</code></span></h4>
+<div class='docblock'><p>Has this plugin been configured for this project?  This will be called before instantiating any plugin type except <code>PluginGenerate</code>. <a href="../../../../cage/plugins/trait.PluginNew.html#method.is_configured_for">Read more</a></p>
+</div></div><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='../../../../cage/plugins/trait.PluginTransform.html' title='cage::plugins::PluginTransform'>PluginTransform</a> for <a class='struct' href='../../../../cage/plugins/transform/abs_path/struct.Plugin.html' title='cage::plugins::transform::abs_path::Plugin'>Plugin</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-1462' class='srclink' href='../../../../src/cage/src/plugins/transform/abs_path.rs.html#38-78' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.transform' class='method'><span id='transform.v' class='invisible'><code>fn <a href='../../../../cage/plugins/trait.PluginTransform.html#tymethod.transform' class='fnname'>transform</a>(&amp;self, op: <a class='enum' href='../../../../cage/plugins/enum.Operation.html' title='cage::plugins::Operation'>Operation</a>, ctx: &amp;<a class='struct' href='../../../../cage/plugins/struct.Context.html' title='cage::plugins::Context'>Context</a>, file: &amp;mut <a class='struct' href='../../../../compose_yml/v2/struct.File.html' title='compose_yml::v2::File'>File</a>) -&gt; <a class='type' href='../../../../cage/type.Result.html' title='cage::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>&gt;</code></span></h4>
+<div class='docblock'><p>Transform the specified file.</p>
+</div></div></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../../../../";
+        window.currentCrate = "cage";
+        window.playgroundUrl = "";
+    </script>
+    <script src="../../../../jquery.js"></script>
+    <script src="../../../../main.js"></script>
+    
+    <script defer src="../../../../search-index.js"></script>
+</body>
+</html>

@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Plugin","Loads a `config/secrets.yml` file and merges in into a project."]]});

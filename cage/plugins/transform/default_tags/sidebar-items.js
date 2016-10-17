@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Plugin","Applies `DefaultTags` to `dc::File`."]]});
