@@ -1,4 +1,34 @@
-//! `cage` as a reusable API, so that you can call it from other tools.
+//! This is the internal `cage` API.  If you're looking for documentation
+//! about how to use the `cage` command-line tool, **please see the [`cage`
+//! website][cage] instead.**
+//!
+//! ## A note about semantic versioning and API stability
+//!
+//! The `cage` library API is **unstable**, and it will remain so until
+//! further notice.  We _do_ provide "semver" guarantees, but only for the
+//! command-line interface and the on-disk project format, not for the
+//! library API itself.
+//!
+//! If you would like to use `cage` as a library in another tool, please
+//! contact the maintainers.  We may be able to stabilize parts of our API.
+//!
+//! ## Where to start
+//!
+//! Cage relies heavily on the [`compose_yml`][compose_yml] crate, which
+//! represents a `docker-compose.yml` file.
+//!
+//! A good place to start reading through this API is the `Project` struct,
+//! which represents an entire project managed by `cage`.  Most other
+//! interesting types can be reached from there.
+//!
+//! You may also want to look the `plugins` module, which handles much of
+//! our code generation and YAML transformation.  Essentially, cage works
+//! like a multi-pass "compiler", where the intermediate representation is
+//! a `compose_yml::v2::File` object, and each transformation plugin is a
+//! analogous to a "pass" in a compiler.
+//!
+//! [cage]: http://cage.faraday.io/
+//! [compose_yml]: http://docs.randomhacks.net/compose_yml/
 
 // Enable clippy if our Cargo.toml file asked us to do so.
 #![cfg_attr(feature="clippy", feature(plugin))]
