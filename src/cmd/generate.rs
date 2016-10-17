@@ -14,8 +14,9 @@ use project::Project;
 use template::Template;
 use version;
 
-/// A list of standard overrides to generate.
-const OVERRIDES: &'static [&'static str] = &["development", "production", "test"];
+/// A list of standard overrides to generate.  We handle `production`
+/// manually.
+const DEFAULT_OVERRIDES: &'static [&'static str] = &["development", "test"];
 
 /// Interface to various file-generation commands.
 pub trait CommandGenerate {
@@ -57,10 +58,14 @@ impl CommandGenerate for Project {
         };
         try!(proj_tmpl.generate(&proj_dir, &proj_info, &mut io::stdout()));
 
-        // Generate files for each override.
-        let mut ovr_tmpl = try!(Template::new("new/pods/_overrides/_default"));
+        // Generate a sample secrets.yml file.
+        let mut secrets_tmpl = try!(Template::new("secrets"));
+        try!(secrets_tmpl.generate(&proj_dir, &proj_info, &mut io::stdout()));
+
+        // Generate files for each override that uses our defaults.
+        let mut ovr_tmpl = try!(Template::new("new/pods/overrides/_default"));
         let overrides_dir = proj_dir.join("pods").join("overrides");
-        for ovr in OVERRIDES {
+        for ovr in DEFAULT_OVERRIDES {
             let ovr_info = OverrideInfo {
                 project: &proj_info,
                 name: ovr,
@@ -93,6 +98,7 @@ fn generate_new_creates_a_project() {
     let proj_dir = env::current_dir().unwrap().join("test_project");
 
     assert!(proj_dir.exists());
+    assert!(proj_dir.join("config/secrets.yml").exists());
     assert!(proj_dir.join("pods/common.env").exists());
     assert!(proj_dir.join("pods/frontend.yml").exists());
     assert!(proj_dir.join("pods/db.yml").exists());
