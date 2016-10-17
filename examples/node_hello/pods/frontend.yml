@@ -1,0 +1,13 @@
+# An example frontend web pod using Node.js and yarn.
+
+version: "2"
+
+services:
+  web:
+    # The name of the Docker image we build.
+    image: "faraday/node_hello"
+    # For this project, we keep our source code directly in the main
+    # project tree, and not in an external git repository.
+    build: "../src/node_hello"
+    ports:
+    - "3000:3000"

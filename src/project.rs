@@ -602,6 +602,22 @@ fn output_mounts_cloned_libraries() {
 }
 
 #[test]
+fn output_supports_in_tree_source_code() {
+    let proj = Project::from_example("node_hello").unwrap();
+    let ovr = proj.ovr("development").unwrap();
+    proj.output(ovr).unwrap();
+
+    // Load the generated file and look at the `web` service we cloned.
+    let frontend_file = proj.output_dir().join("pods/frontend.yml");
+    let file = dc::File::read_from_path(frontend_file).unwrap();
+    let web = file.services.get("web").unwrap();
+
+    let abs_src = proj.root_dir().join("pods/../src/node_hello").to_absolute().unwrap();
+    assert_eq!(web.build.as_ref().unwrap().context.value().unwrap(),
+               &dc::Context::Dir(abs_src));
+}
+
+#[test]
 fn export_creates_a_directory_of_flat_yml_files() {
     use env_logger;
     let _ = env_logger::init();

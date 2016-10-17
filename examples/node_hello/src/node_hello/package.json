@@ -1,0 +1,14 @@
+{
+  "name": "node_hello",
+  "version": "0.1.0",
+  "description": "Example Node.js project for Faraday's cage",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Call your tests here\""
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.14.0"
+  }
+}

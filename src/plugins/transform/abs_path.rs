@@ -49,7 +49,16 @@ impl PluginTransform for Plugin {
         }
 
         for service in file.services.values_mut() {
-            // TODO MED: Handle relative paths in `build:`.
+            // Handle relative paths in `build:`.
+            if let Some(ref mut build) = service.build {
+                let context: &mut _ = try!(build.context.value_mut());
+                if let dc::Context::Dir(ref mut path) = *context {
+                    let new_path = try!(ctx.project.pods_dir()
+                        .join(&path)
+                        .to_absolute());
+                    *path = new_path;
+                }
+            }
 
             for volume in &mut service.volumes {
                 let volume = try!(volume.value_mut());
