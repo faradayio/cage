@@ -1,54 +1,60 @@
-# Develop large, multi-pod, multi-repo `docker-compose` apps
+# Cage: Develop and deploy complex Docker applications
 
-[![Latest version](https://img.shields.io/crates/v/cage.svg)](https://crates.io/crates/cage) [![License](https://img.shields.io/crates/l/cage.svg)](https://opensource.org/licenses/MIT) [![Build Status](https://travis-ci.org/faradayio/cage.svg?branch=master)](https://travis-ci.org/faradayio/cage)
+[![Latest version](https://img.shields.io/crates/v/cage.svg)](https://crates.io/crates/cage) [![License](https://img.shields.io/crates/l/cage.svg)](https://opensource.org/licenses/MIT) [![Build Status](https://travis-ci.org/faradayio/cage.svg?branch=master)](https://travis-ci.org/faradayio/cage) [![Documentation](https://img.shields.io/badge/documentation-docs.rs-yellow.svg)](https://docs.rs/cage/)
 
-This is a work in progress using the
-[`compose_yml`](https://github.com/emk/compose_yml) library.  It's
-a reimplementation of our internal, _ad hoc_ tools using the new
-`docker-compose.yml` version 2 format and Rust.
+Does your project have too many Docker services? Too many git repos? Cage
+makes it easy to develop complex, multi-service applications locally.  It
+works with standard `docker-compose.yml` files and `docker-compose`, but
+it helps bring order to the complexity:
 
-[API Documentation](https://faradayio.github.io/cage/)
+- Cage provides a standardized project structure, much like Rails did for
+  web development.
+- Cage allows you to work with multiple source repositories, and to mix
+  pre-built Docker images with local source code.
+- Cage removes the repetitive clutter from your `docker-compose.yml` files.
+- Cage provides secret management, either using a single text file
+  or [Hashicorp's Vault][vault].
 
-## What's this for?
-
-- Does your app include more than one `docker-compose.yml` file?
-- Are your service implementations spread across multiple git repositories?
-- Does your app contain a mixture of permanently running containers and
-  one-shot tasks?
-- Does your app run across more than one cluster of machines?
-- Do individual components of your app need their own load balancers?
-- When running in development mode, do you need to replace 3rd-party
-  services with local containers?
-
-If you answer to one or more of these questions is "yes", then `cage` is
-probably for you.  It provides development and deployment tools for complex
-`docker-compose` apps, following a [convention over configuration][coc]
-philosophy.
-
-[coc]: https://en.wikipedia.org/wiki/Convention_over_configuration
+[vault]: https://www.vaultproject.io/
 
 ## Installation
 
-To install, we recommend using `rustup` and `cargo`:
+First, you need to [install Docker][] and make sure that you
+have [at least version 1.8.1][compose] of `docker-compose`:
+
+```sh
+$ docker-compose --version
+docker-compose version 1.8.1, build 878cff1
+```
+
+We provide [pre-built `cage` binaries for Linux and MacOS][releases] on the
+release page.  The Linux binaries
+are [statically linked][rust-musl-builder] and should work on any modern
+Linux distribution.  To install, you can just unzip the binaries and copy
+them to `/usr/local/bin`:
+
+```sh
+unzip cage-*.zip
+sudo cp cage /usr/local/bin/
+rm cage-*.zip cage
+```
+
+If you would like to install from source, we recommend using `rustup` and
+`cargo install`:
 
 ```sh
 curl https://sh.rustup.rs -sSf | sh
 cargo install cage
 ```
 
-We also provide [official binary releases][releases] for Mac OS X and for
-Linux.  The Linux binaries are statically linked using [musl-libc][]
-and [rust-musl-builder][], so they should work on any Linux distribution,
-including both regular distributions and stripped down distributions like
-Alpine.  Just unzip the binaries and copy them to where you want them.
+If you have [trouble][] using cage's vault integration, try installing with
+`cargo` instead.
 
-The Mac binaries are somewhat experimental because of issues with MacPorts
-and OpenSSL.  If they fail to work, please file a bug and try installing
-with `cargo`.
-
+[install Docker]: https://docs.docker.com/engine/installation/
+[compose]: https://github.com/docker/compose/releases
 [releases]: https://github.com/faradayio/cage/releases
-[musl-libc]: https://www.musl-libc.org/
 [rust-musl-builder]: https://github.com/emk/rust-musl-builder
+[trouble]: https://github.com/faradayio/cage/issues/11
 
 ## Trying it out
 
@@ -62,7 +68,13 @@ $ cage repo list
 rails_hello               https://github.com/faradayio/rails_hello.git
 ```
 
-Check out the source code for an image locally:
+Pull the pre-built Docker images associated with this application:
+
+```sh
+$ cage pull
+```
+
+Trying checking out the source code for an image locally:
 
 ```sh
 $ cage repo clone rails_hello
@@ -130,29 +142,10 @@ The top-level convenience commands like `test` and `shell` make it much
 easier to perform standard development tasks without knowing how individual
 containers work.
 
-## Usage
+For more information, check out `cage`'s help:
 
-To see how to use `cage`, run `cage` with no arguments.  It supports a
-fairly long list of subcommands:
-
-```
-SUBCOMMANDS:
-    build       Build images for the containers associated with this
-                project
-    exec        Run a command inside an existing container
-    export      Export project as flattened *.yml files
-    generate    Commands for generating new source files
-    help        Prints this message or the help of the given subcommand(s)
-    new         Create a directory containing a new project
-    pull        Build images for the containers associated with this
-                project
-    repo        Commands for working with git repositories
-    run         Run a specific pod as a one-shot task
-    shell       Run an interactive shell inside a running container
-    stop        Stop all containers associated with project
-    sysinfo     Print information about the system
-    test        Run the tests associated with a service, if any
-    up          Run project
+```sh
+cage --help
 ```
 
 ## What's a pod?
@@ -209,8 +202,8 @@ export RUST_BACKTRACE=1 RUST_LOG=cage=debug,compose_yml=debug
 
 ## Development notes
 
-Pull requests are welcome!  If you're not sure whether your idea would fit
-into the project's vision, please feel free to file an issue and ask us.
+Pull requests are welcome!  If you're unsure about your idea, then please
+feel free to file an issue and ask us for feedback.  We like suggestions!
 
 ### Setting up tools
 
@@ -238,7 +231,7 @@ rustup update nightly
 cargo update
 ```
 
-If that still doesn't work, try `stable`:
+If that still doesn't work, try using `stable` Rust instead:
 
 ```sh
 rustup override set stable
