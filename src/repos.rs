@@ -11,6 +11,7 @@ use command_runner::{Command, CommandRunner};
 #[cfg(test)]
 use command_runner::TestCommandRunner;
 use errors::*;
+use ext::context::ContextExt;
 use ext::git_url::GitUrlExt;
 use ext::service::ServiceExt;
 use project::Project;
@@ -31,15 +32,15 @@ pub struct Repos {
 impl Repos {
     /// Add a repository to a map, keyed by its alias.  Returns the alias.
     fn add_repo(repos: &mut BTreeMap<String, Repo>,
-                git_url: &dc::GitUrl)
+                context: &dc::Context)
                 -> Result<String> {
         // Figure out what alias we want to use.
-        let alias = try!(git_url.human_alias());
+        let alias = try!(context.human_alias());
 
         // Build our repository.
         let repo = Repo {
             alias: alias.clone(),
-            git_url: git_url.clone(),
+            context: context.clone(),
         };
 
         // Insert our repository our map, checking for alias
@@ -49,11 +50,11 @@ impl Repos {
                 vacant.insert(repo);
             }
             btree_map::Entry::Occupied(occupied) => {
-                if &repo.git_url != &occupied.get().git_url {
+                if &repo.context != &occupied.get().context {
                     return Err(err!("{} and {} would both alias to \
                                      {}",
-                                    &occupied.get().git_url,
-                                    &repo.git_url,
+                                    &occupied.get().context,
+                                    &repo.context,
                                     &repo.alias));
                 }
             }
@@ -71,8 +72,8 @@ impl Repos {
         for pod in pods {
             for file in pod.all_files() {
                 for service in file.services.values() {
-                    if let Some(git_url) = try!(service.git_url()) {
-                        try!(Self::add_repo(&mut repos, git_url));
+                    if let Some(context) = try!(service.context()) {
+                        try!(Self::add_repo(&mut repos, context));
                     }
                 }
             }
@@ -83,8 +84,8 @@ impl Repos {
         if path.exists() {
             let libs: BTreeMap<String, String> = try!(load_yaml(&path));
             for (lib_key, lib_src) in &libs {
-                let git_url: dc::GitUrl = try!(dc::GitUrl::new(&lib_src[..]));
-                let alias = try!(Self::add_repo(&mut repos, &git_url));
+                let context = dc::Context::new(&lib_src[..]);
+                let alias = try!(Self::add_repo(&mut repos, &context));
                 lib_keys.insert(lib_key.clone(), alias);
             }
         }
@@ -106,8 +107,8 @@ impl Repos {
     }
 
     /// Look up a repository given a git URL.
-    pub fn find_by_git_url(&self, url: &dc::GitUrl) -> Option<&Repo> {
-        self.repos.values().find(|r| r.git_url() == url)
+    pub fn find_by_context(&self, context: &dc::Context) -> Option<&Repo> {
+        self.repos.values().find(|r| r.context() == context)
     }
 
     /// Look up a repository using a "lib key", which is key used in
@@ -142,8 +143,9 @@ impl<'a> Iterator for Iter<'a> {
 pub struct Repo {
     /// A short name for this repository.
     alias: String,
-    /// The remote location from which we can clone this repository.
-    git_url: dc::GitUrl,
+    /// The remote location from which we can clone this repository, or the
+    /// local directory where we can find it.
+    context: dc::Context,
 }
 
 impl Repo {
@@ -154,25 +156,26 @@ impl Repo {
     }
 
     /// The remote git URL from which we can clone this repository.
-    pub fn git_url(&self) -> &dc::GitUrl {
-        &self.git_url
+    pub fn context(&self) -> &dc::Context {
+        &self.context
     }
 
-    /// The path to which we would check out this repository, relative to
-    /// `Project::src_dir`.
-    pub fn rel_path(&self) -> PathBuf {
-        Path::new(self.alias()).to_owned()
-    }
-
-    /// The full path to which we would check out this repository.  The
-    /// `project` argument is mandatory because we can't store a pointer
+    /// The full path to where we expect any local copies of this code to
+    /// live.  This will either be the location where we will check out a
+    /// git repository, or the path to the actual source code, depending on
+    /// what type of `Context` object we're dealing with.
+    ///
+    /// The `project` argument is mandatory because we can't store a pointer
     /// to it without creating a circular reference loop.
     pub fn path(&self, project: &Project) -> PathBuf {
-        project.src_dir().join(self.rel_path())
+        match self.context {
+            dc::Context::GitUrl(_) => project.src_dir().join(Path::new(self.alias())),
+            dc::Context::Dir(ref path) => project.pods_dir().join(path),
+        }
     }
 
     /// Has this project been cloned locally?
-    pub fn is_cloned(&self, project: &Project) -> bool {
+    pub fn is_available_locally(&self, project: &Project) -> bool {
         self.path(project).exists()
     }
 
@@ -180,12 +183,16 @@ impl Repo {
     pub fn clone_source<CR>(&self, runner: &CR, project: &Project) -> Result<()>
         where CR: CommandRunner
     {
-        let dest = try!(self.path(project).with_guaranteed_parent());
-        runner.build("git")
-            .arg("clone")
-            .args(&try!(self.git_url().clone_args()))
-            .arg(&dest)
-            .exec()
+        if let dc::Context::GitUrl(ref git_url) = self.context {
+            let dest = try!(self.path(project).with_guaranteed_parent());
+            runner.build("git")
+                .arg("clone")
+                .args(&try!(git_url.clone_args()))
+                .arg(&dest)
+                .exec()
+        } else {
+            Err(format!("'{}' is not a git repository", &self.context).into())
+        }
     }
 
     /// (Test mode only.) Pretend to clone the source code for this
@@ -207,9 +214,9 @@ fn are_loaded_with_projects() {
     let hello = repos.find_by_alias("dockercloud-hello-world")
         .expect("repos should include dockercloud-hello-world");
     assert_eq!(hello.alias(), "dockercloud-hello-world");
-    assert_eq!(hello.git_url().as_ref() as &str,
-               "https://github.com/docker/dockercloud-hello-world.git");
-    assert_eq!(hello.rel_path(), Path::new("dockercloud-hello-world"));
+    assert_eq!(hello.context(),
+               &dc::Context::new("https://github.com/docker/dockercloud-hello-world.git"));
+    assert_eq!(hello.path(&proj), proj.src_dir().join("dockercloud-hello-world"));
 }
 
 #[test]
@@ -221,9 +228,9 @@ fn are_loaded_from_config_libraries() {
     let lib = repos.find_by_lib_key("coffee_rails")
         .expect("libs should include coffee_rails");
     assert_eq!(lib.alias(), "coffee-rails");
-    assert_eq!(lib.git_url().as_ref() as &str,
-               "https://github.com/rails/coffee-rails.git");
-    assert_eq!(lib.rel_path(), Path::new("coffee-rails"));
+    assert_eq!(lib.context(),
+               &dc::Context::new("https://github.com/rails/coffee-rails.git"));
+    assert_eq!(lib.path(&proj), proj.src_dir().join("coffee-rails"));
 }
 
 #[test]
@@ -235,7 +242,7 @@ fn can_be_cloned() {
     let runner = TestCommandRunner::new();
     repo.clone_source(&runner, &proj).unwrap();
     assert_ran!(runner, {
-        ["git", "clone", repo.git_url(), proj.src_dir().join(repo.rel_path())]
+        ["git", "clone", "https://github.com/docker/dockercloud-hello-world.git", repo.path(&proj)]
     });
     proj.remove_test_output().unwrap();
 }
@@ -246,8 +253,18 @@ fn can_be_checked_to_see_if_cloned() {
     let _ = env_logger::init();
     let proj = Project::from_example("hello").unwrap();
     let repo = proj.repos().find_by_alias("dockercloud-hello-world").unwrap();
-    assert!(!repo.is_cloned(&proj));
+    assert!(!repo.is_available_locally(&proj));
     repo.fake_clone_source(&proj).unwrap();
-    assert!(repo.is_cloned(&proj));
+    assert!(repo.is_available_locally(&proj));
+    proj.remove_test_output().unwrap();
+}
+
+#[test]
+fn dir_context_is_always_available_locally() {
+    use env_logger;
+    let _ = env_logger::init();
+    let proj = Project::from_example("node_hello").unwrap();
+    let repo = proj.repos().find_by_alias("node_hello").unwrap();
+    assert!(repo.is_available_locally(&proj));
     proj.remove_test_output().unwrap();
 }

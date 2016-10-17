@@ -20,12 +20,12 @@ impl CommandRepo for Project {
         where CR: CommandRunner
     {
         for repo in self.repos().iter() {
-            println!("{:25} {}", repo.alias(), repo.git_url());
-            if repo.is_cloned(self) {
+            println!("{:25} {}", repo.alias(), repo.context());
+            if repo.is_available_locally(self) {
                 let path = try!(repo.path(self)
                         .strip_prefix(self.root_dir()))
                     .to_owned();
-                println!("  Cloned at {}", path.display());
+                println!("  Available at {}", path.display());
             }
         }
         Ok(())
@@ -39,8 +39,10 @@ impl CommandRepo for Project {
                 .ok_or_else(|| {
                     err!("Could not find a repo with short alias \"{}\"", alias)
                 }));
-        if !repo.is_cloned(self) {
+        if !repo.is_available_locally(self) {
             try!(repo.clone_source(runner, self));
+        } else {
+            println!("'{}' is already available locally", repo.alias());
         }
         Ok(())
     }

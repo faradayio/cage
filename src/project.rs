@@ -612,7 +612,8 @@ fn output_supports_in_tree_source_code() {
     let file = dc::File::read_from_path(frontend_file).unwrap();
     let web = file.services.get("web").unwrap();
 
-    let abs_src = proj.root_dir().join("pods/../src/node_hello").to_absolute().unwrap();
+    let abs_src =
+        proj.root_dir().join("pods/../src/node_hello").to_absolute().unwrap();
     assert_eq!(web.build.as_ref().unwrap().context.value().unwrap(),
                &dc::Context::Dir(abs_src));
 }

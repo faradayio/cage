@@ -58,9 +58,9 @@ impl PluginTransform for Plugin {
         for service in &mut file.services.values_mut() {
 
             // Handle the main repo associated with this service.
-            if let Some(git_url) = try!(service.git_url()).cloned() {
-                if let Some(repo) = project.repos().find_by_git_url(&git_url) {
-                    if repo.is_cloned(project) {
+            if let Some(context) = try!(service.context()).cloned() {
+                if let Some(repo) = project.repos().find_by_context(&context) {
+                    if repo.is_available_locally(project) {
                         // Build an absolute path to our repo's clone directory.
                         let path = try!(repo.path(project).to_absolute());
 
@@ -90,7 +90,7 @@ impl PluginTransform for Plugin {
                                  key)
                         }));
 
-                    if repo.is_cloned(project) {
+                    if repo.is_available_locally(project) {
                         let path = try!(repo.path(project).to_absolute());
                         let mount = dc::VolumeMount::host(&path, mount_as);
                         service.volumes.push(dc::value(mount));

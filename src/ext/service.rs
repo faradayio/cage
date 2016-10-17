@@ -5,7 +5,6 @@ use shlex;
 use std::path::{Path, PathBuf};
 
 use errors::*;
-use ext::context::ContextExt;
 #[cfg(test)]
 use project::Project;
 use util::err;
@@ -13,8 +12,9 @@ use util::err;
 /// These methods will appear as regular methods on `Service` in any module
 /// which includes `ServiceExt`.
 pub trait ServiceExt {
-    /// The URL for the the git repository associated with this service.
-    fn git_url(&self) -> Result<Option<&dc::GitUrl>>;
+    /// The build context associated with this service (either a git
+    /// repository URL or a local directory).
+    fn context(&self) -> Result<Option<&dc::Context>>;
 
     /// The directory in which to mount our source code if it's checked
     /// out.
@@ -29,9 +29,9 @@ pub trait ServiceExt {
 }
 
 impl ServiceExt for dc::Service {
-    fn git_url(&self) -> Result<Option<&dc::GitUrl>> {
+    fn context(&self) -> Result<Option<&dc::Context>> {
         if let Some(ref build) = self.build {
-            Ok(try!(build.context.value()).git_url())
+            Ok(Some(try!(build.context.value())))
         } else {
             Ok(None)
         }

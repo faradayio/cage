@@ -23,11 +23,7 @@ pub trait CommandPull {
 }
 
 impl CommandPull for Project {
-    fn pull<CR>(&self,
-                runner: &CR,
-                ovr: &Override,
-                act_on: &args::ActOn)
-                -> Result<()>
+    fn pull<CR>(&self, runner: &CR, ovr: &Override, act_on: &args::ActOn) -> Result<()>
         where CR: CommandRunner
     {
         // Run our hook.
