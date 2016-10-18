@@ -17,7 +17,7 @@ pub trait CommandLogs {
                runner: &CR,
                ovr: &Override,
                act_on: &args::ActOn,
-               _opts: &args::opts::Logs)
+               opts: &args::opts::Logs)
               -> Result<()>
         where CR: CommandRunner;
 }
@@ -27,12 +27,12 @@ impl CommandLogs for Project {
               runner: &CR,
               ovr: &Override,
               act_on: &args::ActOn,
-              _opts: &args::opts::Logs)
+              opts: &args::opts::Logs)
               -> Result<()>
         where CR: CommandRunner
     {
         let pred = |p: &Pod| p.pod_type() != PodType::Task;
-        self.compose(runner, ovr, "logs", act_on, pred, &args::opts::Empty)
+        self.compose(runner, ovr, "logs", act_on, pred, opts)
     }
 }
 

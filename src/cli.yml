@@ -167,7 +167,8 @@ subcommands:
             short: "f"
             help: "Follow log output"
         - number: 
-            short: "n"
+            long: "tail"
+            value_name: "NUMBER"
             help: "Number of lines from end of output to display"
         - POD_OR_SERVICE: *pod_or_service
 

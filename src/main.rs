@@ -57,6 +57,9 @@ trait ArgMatchesExt {
 
     /// Extract `exec::Command` from our command-line arguments.
     fn to_exec_command(&self) -> Option<cage::args::Command>;
+
+    /// Extract 'logs' options from our command-line arguments.
+    fn to_logs_options(&self) -> cage::args::opts::Logs;
 }
 
 impl<'a> ArgMatchesExt for clap::ArgMatches<'a> {
@@ -118,6 +121,13 @@ impl<'a> ArgMatchesExt for clap::ArgMatches<'a> {
             }
         }
         opts
+    }
+
+    fn to_logs_options(&self) -> cage::args::opts::Logs {
+      let mut opts = cage::args::opts::Logs::default();
+      opts.follow = self.is_present("follow");
+      opts.number = self.value_of("number").map(|v| v.to_owned());
+      opts
     }
 
     fn to_exec_command(&self) -> Option<cage::args::Command> {
@@ -226,7 +236,7 @@ fn run(matches: &clap::ArgMatches) -> Result<()> {
         }
         "logs" => {
             let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE");
-            let opts = cage::args::opts::Logs::default();
+            let opts = sc_matches.to_logs_options();
             try!(proj.logs(&runner, &ovr, &acts_on, &opts));
         }
         "source" => try!(run_source(&runner, &mut proj, &ovr, sc_matches)),
