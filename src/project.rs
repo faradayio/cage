@@ -391,10 +391,7 @@ impl Project {
 
     /// Process our pods, flattening and transforming them using our
     /// plugins, and output them to the specified directory.
-    fn output_helper(&self,
-                     op: Operation,
-                     export_dir: &Path)
-                     -> Result<()> {
+    fn output_helper(&self, op: Operation, export_dir: &Path) -> Result<()> {
         // Output each pod.
         for pod in &self.pods {
             // Don't export pods which aren't enabled.

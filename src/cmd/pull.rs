@@ -13,10 +13,7 @@ use project::Project;
 /// We implement `pull` with a trait so we put it in its own module.
 pub trait CommandPull {
     /// Pull all the images associated with a project.
-    fn pull<CR>(&self,
-                runner: &CR,
-                act_on: &args::ActOn)
-                -> Result<()>
+    fn pull<CR>(&self, runner: &CR, act_on: &args::ActOn) -> Result<()>
         where CR: CommandRunner;
 }
 
