@@ -1,6 +1,6 @@
 //! The `logs` command.
 
-use args; ///::{self, ToArgs};
+use args;
 use cmd::CommandCompose;
 use command_runner::CommandRunner;
 #[cfg(test)]
