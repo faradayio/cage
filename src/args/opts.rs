@@ -219,3 +219,58 @@ fn run_options_to_args_returns_appropriate_flags() {
         .collect();
     assert_eq!(opts.to_args(), expected);
 }
+
+
+/// Command-line flags with for `docker-compose logs`.
+#[derive(Debug, Clone)]
+#[allow(missing_copy_implementations)]
+pub struct Logs {
+    /// Whether to interactively display logs as they're output
+    pub follow: bool,
+
+    /// Number of lines from end of log output to display
+    pub number: Option<String>,
+
+    /// PRIVATE: This field is a stand-in for future options.
+    /// See http://stackoverflow.com/q/39277157/12089
+    #[doc(hidden)]
+    pub _nonexhaustive: (),
+}
+
+impl ToArgs for Logs {
+    fn to_args(&self) -> Vec<OsString> {
+        let mut args: Vec<OsString> = vec![];
+
+        if self.follow {
+            args.push(OsStr::new("-f").to_owned());
+        }
+
+        if let Some(ref number) = self.number {
+            args.push(OsStr::new(&format!("--tail={}", number)).to_owned());
+        }
+
+        args
+    }
+}
+
+impl Default for Logs {
+    fn default() -> Logs {
+        Logs {
+            follow: false,
+            number: None,
+            _nonexhaustive: (),
+        }
+    }
+}
+
+#[test]
+fn run_options_to_logs_args_returns_appropriate_flags() {
+    let mut opts = Logs::default();
+    opts.follow = true;
+    opts.number = Some("12".to_owned());
+    let raw_expected = &["-f", "--tail=12"];
+    let expected: Vec<OsString> = raw_expected.iter()
+        .map(|s| OsStr::new(s).to_owned())
+        .collect();
+    assert_eq!(opts.to_args(), expected);
+}

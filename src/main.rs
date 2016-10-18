@@ -224,6 +224,11 @@ fn run(matches: &clap::ArgMatches) -> Result<()> {
             let cmd = sc_matches.to_exec_command();
             try!(proj.test(&runner, &ovr, &service, cmd.as_ref()));
         }
+        "logs" => {
+            let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE");
+            let opts = cage::args::opts::Logs::default();
+            try!(proj.logs(&runner, &ovr, &acts_on, &opts));
+        }
         "source" => try!(run_source(&runner, &mut proj, &ovr, sc_matches)),
         "generate" => try!(run_generate(&runner, &proj, &ovr, sc_matches)),
         "export" => {

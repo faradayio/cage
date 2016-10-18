@@ -159,6 +159,19 @@ subcommands:
         command:
 
             cage test myservice rspec spec/my_new_feature_spec.rb
+
+  - logs:
+      about: "Display logs for a service"
+      args:
+        - follow:
+            short: "f"
+            help: "Follow log output"
+        - number: 
+            short: "n"
+            help: "Number of lines from end of output to display"
+        - POD_OR_SERVICE: *pod_or_service
+
+
   - source:
       about: "Commands for working with git repositories and local source trees"
       settings:
