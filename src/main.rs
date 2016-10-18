@@ -273,11 +273,11 @@ fn run_source<R>(runner: &R,
         }
         "mount" => {
             let alias = sc_matches.value_of("ALIAS").unwrap();
-            try!(proj.source_set_mounted(alias, true));
+            try!(proj.source_set_mounted(runner, alias, true));
         }
         "unmount" => {
             let alias = sc_matches.value_of("ALIAS").unwrap();
-            try!(proj.source_set_mounted(alias, false));
+            try!(proj.source_set_mounted(runner, alias, false));
         }
         unknown => unreachable!("Unexpected subcommand '{}'", unknown),
     }

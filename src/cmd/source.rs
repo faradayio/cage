@@ -16,7 +16,9 @@ pub trait CommandSource {
         where CR: CommandRunner;
 
     /// Set the `mounted` flag on the specified source tree.
-    fn source_set_mounted(&mut self, alias: &str, mounted: bool) -> Result<()>;
+    fn source_set_mounted<CR>(&mut self, runner: &CR, alias: &str, mounted: bool)
+                              -> Result<()>
+        where CR: CommandRunner;
 }
 
 
@@ -55,14 +57,34 @@ impl CommandSource for Project {
         Ok(())
     }
 
-    fn source_set_mounted(&mut self, alias: &str, mounted: bool) -> Result<()> {
+    fn source_set_mounted<CR>(&mut self, runner: &CR, alias: &str, mounted: bool)
+                              -> Result<()>
+        where CR: CommandRunner
+    {
         {
+            // Look up the source mutably.  We do this in a block so we can
+            // drop the mutable borrow before continuing and keep Rust
+            // happy.
             let source = try!(self.sources_mut()
                 .find_by_alias_mut(alias)
                 .ok_or_else(|| ErrorKind::UnknownSource(alias.to_owned())));
+
+            // Set the mounted flag on our source.
             source.set_mounted(mounted);
         }
+
+        // Write our persistent project settings back to disk.
         try!(self.save_settings());
+
+        // Clone the source if we're mounting it but don't have a local
+        // copy yet.
+        let source = try!(self.sources()
+            .find_by_alias(alias)
+            .ok_or_else(|| ErrorKind::UnknownSource(alias.to_owned())));
+        if source.mounted() && !source.is_available_locally(self) {
+            try!(self.source_clone(runner, alias));
+        }
+
         Ok(())
     }
 }
