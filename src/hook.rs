@@ -84,9 +84,8 @@ fn runs_requested_hook_scripts() {
     use env_logger;
     let _ = env_logger::init();
     let proj = Project::from_example("hello").unwrap();
-    let ovr = proj.ovr("development").unwrap();
     let runner = TestCommandRunner::new();
-    proj.output(ovr).unwrap();
+    proj.output().unwrap();
 
     proj.hooks().invoke(&runner, "pull", &BTreeMap::default()).unwrap();
     assert_ran!(runner, {

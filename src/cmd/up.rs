@@ -6,7 +6,6 @@ use command_runner::CommandRunner;
 #[cfg(test)]
 use command_runner::TestCommandRunner;
 use errors::*;
-use ovr::Override;
 use pod::{Pod, PodType};
 use project::Project;
 
@@ -15,7 +14,6 @@ pub trait CommandUp {
     /// Up all the images in the specified pods.
     fn up<CR>(&self,
               runner: &CR,
-              ovr: &Override,
               act_on: &args::ActOn,
               opts: &args::opts::Up)
               -> Result<()>
@@ -25,14 +23,13 @@ pub trait CommandUp {
 impl CommandUp for Project {
     fn up<CR>(&self,
               runner: &CR,
-              ovr: &Override,
               act_on: &args::ActOn,
               opts: &args::opts::Up)
               -> Result<()>
         where CR: CommandRunner
     {
         let pred = |p: &Pod| p.pod_type() != PodType::Task;
-        self.compose(runner, ovr, "up", act_on, &pred, opts)
+        self.compose(runner, "up", act_on, &pred, opts)
     }
 }
 
@@ -40,13 +37,13 @@ impl CommandUp for Project {
 fn runs_docker_compose_up_honors_enable_in_overrides() {
     use env_logger;
     let _ = env_logger::init();
-    let proj = Project::from_example("rails_hello").unwrap();
-    let ovr = proj.ovr("production").unwrap();
+    let mut proj = Project::from_example("rails_hello").unwrap();
+    proj.set_current_override_name("production").unwrap();
     let runner = TestCommandRunner::new();
-    proj.output(ovr).unwrap();
+    proj.output().unwrap();
 
     let opts = args::opts::Up::default();
-    proj.up(&runner, ovr, &args::ActOn::All, &opts).unwrap();
+    proj.up(&runner, &args::ActOn::All, &opts).unwrap();
     assert_ran!(runner, {
         ["docker-compose",
          "-p",

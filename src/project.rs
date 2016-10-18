@@ -75,6 +75,10 @@ pub struct Project {
     /// All the overrides associated with this project.
     overrides: Vec<Override>,
 
+    /// The override that we're currently using.  Applies to most
+    /// operations.
+    current_override: Override,
+
     /// All the source trees associated with this project.
     sources: Sources,
 
@@ -100,6 +104,12 @@ impl Project {
                  output_dir: &Path)
                  -> Result<Project> {
         let overrides = try!(Project::find_overrides(root_dir));
+        let current_override = try!(overrides.iter()
+            .find(|ovr| ovr.name() == "development")
+            .ok_or_else(|| {
+                ErrorKind::UnknownOverride("development".into())
+            }))
+            .to_owned();
         let pods = try!(Project::find_pods(root_dir, &overrides));
         let service_locations = ServiceLocations::new(&pods);
         let sources = try!(Sources::new(&root_dir, &output_dir, &pods));
@@ -119,6 +129,7 @@ impl Project {
             pods: pods,
             service_locations: service_locations,
             overrides: overrides,
+            current_override: current_override,
             sources: sources,
             hooks: try!(HookManager::new(root_dir.join("config/hooks"))),
             config: config,
@@ -321,6 +332,23 @@ impl Project {
         self.overrides().find(|ovr| ovr.name() == name)
     }
 
+    /// Like `ovr`, but returns an error if no each override is found.
+    pub fn override_or_err(&self, name: &str) -> Result<&Override> {
+        self.ovr(name).ok_or_else(|| ErrorKind::UnknownOverride(name.into()).into())
+    }
+
+    /// Get the current override that we're using with this project.
+    pub fn current_override(&self) -> &Override {
+        &self.current_override
+    }
+
+    /// Set the name of the override to use.  This must be done before
+    /// calling `output` or `export`.
+    pub fn set_current_override_name(&mut self, name: &str) -> Result<()> {
+        self.current_override = try!(self.override_or_err(name)).to_owned();
+        Ok(())
+    }
+
     /// Return the collection of source trees associated with this project,
     /// including both extern git repositories and local source trees.
     pub fn sources(&self) -> &Sources {
@@ -364,7 +392,6 @@ impl Project {
     /// Process our pods, flattening and transforming them using our
     /// plugins, and output them to the specified directory.
     fn output_helper(&self,
-                     ovr: &Override,
                      op: Operation,
                      export_dir: &Path)
                      -> Result<()> {
@@ -373,7 +400,7 @@ impl Project {
             // Don't export pods which aren't enabled.
             //
             // TODO MED: Should we exclude these at load time instead?
-            if op == Operation::Export && !pod.enabled_in(ovr) {
+            if op == Operation::Export && !pod.enabled_in(&self.current_override) {
                 continue;
             }
 
@@ -390,9 +417,9 @@ impl Project {
 
             // Combine overrides, make it standalone, tweak as needed, and
             // output.
-            let mut file = try!(pod.merged_file(ovr));
+            let mut file = try!(pod.merged_file(&self.current_override));
             try!(file.make_standalone(&self.pods_dir()));
-            let ctx = plugins::Context::new(self, ovr, pod);
+            let ctx = plugins::Context::new(self, pod);
             try!(self.plugins().transform(op, &ctx, &mut file));
             try!(file.write_to_path(out_path));
         }
@@ -401,7 +428,7 @@ impl Project {
 
     /// Delete our existing output and replace it with a processed and
     /// expanded version of our pod definitions.
-    pub fn output(&self, ovr: &Override) -> Result<()> {
+    pub fn output(&self) -> Result<()> {
         // Get a path to our output pods directory (and delete it if it
         // exists).
         let out_pods = self.output_pods_dir();
@@ -410,13 +437,13 @@ impl Project {
                 .map_err(|e| err!("Cannot delete {}: {}", out_pods.display(), e)));
         }
 
-        self.output_helper(ovr, Operation::Output, &out_pods)
+        self.output_helper(Operation::Output, &out_pods)
     }
 
     /// Export this project (with the specified override applied) as a set
     /// of standalone `*.yml` files with no environment variable
     /// interpolations and no external dependencies.
-    pub fn export(&self, ovr: &Override, export_dir: &Path) -> Result<()> {
+    pub fn export(&self, export_dir: &Path) -> Result<()> {
         // Don't clobber an existing directory.
         if export_dir.exists() {
             return Err(err!("The directory {} already exists", export_dir.display()));
@@ -427,7 +454,7 @@ impl Project {
             warn!("Exporting project without --default-tags");
         }
 
-        self.output_helper(ovr, Operation::Export, export_dir)
+        self.output_helper(Operation::Export, export_dir)
     }
 }
 
@@ -537,8 +564,7 @@ fn output_creates_a_directory_of_flat_yml_files() {
     use env_logger;
     let _ = env_logger::init();
     let proj = Project::from_example("rails_hello").unwrap();
-    let ovr = proj.ovr("development").unwrap();
-    proj.output(ovr).unwrap();
+    proj.output().unwrap();
     assert!(proj.output_dir.join("pods/frontend.yml").exists());
     assert!(proj.output_dir.join("pods/db.yml").exists());
     assert!(proj.output_dir.join("pods/migrate.yml").exists());
@@ -555,10 +581,9 @@ fn output_applies_expected_transforms() {
 
     let mut proj = Project::from_example("hello").unwrap();
     proj.set_default_tags(default_tags);
-    let ovr = proj.ovr("development").unwrap();
     let source = proj.sources().find_by_alias("dockercloud-hello-world").unwrap();
     source.fake_clone_source(&proj).unwrap();
-    proj.output(ovr).unwrap();
+    proj.output().unwrap();
 
     // Load the generated file and look at the `web` service we cloned.
     let frontend_file = proj.output_dir().join("pods/frontend.yml");
@@ -594,12 +619,11 @@ fn output_mounts_cloned_libraries() {
     let _ = env_logger::init();
 
     let proj = Project::from_example("rails_hello").unwrap();
-    let ovr = proj.ovr("development").unwrap();
     let source = proj.sources()
         .find_by_lib_key("coffee_rails")
         .expect("should define lib coffee_rails");
     source.fake_clone_source(&proj).unwrap();
-    proj.output(ovr).unwrap();
+    proj.output().unwrap();
 
     // Load the generated file and look at the `web` service we cloned.
     let frontend_file = proj.output_dir().join("pods/frontend.yml");
@@ -622,8 +646,7 @@ fn output_mounts_cloned_libraries() {
 #[test]
 fn output_supports_in_tree_source_code() {
     let proj = Project::from_example("node_hello").unwrap();
-    let ovr = proj.ovr("development").unwrap();
-    proj.output(ovr).unwrap();
+    proj.output().unwrap();
 
     // Load the generated file and look at the `web` service we cloned.
     let frontend_file = proj.output_dir().join("pods/frontend.yml");
@@ -640,10 +663,10 @@ fn output_supports_in_tree_source_code() {
 fn export_creates_a_directory_of_flat_yml_files() {
     use env_logger;
     let _ = env_logger::init();
-    let proj = Project::from_example("rails_hello").unwrap();
+    let mut proj = Project::from_example("rails_hello").unwrap();
     let export_dir = proj.output_dir.join("hello_export");
-    let ovr = proj.ovr("production").unwrap();
-    proj.export(ovr, &export_dir).unwrap();
+    proj.set_current_override_name("production").unwrap();
+    proj.export(&export_dir).unwrap();
     assert!(export_dir.join("frontend.yml").exists());
     assert!(!export_dir.join("db.yml").exists());
     assert!(export_dir.join("tasks/migrate.yml").exists());
@@ -659,11 +682,10 @@ fn export_applies_expected_transforms() {
     // `output`.
 
     let proj = Project::from_example("hello").unwrap();
-    let ovr = proj.ovr("development").unwrap();
     let source = proj.sources().find_by_alias("dockercloud-hello-world").unwrap();
     source.fake_clone_source(&proj).unwrap();
     let export_dir = proj.output_dir.join("hello_export");
-    proj.export(ovr, &export_dir).unwrap();
+    proj.export(&export_dir).unwrap();
 
     // Load the generated file and look at the `web` service we cloned.
     let frontend_file = export_dir.join("frontend.yml");

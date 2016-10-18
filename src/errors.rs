@@ -85,6 +85,12 @@ error_chain! {
                     &names, base.display(), ovr.display())
         }
 
+        /// The requested override does not appear to exist.
+        UnknownOverride(override_name: String) {
+            description("unknown override")
+            display("unknown override '{}'", &override_name)
+        }
+
         /// The requested pod or service does not appear to exist.
         UnknownPodOrService(pod_or_service_name: String) {
             description("unknown pod or service")

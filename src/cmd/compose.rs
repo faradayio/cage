@@ -7,7 +7,6 @@ use command_runner::{Command, CommandRunner};
 #[cfg(test)]
 use command_runner::TestCommandRunner;
 use errors::*;
-use ovr::Override;
 use pod::Pod;
 use project::{PodOrService, Project};
 
@@ -16,7 +15,6 @@ pub trait CommandCompose {
     /// Pass simple commands directly through to `docker-compose`.
     fn compose<CR, F>(&self,
                       runner: &CR,
-                      ovr: &Override,
                       command: &str,
                       act_on: &args::ActOn,
                       matching: F,
@@ -29,7 +27,6 @@ pub trait CommandCompose {
 impl CommandCompose for Project {
     fn compose<CR, F>(&self,
                       runner: &CR,
-                      ovr: &Override,
                       command: &str,
                       act_on: &args::ActOn,
                       matching: F,
@@ -51,6 +48,7 @@ impl CommandCompose for Project {
         };
 
         for name in names.deref() {
+            let ovr = self.current_override();
             match try!(self.pod_or_service_or_err(name)) {
                 PodOrService::Pod(pod) => {
                     if pod.enabled_in(ovr) && matching(pod) {
@@ -83,12 +81,11 @@ fn runs_docker_compose_on_all_pods() {
     use env_logger;
     let _ = env_logger::init();
     let proj = Project::from_example("rails_hello").unwrap();
-    let ovr = proj.ovr("development").unwrap();
     let runner = TestCommandRunner::new();
-    proj.output(ovr).unwrap();
+    proj.output().unwrap();
 
     let opts = args::opts::Empty;
-    proj.compose(&runner, ovr, "stop", &args::ActOn::All, |_| true, &opts).unwrap();
+    proj.compose(&runner, "stop", &args::ActOn::All, |_| true, &opts).unwrap();
     assert_ran!(runner, {
         ["docker-compose",
          "-p",
@@ -118,13 +115,12 @@ fn runs_docker_compose_on_named_pods_and_services() {
     use env_logger;
     let _ = env_logger::init();
     let proj = Project::from_example("rails_hello").unwrap();
-    let ovr = proj.ovr("development").unwrap();
     let runner = TestCommandRunner::new();
-    proj.output(ovr).unwrap();
+    proj.output().unwrap();
 
     let act_on = args::ActOn::Named(vec!("db".to_owned(), "web".to_owned()));
     let opts = args::opts::Empty;
-    proj.compose(&runner, ovr, "stop", &act_on, |_| true, &opts).unwrap();
+    proj.compose(&runner, "stop", &act_on, |_| true, &opts).unwrap();
     assert_ran!(runner, {
         ["docker-compose",
          "-p",
