@@ -13,19 +13,19 @@ use project::Project;
 pub trait CommandLogs {
     /// Display logs for a given service
     fn logs<CR>(&self,
-               runner: &CR,
-               act_on: &args::ActOn,
-               opts: &args::opts::Logs)
-              -> Result<()>
+                runner: &CR,
+                act_on: &args::ActOn,
+                opts: &args::opts::Logs)
+                -> Result<()>
         where CR: CommandRunner;
 }
 
 impl CommandLogs for Project {
     fn logs<CR>(&self,
-              runner: &CR,
-              act_on: &args::ActOn,
-              opts: &args::opts::Logs)
-              -> Result<()>
+                runner: &CR,
+                act_on: &args::ActOn,
+                opts: &args::opts::Logs)
+                -> Result<()>
         where CR: CommandRunner
     {
         match *act_on {
@@ -47,11 +47,10 @@ fn runs_docker_compose_logs() {
     proj.output().unwrap();
 
     let opts = args::opts::Logs::default();
-    proj.logs(
-        &runner,
-        &args::ActOn::Named(vec!("frontend".to_owned())),
-        &opts
-    ).unwrap();
+    proj.logs(&runner,
+              &args::ActOn::Named(vec!["frontend".to_owned()]),
+              &opts)
+        .unwrap();
     assert_ran!(runner, {
         ["docker-compose",
          "-p",
