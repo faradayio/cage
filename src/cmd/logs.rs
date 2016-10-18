@@ -28,18 +28,12 @@ impl CommandLogs for Project {
               -> Result<()>
         where CR: CommandRunner
     {
-        return match *act_on {
-            args::ActOn::All => {
-                Err("You may only specify a single service or pod".into())
-            },
-            args::ActOn::Named(ref names) => {
-                if names.len() > 1 {
-                    Err("You may only specify a single service or pod".into())
-                } else {
-                    let pred = |p: &Pod| p.pod_type() != PodType::Task;
-                    self.compose(runner, "logs", act_on, pred, opts)
-                }
+        match *act_on {
+            args::ActOn::Named(ref names) if names.len() == 1 => {
+                let pred = |p: &Pod| p.pod_type() != PodType::Task;
+                self.compose(runner, "logs", act_on, pred, opts)
             }
+            _ => Err("You may only specify a single service or pod".into()),
         }
     }
 }
