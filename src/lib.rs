@@ -72,6 +72,7 @@
 // The `error_chain` documentation says we need this.
 #![recursion_limit = "1024"]
 
+extern crate colored;
 extern crate compose_yml;
 #[cfg(test)]
 extern crate env_logger;

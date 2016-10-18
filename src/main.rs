@@ -166,12 +166,13 @@ fn run(matches: &clap::ArgMatches) -> Result<()> {
     }
     let override_name = matches.override_name();
     let ovr = try!(proj.ovr(override_name)
-        .ok_or_else(|| err!("override {} is not defined", override_name)));
+            .ok_or_else(|| err!("override {} is not defined", override_name)))
+        .to_owned();
 
     // Output our project's `*.yml` files for `docker-compose` if we'll
     // need it.
     if matches.should_output_project() {
-        try!(proj.output(ovr));
+        try!(proj.output(&ovr));
     }
 
     // Handle our subcommands that require a `Project`.
@@ -223,7 +224,7 @@ fn run(matches: &clap::ArgMatches) -> Result<()> {
             let cmd = sc_matches.to_exec_command();
             try!(proj.test(&runner, &ovr, &service, cmd.as_ref()));
         }
-        "source" => try!(run_source(&runner, &proj, &ovr, sc_matches)),
+        "source" => try!(run_source(&runner, &mut proj, &ovr, sc_matches)),
         "generate" => try!(run_generate(&runner, &proj, &ovr, sc_matches)),
         "export" => {
             let dir = sc_matches.value_of("DIR").unwrap();
@@ -237,7 +238,7 @@ fn run(matches: &clap::ArgMatches) -> Result<()> {
 
 /// Our `source` subcommand.
 fn run_source<R>(runner: &R,
-                 proj: &cage::Project,
+                 proj: &mut cage::Project,
                  ovr: &cage::Override,
                  matches: &clap::ArgMatches)
                  -> Result<()>
@@ -249,16 +250,32 @@ fn run_source<R>(runner: &R,
     let sc_matches: &clap::ArgMatches = matches.subcommand_matches(sc_name).unwrap();
 
     // Dispatch our subcommand.
+    let mut re_output = true;
     match sc_name {
-        "ls" => try!(proj.source_list(runner)),
+        "ls" => {
+            re_output = false;
+            try!(proj.source_list(runner));
+        }
         "clone" => {
             let alias = sc_matches.value_of("ALIAS").unwrap();
             try!(proj.source_clone(runner, alias));
-            // Regenerate our output now that we've cloned.
-            try!(proj.output(ovr));
+        }
+        "mount" => {
+            let alias = sc_matches.value_of("ALIAS").unwrap();
+            try!(proj.source_set_mounted(alias, true));
+        }
+        "unmount" => {
+            let alias = sc_matches.value_of("ALIAS").unwrap();
+            try!(proj.source_set_mounted(alias, false));
         }
         unknown => unreachable!("Unexpected subcommand '{}'", unknown),
     }
+
+    // Regenerate our output if it might have changed.
+    if re_output {
+        try!(proj.output(ovr));
+    }
+
     Ok(())
 }
 

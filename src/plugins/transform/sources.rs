@@ -61,7 +61,7 @@ impl PluginTransform for Plugin {
             // Handle the main source associated with this service.
             if let Some(context) = try!(service.context()).cloned() {
                 if let Some(source) = project.sources().find_by_context(&context) {
-                    if source.is_available_locally(project) {
+                    if source.is_available_locally(project) && source.mounted() {
                         // Build an absolute path to our source's local
                         // directory.
                         let path = try!(source.path(project).to_absolute());
@@ -92,7 +92,7 @@ impl PluginTransform for Plugin {
                                  key)
                         }));
 
-                    if source.is_available_locally(project) {
+                    if source.is_available_locally(project) && source.mounted() {
                         let path = try!(source.path(project).to_absolute());
                         let mount = dc::VolumeMount::host(&path, mount_as);
                         service.volumes.push(dc::value(mount));

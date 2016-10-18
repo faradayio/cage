@@ -169,10 +169,18 @@ subcommands:
         - clone:
             about: "Clone a git repository using its short alias and mount it into the containers that use it"
             args:
-              - ALIAS:
+              - ALIAS: &alias
                   value_name: "ALIAS"
                   required: true
                   help: "The short alias of the repo to clone (see `source list`)"
+        - mount:
+            about: "Mount a source tree into the containers that use it"
+            args:
+              - ALIAS: *alias
+        - unmount:
+            about: "Unmount a local source tree from all containers"
+            args:
+              - ALIAS: *alias
   - generate:
       about: "Commands for generating new source files"
       settings:

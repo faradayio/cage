@@ -102,7 +102,7 @@ impl Project {
         let overrides = try!(Project::find_overrides(root_dir));
         let pods = try!(Project::find_pods(root_dir, &overrides));
         let service_locations = ServiceLocations::new(&pods);
-        let sources = try!(Sources::new(&root_dir, &pods));
+        let sources = try!(Sources::new(&root_dir, &output_dir, &pods));
         let config_path = root_dir.join(PROJECT_CONFIG_PATH.deref());
         let config = try!(ProjectConfig::new(&config_path));
         let absolute_root = try!(root_dir.to_absolute());
@@ -162,8 +162,16 @@ impl Project {
     #[cfg(test)]
     pub fn from_example(name: &str) -> Result<Project> {
         use rand::random;
+        Project::from_example_and_random_id(name, random())
+    }
+
+    /// (Tests only.) Create a `Project` from a subirectory of `examples`
+    /// and a random ID, with an output directory under
+    /// `target/test_output/$NAME`.
+    #[cfg(test)]
+    pub fn from_example_and_random_id(name: &str, id: u16) -> Result<Project> {
         let root_dir = Path::new("examples").join(name);
-        let rand_name = format!("{}-{}", name, random::<u16>());
+        let rand_name = format!("{}-{}", name, id);
         let test_output = Path::new("target/test_output").join(&rand_name);
         Project::from_dirs(&root_dir, &test_output.join("src"), &test_output)
     }
@@ -319,6 +327,12 @@ impl Project {
         &self.sources
     }
 
+    /// Return the collection of source trees associated with this project
+    /// in mutable form.
+    pub fn sources_mut(&mut self) -> &mut Sources {
+        &mut self.sources
+    }
+
     /// Get our available hooks.
     pub fn hooks(&self) -> &HookManager {
         &self.hooks
@@ -340,6 +354,11 @@ impl Project {
         self.plugins
             .as_ref()
             .expect("plugins should always be set at Project init")
+    }
+
+    /// Save persistent project settings to disk.
+    pub fn save_settings(&mut self) -> Result<()> {
+        self.sources.save_settings(&self.output_dir)
     }
 
     /// Process our pods, flattening and transforming them using our
@@ -379,7 +398,6 @@ impl Project {
         }
         Ok(())
     }
-
 
     /// Delete our existing output and replace it with a processed and
     /// expanded version of our pod definitions.

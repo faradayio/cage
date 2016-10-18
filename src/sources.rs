@@ -17,8 +17,11 @@ use ext::git_url::GitUrlExt;
 use ext::service::ServiceExt;
 use project::Project;
 use pod::Pod;
-use serde_helpers::load_yaml;
+use serde_helpers::{dump_yaml, load_yaml};
 use util::ConductorPathExt;
+
+/// The file where we store our `mounted` state.
+const MOUNTED_YML: &'static str = "mounted.yml";
 
 /// All the source trees associated with a project's Docker images.
 #[derive(Debug)]
@@ -34,15 +37,20 @@ pub struct Sources {
 impl Sources {
     /// Add a source tree to a map, keyed by its alias.  Returns the alias.
     fn add_source(sources: &mut BTreeMap<String, Source>,
-                context: &dc::Context)
-                -> Result<String> {
+                  mounted_sources: &BTreeMap<String, bool>,
+                  context: &dc::Context)
+                  -> Result<String> {
         // Figure out what alias we want to use.
         let alias = try!(context.human_alias());
+
+        // Look up whether we've mounted this container or not.
+        let mounted = mounted_sources.get(&alias).cloned().unwrap_or(true);
 
         // Build our Source object.
         let source = Source {
             alias: alias.clone(),
             context: context.clone(),
+            mounted: mounted,
         };
 
         // Insert our Source object into our map, checking for alias
@@ -67,16 +75,24 @@ impl Sources {
     /// Create a collection of source trees based on a list of pods and our
     /// configuration files.
     #[doc(hidden)]
-    pub fn new(root_dir: &Path, pods: &[Pod]) -> Result<Sources> {
+    pub fn new(root_dir: &Path, output_dir: &Path, pods: &[Pod]) -> Result<Sources> {
         let mut sources: BTreeMap<String, Source> = BTreeMap::new();
         let mut lib_keys: BTreeMap<String, String> = BTreeMap::new();
+
+        // Load our `mounted` state, if we've saved it previously.
+        let mounted_path = output_dir.join(MOUNTED_YML);
+        let mounted: BTreeMap<String, bool> = if mounted_path.exists() {
+            try!(load_yaml(&mounted_path))
+        } else {
+            Default::default()
+        };
 
         // Scan our pods for dc::Context objects.
         for pod in pods {
             for file in pod.all_files() {
                 for service in file.services.values() {
                     if let Some(context) = try!(service.context()) {
-                        try!(Self::add_source(&mut sources, context));
+                        try!(Self::add_source(&mut sources, &mounted, context));
                     }
                 }
             }
@@ -88,7 +104,7 @@ impl Sources {
             let libs: BTreeMap<String, String> = try!(load_yaml(&path));
             for (lib_key, lib_src) in &libs {
                 let context = dc::Context::new(&lib_src[..]);
-                let alias = try!(Self::add_source(&mut sources, &context));
+                let alias = try!(Self::add_source(&mut sources, &mounted, &context));
                 lib_keys.insert(lib_key.clone(), alias);
             }
         }
@@ -100,6 +116,8 @@ impl Sources {
     }
 
     /// Iterate over all source trees associated with this project.
+    ///
+    /// TODO LOW: Replace with IntoIterator.
     pub fn iter(&self) -> Iter {
         Iter { iter: self.sources.iter() }
     }
@@ -107,6 +125,11 @@ impl Sources {
     /// Look up a source tree using the short-form local alias.
     pub fn find_by_alias(&self, alias: &str) -> Option<&Source> {
         self.sources.get(alias)
+    }
+
+    /// Look up a source tree mutably using the short-form local alias.
+    pub fn find_by_alias_mut(&mut self, alias: &str) -> Option<&mut Source> {
+        self.sources.get_mut(alias)
     }
 
     /// Look up a source tree given a git URL.
@@ -121,6 +144,20 @@ impl Sources {
         self.lib_keys
             .get(lib_key)
             .and_then(|alias| self.find_by_alias(alias))
+    }
+
+    /// Save any state that we want to persist until the next run.
+    pub fn save_settings(&self, out_dir: &Path) -> Result<()> {
+        let mut mounted = BTreeMap::new();
+        for source in self.iter() {
+            // Only record non-default mount values.
+            if !source.mounted() {
+                mounted.insert(source.alias(), source.mounted());
+            }
+        }
+        try!(dump_yaml(&out_dir.join(MOUNTED_YML), &mounted));
+
+        Ok(())
     }
 }
 
@@ -149,6 +186,9 @@ pub struct Source {
     /// The remote location from which we can clone this source tree, or
     /// the local directory where we can find it.
     context: dc::Context,
+    /// Should this source tree be mounted into all of the containers that
+    /// use it?
+    mounted: bool,
 }
 
 impl Source {
@@ -161,6 +201,17 @@ impl Source {
     /// The remote git URL from which we can clone this source tree.
     pub fn context(&self) -> &dc::Context {
         &self.context
+    }
+
+    /// Should this source tree be mounted into the appropriate containers?
+    pub fn mounted(&self) -> bool {
+        self.mounted
+    }
+
+    /// Set whether this source tree should be mounted into the appropriate
+    /// containers?
+    pub fn set_mounted(&mut self, mounted: bool) {
+        self.mounted = mounted;
     }
 
     /// The full path to where we expect any local copies of this code to
@@ -271,5 +322,32 @@ fn dir_context_is_always_available_locally() {
     let proj = Project::from_example("node_hello").unwrap();
     let source = proj.sources().find_by_alias("node_hello").unwrap();
     assert!(source.is_available_locally(&proj));
+    proj.remove_test_output().unwrap();
+}
+
+#[test]
+fn mounted_state_is_saved_between_runs() {
+    use env_logger;
+    let _ = env_logger::init();
+    use rand::random;
+    let id: u16 = random();
+
+    // Load the project and update a `mounted` flag.
+    {
+        let mut proj = Project::from_example_and_random_id("node_hello", id).unwrap();
+        {
+            let sources = proj.sources_mut();
+            let source = sources.find_by_alias_mut("node_hello").unwrap();
+            assert_eq!(source.mounted(), true);
+            source.set_mounted(false);
+            assert_eq!(source.mounted(), false);
+        }
+        proj.save_settings().unwrap();
+    }
+
+    // Reload the project and make sure the value was saved.
+    let proj = Project::from_example_and_random_id("node_hello", id).unwrap();
+    let source = proj.sources().find_by_alias("node_hello").unwrap();
+    assert_eq!(source.mounted(), false);
     proj.remove_test_output().unwrap();
 }

@@ -96,6 +96,14 @@ error_chain! {
             description("unknown service")
             display("unknown service '{}'", &service_name)
         }
+
+        /// The requested source alias does not appear to exist.
+        UnknownSource(source_alias: String) {
+            description("unknown source alias")
+            display("unknown short alias '{}' for source tree (try `cage \
+                     source ls`)",
+                    &source_alias)
+        }
     }
 }
 
