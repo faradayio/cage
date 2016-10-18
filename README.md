@@ -2,6 +2,11 @@
 
 [![Latest version](https://img.shields.io/crates/v/cage.svg)](https://crates.io/crates/cage) [![License](https://img.shields.io/crates/l/cage.svg)](https://opensource.org/licenses/MIT) [![Build Status](https://travis-ci.org/faradayio/cage.svg?branch=master)](https://travis-ci.org/faradayio/cage) [![Documentation](https://img.shields.io/badge/documentation-docs.rs-yellow.svg)](https://docs.rs/cage/)
 
+<a href="http://cage.faraday.io/">
+  <img src="http://cage.faraday.io/assets/cage-logo.svg" alt="Logo"
+       width="200" height=113">
+</a>
+
 Does your project have too many Docker services? Too many git repos? Cage
 makes it easy to develop complex, multi-service applications locally.  It
 works with standard `docker-compose.yml` files and `docker-compose`, but
@@ -14,6 +19,9 @@ it helps bring order to the complexity:
 - Cage removes the repetitive clutter from your `docker-compose.yml` files.
 - Cage provides secret management, either using a single text file
   or [Hashicorp's Vault][vault].
+
+For more information about Cage, see
+the [introductory website](http://cage.faraday.io/).
 
 [vault]: https://www.vaultproject.io/
 
