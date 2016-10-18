@@ -231,6 +231,11 @@ fn run(matches: &clap::ArgMatches) -> Result<()> {
             let cmd = sc_matches.to_exec_command();
             try!(proj.test(&runner, &service, cmd.as_ref()));
         }
+        "logs" => {
+            let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE");
+            let opts = sc_matches.to_logs_options();
+            try!(proj.logs(&runner, &acts_on, &opts));
+        }
         "source" => try!(run_source(&runner, &mut proj, sc_matches)),
         "generate" => try!(run_generate(&runner, &proj, sc_matches)),
         "logs" => {
