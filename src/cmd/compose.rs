@@ -48,21 +48,21 @@ impl CommandCompose for Project {
         };
 
         for name in names.deref() {
-            let ovr = self.current_override();
+            let target = self.current_target();
             match try!(self.pod_or_service_or_err(name)) {
                 PodOrService::Pod(pod) => {
-                    if pod.enabled_in(ovr) && matching(pod) {
+                    if pod.enabled_in(target) && matching(pod) {
                         try!(runner.build("docker-compose")
-                            .args(&try!(pod.compose_args(self, ovr)))
+                            .args(&try!(pod.compose_args(self, target)))
                             .arg(command)
                             .args(&opts.to_args())
                             .exec());
                     }
                 }
                 PodOrService::Service(pod, service_name) => {
-                    if pod.enabled_in(ovr) && matching(pod) {
+                    if pod.enabled_in(target) && matching(pod) {
                         try!(runner.build("docker-compose")
-                            .args(&try!(pod.compose_args(self, ovr)))
+                            .args(&try!(pod.compose_args(self, target)))
                             .arg(command)
                             .args(&opts.to_args())
                             .arg(service_name)

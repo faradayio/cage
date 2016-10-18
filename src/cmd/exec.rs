@@ -43,7 +43,7 @@ impl CommandExec for Project {
     {
         let (pod, service_name) = try!(self.service_or_err(service_name));
         runner.build("docker-compose")
-            .args(&try!(pod.compose_args(self, self.current_override())))
+            .args(&try!(pod.compose_args(self, self.current_target())))
             .arg("exec")
             .args(&opts.to_args())
             .arg(service_name)
@@ -66,9 +66,9 @@ impl CommandExec for Project {
             return Err(err("Can't run shell without a TTY"));
         }
 
-        let ovr = self.current_override();
+        let target = self.current_target();
         let (pod, service_name) = try!(self.service_or_err(service_name));
-        let service = try!(pod.service_or_err(ovr, service_name));
+        let service = try!(pod.service_or_err(target, service_name));
         let shell = try!(service.shell());
         self.exec(runner, service_name, &args::Command::new(shell), opts)
     }

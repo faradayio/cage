@@ -14,9 +14,9 @@ use project::Project;
 use template::Template;
 use version;
 
-/// A list of standard overrides to generate.  We handle `production`
+/// A list of standard targets to generate.  We handle `production`
 /// manually.
-const DEFAULT_OVERRIDES: &'static [&'static str] = &["development", "test"];
+const DEFAULT_TARGETS: &'static [&'static str] = &["development", "test"];
 
 /// Interface to various file-generation commands.
 pub trait CommandGenerate {
@@ -28,7 +28,7 @@ pub trait CommandGenerate {
     /// └── pods
     ///   ├── common.env
     ///   ├── frontend.yml
-    ///   └── overrides
+    ///   └── targets
     ///       ├── development
     ///       │   └── common.env
     ///       ├── production
@@ -62,16 +62,16 @@ impl CommandGenerate for Project {
         let mut secrets_tmpl = try!(Template::new("secrets"));
         try!(secrets_tmpl.generate(&proj_dir, &proj_info, &mut io::stdout()));
 
-        // Generate files for each override that uses our defaults.
-        let mut ovr_tmpl = try!(Template::new("new/pods/overrides/_default"));
-        let overrides_dir = proj_dir.join("pods").join("overrides");
-        for ovr in DEFAULT_OVERRIDES {
-            let ovr_info = OverrideInfo {
+        // Generate files for each target that uses our defaults.
+        let mut target_tmpl = try!(Template::new("new/pods/targets/_default"));
+        let targets_dir = proj_dir.join("pods").join("targets");
+        for target in DEFAULT_TARGETS {
+            let target_info = TargetInfo {
                 project: &proj_info,
-                name: ovr,
+                name: target,
             };
-            let dir = overrides_dir.join(ovr);
-            try!(ovr_tmpl.generate(&dir, &ovr_info, &mut io::stdout()));
+            let dir = targets_dir.join(target);
+            try!(target_tmpl.generate(&dir, &target_info, &mut io::stdout()));
         }
 
         Ok(proj_dir)
@@ -102,9 +102,9 @@ fn generate_new_creates_a_project() {
     assert!(proj_dir.join("pods/common.env").exists());
     assert!(proj_dir.join("pods/frontend.yml").exists());
     assert!(proj_dir.join("pods/db.yml").exists());
-    assert!(proj_dir.join("pods/overrides/development/common.env").exists());
-    assert!(proj_dir.join("pods/overrides/production/common.env").exists());
-    assert!(proj_dir.join("pods/overrides/test/common.env").exists());
+    assert!(proj_dir.join("pods/targets/development/common.env").exists());
+    assert!(proj_dir.join("pods/targets/production/common.env").exists());
+    assert!(proj_dir.join("pods/targets/test/common.env").exists());
 
     fs::remove_dir_all(&proj_dir.as_path()).unwrap();
 }
@@ -134,17 +134,17 @@ impl<'a> ToJson for ProjectInfo<'a> {
     }
 }
 
-/// Information about the override we're generating.  This will be passed
+/// Information about the target we're generating.  This will be passed
 /// to our templates.
 #[derive(Debug)]
-struct OverrideInfo<'a> {
-    /// The project in which this override appears.
+struct TargetInfo<'a> {
+    /// The project in which this target appears.
     project: &'a ProjectInfo<'a>,
-    /// The name of this override.
+    /// The name of this target.
     name: &'a str,
 }
 
-impl<'a> ToJson for OverrideInfo<'a> {
+impl<'a> ToJson for TargetInfo<'a> {
     fn to_json(&self) -> Json {
         let mut info: BTreeMap<String, Json> = BTreeMap::new();
         info.insert("project".to_string(), self.project.to_json());

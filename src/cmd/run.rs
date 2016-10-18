@@ -41,7 +41,7 @@ impl CommandRun for Project {
             .ok_or_else(|| err!("Cannot find pod {}", pod)));
 
         // Get the single service in our pod.
-        let file = try!(pod.merged_file(self.current_override()));
+        let file = try!(pod.merged_file(self.current_target()));
         if file.services.len() != 1 {
             return Err(err!("Can only `run` pods with 1 service, {} has {}",
                             pod.name(),
@@ -56,7 +56,7 @@ impl CommandRun for Project {
             vec![]
         };
         runner.build("docker-compose")
-            .args(&try!(pod.compose_args(self, self.current_override())))
+            .args(&try!(pod.compose_args(self, self.current_target())))
             .arg("run")
             .args(&opts.to_args())
             .arg(service)
@@ -71,17 +71,17 @@ impl CommandRun for Project {
                 -> Result<()>
         where CR: CommandRunner
     {
-        let ovr = self.current_override();
+        let target = self.current_target();
         let (pod, service_name) = try!(self.service_or_err(service_name));
 
         let command_args = if let Some(c) = command {
             c.to_args()
         } else {
-            let service = try!(pod.service_or_err(ovr, service_name));
+            let service = try!(pod.service_or_err(target, service_name));
             try!(service.test_command()).iter().map(|s| s.into()).collect()
         };
         runner.build("docker-compose")
-            .args(&try!(pod.compose_args(self, ovr)))
+            .args(&try!(pod.compose_args(self, target)))
             .arg("run")
             .arg("--rm")
             .arg("--no-deps")
@@ -133,7 +133,7 @@ fn runs_tests() {
     use env_logger;
     let _ = env_logger::init();
     let mut proj = Project::from_example("hello").unwrap();
-    proj.set_current_override_name("test").unwrap();
+    proj.set_current_target_name("test").unwrap();
     let runner = TestCommandRunner::new();
     proj.output().unwrap();
 
@@ -161,7 +161,7 @@ fn runs_tests_with_custom_command() {
     use env_logger;
     let _ = env_logger::init();
     let mut proj = Project::from_example("hello").unwrap();
-    proj.set_current_override_name("test").unwrap();
+    proj.set_current_target_name("test").unwrap();
     let runner = TestCommandRunner::new();
     proj.output().unwrap();
 

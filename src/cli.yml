@@ -10,10 +10,10 @@ args:
       long: "project-name"
       value_name: "PROJECT_NAME"
       help: "The name of this project.  Defaults to the current directory name."
-  - override:
-      long: "override"
-      value_name: "OVERRIDE"
-      help: "Use overrides from the specified subdirectory of `pods/overrides`.  Defaults to `development` unless running tests."
+  - target:
+      long: "target"
+      value_name: "TARGET"
+      help: "Override settings with values from the specified subdirectory of `pods/targets`.  Defaults to `development` unless running tests."
   - default-tags:
       long: "default-tags"
       value_name: "TAG_FILE"

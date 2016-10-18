@@ -71,7 +71,7 @@ impl<'a> dc::Environment for ConfigEnvironment<'a> {
     fn var(&self, key: &str) -> result::Result<String, env::VarError> {
         let result = match key {
             "PROJECT" => Ok(self.ctx.project.name()),
-            "OVERRIDE" => Ok(self.ctx.project.current_override().name()),
+            "TARGET" => Ok(self.ctx.project.current_target().name()),
             "POD" => Ok(self.ctx.pod.name()),
             "SERVICE" => Ok(self.service),
             _ => Err(env::VarError::NotPresent),
@@ -277,9 +277,9 @@ impl PluginTransform for Plugin {
             .as_ref()
             .expect("generator should always be present for transform");
 
-        // Should this plugin be excluded in this override?
-        let ovr = ctx.project.current_override();
-        if !ovr.is_enabled_by(&config.enable_in_overrides) {
+        // Should this plugin be excluded in this target?
+        let target = ctx.project.current_target();
+        if !target.is_enabled_by(&config.enable_in_targets) {
             return Ok(());
         }
 
@@ -323,7 +323,7 @@ impl PluginTransform for Plugin {
             // Generate a VAULT_TOKEN.
             let display_name = format!("{}_{}_{}_{}",
                                        ctx.project.name(),
-                                       ctx.project.current_override().name(),
+                                       ctx.project.current_target().name(),
                                        ctx.pod.name(),
                                        name);
             let ttl = VaultDuration::seconds(config.default_ttl);
@@ -349,7 +349,7 @@ fn interpolates_policies() {
     env::set_var("VAULT_MASTER_TOKEN", "fake master token");
 
     let mut proj = Project::from_example("vault_integration").unwrap();
-    proj.set_current_override_name("production").unwrap();
+    proj.set_current_target_name("production").unwrap();
 
     let vault = MockVault::new();
     let calls = vault.calls();
@@ -357,7 +357,7 @@ fn interpolates_policies() {
 
     let frontend = proj.pod("frontend").unwrap();
     let ctx = plugins::Context::new(&proj, frontend);
-    let mut file = frontend.merged_file(proj.current_override()).unwrap();
+    let mut file = frontend.merged_file(proj.current_target()).unwrap();
     plugin.transform(Operation::Output, &ctx, &mut file).unwrap();
     let web = file.services.get("web").unwrap();
     assert_eq!(web.environment.get("VAULT_ADDR").expect("has VAULT_ADDR"),
@@ -379,20 +379,20 @@ fn interpolates_policies() {
 }
 
 #[test]
-fn only_applied_in_specified_overrides() {
+fn only_applied_in_specified_targets() {
     use env_logger;
     let _ = env_logger::init();
 
     let mut proj = Project::from_example("vault_integration").unwrap();
-    proj.set_current_override_name("test").unwrap();
-    let ovr = proj.current_override();
+    proj.set_current_target_name("test").unwrap();
+    let target = proj.current_target();
 
     let vault = MockVault::new();
     let plugin = Plugin::new_with_generator(&proj, Some(vault)).unwrap();
 
     let frontend = proj.pod("frontend").unwrap();
     let ctx = plugins::Context::new(&proj, frontend);
-    let mut file = frontend.merged_file(ovr).unwrap();
+    let mut file = frontend.merged_file(target).unwrap();
     plugin.transform(Operation::Output, &ctx, &mut file).unwrap();
     let web = file.services.get("web").unwrap();
     assert_eq!(web.environment.get("VAULT_ADDR"), None);

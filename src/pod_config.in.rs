@@ -24,9 +24,9 @@ pub enum PodType {
 #[derive(Debug, Default, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Config {
-    /// Only use this pod in the specified overrides.  If this field is
-    /// omitted, we apply the plguin in all overrides.
-    enable_in_overrides: Option<Vec<String>>,
+    /// Only use this pod in the specified targets.  If this field is
+    /// omitted, we apply the plguin in all targets.
+    enable_in_targets: Option<Vec<String>>,
 
     /// What kind of pod is this?
     pod_type: Option<PodType>,

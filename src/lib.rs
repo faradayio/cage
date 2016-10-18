@@ -102,11 +102,11 @@ extern crate url;
 
 pub use default_tags::DefaultTags;
 pub use errors::*;
-pub use ovr::Override;
-pub use project::{PodOrService, Project, ProjectConfig, Pods, Overrides};
-pub use pod::{Pod, PodType, OverrideFiles, AllFiles};
+pub use project::{PodOrService, Project, ProjectConfig, Pods, Targets};
+pub use pod::{Pod, PodType, TargetFiles, AllFiles};
 pub use sources::{Sources, Source};
 pub use sources::Iter as SourceIter;
+pub use target::Target;
 pub use util::err;
 
 #[macro_use]
@@ -120,13 +120,13 @@ pub mod dir;
 mod errors;
 mod ext;
 pub mod hook;
-mod ovr;
 pub mod plugins;
 mod pod;
 mod project;
 mod serde_helpers;
 mod service_locations;
 mod sources;
+mod target;
 mod template;
 
 /// Include raw data files into our binary at compile time using the

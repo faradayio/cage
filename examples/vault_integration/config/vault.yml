@@ -4,15 +4,15 @@
 # In this file, the following variables will be replaced:
 #
 #     $PROJECT    The name of the project (-p)
-#     $OVERRIDE   The name of the current override
+#     $TARGET     The name of the current target
 #     $POD        The name of the pod
 #     $SERVICE    The name of the service
 
 # By default, we only want to enable this plugin in production mode (and
 # staging if we have it).  For local development, either specify fake
-# secrets somewhere in `pods/overrides/development`, or use the `secrets`
+# secrets somewhere in `pods/targets/development`, or use the `secrets`
 # plugin for real secrets.
-enable_in_overrides:
+enable_in_targets:
 - "production"
 
 # How should individual services authenticate themselves to vault?  The only
@@ -28,7 +28,7 @@ auth_type: "token"
 
 # Extra environment variables to add to each service.
 extra_environment:
-  VAULT_ENV: "$OVERRIDE"
+  VAULT_ENV: "$TARGET"
 
 # How long should the generated tokens be valid for, in seconds?
 default_ttl: 2592000
@@ -36,13 +36,13 @@ default_ttl: 2592000
 # We use these templates to construct the names of policies to apply to our
 # project.
 default_policies:
-  - "$PROJECT-$OVERRIDE"
-  - "$PROJECT-$OVERRIDE-$POD-$SERVICE"
+  - "$PROJECT-$TARGET"
+  - "$PROJECT-$TARGET-$POD-$SERVICE"
 
 # If you want to apply addition policies to particular pods, you may also
-# override them as follows.
+# target them as follows.
 pods:
   frontend:
     web:
       policies:
-        - "$PROJECT-$OVERRIDE-ssl"
+        - "$PROJECT-$TARGET-ssl"

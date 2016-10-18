@@ -181,7 +181,7 @@ hello
 └── pods
     ├── common.env
     ├── frontend.yml
-    └── overrides
+    └── targets
         ├── development
         │   └── common.env
         ├── production

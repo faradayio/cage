@@ -39,8 +39,8 @@ trait ArgMatchesExt {
     /// refactored in the future.
     fn should_output_project(&self) -> bool;
 
-    /// Get either the specified override name, or a reasonable default.
-    fn override_name(&self) -> &str;
+    /// Get either the specified target name, or a reasonable default.
+    fn target_name(&self) -> &str;
 
     /// Determine what pods or services we're supposed to act on.
     fn to_acts_on(&self, arg_name: &str) -> cage::args::ActOn;
@@ -64,8 +64,8 @@ impl<'a> ArgMatchesExt for clap::ArgMatches<'a> {
         self.subcommand_name() != Some("export")
     }
 
-    fn override_name(&self) -> &str {
-        self.value_of("override")
+    fn target_name(&self) -> &str {
+        self.value_of("target")
             .unwrap_or_else(|| {
                 if self.subcommand_name() == Some("test") {
                     "test"
@@ -164,7 +164,7 @@ fn run(matches: &clap::ArgMatches) -> Result<()> {
         let reader = io::BufReader::new(f);
         proj.set_default_tags(try!(cage::DefaultTags::read(reader)));
     }
-    try!(proj.set_current_override_name(matches.override_name()));
+    try!(proj.set_current_target_name(matches.target_name()));
 
     // Output our project's `*.yml` files for `docker-compose` if we'll
     // need it.

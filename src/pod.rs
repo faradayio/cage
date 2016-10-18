@@ -8,7 +8,7 @@ use std::ffi::OsString;
 use std::path::{Path, PathBuf};
 
 use errors::*;
-use ovr::Override;
+use target::Target;
 use project::Project;
 use serde_helpers::load_yaml;
 
@@ -23,7 +23,7 @@ include!(concat!(env!("OUT_DIR"), "/pod_config.rs"));
 /// relative to `base_dir` (`base_dir` is normally `$PROJECT/pods`), and
 /// the normalized version of its contents:
 ///
-/// 1. Any missing services will be explicitly added to an override file.
+/// 1. Any missing services will be explicitly added to an target file.
 /// 2. The `env_file` list will be updated to contain the appropriate
 ///    `common.yml` file.
 ///
@@ -71,13 +71,13 @@ impl FileInfo {
                             -> Result<()> {
         // Check for any newly-introduced services.  These are problematic
         // because (1) in our previous experience, they lead to really
-        // confusing and unmaintanable overrides, and (2) the rest of this
+        // confusing and unmaintanable targets, and (2) the rest of this
         // program's design assumes it doesn't have to worry about them.
         let ours: BTreeSet<String> = self.file.services.keys().cloned().collect();
         let introduced: Vec<String> =
             ours.difference(service_names).cloned().collect();
         if !introduced.is_empty() {
-            return Err(ErrorKind::ServicesAddedInOverride(base_file.to_owned(),
+            return Err(ErrorKind::ServicesAddedInTarget(base_file.to_owned(),
                                                           self.rel_path.clone(),
                                                           introduced)
                 .into());
@@ -106,11 +106,11 @@ impl FileInfo {
 }
 
 /// A pod, specified by `pods/$NAME.yml` and zero or more
-/// `pods/overrides/*/*.yml` overrides that we can apply to it.
+/// `pods/targets/*/*.yml` targets that we can apply to it.
 #[derive(Debug)]
 pub struct Pod {
     /// All paths in any associated `dc::File` should be intepreted
-    /// relative to this base, including paths in override files.
+    /// relative to this base, including paths in target files.
     base_dir: PathBuf,
 
     /// The name of this pod, based on the file `pods/$NAME.yml`.
@@ -119,10 +119,10 @@ pub struct Pod {
     /// The top-level file defining this pod.
     file_info: FileInfo,
 
-    /// The individual override files for this pod.  There will always be a
+    /// The individual target files for this pod.  There will always be a
     /// sensible value here for each pod, even if the file doesn't exist on
     /// disk.
-    override_file_infos: BTreeMap<Override, FileInfo>,
+    target_file_infos: BTreeMap<Target, FileInfo>,
 
     /// Per-pod configuration.
     config: Config,
@@ -135,7 +135,7 @@ impl Pod {
     /// Create a new pod, specifying the base directory from which we'll load
     /// pod definitions and the name of the pod.
     #[doc(hidden)]
-    pub fn new<P, S>(base_dir: P, name: S, overrides: &[Override]) -> Result<Pod>
+    pub fn new<P, S>(base_dir: P, name: S, targets: &[Target]) -> Result<Pod>
         where P: Into<PathBuf>,
               S: Into<String>
     {
@@ -156,23 +156,23 @@ impl Pod {
         file_info.finish_normalization();
         let service_names = file_info.file.services.keys().cloned().collect();
 
-        // Load our override `*.yml` files.
-        let mut ovr_infos = BTreeMap::new();
-        for ovr in overrides {
-            let ovr_rel_path =
-                Path::new(&format!("overrides/{}/{}.yml", ovr.name(), &name))
+        // Load our target `*.yml` files.
+        let mut target_infos = BTreeMap::new();
+        for target in targets {
+            let target_rel_path =
+                Path::new(&format!("targets/{}/{}.yml", target.name(), &name))
                     .to_owned();
-            let mut ovr_info = try!(FileInfo::unnormalized(&base_dir, &ovr_rel_path));
-            try!(ovr_info.ensure_same_services(&rel_path, &service_names));
-            ovr_info.finish_normalization();
-            ovr_infos.insert(ovr.to_owned(), ovr_info);
+            let mut target_info = try!(FileInfo::unnormalized(&base_dir, &target_rel_path));
+            try!(target_info.ensure_same_services(&rel_path, &service_names));
+            target_info.finish_normalization();
+            target_infos.insert(target.to_owned(), target_info);
         }
 
         Ok(Pod {
             base_dir: base_dir,
             name: name,
             file_info: file_info,
-            override_file_infos: ovr_infos,
+            target_file_infos: target_infos,
             config: config,
             service_names: service_names,
         })
@@ -193,9 +193,9 @@ impl Pod {
         &self.service_names
     }
 
-    /// Is this pod enabled in the specified override?
-    pub fn enabled_in(&self, ovr: &Override) -> bool {
-        ovr.is_enabled_by(&self.config.enable_in_overrides)
+    /// Is this pod enabled in the specified target?
+    pub fn enabled_in(&self, target: &Target) -> bool {
+        target.is_enabled_by(&self.config.enable_in_targets)
     }
 
     /// The base directory for our relative paths.
@@ -217,40 +217,40 @@ impl Pod {
         &self.file_info.file
     }
 
-    /// Look up the file info associated with an override, or return an
-    /// error if this override was not specified for this `Pod` at creation
+    /// Look up the file info associated with an target, or return an
+    /// error if this target was not specified for this `Pod` at creation
     /// time.
-    fn override_file_info(&self, ovr: &Override) -> Result<&FileInfo> {
-        self.override_file_infos
-            .get(ovr)
-            .ok_or_else(|| err!("The override {} is not defined", ovr.name()))
+    fn target_file_info(&self, target: &Target) -> Result<&FileInfo> {
+        self.target_file_infos
+            .get(target)
+            .ok_or_else(|| err!("The target {} is not defined", target.name()))
     }
 
-    /// The path to the specificied override file for this pod.
-    pub fn override_rel_path(&self, ovr: &Override) -> Result<&Path> {
-        Ok(&(try!(self.override_file_info(ovr)).rel_path))
+    /// The path to the specificied target file for this pod.
+    pub fn target_rel_path(&self, target: &Target) -> Result<&Path> {
+        Ok(&(try!(self.target_file_info(target)).rel_path))
     }
 
-    /// The `dc::File` for this override.
-    pub fn override_file(&self, ovr: &Override) -> Result<&dc::File> {
-        Ok(&(try!(self.override_file_info(ovr)).file))
+    /// The `dc::File` for this target.
+    pub fn target_file(&self, target: &Target) -> Result<&dc::File> {
+        Ok(&(try!(self.target_file_info(target)).file))
     }
 
-    /// Return the base file and the override file merged into a single
+    /// Return the base file and the target file merged into a single
     /// `docker-compose.yml` file.
-    pub fn merged_file(&self, ovr: &Override) -> Result<dc::File> {
+    pub fn merged_file(&self, target: &Target) -> Result<dc::File> {
         // This is expensive so log it.
-        debug!("Merging pod {} with override {}", self.name(), ovr.name());
-        Ok(self.file().merge_override(try!(self.override_file(ovr))))
+        debug!("Merging pod {} with target {}", self.name(), target.name());
+        Ok(self.file().merge_override(try!(self.target_file(target))))
     }
 
-    /// All the overrides associated with this pod.
-    pub fn override_files(&self) -> OverrideFiles {
-        OverrideFiles { iter: self.override_file_infos.iter() }
+    /// All the targets associated with this pod.
+    pub fn target_files(&self) -> TargetFiles {
+        TargetFiles { iter: self.target_file_infos.iter() }
     }
 
     /// Iterate over all `dc::File` objects associated with this pod, including
-    /// both the main `file()` and all the files in `override_files()`.
+    /// both the main `file()` and all the files in `target_files()`.
     pub fn all_files(&self) -> AllFiles {
         // Defer all the hard work to our iterator type.
         AllFiles {
@@ -260,14 +260,14 @@ impl Pod {
     }
 
     /// Look up a service by name.
-    pub fn service(&self, ovr: &Override, name: &str) -> Result<Option<dc::Service>> {
-        let file = try!(self.merged_file(ovr));
+    pub fn service(&self, target: &Target, name: &str) -> Result<Option<dc::Service>> {
+        let file = try!(self.merged_file(target));
         Ok(file.services.get(name).cloned())
     }
 
     /// Like `service`, but returns an error if the service can't be found.
-    pub fn service_or_err(&self, ovr: &Override, name: &str) -> Result<dc::Service> {
-        try!(self.service(ovr, name))
+    pub fn service_or_err(&self, target: &Target, name: &str) -> Result<dc::Service> {
+        try!(self.service(target, name))
             .ok_or_else(|| ErrorKind::UnknownService(name.to_owned()).into())
     }
 
@@ -275,9 +275,9 @@ impl Pod {
     /// `docker-compose` to describe this file.
     pub fn compose_args(&self,
                         proj: &Project,
-                        ovr: &Override)
+                        target: &Target)
                         -> Result<Vec<OsString>> {
-        let compose_project_name = ovr.compose_project_name(proj);
+        let compose_project_name = target.compose_project_name(proj);
         Ok(vec!["-p".into(),
                 compose_project_name.into(),
                 "-f".into(),
@@ -285,18 +285,18 @@ impl Pod {
     }
 }
 
-/// An iterator over this pods overrides and their associated files.
+/// An iterator over this pods targets and their associated files.
 #[allow(missing_debug_implementations)]
-pub struct OverrideFiles<'a> {
+pub struct TargetFiles<'a> {
     /// Our wrapped iterator.
-    iter: btree_map::Iter<'a, Override, FileInfo>,
+    iter: btree_map::Iter<'a, Target, FileInfo>,
 }
 
-impl<'a> Iterator for OverrideFiles<'a> {
-    type Item = (&'a Override, &'a dc::File);
+impl<'a> Iterator for TargetFiles<'a> {
+    type Item = (&'a Target, &'a dc::File);
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next().map(|(ovr, file_info)| (ovr, &file_info.file))
+        self.iter.next().map(|(target, file_info)| (target, &file_info.file))
     }
 }
 
@@ -306,11 +306,11 @@ enum AllFilesState<'a> {
     /// Yield the top-level `file()` next.
     TopLevelFile,
     /// Yield an item from this iterator next.
-    OverrideFiles(OverrideFiles<'a>),
+    TargetFiles(TargetFiles<'a>),
 }
 
 /// An iterator over all the `dc::File` objects associated with a pod, in
-/// all overrides.
+/// all targets.
 #[allow(missing_debug_implementations)]
 pub struct AllFiles<'a> {
     /// The pod whose files we're iterating over.
@@ -327,17 +327,17 @@ impl<'a> Iterator for AllFiles<'a> {
         //
         // ```
         // iter::once(pod.file())
-        //     .chain(pod.override_files().map(|(_, file)| file))
+        //     .chain(pod.target_files().map(|(_, file)| file))
         // ```
         //
         // ...and storing the result in our object, but the type of that
         // expression is exquisitely hideous and we'd go mad.
         match self.state {
             AllFilesState::TopLevelFile => {
-                self.state = AllFilesState::OverrideFiles(self.pod.override_files());
+                self.state = AllFilesState::TargetFiles(self.pod.target_files());
                 Some(self.pod.file())
             }
-            AllFilesState::OverrideFiles(ref mut iter) => {
+            AllFilesState::TargetFiles(ref mut iter) => {
                 iter.next().map(|(_, file)| file)
             }
         }
@@ -358,26 +358,26 @@ fn pods_are_normalized_on_load() {
     assert_eq!(web.env_files[0].value().unwrap(), Path::new("common.env"));
 
     // This test assumes that there's no `web` entry in the `production`
-    // override, so we have to create everything from scratch.
-    let production = proj.ovr("production").unwrap();
-    let web_ovr = frontend.override_file(production)
+    // target, so we have to create everything from scratch.
+    let production = proj.target("production").unwrap();
+    let web_target = frontend.target_file(production)
         .unwrap()
         .services
         .get("web")
         .unwrap();
-    assert_eq!(web_ovr.env_files.len(), 1);
-    assert_eq!(web_ovr.env_files[0].value().unwrap(),
-               Path::new("overrides/production/common.env"));
+    assert_eq!(web_target.env_files.len(), 1);
+    assert_eq!(web_target.env_files[0].value().unwrap(),
+               Path::new("targets/production/common.env"));
 }
 
 #[test]
-fn can_merge_base_file_and_override() {
+fn can_merge_base_file_and_target() {
     use env_logger;
     let _ = env_logger::init();
     let proj: Project = Project::from_example("hello").unwrap();
-    let ovr = proj.ovr("development").unwrap();
+    let target = proj.target("development").unwrap();
     let frontend = proj.pod("frontend").unwrap();
-    let merged = frontend.merged_file(ovr).unwrap();
+    let merged = frontend.merged_file(target).unwrap();
     let proxy = merged.services.get("proxy").unwrap();
     assert_eq!(proxy.env_files.len(), 2);
 }
