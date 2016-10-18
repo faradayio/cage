@@ -88,7 +88,7 @@ impl PluginTransform for Plugin {
                     let source = try!(project.sources()
                         .find_by_lib_key(key)
                         .ok_or_else(|| {
-                            err!("no library <{}> defined in `config/libraries.yml`",
+                            err!("no library <{}> defined in `config/sources.yml`",
                                  key)
                         }));
 

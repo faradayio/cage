@@ -89,9 +89,10 @@ impl PluginTransform for Plugin {
         for (name, mut service) in &mut file.services {
             service.environment.append(&mut config.common.clone());
             append_service(&mut service, &config.pods, name);
-            if let Some(ovr) = config.overrides.get(ctx.ovr.name()) {
-                service.environment.append(&mut ovr.common.clone());
-                append_service(&mut service, &ovr.pods, name);
+            let target_name = ctx.project.current_target().name();
+            if let Some(target) = config.targets.get(target_name) {
+                service.environment.append(&mut target.common.clone());
+                append_service(&mut service, &target.pods, name);
             }
         }
         Ok(())
@@ -112,13 +113,14 @@ fn enabled_for_projects_with_config_file() {
 fn injects_secrets_into_services() {
     use env_logger;
     let _ = env_logger::init();
-    let proj = Project::from_example("rails_hello").unwrap();
+    let mut proj = Project::from_example("rails_hello").unwrap();
+    proj.set_current_target_name("production").unwrap();
     let plugin = Plugin::new(&proj).unwrap();
 
-    let ovr = proj.ovr("production").unwrap();
+    let target = proj.current_target();
     let frontend = proj.pod("frontend").unwrap();
-    let ctx = plugins::Context::new(&proj, ovr, frontend);
-    let mut file = frontend.merged_file(ovr).unwrap();
+    let ctx = plugins::Context::new(&proj, frontend);
+    let mut file = frontend.merged_file(target).unwrap();
     plugin.transform(Operation::Output, &ctx, &mut file).unwrap();
     let web = file.services.get("web").unwrap();
     assert_eq!(web.environment.get("GLOBAL_PASSWORD").expect("has GLOBAL_PASSWORD"),

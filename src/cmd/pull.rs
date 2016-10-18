@@ -8,7 +8,6 @@ use command_runner::CommandRunner;
 #[cfg(test)]
 use command_runner::TestCommandRunner;
 use errors::*;
-use ovr::Override;
 use project::Project;
 
 /// We implement `pull` with a trait so we put it in its own module.
@@ -16,14 +15,13 @@ pub trait CommandPull {
     /// Pull all the images associated with a project.
     fn pull<CR>(&self,
                 runner: &CR,
-                ovr: &Override,
                 act_on: &args::ActOn)
                 -> Result<()>
         where CR: CommandRunner;
 }
 
 impl CommandPull for Project {
-    fn pull<CR>(&self, runner: &CR, ovr: &Override, act_on: &args::ActOn) -> Result<()>
+    fn pull<CR>(&self, runner: &CR, act_on: &args::ActOn) -> Result<()>
         where CR: CommandRunner
     {
         // Run our hook.
@@ -31,7 +29,7 @@ impl CommandPull for Project {
 
         // Pass everything else off to `compose`, as usual.
         let opts = args::opts::Empty;
-        self.compose(runner, ovr, "pull", act_on, |_| true, &opts)
+        self.compose(runner, "pull", act_on, |_| true, &opts)
     }
 }
 
@@ -40,11 +38,10 @@ fn runs_docker_compose_pull_on_all_pods() {
     use env_logger;
     let _ = env_logger::init();
     let proj = Project::from_example("hello").unwrap();
-    let ovr = proj.ovr("development").unwrap();
     let runner = TestCommandRunner::new();
-    proj.output(ovr).unwrap();
+    proj.output().unwrap();
 
-    proj.pull(&runner, ovr, &args::ActOn::All).unwrap();
+    proj.pull(&runner, &args::ActOn::All).unwrap();
     assert_ran!(runner, {
         [proj.root_dir().join("config/hooks/pull.d/hello.hook")],
         ["docker-compose",

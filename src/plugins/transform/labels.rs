@@ -41,9 +41,11 @@ impl PluginTransform for Plugin {
                  -> Result<()> {
 
         for service in &mut file.services.values_mut() {
-            // These are intended for easy use as `docker ps --filter label
+            // These are intended for easy use as `docker ps --filter`
+            // arguments.
+            let target = ctx.project.current_target().name();
             service.labels
-                .insert("io.fdy.cage.override".into(), ctx.ovr.name().into());
+                .insert("io.fdy.cage.target".into(), target.into());
             service.labels.insert("io.fdy.cage.pod".into(), ctx.pod.name().into());
 
             // TODO LOW: Remove metadata-only `io.fdy.cage.` labels?

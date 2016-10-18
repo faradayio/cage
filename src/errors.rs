@@ -77,12 +77,18 @@ error_chain! {
             display("plugin '{}' failed", &plugin)
         }
 
-        /// An override file tried to add new services that weren't present in
+        /// An target file tried to add new services that weren't present in
         /// the file it was overriding.
-        ServicesAddedInOverride(base: PathBuf, ovr: PathBuf, names: Vec<String>) {
-            description("services present in override but not in base")
+        ServicesAddedInTarget(base: PathBuf, target: PathBuf, names: Vec<String>) {
+            description("services present in target but not in base")
             display("services {:?} present in {} but not in {}",
-                    &names, base.display(), ovr.display())
+                    &names, base.display(), target.display())
+        }
+
+        /// The requested target does not appear to exist.
+        UnknownTarget(target_name: String) {
+            description("unknown target")
+            display("unknown target '{}'", &target_name)
         }
 
         /// The requested pod or service does not appear to exist.

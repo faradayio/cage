@@ -6,7 +6,6 @@ use command_runner::{Command, CommandRunner};
 use command_runner::TestCommandRunner;
 use errors::*;
 use ext::service::ServiceExt;
-use ovr::Override;
 use project::Project;
 
 /// We implement `run` with a trait so we put it in its own module.
@@ -14,7 +13,6 @@ pub trait CommandRun {
     /// Run a specific pod as a one-shot task.
     fn run<CR>(&self,
                runner: &CR,
-               ovr: &Override,
                pod: &str,
                command: Option<&args::Command>,
                opts: &args::opts::Run)
@@ -24,7 +22,6 @@ pub trait CommandRun {
     /// Execute tests inside a fresh container.
     fn test<CR>(&self,
                 runner: &CR,
-                ovr: &Override,
                 service: &str,
                 command: Option<&args::Command>)
                 -> Result<()>
@@ -34,7 +31,6 @@ pub trait CommandRun {
 impl CommandRun for Project {
     fn run<CR>(&self,
                runner: &CR,
-               ovr: &Override,
                pod: &str,
                command: Option<&args::Command>,
                opts: &args::opts::Run)
@@ -45,7 +41,7 @@ impl CommandRun for Project {
             .ok_or_else(|| err!("Cannot find pod {}", pod)));
 
         // Get the single service in our pod.
-        let file = try!(pod.merged_file(ovr));
+        let file = try!(pod.merged_file(self.current_target()));
         if file.services.len() != 1 {
             return Err(err!("Can only `run` pods with 1 service, {} has {}",
                             pod.name(),
@@ -60,7 +56,7 @@ impl CommandRun for Project {
             vec![]
         };
         runner.build("docker-compose")
-            .args(&try!(pod.compose_args(self, ovr)))
+            .args(&try!(pod.compose_args(self, self.current_target())))
             .arg("run")
             .args(&opts.to_args())
             .arg(service)
@@ -70,22 +66,22 @@ impl CommandRun for Project {
 
     fn test<CR>(&self,
                 runner: &CR,
-                ovr: &Override,
                 service_name: &str,
                 command: Option<&args::Command>)
                 -> Result<()>
         where CR: CommandRunner
     {
+        let target = self.current_target();
         let (pod, service_name) = try!(self.service_or_err(service_name));
 
         let command_args = if let Some(c) = command {
             c.to_args()
         } else {
-            let service = try!(pod.service_or_err(ovr, service_name));
+            let service = try!(pod.service_or_err(target, service_name));
             try!(service.test_command()).iter().map(|s| s.into()).collect()
         };
         runner.build("docker-compose")
-            .args(&try!(pod.compose_args(self, ovr)))
+            .args(&try!(pod.compose_args(self, target)))
             .arg("run")
             .arg("--rm")
             .arg("--no-deps")
@@ -100,11 +96,10 @@ fn fails_on_a_multi_service_pod() {
     use env_logger;
     let _ = env_logger::init();
     let proj = Project::from_example("hello").unwrap();
-    let ovr = proj.ovr("development").unwrap();
     let runner = TestCommandRunner::new();
-    proj.output(ovr).unwrap();
+    proj.output().unwrap();
     let opts = Default::default();
-    assert!(proj.run(&runner, ovr, "frontend", None, &opts).is_err());
+    assert!(proj.run(&runner, "frontend", None, &opts).is_err());
 }
 
 #[test]
@@ -112,13 +107,12 @@ fn runs_a_single_service_pod() {
     use env_logger;
     let _ = env_logger::init();
     let proj = Project::from_example("rails_hello").unwrap();
-    let ovr = proj.ovr("development").unwrap();
     let runner = TestCommandRunner::new();
-    proj.output(ovr).unwrap();
+    proj.output().unwrap();
     let cmd = args::Command::new("rake").with_args(&["db:migrate"]);
     let mut opts = args::opts::Run::default();
     opts.allocate_tty = false;
-    proj.run(&runner, ovr, "migrate", Some(&cmd), &opts).unwrap();
+    proj.run(&runner, "migrate", Some(&cmd), &opts).unwrap();
     assert_ran!(runner, {
         ["docker-compose",
          "-p",
@@ -138,12 +132,12 @@ fn runs_a_single_service_pod() {
 fn runs_tests() {
     use env_logger;
     let _ = env_logger::init();
-    let proj = Project::from_example("hello").unwrap();
-    let ovr = proj.ovr("test").unwrap();
+    let mut proj = Project::from_example("hello").unwrap();
+    proj.set_current_target_name("test").unwrap();
     let runner = TestCommandRunner::new();
-    proj.output(ovr).unwrap();
+    proj.output().unwrap();
 
-    proj.test(&runner, ovr, "frontend/proxy", None).unwrap();
+    proj.test(&runner, "frontend/proxy", None).unwrap();
 
     assert_ran!(runner, {
         ["docker-compose",
@@ -166,13 +160,13 @@ fn runs_tests() {
 fn runs_tests_with_custom_command() {
     use env_logger;
     let _ = env_logger::init();
-    let proj = Project::from_example("hello").unwrap();
-    let ovr = proj.ovr("test").unwrap();
+    let mut proj = Project::from_example("hello").unwrap();
+    proj.set_current_target_name("test").unwrap();
     let runner = TestCommandRunner::new();
-    proj.output(ovr).unwrap();
+    proj.output().unwrap();
 
     let cmd = args::Command::new("rspec").with_args(&["-t", "foo"]);
-    proj.test(&runner, ovr, "proxy", Some(&cmd)).unwrap();
+    proj.test(&runner, "proxy", Some(&cmd)).unwrap();
 
     assert_ran!(runner, {
         ["docker-compose",

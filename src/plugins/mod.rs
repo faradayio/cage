@@ -6,7 +6,6 @@ use std::io;
 use std::marker::PhantomData;
 
 use errors::*;
-use ovr::Override;
 use pod::Pod;
 use project::Project;
 use template::Template;
@@ -18,8 +17,6 @@ pub mod transform;
 pub struct Context<'a> {
     /// The project to which we're applying this plugin.
     pub project: &'a Project,
-    /// The override which we're currently using.
-    pub ovr: &'a Override,
     /// The pod to which we're applying this plugin.
     pub pod: &'a Pod,
     /// PRIVATE. Allow future extensibility without breaking the API.
@@ -28,10 +25,9 @@ pub struct Context<'a> {
 
 impl<'a> Context<'a> {
     /// Create a new plugin context.
-    pub fn new(project: &'a Project, ovr: &'a Override, pod: &'a Pod) -> Context<'a> {
+    pub fn new(project: &'a Project, pod: &'a Pod) -> Context<'a> {
         Context {
             project: project,
-            ovr: ovr,
             pod: pod,
             _nonexclusive: PhantomData,
         }

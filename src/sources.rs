@@ -20,8 +20,20 @@ use pod::Pod;
 use serde_helpers::{dump_yaml, load_yaml};
 use util::ConductorPathExt;
 
+
+/// The file where we define extra source trees for libraries used by our
+/// services.
+const SOURCES_YML: &'static str = "config/sources.yml";
+
 /// The file where we store our `mounted` state.
 const MOUNTED_YML: &'static str = "mounted.yml";
+
+// Include some source code containing data structures we need to run
+// through serde.
+#[cfg(feature = "serde_derive")]
+include!(concat!("source_config.in.rs"));
+#[cfg(feature = "serde_codegen")]
+include!(concat!(env!("OUT_DIR"), "/source_config.rs"));
 
 /// All the source trees associated with a project's Docker images.
 #[derive(Debug)]
@@ -29,7 +41,7 @@ pub struct Sources {
     /// Our source trees, indexed by their local alias.
     sources: BTreeMap<String, Source>,
 
-    /// A map from keys in `config/libraries.yml` to source tree
+    /// A map from keys in `config/sources.yml` to source tree
     /// aliases.
     lib_keys: BTreeMap<String, String>,
 }
@@ -99,11 +111,11 @@ impl Sources {
         }
 
         // Scan our config files for more source trees.
-        let path = root_dir.join("config/libraries.yml");
+        let path = root_dir.join(SOURCES_YML);
         if path.exists() {
-            let libs: BTreeMap<String, String> = try!(load_yaml(&path));
-            for (lib_key, lib_src) in &libs {
-                let context = dc::Context::new(&lib_src[..]);
+            let libs: BTreeMap<String, SourceConfig> = try!(load_yaml(&path));
+            for (lib_key, lib_info) in &libs {
+                let context = try!(lib_info.context.value());
                 let alias = try!(Self::add_source(&mut sources, &mounted, &context));
                 lib_keys.insert(lib_key.clone(), alias);
             }
@@ -138,7 +150,7 @@ impl Sources {
     }
 
     /// Look up a source tree using a "lib key", which is key used in
-    /// `config/libraries.yml` and with service labels of the form
+    /// `config/sources.yml` and with service labels of the form
     /// `io.fdy.cage.lib.<KEY>`.
     pub fn find_by_lib_key(&self, lib_key: &str) -> Option<&Source> {
         self.lib_keys
@@ -275,7 +287,7 @@ fn are_loaded_with_projects() {
 }
 
 #[test]
-fn are_loaded_from_config_libraries() {
+fn are_loaded_from_config_sources_yml() {
     use env_logger;
     let _ = env_logger::init();
     let proj = Project::from_example("rails_hello").unwrap();

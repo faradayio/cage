@@ -20,7 +20,7 @@ use default_tags::DefaultTags;
 use dir;
 use errors::*;
 use hook::HookManager;
-use ovr::Override;
+use target::Target;
 use plugins::{self, Operation};
 use pod::{Pod, PodType};
 use sources::Sources;
@@ -51,7 +51,7 @@ pub enum PodOrService<'a> {
 #[derive(Debug)]
 pub struct Project {
     /// The name of this project.  This defaults to the name of the
-    /// directory containing the project, but it can be overriden, just
+    /// directory containing the project, but it can be targetn, just
     /// like with `docker-compose`.
     name: String,
 
@@ -72,8 +72,12 @@ pub struct Project {
     /// Mappings from user-visible service names to `(pod, service)` pairs.
     service_locations: ServiceLocations,
 
-    /// All the overrides associated with this project.
-    overrides: Vec<Override>,
+    /// All the targets associated with this project.
+    targets: Vec<Target>,
+
+    /// The target that we're currently using.  Applies to most
+    /// operations.
+    current_target: Target,
 
     /// All the source trees associated with this project.
     sources: Sources,
@@ -99,8 +103,14 @@ impl Project {
                  src_dir: &Path,
                  output_dir: &Path)
                  -> Result<Project> {
-        let overrides = try!(Project::find_overrides(root_dir));
-        let pods = try!(Project::find_pods(root_dir, &overrides));
+        let targets = try!(Project::find_targets(root_dir));
+        let current_target = try!(targets.iter()
+            .find(|target| target.name() == "development")
+            .ok_or_else(|| {
+                ErrorKind::UnknownTarget("development".into())
+            }))
+            .to_owned();
+        let pods = try!(Project::find_pods(root_dir, &targets));
         let service_locations = ServiceLocations::new(&pods);
         let sources = try!(Sources::new(&root_dir, &output_dir, &pods));
         let config_path = root_dir.join(PROJECT_CONFIG_PATH.deref());
@@ -118,7 +128,8 @@ impl Project {
             output_dir: output_dir.to_owned(),
             pods: pods,
             service_locations: service_locations,
-            overrides: overrides,
+            targets: targets,
+            current_target: current_target,
             sources: sources,
             hooks: try!(HookManager::new(root_dir.join("config/hooks"))),
             config: config,
@@ -185,24 +196,24 @@ impl Project {
         Ok(())
     }
 
-    /// Find all the overrides defined in this project.
-    fn find_overrides(root_dir: &Path) -> Result<Vec<Override>> {
-        let overrides_dir = root_dir.join("pods/overrides");
-        let mut overrides = vec![];
-        for glob_result in try!(overrides_dir.glob("*")) {
+    /// Find all the targets defined in this project.
+    fn find_targets(root_dir: &Path) -> Result<Vec<Target>> {
+        let targets_dir = root_dir.join("pods/targets");
+        let mut targets = vec![];
+        for glob_result in try!(targets_dir.glob("*")) {
             let path = try!(glob_result);
             if path.is_dir() {
                 // It's safe to unwrap file_name because we know it matched
                 // our glob.
                 let name = try!(path.file_name().unwrap().to_str_or_err()).to_owned();
-                overrides.push(Override::new(name));
+                targets.push(Target::new(name));
             }
         }
-        Ok(overrides)
+        Ok(targets)
     }
 
     /// Find all the pods defined in this project.
-    fn find_pods(root_dir: &Path, overrides: &[Override]) -> Result<Vec<Pod>> {
+    fn find_pods(root_dir: &Path, targets: &[Target]) -> Result<Vec<Pod>> {
         let pods_dir = root_dir.join("pods");
         let mut pods = vec![];
         for glob_result in try!(pods_dir.glob("*.yml")) {
@@ -211,7 +222,7 @@ impl Project {
             // our glob.
             let name = try!(path.file_stem().unwrap().to_str_or_err()).to_owned();
             if !name.ends_with(".metadata") {
-                pods.push(try!(Pod::new(pods_dir.clone(), name, overrides)));
+                pods.push(try!(Pod::new(pods_dir.clone(), name, targets)));
             }
         }
         Ok(pods)
@@ -242,7 +253,7 @@ impl Project {
     }
 
     /// The output directory of this project.  Normally `.cage` inside
-    /// the `root_dir`, but it may be overriden.
+    /// the `root_dir`, but it may be targetn.
     pub fn output_dir(&self) -> &Path {
         &self.output_dir
     }
@@ -310,15 +321,32 @@ impl Project {
             .ok_or_else(|| ErrorKind::UnknownPodOrService(name.to_owned()).into())
     }
 
-    /// Iterate over all overrides in this project.
-    pub fn overrides(&self) -> Overrides {
-        Overrides { iter: self.overrides.iter() }
+    /// Iterate over all targets in this project.
+    pub fn targets(&self) -> Targets {
+        Targets { iter: self.targets.iter() }
     }
 
-    /// Look up the named override.  We name this function `ovr` instead of
-    /// `override` to avoid a keyword clash.
-    pub fn ovr(&self, name: &str) -> Option<&Override> {
-        self.overrides().find(|ovr| ovr.name() == name)
+    /// Look up the named target.  We name this function `target` instead of
+    /// `target` to avoid a keyword clash.
+    pub fn target(&self, name: &str) -> Option<&Target> {
+        self.targets().find(|target| target.name() == name)
+    }
+
+    /// Like `target`, but returns an error if no each target is found.
+    pub fn target_or_err(&self, name: &str) -> Result<&Target> {
+        self.target(name).ok_or_else(|| ErrorKind::UnknownTarget(name.into()).into())
+    }
+
+    /// Get the current target that we're using with this project.
+    pub fn current_target(&self) -> &Target {
+        &self.current_target
+    }
+
+    /// Set the name of the target to use.  This must be done before
+    /// calling `output` or `export`.
+    pub fn set_current_target_name(&mut self, name: &str) -> Result<()> {
+        self.current_target = try!(self.target_or_err(name)).to_owned();
+        Ok(())
     }
 
     /// Return the collection of source trees associated with this project,
@@ -364,7 +392,6 @@ impl Project {
     /// Process our pods, flattening and transforming them using our
     /// plugins, and output them to the specified directory.
     fn output_helper(&self,
-                     ovr: &Override,
                      op: Operation,
                      export_dir: &Path)
                      -> Result<()> {
@@ -373,7 +400,7 @@ impl Project {
             // Don't export pods which aren't enabled.
             //
             // TODO MED: Should we exclude these at load time instead?
-            if op == Operation::Export && !pod.enabled_in(ovr) {
+            if op == Operation::Export && !pod.enabled_in(&self.current_target) {
                 continue;
             }
 
@@ -388,11 +415,11 @@ impl Project {
             let out_path = try!(export_dir.join(&rel_path).with_guaranteed_parent());
             debug!("Outputting {}", out_path.display());
 
-            // Combine overrides, make it standalone, tweak as needed, and
+            // Combine targets, make it standalone, tweak as needed, and
             // output.
-            let mut file = try!(pod.merged_file(ovr));
+            let mut file = try!(pod.merged_file(&self.current_target));
             try!(file.make_standalone(&self.pods_dir()));
-            let ctx = plugins::Context::new(self, ovr, pod);
+            let ctx = plugins::Context::new(self, pod);
             try!(self.plugins().transform(op, &ctx, &mut file));
             try!(file.write_to_path(out_path));
         }
@@ -401,7 +428,7 @@ impl Project {
 
     /// Delete our existing output and replace it with a processed and
     /// expanded version of our pod definitions.
-    pub fn output(&self, ovr: &Override) -> Result<()> {
+    pub fn output(&self) -> Result<()> {
         // Get a path to our output pods directory (and delete it if it
         // exists).
         let out_pods = self.output_pods_dir();
@@ -410,13 +437,13 @@ impl Project {
                 .map_err(|e| err!("Cannot delete {}: {}", out_pods.display(), e)));
         }
 
-        self.output_helper(ovr, Operation::Output, &out_pods)
+        self.output_helper(Operation::Output, &out_pods)
     }
 
-    /// Export this project (with the specified override applied) as a set
+    /// Export this project (with the specified target applied) as a set
     /// of standalone `*.yml` files with no environment variable
     /// interpolations and no external dependencies.
-    pub fn export(&self, ovr: &Override, export_dir: &Path) -> Result<()> {
+    pub fn export(&self, export_dir: &Path) -> Result<()> {
         // Don't clobber an existing directory.
         if export_dir.exists() {
             return Err(err!("The directory {} already exists", export_dir.display()));
@@ -427,7 +454,7 @@ impl Project {
             warn!("Exporting project without --default-tags");
         }
 
-        self.output_helper(ovr, Operation::Export, export_dir)
+        self.output_helper(Operation::Export, export_dir)
     }
 }
 
@@ -456,18 +483,18 @@ impl<'a> Iterator for Pods<'a> {
     }
 }
 
-/// An iterator over the overrides in a project.
+/// An iterator over the targets in a project.
 #[derive(Debug, Clone)]
-pub struct Overrides<'a> {
+pub struct Targets<'a> {
     /// Our wrapped iterator.  We wrap this in our own struct to make the
     /// underlying type opaque.
-    iter: slice::Iter<'a, Override>,
+    iter: slice::Iter<'a, Target>,
 }
 
-impl<'a> Iterator for Overrides<'a> {
-    type Item = &'a Override;
+impl<'a> Iterator for Targets<'a> {
+    type Item = &'a Target;
 
-    fn next(&mut self) -> Option<&'a Override> {
+    fn next(&mut self) -> Option<&'a Target> {
         self.iter.next()
     }
 }
@@ -524,11 +551,11 @@ fn pods_are_loaded() {
 }
 
 #[test]
-fn overrides_are_loaded() {
+fn targets_are_loaded() {
     use env_logger;
     let _ = env_logger::init();
     let proj = Project::from_example("hello").unwrap();
-    let names: Vec<_> = proj.overrides.iter().map(|o| o.name()).collect();
+    let names: Vec<_> = proj.targets.iter().map(|o| o.name()).collect();
     assert_eq!(names, ["development", "production", "test"]);
 }
 
@@ -537,8 +564,7 @@ fn output_creates_a_directory_of_flat_yml_files() {
     use env_logger;
     let _ = env_logger::init();
     let proj = Project::from_example("rails_hello").unwrap();
-    let ovr = proj.ovr("development").unwrap();
-    proj.output(ovr).unwrap();
+    proj.output().unwrap();
     assert!(proj.output_dir.join("pods/frontend.yml").exists());
     assert!(proj.output_dir.join("pods/db.yml").exists());
     assert!(proj.output_dir.join("pods/migrate.yml").exists());
@@ -555,10 +581,9 @@ fn output_applies_expected_transforms() {
 
     let mut proj = Project::from_example("hello").unwrap();
     proj.set_default_tags(default_tags);
-    let ovr = proj.ovr("development").unwrap();
     let source = proj.sources().find_by_alias("dockercloud-hello-world").unwrap();
     source.fake_clone_source(&proj).unwrap();
-    proj.output(ovr).unwrap();
+    proj.output().unwrap();
 
     // Load the generated file and look at the `web` service we cloned.
     let frontend_file = proj.output_dir().join("pods/frontend.yml");
@@ -594,12 +619,11 @@ fn output_mounts_cloned_libraries() {
     let _ = env_logger::init();
 
     let proj = Project::from_example("rails_hello").unwrap();
-    let ovr = proj.ovr("development").unwrap();
     let source = proj.sources()
         .find_by_lib_key("coffee_rails")
         .expect("should define lib coffee_rails");
     source.fake_clone_source(&proj).unwrap();
-    proj.output(ovr).unwrap();
+    proj.output().unwrap();
 
     // Load the generated file and look at the `web` service we cloned.
     let frontend_file = proj.output_dir().join("pods/frontend.yml");
@@ -622,8 +646,7 @@ fn output_mounts_cloned_libraries() {
 #[test]
 fn output_supports_in_tree_source_code() {
     let proj = Project::from_example("node_hello").unwrap();
-    let ovr = proj.ovr("development").unwrap();
-    proj.output(ovr).unwrap();
+    proj.output().unwrap();
 
     // Load the generated file and look at the `web` service we cloned.
     let frontend_file = proj.output_dir().join("pods/frontend.yml");
@@ -640,10 +663,10 @@ fn output_supports_in_tree_source_code() {
 fn export_creates_a_directory_of_flat_yml_files() {
     use env_logger;
     let _ = env_logger::init();
-    let proj = Project::from_example("rails_hello").unwrap();
+    let mut proj = Project::from_example("rails_hello").unwrap();
     let export_dir = proj.output_dir.join("hello_export");
-    let ovr = proj.ovr("production").unwrap();
-    proj.export(ovr, &export_dir).unwrap();
+    proj.set_current_target_name("production").unwrap();
+    proj.export(&export_dir).unwrap();
     assert!(export_dir.join("frontend.yml").exists());
     assert!(!export_dir.join("db.yml").exists());
     assert!(export_dir.join("tasks/migrate.yml").exists());
@@ -659,11 +682,10 @@ fn export_applies_expected_transforms() {
     // `output`.
 
     let proj = Project::from_example("hello").unwrap();
-    let ovr = proj.ovr("development").unwrap();
     let source = proj.sources().find_by_alias("dockercloud-hello-world").unwrap();
     source.fake_clone_source(&proj).unwrap();
     let export_dir = proj.output_dir.join("hello_export");
-    proj.export(ovr, &export_dir).unwrap();
+    proj.export(&export_dir).unwrap();
 
     // Load the generated file and look at the `web` service we cloned.
     let frontend_file = export_dir.join("frontend.yml");
@@ -677,7 +699,7 @@ fn export_applies_expected_transforms() {
                &dc::Context::new(dc::GitUrl::new(url).unwrap()));
 
     // Make sure we've added our custom labels.
-    assert_eq!(web.labels.get("io.fdy.cage.override"),
+    assert_eq!(web.labels.get("io.fdy.cage.target"),
                Some(&"development".to_owned()));
     assert_eq!(web.labels.get("io.fdy.cage.pod"),
                Some(&"frontend".to_owned()));

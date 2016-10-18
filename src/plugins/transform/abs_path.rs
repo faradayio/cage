@@ -92,8 +92,7 @@ fn converts_relative_paths_to_absolute() {
     use env_logger;
     let _ = env_logger::init();
     let proj = Project::from_example("rails_hello").unwrap();
-    let ovr = proj.ovr("development").unwrap();
-    proj.output(ovr).unwrap();
+    proj.output().unwrap();
 
     // Load the generated file and look at the `db` service we cloned.
     let db_file = proj.output_dir().join("pods/db.yml");

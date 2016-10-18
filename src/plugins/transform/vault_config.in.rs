@@ -26,9 +26,9 @@ type PodConfig = BTreeMap<String, ServiceConfig>;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Config {
-    /// Only apply this plugin in the specified overrides.  If this
-    /// field is omitted, we apply the plguin in all overrides.
-    enable_in_overrides: Option<Vec<String>>,
+    /// Only apply this plugin in the specified targets.  If this
+    /// field is omitted, we apply the plguin in all targets.
+    enable_in_targets: Option<Vec<String>>,
 
     /// The kind of authentication to use.
     auth_type: AuthType,

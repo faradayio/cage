@@ -9,4 +9,5 @@
 # volume, you can use the key `io.fdy.cage.lib.<KEY>`.  See
 # `pods/frontend.yml` for an example.
 
-coffee_rails: "https://github.com/rails/coffee-rails.git"
+coffee_rails:
+  context: "https://github.com/rails/coffee-rails.git"

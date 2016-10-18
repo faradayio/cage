@@ -39,8 +39,8 @@ trait ArgMatchesExt {
     /// refactored in the future.
     fn should_output_project(&self) -> bool;
 
-    /// Get either the specified override name, or a reasonable default.
-    fn override_name(&self) -> &str;
+    /// Get either the specified target name, or a reasonable default.
+    fn target_name(&self) -> &str;
 
     /// Determine what pods or services we're supposed to act on.
     fn to_acts_on(&self, arg_name: &str) -> cage::args::ActOn;
@@ -67,8 +67,8 @@ impl<'a> ArgMatchesExt for clap::ArgMatches<'a> {
         self.subcommand_name() != Some("export")
     }
 
-    fn override_name(&self) -> &str {
-        self.value_of("override")
+    fn target_name(&self) -> &str {
+        self.value_of("target")
             .unwrap_or_else(|| {
                 if self.subcommand_name() == Some("test") {
                     "test"
@@ -174,15 +174,12 @@ fn run(matches: &clap::ArgMatches) -> Result<()> {
         let reader = io::BufReader::new(f);
         proj.set_default_tags(try!(cage::DefaultTags::read(reader)));
     }
-    let override_name = matches.override_name();
-    let ovr = try!(proj.ovr(override_name)
-            .ok_or_else(|| err!("override {} is not defined", override_name)))
-        .to_owned();
+    try!(proj.set_current_target_name(matches.target_name()));
 
     // Output our project's `*.yml` files for `docker-compose` if we'll
     // need it.
     if matches.should_output_project() {
-        try!(proj.output(&ovr));
+        try!(proj.output());
     }
 
     // Handle our subcommands that require a `Project`.
@@ -190,60 +187,60 @@ fn run(matches: &clap::ArgMatches) -> Result<()> {
     match sc_name {
         "pull" => {
             let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE");
-            try!(proj.pull(&runner, &ovr, &acts_on));
+            try!(proj.pull(&runner, &acts_on));
         }
         "build" => {
             let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE");
             let opts = cage::args::opts::Empty;
-            try!(proj.compose(&runner, &ovr, "build", &acts_on, |_| true, &opts));
+            try!(proj.compose(&runner, "build", &acts_on, |_| true, &opts));
         }
         "up" => {
             let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE");
             let opts = cage::args::opts::Up::default();
-            try!(proj.up(&runner, &ovr, &acts_on, &opts));
+            try!(proj.up(&runner, &acts_on, &opts));
         }
         "stop" => {
             let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE");
             let opts = cage::args::opts::Empty;
-            try!(proj.compose(&runner, &ovr, "stop", &acts_on, |_| true, &opts));
+            try!(proj.compose(&runner, "stop", &acts_on, |_| true, &opts));
         }
         "rm" => {
             let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE");
             let opts = cage::args::opts::Empty;
-            try!(proj.compose(&runner, &ovr, "rm", &acts_on, |_| true, &opts));
+            try!(proj.compose(&runner, "rm", &acts_on, |_| true, &opts));
         }
         "run" => {
             let opts = sc_matches.to_run_options();
             let cmd = sc_matches.to_exec_command();
             let pod = sc_matches.value_of("POD").unwrap();
-            try!(proj.run(&runner, &ovr, pod, cmd.as_ref(), &opts));
+            try!(proj.run(&runner, pod, cmd.as_ref(), &opts));
         }
         "exec" => {
             let service = sc_matches.value_of("SERVICE").unwrap();
             let opts = sc_matches.to_exec_options();
             let cmd = sc_matches.to_exec_command().unwrap();
-            try!(proj.exec(&runner, &ovr, &service, &cmd, &opts));
+            try!(proj.exec(&runner, &service, &cmd, &opts));
         }
         "shell" => {
             let service = sc_matches.value_of("SERVICE").unwrap();
             let opts = sc_matches.to_exec_options();
-            try!(proj.shell(&runner, &ovr, &service, &opts));
+            try!(proj.shell(&runner, &service, &opts));
         }
         "test" => {
             let service = sc_matches.value_of("SERVICE").unwrap();
             let cmd = sc_matches.to_exec_command();
-            try!(proj.test(&runner, &ovr, &service, cmd.as_ref()));
+            try!(proj.test(&runner, &service, cmd.as_ref()));
         }
         "logs" => {
             let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE");
             let opts = sc_matches.to_logs_options();
-            try!(proj.logs(&runner, &ovr, &acts_on, &opts));
+            try!(proj.logs(&runner, &acts_on, &opts));
         }
-        "source" => try!(run_source(&runner, &mut proj, &ovr, sc_matches)),
-        "generate" => try!(run_generate(&runner, &proj, &ovr, sc_matches)),
+        "source" => try!(run_source(&runner, &mut proj, sc_matches)),
+        "generate" => try!(run_generate(&runner, &proj, sc_matches)),
         "export" => {
             let dir = sc_matches.value_of("DIR").unwrap();
-            try!(proj.export(&ovr, &Path::new(dir)));
+            try!(proj.export(&Path::new(dir)));
         }
         unknown => unreachable!("Unexpected subcommand '{}'", unknown),
     }
@@ -254,7 +251,6 @@ fn run(matches: &clap::ArgMatches) -> Result<()> {
 /// Our `source` subcommand.
 fn run_source<R>(runner: &R,
                  proj: &mut cage::Project,
-                 ovr: &cage::Override,
                  matches: &clap::ArgMatches)
                  -> Result<()>
     where R: CommandRunner
@@ -288,7 +284,7 @@ fn run_source<R>(runner: &R,
 
     // Regenerate our output if it might have changed.
     if re_output {
-        try!(proj.output(ovr));
+        try!(proj.output());
     }
 
     Ok(())
@@ -297,7 +293,6 @@ fn run_source<R>(runner: &R,
 /// Our `generate` subcommand.
 fn run_generate<R>(_runner: &R,
                    proj: &cage::Project,
-                   _ovr: &cage::Override,
                    matches: &clap::ArgMatches)
                    -> Result<()>
     where R: CommandRunner

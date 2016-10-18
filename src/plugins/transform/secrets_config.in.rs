@@ -7,11 +7,11 @@ type ServiceSecrets = BTreeMap<String, String>;
 /// The secrets for a pod.
 type PodSecrets = BTreeMap<String, ServiceSecrets>;
 
-/// The secrets for an override.
+/// The secrets for an target.
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-struct OverrideSecrets {
-    /// Shared between all services in this override.
+struct TargetSecrets {
+    /// Shared between all services in this target.
     #[serde(default)]
     common: ServiceSecrets,
     /// Secrets for each of our pods.
@@ -29,9 +29,9 @@ struct Config {
     /// Secrets for each of our pods.
     #[serde(default)]
     pods: BTreeMap<String, PodSecrets>,
-    /// Secrets for each of our overrides.
+    /// Secrets for each of our targets.
     #[serde(default)]
-    overrides: BTreeMap<String, OverrideSecrets>,
+    targets: BTreeMap<String, TargetSecrets>,
 }
 
 #[test]

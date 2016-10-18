@@ -6,7 +6,6 @@ use command_runner::{Command, CommandRunner};
 use command_runner::TestCommandRunner;
 use errors::*;
 use ext::service::ServiceExt;
-use ovr::Override;
 use project::Project;
 use util::err;
 
@@ -18,7 +17,6 @@ pub trait CommandExec {
     /// ridiculous number of arguments.
     fn exec<CR>(&self,
                 runner: &CR,
-                ovr: &Override,
                 service_name: &str,
                 command: &args::Command,
                 opts: &args::opts::Exec)
@@ -28,7 +26,6 @@ pub trait CommandExec {
     /// Execute an interactive shell inside a running container.
     fn shell<CR>(&self,
                  runner: &CR,
-                 ovr: &Override,
                  service_name: &str,
                  opts: &args::opts::Exec)
                  -> Result<()>
@@ -38,7 +35,6 @@ pub trait CommandExec {
 impl CommandExec for Project {
     fn exec<CR>(&self,
                 runner: &CR,
-                ovr: &Override,
                 service_name: &str,
                 command: &args::Command,
                 opts: &args::opts::Exec)
@@ -47,7 +43,7 @@ impl CommandExec for Project {
     {
         let (pod, service_name) = try!(self.service_or_err(service_name));
         runner.build("docker-compose")
-            .args(&try!(pod.compose_args(self, ovr)))
+            .args(&try!(pod.compose_args(self, self.current_target())))
             .arg("exec")
             .args(&opts.to_args())
             .arg(service_name)
@@ -57,7 +53,6 @@ impl CommandExec for Project {
 
     fn shell<CR>(&self,
                  runner: &CR,
-                 ovr: &Override,
                  service_name: &str,
                  opts: &args::opts::Exec)
                  -> Result<()>
@@ -71,10 +66,11 @@ impl CommandExec for Project {
             return Err(err("Can't run shell without a TTY"));
         }
 
+        let target = self.current_target();
         let (pod, service_name) = try!(self.service_or_err(service_name));
-        let service = try!(pod.service_or_err(ovr, service_name));
+        let service = try!(pod.service_or_err(target, service_name));
         let shell = try!(service.shell());
-        self.exec(runner, ovr, service_name, &args::Command::new(shell), opts)
+        self.exec(runner, service_name, &args::Command::new(shell), opts)
     }
 }
 
@@ -83,14 +79,13 @@ fn invokes_docker_exec() {
     use env_logger;
     let _ = env_logger::init();
     let proj = Project::from_example("hello").unwrap();
-    let ovr = proj.ovr("development").unwrap();
     let runner = TestCommandRunner::new();
-    proj.output(ovr).unwrap();
+    proj.output().unwrap();
 
     let command = args::Command::new("true");
     let mut opts = args::opts::Exec::default();
     opts.allocate_tty = false;
-    proj.exec(&runner, ovr, "web", &command, &opts).unwrap();
+    proj.exec(&runner, "web", &command, &opts).unwrap();
 
     assert_ran!(runner, {
         ["docker-compose",
@@ -112,11 +107,10 @@ fn runs_shells() {
     use env_logger;
     let _ = env_logger::init();
     let proj = Project::from_example("hello").unwrap();
-    let ovr = proj.ovr("development").unwrap();
     let runner = TestCommandRunner::new();
-    proj.output(ovr).unwrap();
+    proj.output().unwrap();
 
-    proj.shell(&runner, ovr, "web", &Default::default()).unwrap();
+    proj.shell(&runner, "web", &Default::default()).unwrap();
 
     assert_ran!(runner, {
         ["docker-compose",
