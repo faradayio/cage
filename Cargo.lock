@@ -1,6 +1,6 @@
 [root]
 name = "cage"
-version = "0.0.22"
+version = "0.1.0"
 dependencies = [
  "clap 2.14.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "clippy 0.0.95 (registry+https://github.com/rust-lang/crates.io-index)",
