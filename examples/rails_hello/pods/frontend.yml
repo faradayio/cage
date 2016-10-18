@@ -14,7 +14,7 @@ services:
     labels:
       # The directory where our source code gets mounted into the container.
       io.fdy.cage.srcdir: "/usr/src/app"
-      # We can define libraries in `config/libraries.yml`, clone them
+      # We can define libraries in `config/sources.yml`, clone them
       # using `cage repo clone $KEY`, and mount them into our
       # containers using properties like this one.
       io.fdy.cage.lib.coffee_rails: "/usr/src/app/vendor/coffee-rails"

@@ -29,7 +29,7 @@ pub struct Sources {
     /// Our source trees, indexed by their local alias.
     sources: BTreeMap<String, Source>,
 
-    /// A map from keys in `config/libraries.yml` to source tree
+    /// A map from keys in `config/sources.yml` to source tree
     /// aliases.
     lib_keys: BTreeMap<String, String>,
 }
@@ -99,7 +99,7 @@ impl Sources {
         }
 
         // Scan our config files for more source trees.
-        let path = root_dir.join("config/libraries.yml");
+        let path = root_dir.join("config/sources.yml");
         if path.exists() {
             let libs: BTreeMap<String, String> = try!(load_yaml(&path));
             for (lib_key, lib_src) in &libs {
@@ -138,7 +138,7 @@ impl Sources {
     }
 
     /// Look up a source tree using a "lib key", which is key used in
-    /// `config/libraries.yml` and with service labels of the form
+    /// `config/sources.yml` and with service labels of the form
     /// `io.fdy.cage.lib.<KEY>`.
     pub fn find_by_lib_key(&self, lib_key: &str) -> Option<&Source> {
         self.lib_keys
