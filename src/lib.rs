@@ -89,6 +89,7 @@ extern crate log;
 extern crate phf;
 #[cfg(test)]
 extern crate rand;
+extern crate rayon;
 extern crate retry;
 extern crate rustc_serialize;
 extern crate semver;

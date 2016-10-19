@@ -53,7 +53,7 @@ pub enum Operation {
 /// orientation.
 ///
 /// [trait object]: https://doc.rust-lang.org/book/trait-objects.html
-pub trait Plugin {
+pub trait Plugin: Sync {
     /// The name of this plugin (available after we create an instance).
     fn name(&self) -> &'static str;
 }

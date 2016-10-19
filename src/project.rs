@@ -24,6 +24,7 @@ use target::Target;
 use plugins::{self, Operation};
 use pod::{Pod, PodType};
 use sources::Sources;
+use rayon::prelude::*;
 use rustc_serialize::json::{Json, ToJson};
 use serde_helpers::deserialize_parsable_opt;
 use service_locations::ServiceLocations;
@@ -392,35 +393,39 @@ impl Project {
     /// Process our pods, flattening and transforming them using our
     /// plugins, and output them to the specified directory.
     fn output_helper(&self, op: Operation, export_dir: &Path) -> Result<()> {
-        // Output each pod.
-        for pod in &self.pods {
+        // Output each pod.  This isn't especially slow (except maybe the
+        // Vault plugin), but parallelizing things is easy.
+        self.pods.par_iter()
             // Don't export pods which aren't enabled.
             //
             // TODO MED: Should we exclude these at load time instead?
-            if op == Operation::Export && !pod.enabled_in(&self.current_target) {
-                continue;
-            }
+            .filter(|pod| pod.enabled_in(&self.current_target))
+            // Process each pod in parallel.
+            .map(|pod| -> Result<()> {
+                // Figure out where to put our pod.
+                let file_name = format!("{}.yml", pod.name());
+                let rel_path = match (op, pod.pod_type()) {
+                    (Operation::Export, PodType::Task) => {
+                        Path::new("tasks").join(file_name)
+                    }
+                    _ => Path::new(&file_name).to_owned(),
+                };
+                let out_path = try!(export_dir.join(&rel_path)
+                    .with_guaranteed_parent());
+                debug!("Outputting {}", out_path.display());
 
-            // Figure out where to put our pod.
-            let file_name = format!("{}.yml", pod.name());
-            let rel_path = match (op, pod.pod_type()) {
-                (Operation::Export, PodType::Task) => {
-                    Path::new("tasks").join(file_name)
-                }
-                _ => Path::new(&file_name).to_owned(),
-            };
-            let out_path = try!(export_dir.join(&rel_path).with_guaranteed_parent());
-            debug!("Outputting {}", out_path.display());
-
-            // Combine targets, make it standalone, tweak as needed, and
-            // output.
-            let mut file = try!(pod.merged_file(&self.current_target));
-            try!(file.make_standalone(&self.pods_dir()));
-            let ctx = plugins::Context::new(self, pod);
-            try!(self.plugins().transform(op, &ctx, &mut file));
-            try!(file.write_to_path(out_path));
-        }
-        Ok(())
+                // Combine targets, make it standalone, tweak as needed, and
+                // output.
+                let mut file = try!(pod.merged_file(&self.current_target));
+                try!(file.make_standalone(&self.pods_dir()));
+                let ctx = plugins::Context::new(self, pod);
+                try!(self.plugins().transform(op, &ctx, &mut file));
+                try!(file.write_to_path(out_path));
+                Ok(())
+            })
+            // If more than one parallel branch fails, just return one error.
+            .reduce_with(|result1, result2| result1.and(result2).and(Ok(())))
+            .unwrap_or(Ok(()))
     }
 
     /// Delete our existing output and replace it with a processed and

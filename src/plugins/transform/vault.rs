@@ -2,8 +2,6 @@
 
 use compose_yml::v2 as dc;
 use std::result;
-#[cfg(test)]
-use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::env;
 use std::fmt::Debug;
@@ -13,7 +11,7 @@ use std::io::{self, Read};
 use std::path::Path;
 use std::path::PathBuf;
 #[cfg(test)]
-use std::rc::Rc;
+use std::sync::{Arc, RwLock};
 use vault;
 use vault::client::VaultDuration;
 
@@ -82,7 +80,7 @@ impl<'a> dc::Environment for ConfigEnvironment<'a> {
 
 /// An abstract interface to Vault's token-generation capabilities.  We use
 /// this to mock vault during tests.
-trait GenerateToken: Debug {
+trait GenerateToken: Debug + Sync {
     /// Get a `VAULT_ADDR` value to use along with this token.
     fn addr(&self) -> &str;
     /// Generate a token with the specified parameters.
@@ -95,13 +93,13 @@ trait GenerateToken: Debug {
 
 /// A list of calls made to a `MockVault` instance.
 #[cfg(test)]
-type MockVaultCalls = Rc<RefCell<Vec<(String, Vec<String>, VaultDuration)>>>;
+type MockVaultCalls = Arc<RwLock<Vec<(String, Vec<String>, VaultDuration)>>>;
 
 /// A fake interface to vault for testing purposes.
 #[derive(Debug)]
 #[cfg(test)]
 struct MockVault {
-    /// The tokens we were asked to generate.  We store these in a RefCell
+    /// The tokens we were asked to generate.  We store these in a RwLock
     /// so that we can have "interior" mutability, because we don't want
     /// `generate_token` to be `&mut self` in the general case.
     calls: MockVaultCalls,
@@ -111,7 +109,7 @@ struct MockVault {
 impl MockVault {
     /// Create a new MockVault.
     fn new() -> MockVault {
-        MockVault { calls: Rc::new(RefCell::new(vec![])) }
+        MockVault { calls: Arc::new(RwLock::new(vec![])) }
     }
 
     /// Return a reference to record of calls made to our vault.
@@ -131,7 +129,7 @@ impl GenerateToken for MockVault {
                       policies: Vec<String>,
                       ttl: VaultDuration)
                       -> Result<String> {
-        self.calls.borrow_mut().push((display_name.to_owned(), policies, ttl));
+        self.calls.write().unwrap().push((display_name.to_owned(), policies, ttl));
         Ok("fake_token".to_owned())
     }
 }
@@ -367,7 +365,7 @@ fn interpolates_policies() {
     assert_eq!(web.environment.get("VAULT_ENV").expect("has VAULT_ENV"),
                "production");
 
-    let calls = calls.borrow();
+    let calls = calls.read().unwrap();
     assert_eq!(calls.len(), 1);
     let (ref display_name, ref policies, ref ttl) = calls[0];
     assert_eq!(display_name, "vault_integration_production_frontend_web");
