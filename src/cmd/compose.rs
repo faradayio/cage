@@ -103,7 +103,7 @@ fn runs_docker_compose_on_all_pods() {
          "-p",
          "rails_hello",
          "-f",
-         proj.output_dir().join("pods/migrate.yml"),
+         proj.output_dir().join("pods/rake.yml"),
          "stop"]
     });
 

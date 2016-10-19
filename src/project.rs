@@ -564,7 +564,7 @@ fn output_creates_a_directory_of_flat_yml_files() {
     proj.output().unwrap();
     assert!(proj.output_dir.join("pods/frontend.yml").exists());
     assert!(proj.output_dir.join("pods/db.yml").exists());
-    assert!(proj.output_dir.join("pods/migrate.yml").exists());
+    assert!(proj.output_dir.join("pods/rake.yml").exists());
     proj.remove_test_output().unwrap();
 }
 
@@ -666,7 +666,7 @@ fn export_creates_a_directory_of_flat_yml_files() {
     proj.export(&export_dir).unwrap();
     assert!(export_dir.join("frontend.yml").exists());
     assert!(!export_dir.join("db.yml").exists());
-    assert!(export_dir.join("tasks/migrate.yml").exists());
+    assert!(export_dir.join("tasks/rake.yml").exists());
     proj.remove_test_output().unwrap();
 }
 

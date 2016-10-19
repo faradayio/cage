@@ -66,73 +66,72 @@ If you have [trouble][] using cage's vault integration, try installing with
 
 ## Trying it out
 
-Create a new application using `cage`, and list the associated Git
-repositories:
+Create a new application using `cage`:
 
 ```sh
 $ cage new myapp
 $ cd myapp
-$ cage source ls
-rails_hello               https://github.com/faradayio/rails_hello.git
 ```
 
-Pull the pre-built Docker images associated with this application:
+Pull the pre-built Docker images associated with this application and start
+up the database pod:
 
 ```sh
 $ cage pull
+$ cage up db
 ```
 
-Trying checking out the source code for an image locally:
+Run the `rake` image to initialize your database:
 
 ```sh
-$ cage source clone rails_hello
-$ cage source ls
-rails_hello               https://github.com/faradayio/rails_hello.git
-  Cloned at src/rails_hello
+$ cage run rake db:create
+$ cage run rake db:migrate
 ```
 
-Start up your application:
+And bring up the rest of the app:
 
 ```sh
 $ cage up
-Starting myapp_db_1
-Starting myapp_web_1
 ```
 
-You'll notice that the `src/rails_hello` directory is mounted at
-`/usr/src/app` inside the `myapp_web_1` pod, so that you can make changes
-locally and test them.
+You should be able to access the application
+at [http://localhost:3000](http://localhost:3000).  But let's make a
+change!  First, list the available source code for the services in this
+app:
 
-Run a command inside the `frontend` pod's `web` container to create a
-database:
+```
+$ cage source ls
+rails_hello               https://github.com/faradayio/rails_hello.git
+```
+
+Try mounting the source code for `rails_hello` into all the containers that
+use it:
 
 ```sh
-$ cage exec frontend/web rake db:create
-Created database 'myapp_development'
-Created database 'db/test.sqlite3'
+$ cage source mount rails_hello
+$ cage up
+$ cage source ls
+rails_hello               https://github.com/faradayio/rails_hello.git
+  Cloned at src/rails_hello (mounted)
 ```
 
-We could also just specify the service name `web` instead of the full
-`frontend/web`, as long as `web` is unique across all pods.
-
-We can also package up frequently-used commands in their own, standalone
-"task" pods, and run them on demand:
-
-```sh
-$ cage run migrate
-Creating myapp_migrate_1
-Attaching to myapp_migrate_1
-myapp_migrate_1 exited with code 0
-```
-
-You should be able to access your application at http://localhost:3000/.
-
-You may also notice that since `myapp_migrate_1` is based on the same
+You may also notice that since `myapp_rake_1` is based on the same
 underlying Git repository as `myapp_web_1`, that it also has a mount of
 `src/rails_hello` in the appropriate location.  If you change the source on
 your host system, it will automatically show up in both containers.
 
-We can run container-specific unit tests, which are specified by the
+Now, create an HTML file at `src/rails_hello/public/index.html`:
+
+```html
+<html>
+  <head><title>Sample page</title></head>
+  <body><h1>Sample page</h1></body>
+</html>
+```
+
+And reload the website in your browser.  You should see the new page!
+
+We can also run container-specific unit tests, which are specified by the
 container, so that you can invoke any unit test framework of your choice:
 
 ```sh

@@ -109,19 +109,18 @@ fn runs_a_single_service_pod() {
     let proj = Project::from_example("rails_hello").unwrap();
     let runner = TestCommandRunner::new();
     proj.output().unwrap();
-    let cmd = args::Command::new("rake").with_args(&["db:migrate"]);
+    let cmd = args::Command::new("db:migrate");
     let mut opts = args::opts::Run::default();
     opts.allocate_tty = false;
-    proj.run(&runner, "migrate", Some(&cmd), &opts).unwrap();
+    proj.run(&runner, "rake", Some(&cmd), &opts).unwrap();
     assert_ran!(runner, {
         ["docker-compose",
          "-p",
          "rails_hello",
          "-f",
-         proj.output_dir().join("pods/migrate.yml"),
+         proj.output_dir().join("pods/rake.yml"),
          "run",
          "-T",
-         "migrate",
          "rake",
          "db:migrate"]
     });
