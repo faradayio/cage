@@ -162,8 +162,8 @@ impl Pod {
             let target_rel_path =
                 Path::new(&format!("targets/{}/{}.yml", target.name(), &name))
                     .to_owned();
-            let mut target_info =
-                try!(FileInfo::unnormalized(&base_dir, &target_rel_path));
+            let mut target_info = try!(FileInfo::unnormalized(&base_dir,
+                                                              &target_rel_path));
             try!(target_info.ensure_same_services(&rel_path, &service_names));
             target_info.finish_normalization();
             target_infos.insert(target.to_owned(), target_info);

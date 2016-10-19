@@ -106,10 +106,8 @@ impl Project {
                  -> Result<Project> {
         let targets = try!(Project::find_targets(root_dir));
         let current_target = try!(targets.iter()
-            .find(|target| target.name() == "development")
-            .ok_or_else(|| {
-                ErrorKind::UnknownTarget("development".into())
-            }))
+                .find(|target| target.name() == "development")
+                .ok_or_else(|| ErrorKind::UnknownTarget("development".into())))
             .to_owned();
         let pods = try!(Project::find_pods(root_dir, &targets));
         let service_locations = ServiceLocations::new(&pods);

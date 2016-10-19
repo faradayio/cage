@@ -124,10 +124,10 @@ impl<'a> ArgMatchesExt for clap::ArgMatches<'a> {
     }
 
     fn to_logs_options(&self) -> cage::args::opts::Logs {
-      let mut opts = cage::args::opts::Logs::default();
-      opts.follow = self.is_present("follow");
-      opts.number = self.value_of("number").map(|v| v.to_owned());
-      opts
+        let mut opts = cage::args::opts::Logs::default();
+        opts.follow = self.is_present("follow");
+        opts.number = self.value_of("number").map(|v| v.to_owned());
+        opts
     }
 
     fn to_exec_command(&self) -> Option<cage::args::Command> {

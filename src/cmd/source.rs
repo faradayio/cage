@@ -16,7 +16,10 @@ pub trait CommandSource {
         where CR: CommandRunner;
 
     /// Set the `mounted` flag on the specified source tree.
-    fn source_set_mounted<CR>(&mut self, runner: &CR, alias: &str, mounted: bool)
+    fn source_set_mounted<CR>(&mut self,
+                              runner: &CR,
+                              alias: &str,
+                              mounted: bool)
                               -> Result<()>
         where CR: CommandRunner;
 }
@@ -57,7 +60,10 @@ impl CommandSource for Project {
         Ok(())
     }
 
-    fn source_set_mounted<CR>(&mut self, runner: &CR, alias: &str, mounted: bool)
+    fn source_set_mounted<CR>(&mut self,
+                              runner: &CR,
+                              alias: &str,
+                              mounted: bool)
                               -> Result<()>
         where CR: CommandRunner
     {
