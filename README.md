@@ -4,7 +4,7 @@
 
 <a href="http://cage.faraday.io/">
   <img src="http://cage.faraday.io/assets/cage-logo.svg" alt="Logo"
-       width="200" height=113">
+       width="200" height="113">
 </a>
 
 Does your project have too many Docker services? Too many git repos? Cage
