@@ -123,13 +123,13 @@ impl Manager {
         // We instantiate some of these plugins twice, could we be more
         // clever about it?
         try!(manager.register_generator::<transform::secrets::Plugin>(proj));
-        try!(manager.register_generator::<transform::vault::Plugin>(proj));
+        try!(manager.register_vault_generator(proj));
 
         try!(manager.register_transform::<transform::abs_path::Plugin>(proj));
         try!(manager.register_transform::<transform::default_tags::Plugin>(proj));
         try!(manager.register_transform::<transform::sources::Plugin>(proj));
         try!(manager.register_transform::<transform::secrets::Plugin>(proj));
-        try!(manager.register_transform::<transform::vault::Plugin>(proj));
+        try!(manager.register_vault_transform(proj));
 
         // Run this last, in case it wants to remove any labels used by
         // other plugins.
@@ -160,6 +160,21 @@ impl Manager {
         Ok(())
     }
 
+    /// Register our vault generator.  We put this in a separate function
+    /// so we can use `cfg`.
+    #[cfg(feature="hashicorp_vault")]
+    fn register_vault_generator(&mut self, proj: &Project) -> Result<()> {
+        self.register_generator::<transform::vault::Plugin>(proj)
+    }
+
+    /// Pretend to register our vault generator, but just leave a note in
+    /// the logs.
+    #[cfg(not(feature="hashicorp_vault"))]
+    fn register_vault_generator(&mut self, _: &Project) -> Result<()> {
+        debug!("vault generator was disabled at build time");
+        Ok(())
+    }
+
     /// Register a transform with this manager.
     fn register_transform<T>(&mut self, proj: &Project) -> Result<()>
         where T: PluginNew + PluginTransform + 'static
@@ -171,6 +186,30 @@ impl Manager {
         Ok(())
     }
 
+    /// Register our vault transform.  We put this in a separate function
+    /// so we can use `cfg`.
+    #[cfg(feature="hashicorp_vault")]
+    fn register_vault_transform(&mut self, proj: &Project) -> Result<()> {
+        self.register_transform::<transform::vault::Plugin>(proj)
+    }
+
+    /// Pretend to register our vault transform, but just leave a note in
+    /// the logs.
+    #[cfg(not(feature="hashicorp_vault"))]
+    fn register_vault_transform(&mut self, _: &Project) -> Result<()> {
+        debug!("vault transform was disabled at build time");
+        Ok(())
+    }
+
+    /// A plugin was missing, so build an appropriate error message.
+    fn missing_plugin(&self, name: &str) -> ErrorKind {
+        if name == "vault" {
+            ErrorKind::FeatureDisabled
+        } else {
+            unreachable!("Cannot find a generator named {}", name)
+        }
+    }
+
     /// Run the specified generator in the current project.
     pub fn generate(&self,
                     project: &Project,
@@ -180,7 +219,7 @@ impl Manager {
         let generator = try!(self.generators
             .iter()
             .find(|g| g.name() == name)
-            .ok_or_else(|| err!("Cannot find a generator named {}", name)));
+            .ok_or_else(|| self.missing_plugin(name)));
         debug!("Generating {}", generator.name());
         generator.generate(project, out)
     }
@@ -192,6 +231,7 @@ impl Manager {
                      file: &mut dc::File)
                      -> Result<()> {
         for plugin in &self.transforms {
+            trace!("transforming '{}' with {}", ctx.pod.name(), plugin.name());
             try!(plugin.transform(op, ctx, file)
                 .chain_err(|| ErrorKind::PluginFailed(plugin.name().to_owned())));
         }

@@ -15,7 +15,6 @@ use std::ffi::OsString;
 use std::io;
 use std::path::{PathBuf, StripPrefixError};
 use std::string::FromUtf8Error;
-use vault;
 
 use project::PROJECT_CONFIG_PATH;
 use version;
@@ -35,7 +34,6 @@ error_chain! {
         glob::PatternError, GlobPattern;
         io::Error, Io;
         StripPrefixError, StripPrefix;
-        vault::Error, Vault;
     }
 
     errors {
@@ -61,6 +59,13 @@ error_chain! {
         CouldNotWriteFile(path: PathBuf) {
             description("could not write to a file")
             display("could not write to '{}'", path.display())
+        }
+
+        /// A feature was disabled at compile time.
+        FeatureDisabled {
+            description("feature disabled at compile time")
+            display("this feature was disabled when the application was \
+                     compiled (you may want to rebuild from source)")
         }
 
         /// This project specified that it required a different version of
@@ -109,6 +114,12 @@ error_chain! {
             display("unknown short alias '{}' for source tree (try `cage \
                      source ls`)",
                     &source_alias)
+        }
+
+        /// We were unable to communicate with the specified Vault server.
+        VaultError(url: String) {
+            description("an error occurred talking to a Vault server")
+            display("an error occurred talking to the Vault server at {}", &url)
         }
     }
 }

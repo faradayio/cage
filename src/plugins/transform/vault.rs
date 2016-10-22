@@ -175,18 +175,21 @@ impl GenerateToken for Vault {
                       policies: Vec<String>,
                       ttl: VaultDuration)
                       -> Result<String> {
+        let mkerr = || ErrorKind::VaultError(self.addr.clone());
+
         // We can't store `client` in `self`, because it has some obnoxious
         // lifetime parameters.  So we'll just recreate it.  This is
         // probably not the worst idea, because it uses `hyper` for HTTP,
         // and `hyper` HTTP connections used to have expiration issues that
         // were tricky for clients to deal with correctly.
-        let client = try!(vault::Client::new(&self.addr, &self.token));
+        let client = try!(vault::Client::new(&self.addr, &self.token)
+            .chain_err(&mkerr));
         let opts = vault::client::TokenOptions::default()
             .display_name(display_name)
             .renewable(true)
             .ttl(ttl)
             .policies(policies);
-        let auth = try!(client.create_token(&opts));
+        let auth = try!(client.create_token(&opts).chain_err(&mkerr));
         Ok(auth.client_token)
     }
 }

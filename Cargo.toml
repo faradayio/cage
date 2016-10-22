@@ -13,8 +13,23 @@ homepage = "http://cage.faraday.io/"
 build = "build.rs"
 
 [features]
-default = ["serde_codegen", "compose_yml/default"]
-unstable = ["serde_derive", "compose_yml/unstable", "clippy"]
+# This build of `cage` is our standard, official build.
+default = ["default_minimal", "openssl"]
+
+# This build of `cage` relies on nightly Rust features.
+unstable = ["unstable_minimal", "openssl", "clippy"]
+
+# OpenSSL causes build problems on less popular platforms, especially for
+# our binary builds.  And we only need it for certain advanced features.
+# So we allow it to be disabled using:
+#
+#     cargo build --no-default-features --features default_minimal
+openssl = ["hashicorp_vault"]
+
+# You must always enable one of these features or the other to get serde to
+# build.
+default_minimal = ["serde_codegen", "compose_yml/default"]
+unstable_minimal = ["serde_derive", "compose_yml/unstable"]
 
 [[bin]]
 name = "cage"
@@ -35,7 +50,7 @@ env_logger = "0.3.4"
 error-chain = "0.5.0"
 glob = "0.2.11"
 handlebars = "0.21.0"
-hashicorp_vault = "0.6.1"
+hashicorp_vault = { version = "0.6.1", optional = true }
 includedir = "0.2.1"
 lazy_static = "0.2.1"
 log = "0.3.6"

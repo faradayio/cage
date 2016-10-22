@@ -80,6 +80,7 @@ extern crate env_logger;
 extern crate error_chain;
 extern crate glob;
 extern crate handlebars;
+#[cfg(feature="hashicorp_vault")]
 extern crate hashicorp_vault as vault;
 extern crate includedir;
 #[macro_use]
