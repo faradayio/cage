@@ -1,0 +1,4 @@
+[target.x86_64-pc-windows-gnu]
+# If we're targetting Windows, configure a custom linker so that `cargo`
+# won't attempt to use the system GCC.
+linker = "x86_64-w64-mingw32-gcc"
