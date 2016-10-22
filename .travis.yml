@@ -21,7 +21,7 @@ matrix:
     rust: stable
     # Disable OpenSSL on MacOS X, because the binaries aren't really
     # portable between machines.  Also we want to test this config anyway.
-    env: "FEATURE_OPTS='--no-default-features --features default_minimal'"
+    env: "FEATURE_OPTS='--no-default-features --features default-minimal'"
 services:
 - docker
 before_script:
