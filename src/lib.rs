@@ -42,9 +42,9 @@
         missing_docs,
         trivial_numeric_casts,
         unsafe_code,
-        unused_extern_crates,
-        unused_import_braces,
-        unused_qualifications)]
+        unused_import_braces)]
+// We disabled `unused_extern_crates` because it's failing on macro-only crates.
+// We disabled `unused_qualifications` because it's failing on `try!`.
 #![cfg_attr(feature="clippy", warn(cast_possible_truncation))]
 #![cfg_attr(feature="clippy", warn(cast_possible_wrap))]
 #![cfg_attr(feature="clippy", warn(cast_precision_loss))]
