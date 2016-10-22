@@ -91,7 +91,7 @@ impl PluginTransform for Plugin {
 fn converts_relative_paths_to_absolute() {
     use env_logger;
     let _ = env_logger::init();
-    let proj = Project::from_example("rails_hello").unwrap();
+    let proj = Project::from_example("vault_integration").unwrap();
     proj.output().unwrap();
 
     // Load the generated file and look at the `db` service we cloned.
