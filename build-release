@@ -23,12 +23,12 @@ rust-musl-builder() {
 case `uname -s` in
     Linux)
         echo "Building static binaries using ekidd/rust-musl-builder"
-        rust-musl-builder cargo build --release
+        rust-musl-builder cargo build --release $FEATURE_OPTS
         zip -j "$1"-"$2"-"`uname -m`".zip target/x86_64-unknown-linux-musl/release/$1
         ;;
     *)
         echo "Building standard release binaries"
-        cargo build --release
+        cargo build --release $FEATURE_OPTS
         zip -j "$1"-"$2"-"`uname -m`".zip target/release/$1
         ;;
 esac

@@ -7,27 +7,23 @@ cache:
   - "$TRAVIS_BUILD_DIR/target"
   - "$HOME/Library/Python/2.7"
 sudo: required
-os:
-- linux
-- osx
-rust:
-- stable
 matrix:
   include:
+  - os: linux
+    rust: stable
   - os: linux
     rust: beta
   - os: linux
     rust: nightly
+    # We get an extra `--features unstable` from travis-cargo.
+    env: "FEATURE_OPTS=--no-default-features"
+  - os: osx
+    rust: stable
+    # Disable OpenSSL on MacOS X, because the binaries aren't really
+    # portable between machines.  Also we want to test this config anyway.
+    env: "FEATURE_OPTS=--no-default-features --features default_minimal"
 services:
 - docker
-before_install:
-- |
-  if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-    brew update &&
-    brew outdated openssl || brew upgrade openssl &&
-    export OPENSSL_INCLUDE_DIR=`brew --prefix openssl`/include &&
-    export OPENSSL_LIB_DIR=`brew --prefix openssl`/lib
-  fi
 before_script:
 - |
   (cargo install rustfmt || true) &&
@@ -35,15 +31,12 @@ before_script:
   export PATH=$HOME/.local/bin:$HOME/Library/Python/2.7/bin:$HOME/.cargo/bin:$PATH
 script:
 - |
-  if [[ "$TRAVIS_RUST_VERSION" == nightly ]]; then
-    EXTRA_ARGS="-- --no-default-features"
-  fi &&
-  travis-cargo build $EXTRA_ARGS &&
-  travis-cargo test $EXTRA_ARGS &&
+  travis-cargo build $FEATURE_OPTS &&
+  travis-cargo test $FEATURE_OPTS &&
   (cargo fmt -- --write-mode=diff || true) &&
   if [[ "$TRAVIS_RUST_VERSION" == beta ]]; then
-    travis-cargo bench $EXTRA_ARGS &&
-    travis-cargo doc $EXTRA_ARGS
+    travis-cargo bench $FEATURE_OPTS &&
+    travis-cargo doc $FEATURE_OPTS
   fi
 before_deploy: "./build-release cage ${TRAVIS_TAG}-${TRAVIS_OS_NAME}"
 deploy:
