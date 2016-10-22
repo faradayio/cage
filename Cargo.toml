@@ -14,10 +14,10 @@ build = "build.rs"
 
 [features]
 # This build of `cage` is our standard, official build.
-default = ["default_minimal", "openssl"]
+default = ["default-minimal", "openssl"]
 
 # This build of `cage` relies on nightly Rust features.
-unstable = ["unstable_minimal", "openssl", "clippy"]
+unstable = ["unstable-minimal", "openssl", "clippy"]
 
 # OpenSSL causes build problems on less popular platforms, especially for
 # our binary builds.  And we only need it for certain advanced features.
@@ -28,8 +28,8 @@ openssl = ["hashicorp_vault"]
 
 # You must always enable one of these features or the other to get serde to
 # build.
-default_minimal = ["serde_codegen", "compose_yml/default"]
-unstable_minimal = ["serde_derive", "compose_yml/unstable"]
+default-minimal = ["serde_codegen", "compose_yml/default"]
+unstable-minimal = ["serde_derive", "compose_yml/unstable"]
 
 [[bin]]
 name = "cage"
