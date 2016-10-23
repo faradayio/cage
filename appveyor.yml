@@ -6,8 +6,7 @@ install:
   - rustc -V
   - cargo -V
 
-build:
-  - cargo build --verbose --no-default-features --feature default-minimal
+build: false
 
 test_script:
   - cargo test --verbose --no-default-features --feature default-minimal
