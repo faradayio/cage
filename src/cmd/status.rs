@@ -7,8 +7,10 @@ use args;
 use command_runner::CommandRunner;
 use errors::*;
 use ext::port_mapping::PortMappingExt;
+use ext::service::ServiceExt;
 use pod::Pod;
 use project::{PodOrService, Project};
+use sources::Source;
 
 /// We implement `status` with a trait so we can put it in its own
 /// module.
@@ -41,10 +43,15 @@ impl CommandStatus for Project {
 impl Project {
     /// Display information about a pod, but not any of its services.
     fn pod_header(&self, pod: &Pod) -> Result<()> {
-        println!("{} pod_type:{} enabled:{}",
+        let enabled = if pod.enabled_in(self.current_target()) {
+            "enabled".green().bold()
+        } else {
+            "disabled".red().bold()
+        };
+        println!("{} {} type:{}",
                  pod.name().blue().bold(),
-                 pod.pod_type(),
-                 pod.enabled_in(self.current_target()));
+                 enabled,
+                 pod.pod_type());
         Ok(())
     }
 
@@ -88,6 +95,21 @@ impl Project {
             .collect::<Result<_>>());
         if !ports.is_empty() {
             print!(" ports:{}", ports.join(","));
+        }
+
+        // Print out mounted source code.
+        let sources: Vec<&Source> = try!(try!(service.sources(self.sources()))
+                .map(|source_result| {
+                    let (_, source) = try!(source_result);
+                    Ok(source)
+                })
+                .collect::<Result<_>>());
+        let source_names: Vec<&str> = sources.iter()
+            .filter(|s| s.is_available_locally(self) && s.mounted())
+            .map(|s| s.alias())
+            .collect();
+        if !source_names.is_empty() {
+            print!(" mounted:{}", source_names.join(","));
         }
 
         println!("");

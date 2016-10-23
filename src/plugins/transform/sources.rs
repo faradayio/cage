@@ -57,50 +57,27 @@ impl PluginTransform for Plugin {
         // Update each service to point to our locally cloned sources.
         let project = ctx.project;
         for service in &mut file.services.values_mut() {
+            for sources_result in try!(service.sources(project.sources())) {
+                let (mount_as, source) = try!(sources_result);
+                if source.is_available_locally(project) && source.mounted() {
+                    // Build an absolute path to our source's local
+                    // directory.
+                    let path = try!(source.path(project).to_absolute());
 
-            // Handle the main source associated with this service.
-            if let Some(context) = try!(service.context()).cloned() {
-                if let Some(source) = project.sources().find_by_context(&context) {
-                    if source.is_available_locally(project) && source.mounted() {
-                        // Build an absolute path to our source's local
-                        // directory.
-                        let path = try!(source.path(project).to_absolute());
+                    // Add a mount point to the container.
+                    let mount = dc::VolumeMount::host(&path, mount_as);
+                    service.volumes.push(dc::value(mount));
 
-                        // Mount the local build directory inside the
-                        // container.
-                        let srcdir = try!(service.source_mount_dir());
-                        let mount = dc::VolumeMount::host(&path, &srcdir);
-                        service.volumes.push(dc::value(mount));
-
-                        // Update the `build` field if present.
-                        if let Some(ref mut build) = service.build {
+                    // Update the `build` field if it's present and it
+                    // corresponds to this `Source`.
+                    if let Some(ref mut build) = service.build {
+                        if source.context() == try!(build.context.value()) {
                             build.context = dc::value(dc::Context::Dir(path));
                         }
                     }
                 }
             }
-
-            // Look for library sources as well.
-            for (label, mount_as) in &service.labels {
-                let prefix = "io.fdy.cage.lib.";
-                if label.starts_with(prefix) {
-                    let key = &label[prefix.len()..];
-                    let source = try!(project.sources()
-                        .find_by_lib_key(key)
-                        .ok_or_else(|| {
-                            err!("no library <{}> defined in `config/sources.yml`",
-                                 key)
-                        }));
-
-                    if source.is_available_locally(project) && source.mounted() {
-                        let path = try!(source.path(project).to_absolute());
-                        let mount = dc::VolumeMount::host(&path, mount_as);
-                        service.volumes.push(dc::value(mount));
-                    }
-                }
-            }
         }
-
         Ok(())
     }
 }

@@ -3,10 +3,12 @@
 use compose_yml::v2 as dc;
 use shlex;
 use std::path::{Path, PathBuf};
+use std::vec;
 
 use errors::*;
 #[cfg(test)]
 use project::Project;
+use sources::{self, Source};
 use util::err;
 
 /// These methods will appear as regular methods on `Service` in any module
@@ -26,6 +28,14 @@ pub trait ServiceExt {
 
     /// Get the test command associated with this service.
     fn test_command(&self) -> Result<Vec<String>>;
+
+    /// All the `Source` trees which can be mounted into this `Service`.
+    /// Note that this iterator does not hold any references to this
+    /// `Service` object, so you can use it to decide how you want to
+    /// update other fields of this object without running afoul of the
+    /// borrow checker.
+    fn sources<'a, 'b>(&'a self, sources: &'b sources::Sources)
+                       -> Result<Sources<'b>>;
 }
 
 impl ServiceExt for dc::Service {
@@ -61,6 +71,70 @@ impl ServiceExt for dc::Service {
             Err(err!("cannot parse <{}> into shell words", raw))
         } else {
             Ok(result)
+        }
+    }
+
+    fn sources<'a, 'b>(&'a self, sources: &'b sources::Sources)
+                       -> Result<Sources<'b>> {
+        // Get our `context`, if any.
+        let source_mount_dir = try!(self.source_mount_dir());
+        let context = try!(self.context())
+            .map(|ctx| (source_mount_dir, ctx.clone()));
+
+        // Get our library keys and mount points.
+        let mut libs = vec![];
+        for (label, mount_as) in &self.labels {
+            let prefix = "io.fdy.cage.lib.";
+            if label.starts_with(prefix) {
+                libs.push((Path::new(mount_as).to_owned(),
+                           (&label[prefix.len()..]).to_owned()));
+            }
+        }
+
+        Ok(Sources {
+            sources: sources,
+            context: context,
+            libs: libs.into_iter(),
+        })
+    }
+}
+
+/// Iterator over all the `Source` trees which can be mounted into this
+/// `Service`.
+pub struct Sources<'a> {
+    /// All `Source` trees available for this repository.
+    sources: &'a sources::Sources,
+    /// Do we need to iterate over our `context` field?
+    context: Option<(PathBuf, dc::Context)>,
+    /// Libraries
+    libs: vec::IntoIter<(PathBuf, String)>,
+}
+
+impl<'a> Iterator for Sources<'a> {
+    type Item = Result<(PathBuf, &'a Source)>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        // Check for a `dc::Context` using `take`, which moves data out of
+        // an `Option` value and leaves `None` in its place,
+        // simulataneously updating our internal state and keeping the
+        // borrow checker happy.
+        if let Some((path_buf, context)) = self.context.take() {
+            if let Some(source) = self.sources.find_by_context(&context) {
+                // We have a `context` and a `source`, so return them.
+                Some(Ok((path_buf, source)))
+            } else {
+                // We have a `context` but it doesn't correspond to a known
+                // `Source`, so move on the next step of the iteration.
+                self.next()
+            }
+        } else {
+            // Iterate over any "libs"-style mounts.
+            self.libs.next().map(|(path_buf, name)| {
+                match self.sources.find_by_lib_key(&name) {
+                    None => Err(ErrorKind::UnknownLibKey(name).into()),
+                    Some(source) => Ok((path_buf, source)),
+                }
+            })
         }
     }
 }

@@ -90,6 +90,15 @@ error_chain! {
                     &names, base.display(), target.display())
         }
 
+        /// The user tried to access an undefined library.
+        ///
+        /// TODO LOW: This will be merged with `UnknownSource` when library
+        /// keys are merged with source repo aliases.
+        UnknownLibKey(lib_key: String) {
+            description("unknown library")
+            display("no library '{}' defined in `config/sources.yml`", &lib_key)
+        }
+
         /// The requested target does not appear to exist.
         UnknownTarget(target_name: String) {
             description("unknown target")
