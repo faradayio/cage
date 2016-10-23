@@ -58,6 +58,9 @@ cargo install cage
 If you have [trouble][] using cage's vault integration, try installing with
 `cargo` instead.
 
+Note that it's [possible to build `cage` for Windows](./WINDOWS.md), but
+it's still not yet officially supported.
+
 [install Docker]: https://docs.docker.com/engine/installation/
 [compose]: https://github.com/docker/compose/releases
 [releases]: https://github.com/faradayio/cage/releases
