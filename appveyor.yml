@@ -9,4 +9,5 @@ install:
 build: false
 
 test_script:
-  - cargo test --verbose --no-default-features --feature default-minimal
+  - cargo build --verbose --no-default-features --features default-minimal
+  - cargo test --verbose --no-default-features --features default-minimal
