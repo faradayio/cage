@@ -94,7 +94,20 @@ And bring up the rest of the app:
 $ cage up
 ```
 
-You should be able to access the application
+Let's take a look at the pods and services defined by this application:
+
+```sh
+$ cage status
+db enabled type:placeholder
+└─ db
+frontend enabled type:service
+└─ web ports:3000
+rake enabled type:task
+└─ rake
+```
+
+This shows us that the `web` service is listening on port 3000, so you
+should be able to access the application
 at [http://localhost:3000](http://localhost:3000).  But let's make a
 change!  First, list the available source code for the services in this
 app:

@@ -31,6 +31,7 @@ after_help: |
       cage run rake db:create        # Run task in 'pods/rake.yml' with args
       cage run rake db:migrate       # ...and with different args
       cage up                        # Start the whole application running
+      cage status                    # Get an overview of the project
 
   Access your application at http://localhost:3000/.  To download and edit
   the source code for your application, run:
@@ -38,6 +39,7 @@ after_help: |
       cage source ls                 # List available service source code
       cage source mount rails_hello  # Clone source and configure mounts
       cage up                        # Restart application
+      cage status                    # See how things have changed
 
   Now create `src/rails_hello/public/index.html` and reload in your browser.
 
