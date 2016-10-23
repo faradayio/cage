@@ -3,4 +3,5 @@
 
 pub mod context;
 pub mod git_url;
+pub mod port_mapping;
 pub mod service;

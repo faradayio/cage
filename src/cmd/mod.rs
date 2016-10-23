@@ -17,6 +17,7 @@ pub use self::logs::CommandLogs;
 pub use self::pull::CommandPull;
 pub use self::run::CommandRun;
 pub use self::source::CommandSource;
+pub use self::status::CommandStatus;
 pub use self::up::CommandUp;
 
 mod compose;
@@ -26,4 +27,5 @@ mod logs;
 mod pull;
 mod run;
 mod source;
+mod status;
 mod up;

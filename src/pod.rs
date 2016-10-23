@@ -5,6 +5,7 @@ use compose_yml::v2::MergeOverride;
 use std::collections::{BTreeMap, BTreeSet};
 use std::collections::btree_map;
 use std::ffi::OsString;
+use std::fmt;
 use std::path::{Path, PathBuf};
 
 use errors::*;

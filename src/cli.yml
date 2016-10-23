@@ -56,13 +56,17 @@ subcommands:
             value_name: "NAME"
             required: true
             help: "The name of the new project"
-  - build:
-      about: "Build images for the containers associated with this project"
+  - status:
+      about: "Print out the status of the current project"
       args:
         - POD_OR_SERVICE: &pod_or_service
             value_name: "POD_OR_SERVICE"
             multiple: true
             help: "Pod or service names.  Defaults to all."
+  - build:
+      about: "Build images for the containers associated with this project"
+      args:
+        - POD_OR_SERVICE: *pod_or_service
   - pull:
       about: "Build images for the containers associated with this project"
       args:

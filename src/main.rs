@@ -185,6 +185,10 @@ fn run(matches: &clap::ArgMatches) -> Result<()> {
     // Handle our subcommands that require a `Project`.
     let runner = OsCommandRunner::new();
     match sc_name {
+        "status" => {
+            let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE");
+            try!(proj.status(&runner, &acts_on));
+        }
         "pull" => {
             let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE");
             try!(proj.pull(&runner, &acts_on));
