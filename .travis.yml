@@ -11,8 +11,10 @@ matrix:
   include:
   - os: linux
     rust: stable
+    env: "FEATURE_OPTS=''"
   - os: linux
     rust: beta
+    env: "FEATURE_OPTS=''"
   - os: linux
     rust: nightly
     # We get an extra `--features unstable` from travis-cargo.
