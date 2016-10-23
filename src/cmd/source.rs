@@ -91,6 +91,9 @@ impl CommandSource for Project {
             try!(self.source_clone(runner, alias));
         }
 
+        // Notify the user that they need to run `up`.
+        println!("Now run `cage up` for these changes to take effect.");
+
         Ok(())
     }
 }
