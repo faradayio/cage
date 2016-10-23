@@ -2,8 +2,12 @@
 
 Generally speaking, `docker-compose` and Docker Engine are a work in
 progress on Windows. We have highly experimental Windows support in `cage`
-for people who want to try it out and let us know about any issues.  **But
-be warned!** Not all the test suites pass yet.
+for people who want to try it out and let us know about any issues.
+
+**But be warned!** Not all the test suites pass yet.  For an overview of
+the current unit test status, click on the AppVeyor build badge below:
+
+[![AppVeyor](https://img.shields.io/appveyor/ci/emk/cage.svg)](https://ci.appveyor.com/project/emk/cage)
 
 This document should give you all the information you need on available
 builds and overall guidance when working with `cage` on Windows.
