@@ -40,12 +40,13 @@ fn runs_docker_compose_pull_on_all_pods() {
 
     proj.pull(&runner, &args::ActOn::All).unwrap();
     assert_ran!(runner, {
-        [proj.root_dir().join("config/hooks/pull.d/hello.hook")],
+        [proj.root_dir().join("config").join("hooks").join("pull.d")
+             .join("hello.hook")],
         ["docker-compose",
          "-p",
          "hello",
          "-f",
-         proj.output_dir().join("pods/frontend.yml"),
+         proj.output_dir().join("pods").join("frontend.yml"),
          "pull"]
     });
 

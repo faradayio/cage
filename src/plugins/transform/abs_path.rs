@@ -99,12 +99,13 @@ impl PluginTransform for Plugin {
 //     proj.output().unwrap();
 //
 //     // Load the generated file and look at the `db` service we cloned.
-//     let db_file = proj.output_dir().join("pods/db.yml");
+//     let db_file = proj.output_dir().join("pods").join("db.yml");
 //     let file = dc::File::read_from_path(db_file).unwrap();
 //     let db = file.services.get("db").unwrap();
 //
 //     assert_eq!(db.volumes.len(), 1);
-//     let expected = proj.pods_dir().join("../data/db").to_absolute().unwrap();
+//     let expected = proj.pods_dir().join("..").join("data").join("db")
+//         .to_absolute().unwrap();
 //     assert_eq!(db.volumes[0].value().unwrap().host.as_ref().unwrap(),
 //                &dc::HostVolume::Path(expected));
 // }

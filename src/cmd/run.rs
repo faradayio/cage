@@ -118,7 +118,7 @@ fn runs_a_single_service_pod() {
          "-p",
          "rails_hello",
          "-f",
-         proj.output_dir().join("pods/rake.yml"),
+         proj.output_dir().join("pods").join("rake.yml"),
          "run",
          "-T",
          "rake",

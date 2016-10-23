@@ -98,13 +98,14 @@ fn generate_new_creates_a_project() {
     let proj_dir = env::current_dir().unwrap().join("test_project");
 
     assert!(proj_dir.exists());
-    assert!(proj_dir.join("config/secrets.yml").exists());
-    assert!(proj_dir.join("pods/common.env").exists());
-    assert!(proj_dir.join("pods/frontend.yml").exists());
-    assert!(proj_dir.join("pods/db.yml").exists());
-    assert!(proj_dir.join("pods/targets/development/common.env").exists());
-    assert!(proj_dir.join("pods/targets/production/common.env").exists());
-    assert!(proj_dir.join("pods/targets/test/common.env").exists());
+    assert!(proj_dir.join("config").join("secrets.yml").exists());
+    assert!(proj_dir.join("pods").join("common.env").exists());
+    assert!(proj_dir.join("pods").join("frontend.yml").exists());
+    assert!(proj_dir.join("pods").join("db.yml").exists());
+    let targets = proj_dir.join("pods").join("targets");
+    assert!(targets.join("development").join("common.env").exists());
+    assert!(targets.join("production").join("common.env").exists());
+    assert!(targets.join("test").join("common.env").exists());
 
     fs::remove_dir_all(&proj_dir.as_path()).unwrap();
 }

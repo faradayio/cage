@@ -130,7 +130,7 @@ impl Project {
             targets: targets,
             current_target: current_target,
             sources: sources,
-            hooks: try!(HookManager::new(root_dir.join("config/hooks"))),
+            hooks: try!(HookManager::new(root_dir.join("config").join("hooks"))),
             config: config,
             default_tags: None,
             plugins: None,
@@ -152,9 +152,11 @@ impl Project {
     /// env::set_current_dir("examples/hello/pods").unwrap();
     ///
     /// let proj = Project::from_current_dir().unwrap();
-    /// assert_eq!(proj.root_dir(), saved.join("examples/hello"));
-    /// assert_eq!(proj.src_dir(), saved.join("examples/hello/src"));
-    /// assert_eq!(proj.output_dir(), saved.join("examples/hello/.cage"));
+    /// assert_eq!(proj.root_dir(), saved.join("examples").join("hello"));
+    /// assert_eq!(proj.src_dir(),
+    ///            saved.join("examples").join("hello").join("src"));
+    /// assert_eq!(proj.output_dir(),
+    ///            saved.join("examples").join("hello").join(".cage"));
     ///
     /// env::set_current_dir(saved).unwrap();
     /// ```
@@ -197,7 +199,7 @@ impl Project {
 
     /// Find all the targets defined in this project.
     fn find_targets(root_dir: &Path) -> Result<Vec<Target>> {
-        let targets_dir = root_dir.join("pods/targets");
+        let targets_dir = root_dir.join("pods").join("targets");
         let mut targets = vec![];
         for glob_result in try!(targets_dir.glob("*")) {
             let path = try!(glob_result);
@@ -565,9 +567,9 @@ fn output_creates_a_directory_of_flat_yml_files() {
     let _ = env_logger::init();
     let proj = Project::from_example("rails_hello").unwrap();
     proj.output().unwrap();
-    assert!(proj.output_dir.join("pods/frontend.yml").exists());
-    assert!(proj.output_dir.join("pods/db.yml").exists());
-    assert!(proj.output_dir.join("pods/rake.yml").exists());
+    assert!(proj.output_dir.join("pods").join("frontend.yml").exists());
+    assert!(proj.output_dir.join("pods").join("db.yml").exists());
+    assert!(proj.output_dir.join("pods").join("rake.yml").exists());
     proj.remove_test_output().unwrap();
 }
 
@@ -586,7 +588,7 @@ fn output_applies_expected_transforms() {
     proj.output().unwrap();
 
     // Load the generated file and look at the `web` service we cloned.
-    let frontend_file = proj.output_dir().join("pods/frontend.yml");
+    let frontend_file = proj.output_dir().join("pods").join("frontend.yml");
     let file = dc::File::read_from_path(frontend_file).unwrap();
     let web = file.services.get("web").unwrap();
     let src_path = source.path(&proj).to_absolute().unwrap();
@@ -626,7 +628,7 @@ fn output_mounts_cloned_libraries() {
     proj.output().unwrap();
 
     // Load the generated file and look at the `web` service we cloned.
-    let frontend_file = proj.output_dir().join("pods/frontend.yml");
+    let frontend_file = proj.output_dir().join("pods").join("frontend.yml");
     let file = dc::File::read_from_path(frontend_file).unwrap();
     let web = file.services.get("web").unwrap();
     let src_path = source.path(&proj).to_absolute().unwrap();
@@ -649,12 +651,17 @@ fn output_supports_in_tree_source_code() {
     proj.output().unwrap();
 
     // Load the generated file and look at the `web` service we cloned.
-    let frontend_file = proj.output_dir().join("pods/frontend.yml");
+    let frontend_file = proj.output_dir().join("pods").join("frontend.yml");
     let file = dc::File::read_from_path(frontend_file).unwrap();
     let web = file.services.get("web").unwrap();
 
-    let abs_src =
-        proj.root_dir().join("pods/../src/node_hello").to_absolute().unwrap();
+    let abs_src = proj.root_dir()
+        .join("pods")
+        .join("..")
+        .join("src")
+        .join("node_hello")
+        .to_absolute()
+        .unwrap();
     assert_eq!(web.build.as_ref().unwrap().context.value().unwrap(),
                &dc::Context::Dir(abs_src));
 }
@@ -669,7 +676,7 @@ fn export_creates_a_directory_of_flat_yml_files() {
     proj.export(&export_dir).unwrap();
     assert!(export_dir.join("frontend.yml").exists());
     assert!(!export_dir.join("db.yml").exists());
-    assert!(export_dir.join("tasks/rake.yml").exists());
+    assert!(export_dir.join("tasks").join("rake.yml").exists());
     proj.remove_test_output().unwrap();
 }
 

@@ -30,7 +30,7 @@ pub struct Plugin {
 impl Plugin {
     /// Get the path to this plugin's config file.
     fn config_path(project: &Project) -> PathBuf {
-        project.root_dir().join("config/secrets.yml")
+        project.root_dir().join("config").join("secrets.yml")
     }
 }
 

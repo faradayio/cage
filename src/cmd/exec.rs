@@ -92,7 +92,7 @@ fn invokes_docker_exec() {
          "-p",
          "hello",
          "-f",
-         proj.output_dir().join("pods/frontend.yml"),
+         proj.output_dir().join("pods").join("frontend.yml"),
          "exec",
          "-T",
          "web",
@@ -117,7 +117,7 @@ fn runs_shells() {
          "-p",
          "hello",
          "-f",
-         proj.output_dir().join("pods/frontend.yml"),
+         proj.output_dir().join("pods").join("frontend.yml"),
          "exec",
          "web",
          "sh"]

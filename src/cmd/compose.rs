@@ -91,19 +91,19 @@ fn runs_docker_compose_on_all_pods() {
          "-p",
          "rails_hello",
          "-f",
-         proj.output_dir().join("pods/db.yml"),
+         proj.output_dir().join("pods").join("db.yml"),
          "stop"],
         ["docker-compose",
          "-p",
          "rails_hello",
          "-f",
-         proj.output_dir().join("pods/frontend.yml"),
+         proj.output_dir().join("pods").join("frontend.yml"),
          "stop"],
         ["docker-compose",
          "-p",
          "rails_hello",
          "-f",
-         proj.output_dir().join("pods/rake.yml"),
+         proj.output_dir().join("pods").join("rake.yml"),
          "stop"]
     });
 
@@ -126,13 +126,13 @@ fn runs_docker_compose_on_named_pods_and_services() {
          "-p",
          "rails_hello",
          "-f",
-         proj.output_dir().join("pods/db.yml"),
+         proj.output_dir().join("pods").join("db.yml"),
          "stop"],
         ["docker-compose",
          "-p",
          "rails_hello",
          "-f",
-         proj.output_dir().join("pods/frontend.yml"),
+         proj.output_dir().join("pods").join("frontend.yml"),
          "stop",
          "web"]
     });

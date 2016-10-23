@@ -208,7 +208,7 @@ pub struct Plugin {
 impl Plugin {
     /// Get the path to this plugin's config file.
     fn config_path(project: &Project) -> PathBuf {
-        project.root_dir().join("config/vault.yml")
+        project.root_dir().join("config").join("vault.yml")
     }
 
     /// Create a new plugin, specifying an alternate source for tokens.

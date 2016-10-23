@@ -89,7 +89,8 @@ fn runs_requested_hook_scripts() {
 
     proj.hooks().invoke(&runner, "pull", &BTreeMap::default()).unwrap();
     assert_ran!(runner, {
-        [proj.root_dir().join("config/hooks/pull.d/hello.hook")]
+        [proj.root_dir().join("config").join("hooks").join("pull.d")
+             .join("hello.hook")]
     });
 
     proj.remove_test_output().unwrap();

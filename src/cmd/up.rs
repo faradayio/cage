@@ -49,7 +49,7 @@ fn runs_docker_compose_up_honors_enable_in_targets() {
          "-p",
          "rails_hello",
          "-f",
-         proj.output_dir().join("pods/frontend.yml"),
+         proj.output_dir().join("pods").join("frontend.yml"),
          "up",
          "-d"]
     });
