@@ -76,6 +76,9 @@ subcommands:
   - up:
       about: "Run project"
       args:
+        - init:
+            long: "--init"
+            help: "Run any pod initialization commands (for first startup)"
         - POD_OR_SERVICE: *pod_or_service
   - stop:
       about: "Stop all containers associated with project"
