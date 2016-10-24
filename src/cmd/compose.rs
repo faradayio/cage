@@ -1,7 +1,5 @@
 //! Pass simple commands directly through to `docker-compose`.
 
-use std::ops::Deref;
-
 use args;
 use command_runner::{Command, CommandRunner};
 #[cfg(test)]
@@ -22,6 +20,27 @@ pub trait CommandCompose {
                       -> Result<()>
         where CR: CommandRunner,
               F: Fn(&Pod) -> bool;
+
+    /// Run a `docker-compose` command on a single pod.  If the pod is
+    /// disabled, this does nothing.
+    fn compose_pod<CR>(&self,
+                       runner: &CR,
+                       command: &str,
+                       pod: &Pod,
+                       opts: &args::ToArgs)
+                       -> Result<()>
+        where CR: CommandRunner;
+
+    /// Run a `docker-compose` command on a single service.  If the pod is
+    /// disabled, this does nothing.
+    fn compose_service<CR>(&self,
+                           runner: &CR,
+                           command: &str,
+                           pod: &Pod,
+                           service_name: &str,
+                           opts: &args::ToArgs)
+                           -> Result<()>
+        where CR: CommandRunner;
 }
 
 impl CommandCompose for Project {
@@ -35,43 +54,65 @@ impl CommandCompose for Project {
         where CR: CommandRunner,
               F: Fn(&Pod) -> bool
     {
-
-        let names = match *act_on {
-            args::ActOn::Named(ref names) => names.to_owned(),
-            args::ActOn::All => {
-                let mut pods: Vec<_> = self.pods().collect();
-                // Sort so that placeholders come before other pod types,
-                // which is important for the `up` command.
-                pods.sort_by_key(|p| (p.pod_type(), p.name()));
-                pods.iter().map(|p| p.name().to_owned()).collect()
-            }
-        };
-
-        for name in names.deref() {
-            let target = self.current_target();
-            match try!(self.pod_or_service_or_err(name)) {
+        for pod_or_service in act_on.pods_or_services(self) {
+            match try!(pod_or_service) {
                 PodOrService::Pod(pod) => {
-                    if pod.enabled_in(target) && matching(pod) {
-                        try!(runner.build("docker-compose")
-                            .args(&try!(pod.compose_args(self, target)))
-                            .arg(command)
-                            .args(&opts.to_args())
-                            .exec());
+                    if matching(pod) {
+                        try!(self.compose_pod(runner, command, pod, opts));
                     }
                 }
                 PodOrService::Service(pod, service_name) => {
-                    if pod.enabled_in(target) && matching(pod) {
-                        try!(runner.build("docker-compose")
-                            .args(&try!(pod.compose_args(self, target)))
-                            .arg(command)
-                            .args(&opts.to_args())
-                            .arg(service_name)
-                            .exec());
+                    if matching(pod) {
+                        try!(self.compose_service(runner,
+                                                  command,
+                                                  pod,
+                                                  service_name,
+                                                  opts));
                     }
                 }
             }
         }
 
+        Ok(())
+    }
+
+    fn compose_pod<CR>(&self,
+                       runner: &CR,
+                       command: &str,
+                       pod: &Pod,
+                       opts: &args::ToArgs)
+                       -> Result<()>
+        where CR: CommandRunner
+    {
+        let target = self.current_target();
+        if pod.enabled_in(target) {
+            try!(runner.build("docker-compose")
+                 .args(&try!(pod.compose_args(self, target)))
+                 .arg(command)
+                 .args(&opts.to_args())
+                 .exec());
+        }
+        Ok(())
+    }
+
+    fn compose_service<CR>(&self,
+                           runner: &CR,
+                           command: &str,
+                           pod: &Pod,
+                           service_name: &str,
+                           opts: &args::ToArgs)
+                           -> Result<()>
+        where CR: CommandRunner
+    {
+        let target = self.current_target();
+        if pod.enabled_in(target) {
+            try!(runner.build("docker-compose")
+                 .args(&try!(pod.compose_args(self, target)))
+                 .arg(command)
+                 .args(&opts.to_args())
+                 .arg(service_name)
+                 .exec());
+        }
         Ok(())
     }
 }
