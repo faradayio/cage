@@ -214,6 +214,31 @@ hello
             └── common.env
 ```
 
+### File types
+
+<table>
+  <tr>
+    <th>Filename</th>
+    <th>Description</th>
+    <th>Found in</th>
+  </tr>
+  <tr>
+    <td><code>common.env</code>
+    <td>Sets environment variables at different levels. <code>common</code> is a reserved word.</td>
+    <td>Top-level <code>pods/</code> dir and also in target dirs (<code>production</code>, etc.)</td>
+  </tr>
+  <tr>
+  <td><code>$SERVICE.yml</code></td>
+  <td>Valid <a href="https://docs.docker.com/compose/compose-file/"><code>docker-compose.yml</code> version 2</a> defining images, etc.</td>
+  <td>Top-level <code>pods/</code> dir and also in target dirs (<code>production</code>, etc.)</td>
+  </tr>
+  <tr>
+  <td><code>$SERVICE.metadata.yml</code></td>
+  <td>Labels (like <code>io.fdy.cage.test</code>) that are not valid in <a href="https://docs.docker.com/compose/compose-file/"><code>docker-compose.yml</code> version 2</a>.</td>
+  <td>Top-level <code>pods/</code> dir and also in target dirs (<code>production</code>, etc.)</td>
+  </tr>
+</table>
+
 ## Reporting issues
 
 If you encounter an issue, it might help to set the following shell
