@@ -508,9 +508,11 @@ fn new_from_example_uses_example_and_target() {
     let proj = Project::from_example("hello").unwrap();
     assert_eq!(proj.root_dir, Path::new("examples/hello"));
     let output_dir = proj.output_dir.to_str_or_err().unwrap();
-    assert!(output_dir.starts_with("target/test_output/hello-"));
+    assert!(output_dir.starts_with("target/test_output/hello-") ||
+            output_dir.starts_with("target/test_output\\hello-"));
     let src_dir = proj.src_dir.to_str_or_err().unwrap();
-    assert!(src_dir.starts_with("target/test_output/hello-"));
+    assert!(src_dir.starts_with("target/test_output/hello-") ||
+            src_dir.starts_with("target/test_output\\hello-"));
 }
 
 #[test]
