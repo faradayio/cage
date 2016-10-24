@@ -23,7 +23,7 @@ impl ToArgs for Empty {
 #[allow(missing_copy_implementations)]
 pub struct Up {
     /// Should we initialize each pod after we start it up?
-    init: bool,
+    pub init: bool,
 
     /// PRIVATE: This field is a stand-in for future options.
     /// See http://stackoverflow.com/q/39277157/12089

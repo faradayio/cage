@@ -200,7 +200,7 @@ fn run(matches: &clap::ArgMatches) -> Result<()> {
         }
         "up" => {
             let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE");
-            let opts = cage::args::opts::Up::default();
+            let opts = cage::args::opts::Up::new(sc_matches.is_present("init"));
             try!(proj.up(&runner, &acts_on, &opts));
         }
         "stop" => {
