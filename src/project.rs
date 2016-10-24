@@ -47,6 +47,17 @@ pub enum PodOrService<'a> {
     Service(&'a Pod, &'a str),
 }
 
+impl<'a> PodOrService<'a> {
+    /// Get the `pod_type` for either our `Pod` or the pod containing our
+    /// service.
+    pub fn pod_type(&self) -> PodType {
+        match *self {
+            PodOrService::Pod(pod) |
+            PodOrService::Service(pod, _) => pod.pod_type(),
+        }
+    }
+}
+
 /// A `cage` project, which is represented as a directory containing a
 /// `pods` subdirectory.
 #[derive(Debug)]

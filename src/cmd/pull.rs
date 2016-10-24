@@ -26,7 +26,7 @@ impl CommandPull for Project {
 
         // Pass everything else off to `compose`, as usual.
         let opts = args::opts::Empty;
-        self.compose(runner, "pull", act_on, |_| true, &opts)
+        self.compose(runner, "pull", act_on, &opts)
     }
 }
 

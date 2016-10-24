@@ -11,15 +11,13 @@ use project::{PodOrService, Project};
 /// Pass simple commands directly through to `docker-compose`.
 pub trait CommandCompose {
     /// Pass simple commands directly through to `docker-compose`.
-    fn compose<CR, F>(&self,
-                      runner: &CR,
-                      command: &str,
-                      act_on: &args::ActOn,
-                      matching: F,
-                      opts: &args::ToArgs)
-                      -> Result<()>
-        where CR: CommandRunner,
-              F: Fn(&Pod) -> bool;
+    fn compose<CR>(&self,
+                   runner: &CR,
+                   command: &str,
+                   act_on: &args::ActOn,
+                   opts: &args::ToArgs)
+                   -> Result<()>
+        where CR: CommandRunner;
 
     /// Run a `docker-compose` command on a single pod.  If the pod is
     /// disabled, this does nothing.
@@ -44,31 +42,25 @@ pub trait CommandCompose {
 }
 
 impl CommandCompose for Project {
-    fn compose<CR, F>(&self,
-                      runner: &CR,
-                      command: &str,
-                      act_on: &args::ActOn,
-                      matching: F,
-                      opts: &args::ToArgs)
-                      -> Result<()>
-        where CR: CommandRunner,
-              F: Fn(&Pod) -> bool
+    fn compose<CR>(&self,
+                   runner: &CR,
+                   command: &str,
+                   act_on: &args::ActOn,
+                   opts: &args::ToArgs)
+                   -> Result<()>
+        where CR: CommandRunner
     {
         for pod_or_service in act_on.pods_or_services(self) {
             match try!(pod_or_service) {
                 PodOrService::Pod(pod) => {
-                    if matching(pod) {
-                        try!(self.compose_pod(runner, command, pod, opts));
-                    }
+                    try!(self.compose_pod(runner, command, pod, opts));
                 }
                 PodOrService::Service(pod, service_name) => {
-                    if matching(pod) {
-                        try!(self.compose_service(runner,
-                                                  command,
-                                                  pod,
-                                                  service_name,
-                                                  opts));
-                    }
+                    try!(self.compose_service(runner,
+                                              command,
+                                              pod,
+                                              service_name,
+                                              opts));
                 }
             }
         }
@@ -126,7 +118,7 @@ fn runs_docker_compose_on_all_pods() {
     proj.output().unwrap();
 
     let opts = args::opts::Empty;
-    proj.compose(&runner, "stop", &args::ActOn::All, |_| true, &opts).unwrap();
+    proj.compose(&runner, "stop", &args::ActOn::All, &opts).unwrap();
     assert_ran!(runner, {
         ["docker-compose",
          "-p",
@@ -161,7 +153,7 @@ fn runs_docker_compose_on_named_pods_and_services() {
 
     let act_on = args::ActOn::Named(vec!("db".to_owned(), "web".to_owned()));
     let opts = args::opts::Empty;
-    proj.compose(&runner, "stop", &act_on, |_| true, &opts).unwrap();
+    proj.compose(&runner, "stop", &act_on, &opts).unwrap();
     assert_ran!(runner, {
         ["docker-compose",
          "-p",
