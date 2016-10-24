@@ -9,3 +9,10 @@ pod_type: "placeholder"
 # `"test"` to this list.
 enable_in_targets:
 - "development"
+
+# A list of commands to run automatically when `cage up --init` is called
+# on this pod.  These behave as though passed to `cage run`, so the first
+# argument must be the name of a pod or a service.
+run_on_init:
+- ["rake", "db:create"]
+- ["rake", "db:migrate"]

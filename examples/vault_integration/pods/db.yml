@@ -3,14 +3,19 @@
 # Amazon RDS or Heroku Postgres.
 
 version: "2"
-services:
 
+services:
   db:
     image: "postgres"
     # We can use a relative volume here because this pod is only used
     # in development mode.
     volumes:
-    - "../data/db:/var/lib/postgresql/data"
+    - "db:/var/lib/postgresql/data"
     labels:
       # Choose a more useful shell.
       io.fdy.cage.shell: "bash"
+
+volumes:
+  # This will create a persistent data volume that you can manage
+  # with the `docker volume` subcommand.
+  db: {}

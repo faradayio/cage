@@ -41,4 +41,9 @@ struct Config {
 
     /// What kind of pod is this?
     pod_type: Option<PodType>,
+
+    /// A list of commands to invoke with `cage run` when this pod is
+    /// initialized.
+    #[serde(default, skip_serializing_if="Vec::is_empty")]
+    run_on_init: Vec<Vec<String>>,
 }
