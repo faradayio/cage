@@ -234,7 +234,7 @@ hello
   </tr>
   <tr>
   <td><code>$SERVICE.metadata.yml</code></td>
-  <td>Labels (like <code>io.fdy.cage.test</code>) that are not valid in <a href="https://docs.docker.com/compose/compose-file/"><code>docker-compose.yml</code> version 2</a>.</td>
+  <td>Pod-level metadata that isn't valid in <a href="https://docs.docker.com/compose/compose-file/"><code>docker-compose.yml</code> version 2</a>.</td>
   <td>Top-level <code>pods/</code> dir and also in target dirs (<code>production</code>, etc.)</td>
   </tr>
 </table>
