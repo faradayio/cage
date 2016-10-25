@@ -184,7 +184,7 @@ dependencies = [
 [[package]]
 name = "docker"
 version = "0.0.41"
-source = "git+https://github.com/faradayio/rust-docker?branch=update_and_port#8cf4ad20e1f09372797aaf1f07f8fc81653ec45d"
+source = "git+https://github.com/faradayio/rust-docker?branch=update_and_port#c3cf56749d69c7a951ba80ec9e269564c79eba01"
 dependencies = [
  "error-chain 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "hyper 0.9.10 (registry+https://github.com/rust-lang/crates.io-index)",

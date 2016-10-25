@@ -81,7 +81,7 @@ impl ContainerInfo {
         let raw_ip_addr = &info.NetworkSettings.IPAddress[..];
         let ip_addr = if raw_ip_addr != "" {
             Some(try!(raw_ip_addr.parse()
-                    .chain_err(|| ErrorKind::parse("IP address", raw_ip_addr))))
+                .chain_err(|| ErrorKind::parse("IP address", raw_ip_addr))))
         } else {
             None
         };
@@ -93,7 +93,9 @@ impl ContainerInfo {
                 static ref TCP_PORT: Regex = Regex::new(r#"^(\d+)/tcp$"#).unwrap();
             }
             if let Some(caps) = TCP_PORT.captures(port_str) {
-                let port = try!(caps.at(1).unwrap().parse()
+                let port = try!(caps.at(1)
+                    .unwrap()
+                    .parse()
                     .chain_err(|| ErrorKind::parse("TCP port", port_str.clone())));
                 ports.push(port);
             }
@@ -138,8 +140,10 @@ impl ContainerInfo {
     pub fn is_listening_to_ports(&self) -> bool {
         for addr in self.socket_addrs() {
             if net::TcpListener::bind(addr).is_err() {
+                trace!("scanned {}: CLOSED", addr);
                 return false;
             }
+            trace!("scanned {}: OPEN", addr);
         }
         true
     }

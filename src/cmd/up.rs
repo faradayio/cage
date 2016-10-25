@@ -1,5 +1,8 @@
 //! The `up` command.
 
+use std::thread;
+use std::time;
+
 use args;
 use cmd::{CommandCompose, CommandRun};
 use command_runner::CommandRunner;
@@ -8,6 +11,7 @@ use command_runner::TestCommandRunner;
 use errors::*;
 use pod::{Pod, PodType};
 use project::{PodOrService, Project};
+use runtime_state::RuntimeState;
 
 /// We implement `up` with a trait so we put it in its own module.
 pub trait CommandUp {
@@ -49,11 +53,7 @@ impl CommandUp for Project {
                     }
                 }
                 PodOrService::Service(pod, service_name) => {
-                    try!(self.compose_service(runner,
-                                              "up",
-                                              pod,
-                                              service_name,
-                                              opts));
+                    try!(self.compose_service(runner, "up", pod, service_name, opts));
                 }
             }
         }
@@ -63,6 +63,39 @@ impl CommandUp for Project {
     fn init_pod<CR>(&self, runner: &CR, pod: &Pod) -> Result<()>
         where CR: CommandRunner
     {
+        // Skip initialization for this pod if there's nothing to do.
+        if pod.run_on_init().is_empty() {
+            return Ok(());
+        }
+
+        // Wait for the pod's ports to be open.
+        println!("Waiting for pod '{}' to be listening on all ports",
+                 pod.name());
+        loop {
+            let state: RuntimeState = try!(RuntimeState::for_project(self));
+            let listening = pod.service_names()
+                .iter()
+                .map(|service_name| {
+                    let containers = state.service_containers(service_name);
+                    if containers.is_empty() {
+                        // No containers visible yet; give Docker time.
+                        false
+                    } else {
+                        // If we have at least one container, scan it.
+                        containers.iter()
+                            .map(|container| container.is_listening_to_ports())
+                            .all(|listening| listening)
+                    }
+                })
+                .all(|listening| listening);
+            if listening {
+                break;
+            }
+            thread::sleep(time::Duration::from_millis(250));
+        }
+
+        // Run our initialization commands.
+        println!("Initializing pod '{}'", pod.name());
         for cmd in pod.run_on_init() {
             if cmd.len() < 1 {
                 return Err("all `run_on_init` items for '{}' \
