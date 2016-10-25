@@ -66,7 +66,8 @@ impl CommandUp for Project {
         for cmd in pod.run_on_init() {
             if cmd.len() < 1 {
                 return Err("all `run_on_init` items for '{}' \
-                            must have at least one value".into());
+                            must have at least one value"
+                    .into());
             }
             let pod_name = &cmd[0];
             let cmd = if cmd.len() >= 2 {

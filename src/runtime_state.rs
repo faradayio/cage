@@ -37,9 +37,8 @@ impl RuntimeState {
         for container in &containers {
             let info = try!(docker.get_container_info(&container));
             let labels = &info.Config.Labels;
-            if labels.get("com.docker.compose.project") == Some(&name)
-                && labels.get("io.fdy.cage.target") == Some(&target)
-            {
+            if labels.get("com.docker.compose.project") == Some(&name) &&
+               labels.get("io.fdy.cage.target") == Some(&target) {
                 if let Some(service) = labels.get("com.docker.compose.service") {
                     let our_info = try!(ContainerInfo::new(&info));
                     services.entry(service.to_owned())
@@ -55,9 +54,9 @@ impl RuntimeState {
     /// empty list if it can't find any containers related to the specified
     /// `service_name`.
     pub fn service_containers(&self, service_name: &str) -> &[ContainerInfo] {
-        self.services.get(service_name)
-            .map_or_else(|| &[] as &[ContainerInfo],
-                         |containers| &containers[..])
+        self.services
+            .get(service_name)
+            .map_or_else(|| &[] as &[ContainerInfo], |containers| &containers[..])
     }
 }
 
@@ -127,7 +126,8 @@ impl ContainerInfo {
     pub fn socket_addrs(&self) -> Vec<net::SocketAddr> {
         self.ip_addr()
             .map(|addr| {
-                self.container_tcp_ports.iter()
+                self.container_tcp_ports
+                    .iter()
                     .map(|port| net::SocketAddr::new(addr, *port))
                     .collect()
             })

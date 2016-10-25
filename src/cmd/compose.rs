@@ -79,10 +79,10 @@ impl CommandCompose for Project {
         let target = self.current_target();
         if pod.enabled_in(target) {
             try!(runner.build("docker-compose")
-                 .args(&try!(pod.compose_args(self, target)))
-                 .arg(command)
-                 .args(&opts.to_args())
-                 .exec());
+                .args(&try!(pod.compose_args(self, target)))
+                .arg(command)
+                .args(&opts.to_args())
+                .exec());
         }
         Ok(())
     }
@@ -99,11 +99,11 @@ impl CommandCompose for Project {
         let target = self.current_target();
         if pod.enabled_in(target) {
             try!(runner.build("docker-compose")
-                 .args(&try!(pod.compose_args(self, target)))
-                 .arg(command)
-                 .args(&opts.to_args())
-                 .arg(service_name)
-                 .exec());
+                .args(&try!(pod.compose_args(self, target)))
+                .arg(command)
+                .args(&opts.to_args())
+                .arg(service_name)
+                .exec());
         }
         Ok(())
     }
