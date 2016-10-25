@@ -74,7 +74,7 @@
 
 extern crate colored;
 extern crate compose_yml;
-extern crate docker;
+extern crate boondock;
 #[cfg(test)]
 extern crate env_logger;
 #[macro_use]

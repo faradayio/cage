@@ -9,7 +9,7 @@
 #![cfg_attr(feature="clippy", allow(redundant_closure))]
 
 use compose_yml::v2 as dc;
-use docker::errors as docker;
+use boondock::errors as boondock;
 use glob;
 use semver;
 use std::ffi::OsString;
@@ -25,7 +25,7 @@ error_chain! {
     // conversions are implicit.
     links {
         dc::Error, dc::ErrorKind, Compose;
-        docker::Error, docker::ErrorKind, Docker;
+        boondock::Error, boondock::ErrorKind, Docker;
     }
 
     // TODO HIGH: Most of these will go away as we convert them to more

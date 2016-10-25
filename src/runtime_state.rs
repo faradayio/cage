@@ -1,6 +1,6 @@
 //! Support for fetching runtime state directly from the Docker daemon.
 
-use docker;
+use boondock;
 use regex::Regex;
 use std::collections::BTreeMap;
 use std::net;
@@ -30,7 +30,7 @@ impl RuntimeState {
     fn for_project_inner(project: &Project) -> Result<RuntimeState> {
         let name = project.normalized_name();
         let target = project.current_target().name().to_owned();
-        let docker = try!(docker::Docker::connect_with_defaults());
+        let docker = try!(boondock::Docker::connect_with_defaults());
 
         let mut services = BTreeMap::new();
         let containers = try!(docker.get_containers(true));
@@ -76,7 +76,7 @@ pub struct ContainerInfo {
 
 impl ContainerInfo {
     /// Construct our summary from the raw data returned by Docker.
-    fn new(info: &docker::container::ContainerInfo) -> Result<ContainerInfo> {
+    fn new(info: &boondock::container::ContainerInfo) -> Result<ContainerInfo> {
         // Get an IP address for this running container.
         let raw_ip_addr = &info.NetworkSettings.IPAddress[..];
         let ip_addr = if raw_ip_addr != "" {
@@ -164,7 +164,7 @@ pub enum ContainerState {
 
 impl ContainerState {
     /// Create a new `ContainerState` from Docker data.
-    fn new(state: &docker::container::State) -> ContainerState {
+    fn new(state: &boondock::container::State) -> ContainerState {
         if state.Running {
             ContainerState::Running
         } else if state.Dead && state.ExitCode == 0 {
