@@ -2,6 +2,7 @@
 
 #[cfg(test)]
 use compose_yml::v2 as dc;
+use regex::Regex;
 use semver;
 use serde_yaml;
 use std::collections::BTreeMap;
@@ -251,6 +252,15 @@ impl Project {
     pub fn set_name(&mut self, name: &str) -> &mut Project {
         self.name = name.to_owned();
         self
+    }
+
+    /// The normalized name for this project used by `docker-compose`
+    /// internally.
+    pub fn normalized_name(&self) -> String {
+        lazy_static! {
+            static ref NON_ALNUM: Regex = Regex::new(r#"[^a-z0-9]"#).unwrap();
+        }
+        NON_ALNUM.replace_all(&self.name, "")
     }
 
     /// The root directory of this project.
