@@ -10,7 +10,7 @@ use ext::port_mapping::PortMappingExt;
 use ext::service::ServiceExt;
 use pod::Pod;
 use project::{PodOrService, Project};
-use runtime_state::{ContainerState, RuntimeState};
+use runtime_state::{ContainerStatus, RuntimeState};
 use sources::Source;
 
 /// We implement `status` with a trait so we can put it in its own
@@ -92,10 +92,10 @@ impl Project {
         // Print out our runtime status.
         for container in state.service_containers(service_name) {
             let text = match container.state() {
-                ContainerState::Running => "RUNNING".green().bold(),
-                ContainerState::Done => "DONE".green(),
-                ContainerState::Error(_) => "ERROR".red().bold(),
-                ContainerState::Other => "UNKNOWN".red(),
+                ContainerStatus::Running => "RUNNING".green().bold(),
+                ContainerStatus::Done => "DONE".green(),
+                ContainerStatus::Exited(_) => "EXITED".red().bold(),
+                _ => "OTHER".yellow(),
             };
             print!(" {}", text);
         }

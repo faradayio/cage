@@ -33,9 +33,10 @@ impl RuntimeState {
         let docker = try!(boondock::Docker::connect_with_defaults());
 
         let mut services = BTreeMap::new();
-        let containers = try!(docker.get_containers(true));
+        let opts = boondock::ContainerListOptions::default().all();
+        let containers = try!(docker.containers(opts));
         for container in &containers {
-            let info = try!(docker.get_container_info(&container));
+            let info = try!(docker.container_info(&container));
             let labels = &info.Config.Labels;
             if labels.get("com.docker.compose.project") == Some(&name) &&
                labels.get("io.fdy.cage.target") == Some(&target) {
@@ -67,7 +68,7 @@ pub struct ContainerInfo {
     name: String,
 
     /// The current state of this container.
-    state: ContainerState,
+    state: ContainerStatus,
 
     /// An IP address at which we can access this container.
     ip_addr: Option<net::IpAddr>,
@@ -91,29 +92,34 @@ impl ContainerInfo {
 
         // Get the listening network ports.
         let mut ports = vec![];
-        for port_str in info.NetworkSettings.Ports.keys() {
-            lazy_static! {
-                static ref TCP_PORT: Regex = Regex::new(r#"^(\d+)/tcp$"#).unwrap();
-            }
-            if let Some(caps) = TCP_PORT.captures(port_str) {
-                let port = try!(caps.at(1)
-                    .unwrap()
-                    .parse()
-                    .chain_err(|| ErrorKind::parse("TCP port", port_str.clone())));
-                ports.push(port);
+        if let Some(ref port_strs) = info.NetworkSettings.Ports {
+            for port_str in port_strs.keys() {
+                lazy_static! {
+                    static ref TCP_PORT: Regex = Regex::new(r#"^(\d+)/tcp$"#)
+                        .unwrap();
+                }
+                if let Some(caps) = TCP_PORT.captures(port_str) {
+                    let port = try!(caps.at(1)
+                        .unwrap()
+                        .parse()
+                        .chain_err(|| {
+                            ErrorKind::parse("TCP port", port_str.clone())
+                        }));
+                    ports.push(port);
+                }
             }
         }
 
         Ok(ContainerInfo {
             name: info.Name.to_owned(),
-            state: ContainerState::new(&info.State),
+            state: ContainerStatus::new(&info.State),
             ip_addr: ip_addr,
             container_tcp_ports: ports,
         })
     }
 
     /// The current state of this container.
-    pub fn state(&self) -> ContainerState {
+    pub fn state(&self) -> ContainerStatus {
         self.state
     }
 
@@ -157,28 +163,34 @@ impl ContainerInfo {
 
 /// Is a Docker container running? Stopped?
 #[derive(Debug, Clone, Copy)]
-pub enum ContainerState {
+pub enum ContainerStatus {
+    /// The container has been created.
+    Created,
+    /// The container is currently restarting.
+    Restarting,
     /// The container is current running.
     Running,
+    /// The container has been paused.
+    Paused,
     /// The container is stopped with exit code 0.
     Done,
     /// The container is stopped with a non-zero exit code.
-    Error(i64),
+    Exited(i64),
     /// The container is in some other state.
     Other,
 }
 
-impl ContainerState {
-    /// Create a new `ContainerState` from Docker data.
-    fn new(state: &boondock::container::State) -> ContainerState {
-        if state.Running {
-            ContainerState::Running
-        } else if state.Dead && state.ExitCode == 0 {
-            ContainerState::Done
-        } else if state.Dead {
-            ContainerState::Error(state.ExitCode)
-        } else {
-            ContainerState::Other
+impl ContainerStatus {
+    /// Create a new `ContainerStatus` from Docker data.
+    fn new(state: &boondock::container::State) -> ContainerStatus {
+        match &state.Status[..] {
+            "created" => ContainerStatus::Created,
+            "restarting" => ContainerStatus::Restarting,
+            "running" => ContainerStatus::Running,
+            "paused" => ContainerStatus::Paused,
+            "exited" if state.ExitCode == 0 => ContainerStatus::Done,
+            "exited" => ContainerStatus::Exited(state.ExitCode),
+            _ => ContainerStatus::Other,
         }
     }
 }
