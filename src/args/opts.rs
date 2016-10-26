@@ -235,7 +235,7 @@ fn run_options_to_args_returns_appropriate_flags() {
 
 
 /// Command-line flags with for `docker-compose logs`.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 #[allow(missing_copy_implementations)]
 pub struct Logs {
     /// Whether to interactively display logs as they're output
@@ -253,35 +253,63 @@ pub struct Logs {
 impl ToArgs for Logs {
     fn to_args(&self) -> Vec<OsString> {
         let mut args: Vec<OsString> = vec![];
-
         if self.follow {
             args.push(OsStr::new("-f").to_owned());
         }
-
         if let Some(ref number) = self.number {
             args.push(OsStr::new(&format!("--tail={}", number)).to_owned());
         }
-
         args
     }
 }
 
-impl Default for Logs {
-    fn default() -> Logs {
-        Logs {
-            follow: false,
-            number: None,
-            _nonexhaustive: (),
-        }
-    }
-}
-
 #[test]
-fn run_options_to_logs_args_returns_appropriate_flags() {
+fn logs_options_to_args_returns_appropriate_flags() {
     let mut opts = Logs::default();
     opts.follow = true;
     opts.number = Some("12".to_owned());
     let raw_expected = &["-f", "--tail=12"];
+    let expected: Vec<OsString> = raw_expected.iter()
+        .map(|s| OsStr::new(s).to_owned())
+        .collect();
+    assert_eq!(opts.to_args(), expected);
+}
+
+/// Command-line flags for use with `docker-compose rm`.
+#[derive(Debug, Clone, Default)]
+#[allow(missing_copy_implementations)]
+pub struct Rm {
+    /// Delete containers without confirmation.
+    pub force: bool,
+
+    /// Delete any anonymous volumes attached to containers.
+    pub remove_volumes: bool,
+
+    /// PRIVATE: This field is a stand-in for future options.
+    /// See http://stackoverflow.com/q/39277157/12089
+    #[doc(hidden)]
+    pub _nonexhaustive: (),
+}
+
+impl ToArgs for Rm {
+    fn to_args(&self) -> Vec<OsString> {
+        let mut args: Vec<OsString> = vec![];
+        if self.force {
+            args.push(OsStr::new("-f").to_owned());
+        }
+        if self.remove_volumes {
+            args.push(OsStr::new("-v").to_owned());
+        }
+        args
+    }
+}
+
+#[test]
+fn rm_options_to_args_returns_appropriate_flags() {
+    let mut opts = Rm::default();
+    opts.force = true;
+    opts.remove_volumes = true;
+    let raw_expected = &["-f", "-v"];
     let expected: Vec<OsString> = raw_expected.iter()
         .map(|s| OsStr::new(s).to_owned())
         .collect();

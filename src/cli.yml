@@ -74,7 +74,7 @@ subcommands:
       about: "Run project"
       args:
         - init:
-            long: "--init"
+            long: "init"
             help: "Run any pod initialization commands (for first startup)"
         - POD_OR_SERVICE: *pod_or_service
   - stop:
@@ -84,6 +84,13 @@ subcommands:
   - rm:
       about: "Remove the containers associated with a pod or service"
       args:
+        - force:
+            short: "f"
+            long: "force"
+            help: "Remove without confirming first"
+        - remove-volumes:
+            short: "v"
+            help: "Remove anonymous volumes associated with containers"
         - POD_OR_SERVICE: *pod_or_service
   - run:
       about: "Run a specific pod as a one-shot task"

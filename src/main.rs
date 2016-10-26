@@ -60,6 +60,9 @@ trait ArgMatchesExt {
 
     /// Extract 'logs' options from our command-line arguments.
     fn to_logs_options(&self) -> cage::args::opts::Logs;
+
+    /// Extract 'rm' options from our command-line arguments.
+    fn to_rm_options(&self) -> cage::args::opts::Rm;
 }
 
 impl<'a> ArgMatchesExt for clap::ArgMatches<'a> {
@@ -127,6 +130,13 @@ impl<'a> ArgMatchesExt for clap::ArgMatches<'a> {
         let mut opts = cage::args::opts::Logs::default();
         opts.follow = self.is_present("follow");
         opts.number = self.value_of("number").map(|v| v.to_owned());
+        opts
+    }
+
+    fn to_rm_options(&self) -> cage::args::opts::Rm {
+        let mut opts = cage::args::opts::Rm::default();
+        opts.force = self.is_present("force");
+        opts.remove_volumes = self.is_present("remove-volumes");
         opts
     }
 
@@ -210,7 +220,7 @@ fn run(matches: &clap::ArgMatches) -> Result<()> {
         }
         "rm" => {
             let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE");
-            let opts = cage::args::opts::Empty;
+            let opts = sc_matches.to_rm_options();
             try!(proj.compose(&runner, "rm", &acts_on, &opts));
         }
         "run" => {
