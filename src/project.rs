@@ -417,10 +417,13 @@ impl Project {
         // Output each pod.  This isn't especially slow (except maybe the
         // Vault plugin), but parallelizing things is easy.
         self.pods.par_iter()
-            // Don't export pods which aren't enabled.
-            //
-            // TODO MED: Should we exclude these at load time instead?
-            .filter(|pod| pod.enabled_in(&self.current_target))
+            // Don't export pods which aren't enabled.  However, we currently
+            // need to output these for `Operation::Output` in case the user
+            // wants to `run` a task using one of these pod definitions.
+            .filter(|pod| {
+                pod.enabled_in(&self.current_target) ||
+                    op == Operation::Output
+            })
             // Process each pod in parallel.
             .map(|pod| -> Result<()> {
                 // Figure out where to put our pod.

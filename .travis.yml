@@ -34,10 +34,11 @@ before_script:
   export PATH=$HOME/.local/bin:$HOME/Library/Python/2.7/bin:$HOME/.cargo/bin:$PATH
 script:
 - |
-  travis-cargo build -- $FEATURE_OPTS &&
   travis-cargo test -- $FEATURE_OPTS &&
+  travis-cargo build -- $FEATURE_OPTS &&
   (cargo fmt -- --write-mode=diff || true) &&
   if [[ "$TRAVIS_RUST_VERSION" == beta ]]; then
+    PATH="./target/debug:$PATH" && examples/tutorial.sh &&
     travis-cargo bench -- $FEATURE_OPTS &&
     travis-cargo doc -- $FEATURE_OPTS
   fi
