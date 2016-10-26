@@ -14,6 +14,7 @@ cage new tutorial
 cd tutorial
 
 # Start the new project running.
+cage pull
 cage up --init
 cage status
 
