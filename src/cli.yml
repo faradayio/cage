@@ -27,10 +27,7 @@ after_help: |
   From inside a project directory:
 
       cage pull                      # Download images for the a project
-      cage up db                     # Start just the database pod running
-      cage run rake db:create        # Run task in 'pods/rake.yml' with args
-      cage run rake db:migrate       # ...and with different args
-      cage up                        # Start the whole application running
+      cage up --init                 # Start the app, initializing the database
       cage status                    # Get an overview of the project
 
   Access your application at http://localhost:3000/.  To download and edit
@@ -76,6 +73,9 @@ subcommands:
   - up:
       about: "Run project"
       args:
+        - init:
+            long: "--init"
+            help: "Run any pod initialization commands (for first startup)"
         - POD_OR_SERVICE: *pod_or_service
   - stop:
       about: "Stop all containers associated with project"

@@ -34,7 +34,8 @@ pub trait ServiceExt {
     /// `Service` object, so you can use it to decide how you want to
     /// update other fields of this object without running afoul of the
     /// borrow checker.
-    fn sources<'a, 'b>(&'a self, sources: &'b sources::Sources)
+    fn sources<'a, 'b>(&'a self,
+                       sources: &'b sources::Sources)
                        -> Result<Sources<'b>>;
 }
 
@@ -74,12 +75,12 @@ impl ServiceExt for dc::Service {
         }
     }
 
-    fn sources<'a, 'b>(&'a self, sources: &'b sources::Sources)
+    fn sources<'a, 'b>(&'a self,
+                       sources: &'b sources::Sources)
                        -> Result<Sources<'b>> {
         // Get our `context`, if any.
         let source_mount_dir = try!(self.source_mount_dir());
-        let context = try!(self.context())
-            .map(|ctx| (source_mount_dir, ctx.clone()));
+        let context = try!(self.context()).map(|ctx| (source_mount_dir, ctx.clone()));
 
         // Get our library keys and mount points.
         let mut libs = vec![];

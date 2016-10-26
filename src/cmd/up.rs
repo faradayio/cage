@@ -1,13 +1,17 @@
 //! The `up` command.
 
+use std::thread;
+use std::time;
+
 use args;
-use cmd::CommandCompose;
+use cmd::{CommandCompose, CommandRun};
 use command_runner::CommandRunner;
 #[cfg(test)]
 use command_runner::TestCommandRunner;
 use errors::*;
 use pod::{Pod, PodType};
-use project::Project;
+use project::{PodOrService, Project};
+use runtime_state::RuntimeState;
 
 /// We implement `up` with a trait so we put it in its own module.
 pub trait CommandUp {
@@ -17,6 +21,10 @@ pub trait CommandUp {
               act_on: &args::ActOn,
               opts: &args::opts::Up)
               -> Result<()>
+        where CR: CommandRunner;
+
+    /// Run the initialization functions for the specified pod.
+    fn init_pod<CR>(&self, runner: &CR, pod: &Pod) -> Result<()>
         where CR: CommandRunner;
 }
 
@@ -28,8 +36,82 @@ impl CommandUp for Project {
               -> Result<()>
         where CR: CommandRunner
     {
-        let pred = |p: &Pod| p.pod_type() != PodType::Task;
-        self.compose(runner, "up", act_on, &pred, opts)
+        let pods_or_services = act_on.pods_or_services(self)
+            // TODO LOW: Refactor this into a `filter_result` helper?
+            .filter(|v| {
+                match *v {
+                    Ok(ref p_s) => p_s.pod_type() != PodType::Task,
+                    Err(_) => true,
+                }
+            });
+        for pod_or_service in pods_or_services {
+            match try!(pod_or_service) {
+                PodOrService::Pod(pod) => {
+                    try!(self.compose_pod(runner, "up", pod, opts));
+                    if opts.init {
+                        try!(self.init_pod(runner, pod));
+                    }
+                }
+                PodOrService::Service(pod, service_name) => {
+                    try!(self.compose_service(runner, "up", pod, service_name, opts));
+                }
+            }
+        }
+        Ok(())
+    }
+
+    fn init_pod<CR>(&self, runner: &CR, pod: &Pod) -> Result<()>
+        where CR: CommandRunner
+    {
+        // Skip initialization for this pod if there's nothing to do.
+        if pod.run_on_init().is_empty() {
+            return Ok(());
+        }
+
+        // Wait for the pod's ports to be open.
+        println!("Waiting for pod '{}' to be listening on all ports",
+                 pod.name());
+        loop {
+            let state: RuntimeState = try!(RuntimeState::for_project(self));
+            let listening = pod.service_names()
+                .iter()
+                .map(|service_name| {
+                    let containers = state.service_containers(service_name);
+                    if containers.is_empty() {
+                        // No containers visible yet; give Docker time.
+                        false
+                    } else {
+                        // If we have at least one container, scan it.
+                        containers.iter()
+                            .map(|container| container.is_listening_to_ports())
+                            .all(|listening| listening)
+                    }
+                })
+                .all(|listening| listening);
+            if listening {
+                break;
+            }
+            thread::sleep(time::Duration::from_millis(250));
+        }
+
+        // Run our initialization commands.
+        println!("Initializing pod '{}'", pod.name());
+        for cmd in pod.run_on_init() {
+            if cmd.len() < 1 {
+                return Err("all `run_on_init` items for '{}' \
+                            must have at least one value"
+                    .into());
+            }
+            let pod_name = &cmd[0];
+            let cmd = if cmd.len() >= 2 {
+                Some(args::Command::new(&cmd[1]).with_args(&cmd[2..]))
+            } else {
+                None
+            };
+            let opts = args::opts::Run::default();
+            try!(self.run(runner, pod_name, cmd.as_ref(), &opts));
+        }
+        Ok(())
     }
 }
 

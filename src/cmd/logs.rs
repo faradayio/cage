@@ -6,7 +6,6 @@ use command_runner::CommandRunner;
 #[cfg(test)]
 use command_runner::TestCommandRunner;
 use errors::*;
-use pod::{Pod, PodType};
 use project::Project;
 
 /// We implement `logs` with a trait so we put it in its own module.
@@ -30,8 +29,7 @@ impl CommandLogs for Project {
     {
         match *act_on {
             args::ActOn::Named(ref names) if names.len() == 1 => {
-                let pred = |p: &Pod| p.pod_type() != PodType::Task;
-                self.compose(runner, "logs", act_on, pred, opts)
+                self.compose(runner, "logs", act_on, opts)
             }
             _ => Err("You may only specify a single service or pod".into()),
         }

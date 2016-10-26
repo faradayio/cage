@@ -74,6 +74,7 @@
 
 extern crate colored;
 extern crate compose_yml;
+extern crate boondock;
 #[cfg(test)]
 extern crate env_logger;
 #[macro_use]
@@ -91,6 +92,7 @@ extern crate phf;
 #[cfg(test)]
 extern crate rand;
 extern crate rayon;
+extern crate regex;
 extern crate retry;
 extern crate rustc_serialize;
 extern crate semver;
@@ -106,6 +108,7 @@ pub use default_tags::DefaultTags;
 pub use errors::*;
 pub use project::{PodOrService, Project, ProjectConfig, Pods, Targets};
 pub use pod::{Pod, PodType, TargetFiles, AllFiles};
+pub use runtime_state::RuntimeState;
 pub use sources::{Sources, Source};
 pub use sources::Iter as SourceIter;
 pub use target::Target;
@@ -125,6 +128,7 @@ pub mod hook;
 pub mod plugins;
 mod pod;
 mod project;
+mod runtime_state;
 mod serde_helpers;
 mod service_locations;
 mod sources;

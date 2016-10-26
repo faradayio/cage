@@ -10,6 +10,7 @@ use ext::port_mapping::PortMappingExt;
 use ext::service::ServiceExt;
 use pod::Pod;
 use project::{PodOrService, Project};
+use runtime_state::{ContainerState, RuntimeState};
 use sources::Source;
 
 /// We implement `status` with a trait so we can put it in its own
@@ -25,14 +26,19 @@ impl CommandStatus for Project {
     fn status<CR>(&self, _runner: &CR, act_on: &args::ActOn) -> Result<()>
         where CR: CommandRunner
     {
+        let state = try!(RuntimeState::for_project(self));
         for pod_or_service in act_on.pods_or_services(self) {
             match try!(pod_or_service) {
-                PodOrService::Pod(pod) => try!(self.pod_status(pod)),
+                PodOrService::Pod(pod) => try!(self.pod_status(&state, pod)),
                 PodOrService::Service(pod, service_name) => {
                     try!(self.pod_header(pod));
                     let service = try!(pod.service_or_err(self.current_target(),
                                                           service_name));
-                    try!(self.service_status(pod, service_name, &service, true));
+                    try!(self.service_status(&state,
+                                             pod,
+                                             service_name,
+                                             &service,
+                                             true));
                 }
             }
         }
@@ -48,7 +54,7 @@ impl Project {
         } else {
             "disabled".red().bold()
         };
-        println!("{} {} type:{}",
+        println!("{:15} {} type:{}",
                  pod.name().blue().bold(),
                  enabled,
                  pod.pod_type());
@@ -56,11 +62,12 @@ impl Project {
     }
 
     /// Display information about a pod and its services.
-    fn pod_status(&self, pod: &Pod) -> Result<()> {
+    fn pod_status(&self, state: &RuntimeState, pod: &Pod) -> Result<()> {
         try!(self.pod_header(pod));
         let file = try!(pod.merged_file(self.current_target()));
         for (i, (service_name, service)) in file.services.iter().enumerate() {
-            try!(self.service_status(pod,
+            try!(self.service_status(state,
+                                     pod,
                                      service_name,
                                      service,
                                      i + 1 == file.services.len()));
@@ -70,15 +77,27 @@ impl Project {
 
     /// Display information about a service.
     fn service_status(&self,
+                      state: &RuntimeState,
                       _pod: &Pod,
                       service_name: &str,
                       service: &dc::Service,
                       last: bool)
                       -> Result<()> {
         if last {
-            print!("└─ {}", service_name.blue());
+            print!("└─ {:12}", service_name.blue());
         } else {
-            print!("├─ {}", service_name.blue());
+            print!("├─ {:12}", service_name.blue());
+        }
+
+        // Print out our runtime status.
+        for container in state.service_containers(service_name) {
+            let text = match container.state() {
+                ContainerState::Running => "RUNNING".green().bold(),
+                ContainerState::Done => "DONE".green(),
+                ContainerState::Error(_) => "ERROR".red().bold(),
+                ContainerState::Other => "UNKNOWN".red(),
+            };
+            print!(" {}", text);
         }
 
         // Print out ports with known host bindings.

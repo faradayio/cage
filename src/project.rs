@@ -2,6 +2,7 @@
 
 #[cfg(test)]
 use compose_yml::v2 as dc;
+use regex::Regex;
 use semver;
 use serde_yaml;
 use std::collections::BTreeMap;
@@ -45,6 +46,17 @@ pub enum PodOrService<'a> {
     Pod(&'a Pod),
     /// A `Pod` and the name of one of its `Service` objects.
     Service(&'a Pod, &'a str),
+}
+
+impl<'a> PodOrService<'a> {
+    /// Get the `pod_type` for either our `Pod` or the pod containing our
+    /// service.
+    pub fn pod_type(&self) -> PodType {
+        match *self {
+            PodOrService::Pod(pod) |
+            PodOrService::Service(pod, _) => pod.pod_type(),
+        }
+    }
 }
 
 /// A `cage` project, which is represented as a directory containing a
@@ -240,6 +252,15 @@ impl Project {
     pub fn set_name(&mut self, name: &str) -> &mut Project {
         self.name = name.to_owned();
         self
+    }
+
+    /// The normalized name for this project used by `docker-compose`
+    /// internally.
+    pub fn normalized_name(&self) -> String {
+        lazy_static! {
+            static ref NON_ALNUM: Regex = Regex::new(r#"[^a-z0-9]"#).unwrap();
+        }
+        NON_ALNUM.replace_all(&self.name, "")
     }
 
     /// The root directory of this project.

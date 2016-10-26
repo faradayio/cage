@@ -196,22 +196,22 @@ fn run(matches: &clap::ArgMatches) -> Result<()> {
         "build" => {
             let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE");
             let opts = cage::args::opts::Empty;
-            try!(proj.compose(&runner, "build", &acts_on, |_| true, &opts));
+            try!(proj.compose(&runner, "build", &acts_on, &opts));
         }
         "up" => {
             let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE");
-            let opts = cage::args::opts::Up::default();
+            let opts = cage::args::opts::Up::new(sc_matches.is_present("init"));
             try!(proj.up(&runner, &acts_on, &opts));
         }
         "stop" => {
             let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE");
             let opts = cage::args::opts::Empty;
-            try!(proj.compose(&runner, "stop", &acts_on, |_| true, &opts));
+            try!(proj.compose(&runner, "stop", &acts_on, &opts));
         }
         "rm" => {
             let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE");
             let opts = cage::args::opts::Empty;
-            try!(proj.compose(&runner, "rm", &acts_on, |_| true, &opts));
+            try!(proj.compose(&runner, "rm", &acts_on, &opts));
         }
         "run" => {
             let opts = sc_matches.to_run_options();

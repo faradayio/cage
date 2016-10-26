@@ -9,6 +9,7 @@
 #![cfg_attr(feature="clippy", allow(redundant_closure))]
 
 use compose_yml::v2 as dc;
+use boondock::errors as boondock;
 use glob;
 use semver;
 use std::ffi::OsString;
@@ -24,6 +25,7 @@ error_chain! {
     // conversions are implicit.
     links {
         dc::Error, dc::ErrorKind, Compose;
+        boondock::Error, boondock::ErrorKind, Docker;
     }
 
     // TODO HIGH: Most of these will go away as we convert them to more
@@ -41,6 +43,18 @@ error_chain! {
         CommandFailed(command: Vec<OsString>) {
             description("error running external command")
             display("error running '{}'", command_to_string(&command))
+        }
+
+        /// We could not look up our project's `RuntimeState` using Docker.
+        CouldNotGetRuntimeState {
+            description("error getting the project's state from Docker")
+            display("error getting the project's state from Docker")
+        }
+
+        /// We failed to parse a string.
+        CouldNotParse(parsing_as: &'static str, input: String) {
+            description("failed to parse string")
+            display("failed to parse '{}' as {}", &input, parsing_as)
         }
 
         /// An error occurred reading a directory.
@@ -130,6 +144,15 @@ error_chain! {
             description("an error occurred talking to a Vault server")
             display("an error occurred talking to the Vault server at {}", &url)
         }
+    }
+}
+
+impl ErrorKind {
+    /// Build an `ErrorKind::CouldNotParse` value.
+    pub fn parse<S>(parsing_as: &'static str, input: S) -> ErrorKind
+        where S: Into<String>
+    {
+        ErrorKind::CouldNotParse(parsing_as, input.into())
     }
 }
 

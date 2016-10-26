@@ -285,6 +285,11 @@ impl Pod {
                 "-f".into(),
                 proj.output_pods_dir().join(self.rel_path()).into()])
     }
+
+    /// The commands we should run to initialize this pod.
+    pub fn run_on_init(&self) -> &[Vec<String>] {
+        &self.config.run_on_init
+    }
 }
 
 /// An iterator over this pods targets and their associated files.
