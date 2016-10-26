@@ -14,5 +14,10 @@ enable_in_targets:
 # on this pod.  These behave as though passed to `cage run`, so the first
 # argument must be the name of a pod or a service.
 run_on_init:
+# Cage makes sure that PostgreSQL is listening on the expected port, but
+# even once the port is open, we may need to wait longer while it finishes
+# disk recovery.  We can run do this by running a script in the `db` pod.
+- ["db", "bash", "-c", "while ! pg_isready -q -h db; do sleep 0.25; done"]
+# Use the `rake` pod to create our database.
 - ["rake", "db:create"]
 - ["rake", "db:migrate"]
