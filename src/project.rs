@@ -238,6 +238,9 @@ impl Project {
                 pods.push(try!(Pod::new(pods_dir.clone(), name, targets)));
             }
         }
+        // Make sure placeholders are before other pods.  This is necessary
+        // for `up` to run things in the right order.
+        pods.sort_by_key(|p| (p.pod_type(), p.name().to_owned()));
         Ok(pods)
     }
 
