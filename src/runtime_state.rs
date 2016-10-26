@@ -63,6 +63,9 @@ impl RuntimeState {
 /// Information about a specific container associated with a service.
 #[derive(Debug, Clone)]
 pub struct ContainerInfo {
+    /// The name of this container.
+    name: String,
+
     /// The current state of this container.
     state: ContainerState,
 
@@ -102,6 +105,7 @@ impl ContainerInfo {
         }
 
         Ok(ContainerInfo {
+            name: info.Name.to_owned(),
             state: ContainerState::new(&info.State),
             ip_addr: ip_addr,
             container_tcp_ports: ports,
@@ -138,13 +142,15 @@ impl ContainerInfo {
 
     /// Is this container listening to its ports?
     pub fn is_listening_to_ports(&self) -> bool {
+        debug!("scanning container '{}'", &self.name);
         for addr in self.socket_addrs() {
+            trace!("scanning container '{}' at {}", &self.name, addr);
             if net::TcpListener::bind(addr).is_err() {
-                trace!("scanned {}: CLOSED", addr);
+                debug!("container '{}': {} is CLOSED", &self.name, addr);
                 return false;
             }
-            trace!("scanned {}: OPEN", addr);
         }
+        debug!("container '{}' is listening on all ports", &self.name);
         true
     }
 }
