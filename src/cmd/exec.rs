@@ -43,7 +43,7 @@ impl CommandExec for Project {
     {
         let (pod, service_name) = try!(self.service_or_err(service_name));
         runner.build("docker-compose")
-            .args(&try!(pod.compose_args(self, self.current_target())))
+            .args(&try!(pod.compose_args(self)))
             .arg("exec")
             .args(&opts.to_args())
             .arg(service_name)

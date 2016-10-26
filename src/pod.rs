@@ -276,12 +276,10 @@ impl Pod {
     /// Command-line `-p` and `-f` arguments that we'll pass to
     /// `docker-compose` to describe this file.
     pub fn compose_args(&self,
-                        proj: &Project,
-                        target: &Target)
+                        proj: &Project)
                         -> Result<Vec<OsString>> {
-        let compose_project_name = target.compose_project_name(proj);
         Ok(vec!["-p".into(),
-                compose_project_name.into(),
+                proj.compose_name().into(),
                 "-f".into(),
                 proj.output_pods_dir().join(self.rel_path()).into()])
     }

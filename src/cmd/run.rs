@@ -56,7 +56,7 @@ impl CommandRun for Project {
             vec![]
         };
         runner.build("docker-compose")
-            .args(&try!(pod.compose_args(self, self.current_target())))
+            .args(&try!(pod.compose_args(self)))
             .arg("run")
             .args(&opts.to_args())
             .arg(service)
@@ -81,7 +81,7 @@ impl CommandRun for Project {
             try!(service.test_command()).iter().map(|s| s.into()).collect()
         };
         runner.build("docker-compose")
-            .args(&try!(pod.compose_args(self, target)))
+            .args(&try!(pod.compose_args(self)))
             .arg("run")
             .arg("--rm")
             .arg("--no-deps")
@@ -116,7 +116,7 @@ fn runs_a_single_service_pod() {
     assert_ran!(runner, {
         ["docker-compose",
          "-p",
-         "rails_hello",
+         "railshello",
          "-f",
          proj.output_dir().join("pods").join("rake.yml"),
          "run",

@@ -2,7 +2,6 @@
 
 #[cfg(test)]
 use compose_yml::v2 as dc;
-use regex::Regex;
 use semver;
 use serde_yaml;
 use std::collections::BTreeMap;
@@ -257,13 +256,9 @@ impl Project {
         self
     }
 
-    /// The normalized name for this project used by `docker-compose`
-    /// internally.
-    pub fn normalized_name(&self) -> String {
-        lazy_static! {
-            static ref NON_ALNUM: Regex = Regex::new(r#"[^a-z0-9]"#).unwrap();
-        }
-        NON_ALNUM.replace_all(&self.name, "")
+    /// Get that name that `docker_compose` would use for this project.
+    pub fn compose_name(&self) -> String {
+        self.current_target.compose_project_name(self)
     }
 
     /// The root directory of this project.
@@ -576,9 +571,10 @@ fn pod_or_service_finds_either() {
 fn pods_are_loaded() {
     use env_logger;
     let _ = env_logger::init();
-    let proj = Project::from_example("hello").unwrap();
+    let proj = Project::from_example("rails_hello").unwrap();
     let names: Vec<_> = proj.pods.iter().map(|pod| pod.name()).collect();
-    assert_eq!(names, ["frontend"]);
+    // Placeholders before everything else.
+    assert_eq!(names, ["db", "frontend", "rake"]);
 }
 
 #[test]

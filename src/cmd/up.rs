@@ -76,9 +76,11 @@ impl CommandUp for Project {
             let listening = pod.service_names()
                 .iter()
                 .map(|service_name| {
+                    debug!("scanning service '{}'", service_name);
                     let containers = state.service_containers(service_name);
                     if containers.is_empty() {
                         // No containers visible yet; give Docker time.
+                        debug!("no containers for service '{}' yet", service_name);
                         false
                     } else {
                         // If we have at least one container, scan it.
@@ -129,7 +131,7 @@ fn runs_docker_compose_up_honors_enable_in_targets() {
     assert_ran!(runner, {
         ["docker-compose",
          "-p",
-         "rails_hello",
+         "railshello",
          "-f",
          proj.output_dir().join("pods").join("frontend.yml"),
          "up",

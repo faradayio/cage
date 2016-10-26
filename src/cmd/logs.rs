@@ -52,7 +52,7 @@ fn runs_docker_compose_logs() {
     assert_ran!(runner, {
         ["docker-compose",
          "-p",
-         "rails_hello",
+         "railshello",
          "-f",
          proj.output_dir().join("pods").join("frontend.yml"),
          "logs"]

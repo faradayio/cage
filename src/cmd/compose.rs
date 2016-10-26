@@ -76,10 +76,9 @@ impl CommandCompose for Project {
                        -> Result<()>
         where CR: CommandRunner
     {
-        let target = self.current_target();
-        if pod.enabled_in(target) {
+        if pod.enabled_in(self.current_target()) {
             try!(runner.build("docker-compose")
-                .args(&try!(pod.compose_args(self, target)))
+                .args(&try!(pod.compose_args(self)))
                 .arg(command)
                 .args(&opts.to_args())
                 .exec());
@@ -96,10 +95,9 @@ impl CommandCompose for Project {
                            -> Result<()>
         where CR: CommandRunner
     {
-        let target = self.current_target();
-        if pod.enabled_in(target) {
+        if pod.enabled_in(self.current_target()) {
             try!(runner.build("docker-compose")
-                .args(&try!(pod.compose_args(self, target)))
+                .args(&try!(pod.compose_args(self)))
                 .arg(command)
                 .args(&opts.to_args())
                 .arg(service_name)
@@ -122,19 +120,19 @@ fn runs_docker_compose_on_all_pods() {
     assert_ran!(runner, {
         ["docker-compose",
          "-p",
-         "rails_hello",
+         "railshello",
          "-f",
          proj.output_dir().join("pods").join("db.yml"),
          "stop"],
         ["docker-compose",
          "-p",
-         "rails_hello",
+         "railshello",
          "-f",
          proj.output_dir().join("pods").join("frontend.yml"),
          "stop"],
         ["docker-compose",
          "-p",
-         "rails_hello",
+         "railshello",
          "-f",
          proj.output_dir().join("pods").join("rake.yml"),
          "stop"]
@@ -157,13 +155,13 @@ fn runs_docker_compose_on_named_pods_and_services() {
     assert_ran!(runner, {
         ["docker-compose",
          "-p",
-         "rails_hello",
+         "railshello",
          "-f",
          proj.output_dir().join("pods").join("db.yml"),
          "stop"],
         ["docker-compose",
          "-p",
-         "rails_hello",
+         "railshello",
          "-f",
          proj.output_dir().join("pods").join("frontend.yml"),
          "stop",

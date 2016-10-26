@@ -1,6 +1,8 @@
 //! Targets modify a pod for use in a specific environment, such as
 //! `development`, `test` or `production`.
 
+use regex::Regex;
+
 use project::Project;
 
 /// An `Target` provides collection of extensions to a project's basic
@@ -64,10 +66,17 @@ impl Target {
 
     /// Get a value for `docker-compose`'s `-p` argument for a given project.
     pub fn compose_project_name(&self, project: &Project) -> String {
-        if self.name == "test" {
+        let base_name: String = if self.name == "test" {
             format!("{}test", project.name())
         } else {
             project.name().to_owned()
+        };
+
+        // We strip out non-alphabetic characters and convert everything to
+        // lowercase, which is what the `docker-compose` source code does.
+        lazy_static! {
+            static ref NON_ALNUM: Regex = Regex::new(r#"[^a-z0-9]"#).unwrap();
         }
+        NON_ALNUM.replace_all(&base_name.to_lowercase(), "")
     }
 }
