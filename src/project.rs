@@ -141,7 +141,7 @@ impl Project {
             targets: targets,
             current_target: current_target,
             sources: sources,
-            hooks: try!(HookManager::new(root_dir.join("config").join("hooks"))),
+            hooks: try!(HookManager::new(root_dir)),
             config: config,
             default_tags: None,
             plugins: None,

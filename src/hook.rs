@@ -17,15 +17,22 @@ use util::ToStrOrErr;
 pub struct HookManager {
     /// A directory containing subdirectories for each hook.
     hooks_dir: PathBuf,
+
+    /// The root directory of our project.
+    root_dir: PathBuf,
 }
 
 impl HookManager {
     /// Create a new hook manager that runs hooks from the specified
     /// directory.
-    pub fn new<P>(hooks_dir: P) -> Result<HookManager>
+    pub fn new<P>(root_dir: P) -> Result<HookManager>
         where P: Into<PathBuf>
     {
-        Ok(HookManager { hooks_dir: hooks_dir.into() })
+        let root_dir: PathBuf = root_dir.into();
+        Ok(HookManager {
+            hooks_dir: root_dir.join("config").join("hooks"),
+            root_dir: root_dir,
+        })
     }
 
     /// Invoke all scripts available for the specified hook, passing
@@ -69,6 +76,7 @@ impl HookManager {
         // Run all our hook scripts.
         for script in scripts {
             let mut cmd = runner.build(&script);
+            cmd.current_dir(&self.root_dir);
             for (name, val) in env {
                 cmd.env(name, val);
             }

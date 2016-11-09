@@ -3,6 +3,7 @@
 use std::cell::{Ref, RefCell};
 use std::ffi::{OsStr, OsString};
 use std::marker::PhantomData;
+use std::path::Path;
 use std::process;
 use std::rc::Rc;
 
@@ -38,6 +39,10 @@ pub trait Command {
     fn env<K, V>(&mut self, key: K, val: V) -> &mut Self
         where K: AsRef<OsStr>,
               V: AsRef<OsStr>;
+
+    /// Set the current working directory for the child process we'll
+    /// create.
+    fn current_dir<P: AsRef<Path>>(&mut self, dir: P) -> &mut Self;
 
     /// Run our command.
     fn status(&mut self) -> Result<process::ExitStatus>;
@@ -116,6 +121,11 @@ impl Command for OsCommand {
               V: AsRef<OsStr>
     {
         self.command.env(key, val);
+        self
+    }
+
+    fn current_dir<P: AsRef<Path>>(&mut self, dir: P) -> &mut Self {
+        self.command.current_dir(dir);
         self
     }
 
@@ -204,6 +214,11 @@ impl Command for TestCommand {
         where K: AsRef<OsStr>,
               V: AsRef<OsStr>
     {
+        // Just ignore this in test mode.
+        self
+    }
+
+    fn current_dir<P: AsRef<Path>>(&mut self, _dir: P) -> &mut Self {
         // Just ignore this in test mode.
         self
     }
