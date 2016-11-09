@@ -1,6 +1,6 @@
 [root]
 name = "cage"
-version = "0.1.8"
+version = "0.1.9"
 dependencies = [
  "boondock 0.0.47 (registry+https://github.com/rust-lang/crates.io-index)",
  "clap 2.18.0 (registry+https://github.com/rust-lang/crates.io-index)",
