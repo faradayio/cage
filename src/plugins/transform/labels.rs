@@ -45,8 +45,9 @@ impl PluginTransform for Plugin {
             // arguments.
             let target = ctx.project.current_target().name();
             service.labels
-                .insert("io.fdy.cage.target".into(), target.into());
-            service.labels.insert("io.fdy.cage.pod".into(), ctx.pod.name().into());
+                .insert("io.fdy.cage.target".into(), dc::value(target.into()));
+            service.labels.insert("io.fdy.cage.pod".into(),
+                                  dc::value(ctx.pod.name().into()));
 
             // TODO LOW: Remove metadata-only `io.fdy.cage.` labels?
         }

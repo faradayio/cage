@@ -1,8 +1,40 @@
 // This is not a standalone Rust module.  It gets processed by serde to
 // generate serialization code and included directly into another module.
 
-/// The secrets for a single service.
-type ServiceSecrets = BTreeMap<String, String>;
+/// The secrets for a single service.  We implement this as a very thin
+/// wrapper around `BTreeMap` so that we can add methods.
+#[derive(Default, Debug, PartialEq, Eq)]
+struct ServiceSecrets {
+    secrets: BTreeMap<String, String>,
+}
+
+impl ServiceSecrets {
+    fn to_compose_env(&self) -> BTreeMap<String, dc::RawOr<String>> {
+        let mut env = BTreeMap::new();
+        for (var, val) in &self.secrets {
+            let val = dc::escape(val).expect("escape string should never fail");
+            env.insert(var.to_owned(), val);
+        }
+        env
+    }
+}
+
+impl Deserialize for ServiceSecrets {
+    fn deserialize<D>(deserializer: &mut D) -> result::Result<Self, D::Error>
+        where D: Deserializer,
+    {
+        let secrets = Deserialize::deserialize(deserializer)?;
+        Ok(ServiceSecrets { secrets: secrets })
+    }
+}
+
+impl Serialize for ServiceSecrets {
+    fn serialize<S>(&self, serializer: &mut S) -> result::Result<(), S::Error>
+        where S: Serializer
+    {
+        self.secrets.serialize(serializer)
+    }
+}
 
 /// The secrets for a pod.
 type PodSecrets = BTreeMap<String, ServiceSecrets>;
@@ -38,5 +70,5 @@ struct Config {
 fn can_deserialize_config() {
     let path = Path::new("examples/rails_hello/config/secrets.yml");
     let config: Config = load_yaml(path).unwrap();
-    assert_eq!(config.common.get("GLOBAL_PASSWORD").unwrap(), "magic");
+    assert_eq!(config.common.secrets.get("GLOBAL_PASSWORD").unwrap(), "magic");
 }

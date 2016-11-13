@@ -2,7 +2,6 @@
 
 use compose_yml::v2 as dc;
 use shlex;
-use std::path::{Path, PathBuf};
 use std::vec;
 
 use errors::*;
@@ -20,7 +19,7 @@ pub trait ServiceExt {
 
     /// The directory in which to mount our source code if it's checked
     /// out.
-    fn source_mount_dir(&self) -> Result<PathBuf>;
+    fn source_mount_dir(&self) -> Result<String>;
 
     /// Get the default shell associated with this service.  Used for
     /// getting interactive access to a container.
@@ -48,25 +47,27 @@ impl ServiceExt for dc::Service {
         }
     }
 
-    fn source_mount_dir(&self) -> Result<PathBuf> {
-        Ok(Path::new(self.labels
-                .get("io.fdy.cage.srcdir")
-                .map_or_else(|| "/app", |v| v as &str))
-            .to_owned())
+    fn source_mount_dir(&self) -> Result<String> {
+        let default = dc::escape("/app")?;
+        let srcdir = self.labels
+            .get("io.fdy.cage.srcdir")
+            .unwrap_or_else(|| &default);
+        Ok(srcdir.value()?.to_owned())
     }
 
     fn shell(&self) -> Result<String> {
-        Ok(self.labels
+        let default = dc::escape("sh")?;
+        let shell = self.labels
             .get("io.fdy.cage.shell")
-            .cloned()
-            .unwrap_or_else(|| "sh".to_owned()))
+            .unwrap_or_else(|| &default);
+        Ok(shell.value()?.to_owned())
     }
 
     fn test_command(&self) -> Result<Vec<String>> {
         let raw = try!(self.labels.get("io.fdy.cage.test").ok_or_else(|| {
             err("specify a value for the label io.fdy.cage.test to run tests")
         }));
-        let mut lexer = shlex::Shlex::new(raw);
+        let mut lexer = shlex::Shlex::new(raw.value()?);
         let result: Vec<String> = lexer.by_ref().map(|w| w.to_owned()).collect();
         if lexer.had_error {
             Err(err!("cannot parse <{}> into shell words", raw))
@@ -87,7 +88,7 @@ impl ServiceExt for dc::Service {
         for (label, mount_as) in &self.labels {
             let prefix = "io.fdy.cage.lib.";
             if label.starts_with(prefix) {
-                libs.push((Path::new(mount_as).to_owned(),
+                libs.push((mount_as.value()?.to_owned(),
                            (&label[prefix.len()..]).to_owned()));
             }
         }
@@ -106,23 +107,23 @@ pub struct Sources<'a> {
     /// All `Source` trees available for this repository.
     sources: &'a sources::Sources,
     /// Do we need to iterate over our `context` field?
-    context: Option<(PathBuf, dc::Context)>,
+    context: Option<(String, dc::Context)>,
     /// Libraries
-    libs: vec::IntoIter<(PathBuf, String)>,
+    libs: vec::IntoIter<(String, String)>,
 }
 
 impl<'a> Iterator for Sources<'a> {
-    type Item = Result<(PathBuf, &'a Source)>;
+    type Item = Result<(String, &'a Source)>;
 
     fn next(&mut self) -> Option<Self::Item> {
         // Check for a `dc::Context` using `take`, which moves data out of
         // an `Option` value and leaves `None` in its place,
         // simulataneously updating our internal state and keeping the
         // borrow checker happy.
-        if let Some((path_buf, context)) = self.context.take() {
+        if let Some((container_path, context)) = self.context.take() {
             if let Some(source) = self.sources.find_by_context(&context) {
                 // We have a `context` and a `source`, so return them.
-                Some(Ok((path_buf, source)))
+                Some(Ok((container_path, source)))
             } else {
                 // We have a `context` but it doesn't correspond to a known
                 // `Source`, so move on the next step of the iteration.
@@ -130,10 +131,10 @@ impl<'a> Iterator for Sources<'a> {
             }
         } else {
             // Iterate over any "libs"-style mounts.
-            self.libs.next().map(|(path_buf, name)| {
+            self.libs.next().map(|(container_path, name)| {
                 match self.sources.find_by_lib_key(&name) {
                     None => Err(ErrorKind::UnknownLibKey(name).into()),
-                    Some(source) => Ok((path_buf, source)),
+                    Some(source) => Ok((container_path, source)),
                 }
             })
         }
@@ -151,13 +152,13 @@ fn src_dir_returns_the_source_directory_for_this_service() {
     let db = proj.pod("db").unwrap();
     let merged = db.merged_file(target).unwrap();
     let db = merged.services.get("db").unwrap();
-    assert_eq!(db.source_mount_dir().unwrap(), Path::new("/app"));
+    assert_eq!(db.source_mount_dir().unwrap(), "/app");
 
     // Custom value.
     let frontend = proj.pod("frontend").unwrap();
     let merged = frontend.merged_file(target).unwrap();
     let proxy = merged.services.get("web").unwrap();
-    assert_eq!(proxy.source_mount_dir().unwrap(), Path::new("/usr/src/app"));
+    assert_eq!(proxy.source_mount_dir().unwrap(), "/usr/src/app");
 }
 
 #[test]

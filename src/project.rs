@@ -631,7 +631,7 @@ fn output_applies_expected_transforms() {
         .value()
         .unwrap();
     assert_eq!(mount.host, Some(dc::HostVolume::Path(src_path)));
-    assert_eq!(mount.container, Path::new("/app"));
+    assert_eq!(mount.container, "/app");
 
     // Make sure that our image versions were correctly defaulted.
     assert_eq!(web.image.as_ref().unwrap().value().unwrap(),
@@ -667,7 +667,7 @@ fn output_mounts_cloned_libraries() {
         .unwrap();
     assert_eq!(mount.host, Some(dc::HostVolume::Path(src_path)));
     assert_eq!(mount.container,
-               Path::new("/usr/src/app/vendor/coffee-rails"));
+               "/usr/src/app/vendor/coffee-rails");
 }
 
 #[test]
@@ -731,8 +731,8 @@ fn export_applies_expected_transforms() {
                &dc::Context::new(dc::GitUrl::new(url).unwrap()));
 
     // Make sure we've added our custom labels.
-    assert_eq!(web.labels.get("io.fdy.cage.target"),
-               Some(&"development".to_owned()));
-    assert_eq!(web.labels.get("io.fdy.cage.pod"),
-               Some(&"frontend".to_owned()));
+    assert_eq!(web.labels.get("io.fdy.cage.target").unwrap().value().unwrap(),
+               "development");
+    assert_eq!(web.labels.get("io.fdy.cage.pod").unwrap().value().unwrap(),
+               "frontend");
 }

@@ -6,11 +6,13 @@ use std::collections::BTreeMap;
 #[cfg(test)]
 use std::path::Path;
 use std::path::PathBuf;
+use std::result;
 
 use errors::*;
 use plugins;
 use plugins::{Operation, PluginGenerate, PluginNew, PluginTransform};
 use project::Project;
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde_helpers::load_yaml;
 
 #[cfg(feature = "serde_derive")]
@@ -82,16 +84,16 @@ impl PluginTransform for Plugin {
             |service: &mut dc::Service, pods: &BTreeMap<_, PodSecrets>, name| {
                 let opt_env = pods.get(ctx.pod.name()).and_then(|p| p.get(name));
                 if let Some(env) = opt_env {
-                    service.environment.append(&mut env.clone());
+                    service.environment.append(&mut env.to_compose_env());
                 }
             };
 
         for (name, mut service) in &mut file.services {
-            service.environment.append(&mut config.common.clone());
+            service.environment.append(&mut config.common.to_compose_env());
             append_service(&mut service, &config.pods, name);
             let target_name = ctx.project.current_target().name();
             if let Some(target) = config.targets.get(target_name) {
-                service.environment.append(&mut target.common.clone());
+                service.environment.append(&mut target.common.to_compose_env());
                 append_service(&mut service, &target.pods, name);
             }
         }
@@ -123,8 +125,8 @@ fn injects_secrets_into_services() {
     let mut file = frontend.merged_file(target).unwrap();
     plugin.transform(Operation::Output, &ctx, &mut file).unwrap();
     let web = file.services.get("web").unwrap();
-    assert_eq!(web.environment.get("GLOBAL_PASSWORD").expect("has GLOBAL_PASSWORD"),
+    assert_eq!(web.environment.get("GLOBAL_PASSWORD").expect("has GLOBAL_PASSWORD").value().unwrap(),
                "more magic");
-    assert_eq!(web.environment.get("SOME_PASSWORD").expect("has SOME_PASSWORD"),
+    assert_eq!(web.environment.get("SOME_PASSWORD").expect("has SOME_PASSWORD").value().unwrap(),
                "production secret");
 }

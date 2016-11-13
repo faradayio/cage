@@ -302,7 +302,7 @@ impl PluginTransform for Plugin {
 
             // Insert our VAULT_ADDR value into the generated files.
             service.environment
-                .insert("VAULT_ADDR".to_owned(), generator.addr().to_owned());
+                .insert("VAULT_ADDR".to_owned(), dc::escape(generator.addr())?);
 
             // Get a list of policy "patterns" that apply to this service.
             let mut raw_policies = config.default_policies.clone();
@@ -330,11 +330,11 @@ impl PluginTransform for Plugin {
             let ttl = VaultDuration::seconds(config.default_ttl);
             let token = try!(generator.generate_token(&display_name, policies, ttl)
                 .chain_err(|| format!("could not generate token for '{}'", name)));
-            service.environment.insert("VAULT_TOKEN".to_owned(), token);
+            service.environment.insert("VAULT_TOKEN".to_owned(), dc::escape(token)?);
 
             // Add in any extra environment variables.
             for (var, val) in &config.extra_environment {
-                service.environment.insert(var.to_owned(), try!(interpolated(val)));
+                service.environment.insert(var.to_owned(), dc::escape(try!(interpolated(val)))?);
             }
         }
         Ok(())
@@ -361,11 +361,11 @@ fn interpolates_policies() {
     let mut file = frontend.merged_file(proj.current_target()).unwrap();
     plugin.transform(Operation::Output, &ctx, &mut file).unwrap();
     let web = file.services.get("web").unwrap();
-    assert_eq!(web.environment.get("VAULT_ADDR").expect("has VAULT_ADDR"),
+    assert_eq!(web.environment.get("VAULT_ADDR").expect("has VAULT_ADDR").value().unwrap(),
                "http://example.com:8200/");
-    assert_eq!(web.environment.get("VAULT_TOKEN").expect("has VAULT_TOKEN"),
+    assert_eq!(web.environment.get("VAULT_TOKEN").expect("has VAULT_TOKEN").value().unwrap(),
                "fake_token");
-    assert_eq!(web.environment.get("VAULT_ENV").expect("has VAULT_ENV"),
+    assert_eq!(web.environment.get("VAULT_ENV").expect("has VAULT_ENV").value().unwrap(),
                "production");
 
     let calls = calls.read().unwrap();
