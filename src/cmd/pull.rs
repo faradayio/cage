@@ -22,7 +22,7 @@ impl CommandPull for Project {
         where CR: CommandRunner
     {
         // Run our hook.
-        try!(self.hooks().invoke(runner, "pull", &BTreeMap::new()));
+        self.hooks().invoke(runner, "pull", &BTreeMap::new())?;
 
         // Pass everything else off to `compose`, as usual.
         let opts = args::opts::Empty;

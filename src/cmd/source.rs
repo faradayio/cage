@@ -32,8 +32,9 @@ impl CommandSource for Project {
         for source in self.sources().iter() {
             println!("{:25} {}", source.alias().green(), source.context());
             if source.is_available_locally(self) {
-                let path = try!(try!(source.path(self).canonicalize())
-                        .strip_prefix(self.root_dir()))
+                let path = source.path(self)
+                    .canonicalize()?
+                    .strip_prefix(self.root_dir())?
                     .to_owned();
                 let mounted = if source.mounted() {
                     "(mounted)".normal()
@@ -49,11 +50,11 @@ impl CommandSource for Project {
     fn source_clone<CR>(&self, runner: &CR, alias: &str) -> Result<()>
         where CR: CommandRunner
     {
-        let source = try!(self.sources()
+        let source = self.sources()
             .find_by_alias(alias)
-            .ok_or_else(|| ErrorKind::UnknownSource(alias.to_owned())));
+            .ok_or_else(|| ErrorKind::UnknownSource(alias.to_owned()))?;
         if !source.is_available_locally(self) {
-            try!(source.clone_source(runner, self));
+            source.clone_source(runner, self)?;
         } else {
             println!("'{}' is already available locally", source.alias());
         }
@@ -71,24 +72,24 @@ impl CommandSource for Project {
             // Look up the source mutably.  We do this in a block so we can
             // drop the mutable borrow before continuing and keep Rust
             // happy.
-            let source = try!(self.sources_mut()
+            let source = self.sources_mut()
                 .find_by_alias_mut(alias)
-                .ok_or_else(|| ErrorKind::UnknownSource(alias.to_owned())));
+                .ok_or_else(|| ErrorKind::UnknownSource(alias.to_owned()))?;
 
             // Set the mounted flag on our source.
             source.set_mounted(mounted);
         }
 
         // Write our persistent project settings back to disk.
-        try!(self.save_settings());
+        self.save_settings()?;
 
         // Clone the source if we're mounting it but don't have a local
         // copy yet.
-        let source = try!(self.sources()
+        let source = self.sources()
             .find_by_alias(alias)
-            .ok_or_else(|| ErrorKind::UnknownSource(alias.to_owned())));
+            .ok_or_else(|| ErrorKind::UnknownSource(alias.to_owned()))?;
         if source.mounted() && !source.is_available_locally(self) {
-            try!(self.source_clone(runner, alias));
+            self.source_clone(runner, alias)?;
         }
 
         // Notify the user that they need to run `up`.

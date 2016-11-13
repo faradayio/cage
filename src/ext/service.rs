@@ -41,7 +41,7 @@ pub trait ServiceExt {
 impl ServiceExt for dc::Service {
     fn context(&self) -> Result<Option<&dc::Context>> {
         if let Some(ref build) = self.build {
-            Ok(Some(try!(build.context.value())))
+            Ok(Some(build.context.value()?))
         } else {
             Ok(None)
         }
@@ -64,9 +64,11 @@ impl ServiceExt for dc::Service {
     }
 
     fn test_command(&self) -> Result<Vec<String>> {
-        let raw = try!(self.labels.get("io.fdy.cage.test").ok_or_else(|| {
-            err("specify a value for the label io.fdy.cage.test to run tests")
-        }));
+        let raw = self.labels
+            .get("io.fdy.cage.test")
+            .ok_or_else(|| {
+                err("specify a value for the label io.fdy.cage.test to run tests")
+            })?;
         let mut lexer = shlex::Shlex::new(raw.value()?);
         let result: Vec<String> = lexer.by_ref().map(|w| w.to_owned()).collect();
         if lexer.had_error {
@@ -80,8 +82,8 @@ impl ServiceExt for dc::Service {
                        sources: &'b sources::Sources)
                        -> Result<Sources<'b>> {
         // Get our `context`, if any.
-        let source_mount_dir = try!(self.source_mount_dir());
-        let context = try!(self.context()).map(|ctx| (source_mount_dir, ctx.clone()));
+        let source_mount_dir = self.source_mount_dir()?;
+        let context = self.context()?.map(|ctx| (source_mount_dir, ctx.clone()));
 
         // Get our library keys and mount points.
         let mut libs = vec![];

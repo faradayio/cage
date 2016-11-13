@@ -50,7 +50,7 @@ pub trait Command {
     /// Run our command as per `status`, returning an error if the command
     /// fails.
     fn exec(&mut self) -> Result<()> {
-        let status = try!(self.status());
+        let status = self.status()?;
         if status.success() {
             Ok(())
         } else {

@@ -98,8 +98,8 @@ pub trait PluginGenerate: Plugin {
     /// template of the same name as the plugin, using the project as
     /// input.  This is a good default.
     fn generate(&self, project: &Project, out: &mut io::Write) -> Result<()> {
-        let mut proj_tmpl = try!(Template::new(self.name()));
-        try!(proj_tmpl.generate(&project.root_dir(), project, out));
+        let mut proj_tmpl = Template::new(self.name())?;
+        proj_tmpl.generate(project.root_dir(), project, out)?;
         Ok(())
     }
 }
@@ -122,18 +122,18 @@ impl Manager {
         };
         // We instantiate some of these plugins twice, could we be more
         // clever about it?
-        try!(manager.register_generator::<transform::secrets::Plugin>(proj));
-        try!(manager.register_vault_generator(proj));
+        manager.register_generator::<transform::secrets::Plugin>(proj)?;
+        manager.register_vault_generator(proj)?;
 
-        try!(manager.register_transform::<transform::abs_path::Plugin>(proj));
-        try!(manager.register_transform::<transform::default_tags::Plugin>(proj));
-        try!(manager.register_transform::<transform::sources::Plugin>(proj));
-        try!(manager.register_transform::<transform::secrets::Plugin>(proj));
-        try!(manager.register_vault_transform(proj));
+        manager.register_transform::<transform::abs_path::Plugin>(proj)?;
+        manager.register_transform::<transform::default_tags::Plugin>(proj)?;
+        manager.register_transform::<transform::sources::Plugin>(proj)?;
+        manager.register_transform::<transform::secrets::Plugin>(proj)?;
+        manager.register_vault_transform(proj)?;
 
         // Run this last, in case it wants to remove any labels used by
         // other plugins.
-        try!(manager.register_transform::<transform::labels::Plugin>(proj));
+        manager.register_transform::<transform::labels::Plugin>(proj)?;
 
         Ok(manager)
     }
@@ -155,7 +155,7 @@ impl Manager {
     fn register_generator<T>(&mut self, proj: &Project) -> Result<()>
         where T: PluginNew + PluginGenerate + 'static
     {
-        let plugin: T = try!(self.new_plugin(&proj));
+        let plugin: T = self.new_plugin(proj)?;
         self.generators.push(Box::new(plugin));
         Ok(())
     }
@@ -179,8 +179,8 @@ impl Manager {
     fn register_transform<T>(&mut self, proj: &Project) -> Result<()>
         where T: PluginNew + PluginTransform + 'static
     {
-        if try!(T::is_configured_for(&proj)) {
-            let plugin: T = try!(self.new_plugin(&proj));
+        if T::is_configured_for(proj)? {
+            let plugin: T = self.new_plugin(proj)?;
             self.transforms.push(Box::new(plugin));
         }
         Ok(())
@@ -216,10 +216,10 @@ impl Manager {
                     name: &str,
                     out: &mut io::Write)
                     -> Result<()> {
-        let generator = try!(self.generators
+        let generator = self.generators
             .iter()
             .find(|g| g.name() == name)
-            .ok_or_else(|| self.missing_plugin(name)));
+            .ok_or_else(|| self.missing_plugin(name))?;
         debug!("Generating {}", generator.name());
         generator.generate(project, out)
     }
@@ -232,8 +232,8 @@ impl Manager {
                      -> Result<()> {
         for plugin in &self.transforms {
             trace!("transforming '{}' with {}", ctx.pod.name(), plugin.name());
-            try!(plugin.transform(op, ctx, file)
-                .chain_err(|| ErrorKind::PluginFailed(plugin.name().to_owned())));
+            plugin.transform(op, ctx, file)
+                .chain_err(|| ErrorKind::PluginFailed(plugin.name().to_owned()))?;
         }
         Ok(())
     }

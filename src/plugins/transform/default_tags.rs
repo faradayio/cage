@@ -46,7 +46,7 @@ impl PluginTransform for Plugin {
                 // Clone `self.image` to make life easy for the borrow checker,
                 // so that it remains my friend.
                 if let Some(image) = service.image.to_owned() {
-                    let default = tags.default_for(try!(image.value()));
+                    let default = tags.default_for(image.value()?);
                     service.image = Some(dc::value(default));
                 }
             }

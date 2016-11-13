@@ -115,17 +115,17 @@ impl Project {
                  src_dir: &Path,
                  output_dir: &Path)
                  -> Result<Project> {
-        let targets = try!(Project::find_targets(root_dir));
-        let current_target = try!(targets.iter()
-                .find(|target| target.name() == "development")
-                .ok_or_else(|| ErrorKind::UnknownTarget("development".into())))
+        let targets = Project::find_targets(root_dir)?;
+        let current_target = targets.iter()
+            .find(|target| target.name() == "development")
+            .ok_or_else(|| ErrorKind::UnknownTarget("development".into()))?
             .to_owned();
-        let pods = try!(Project::find_pods(root_dir, &targets));
+        let pods = Project::find_pods(root_dir, &targets)?;
         let service_locations = ServiceLocations::new(&pods);
-        let sources = try!(Sources::new(&root_dir, &output_dir, &pods));
+        let sources = Sources::new(root_dir, output_dir, &pods)?;
         let config_path = root_dir.join(PROJECT_CONFIG_PATH.deref());
-        let config = try!(ProjectConfig::new(&config_path));
-        let absolute_root = try!(root_dir.to_absolute());
+        let config = ProjectConfig::new(&config_path)?;
+        let absolute_root = root_dir.to_absolute()?;
         let name = try!(absolute_root.file_name()
                 .and_then(|s| s.to_str())
                 .ok_or_else(|| {
@@ -141,12 +141,12 @@ impl Project {
             targets: targets,
             current_target: current_target,
             sources: sources,
-            hooks: try!(HookManager::new(root_dir)),
+            hooks: HookManager::new(root_dir)?,
             config: config,
             default_tags: None,
             plugins: None,
         };
-        let plugins = try!(plugins::Manager::new(&proj));
+        let plugins = plugins::Manager::new(&proj)?;
         proj.plugins = Some(plugins);
         Ok(proj)
     }
@@ -175,8 +175,8 @@ impl Project {
         // (We can only test this using a doc test because testing it
         // requires messing with `set_current_dir`, which isn't thread safe
         // and will break parallel tests.)
-        let current = try!(env::current_dir());
-        let root_dir = try!(dir::find_project(&current));
+        let current = env::current_dir()?;
+        let root_dir = dir::find_project(&current)?;
         Project::from_dirs(&root_dir, &root_dir.join("src"), &root_dir.join(".cage"))
     }
 
@@ -203,7 +203,7 @@ impl Project {
     #[cfg(test)]
     pub fn remove_test_output(&self) -> Result<()> {
         if self.output_dir.exists() {
-            try!(fs::remove_dir_all(&self.output_dir));
+            fs::remove_dir_all(&self.output_dir)?;
         }
         Ok(())
     }
@@ -212,12 +212,12 @@ impl Project {
     fn find_targets(root_dir: &Path) -> Result<Vec<Target>> {
         let targets_dir = root_dir.join("pods").join("targets");
         let mut targets = vec![];
-        for glob_result in try!(targets_dir.glob("*")) {
-            let path = try!(glob_result);
+        for glob_result in targets_dir.glob("*")? {
+            let path = glob_result?;
             if path.is_dir() {
                 // It's safe to unwrap file_name because we know it matched
                 // our glob.
-                let name = try!(path.file_name().unwrap().to_str_or_err()).to_owned();
+                let name = path.file_name().unwrap().to_str_or_err()?.to_owned();
                 targets.push(Target::new(name));
             }
         }
@@ -228,13 +228,13 @@ impl Project {
     fn find_pods(root_dir: &Path, targets: &[Target]) -> Result<Vec<Pod>> {
         let pods_dir = root_dir.join("pods");
         let mut pods = vec![];
-        for glob_result in try!(pods_dir.glob("*.yml")) {
-            let path = try!(glob_result);
+        for glob_result in pods_dir.glob("*.yml")? {
+            let path = glob_result?;
             // It's safe to unwrap the file_stem because we know it matched
             // our glob.
-            let name = try!(path.file_stem().unwrap().to_str_or_err()).to_owned();
+            let name = path.file_stem().unwrap().to_str_or_err()?.to_owned();
             if !name.ends_with(".metadata") {
-                pods.push(try!(Pod::new(pods_dir.clone(), name, targets)));
+                pods.push(Pod::new(pods_dir.clone(), name, targets)?);
             }
         }
         // Make sure placeholders are before other pods.  This is necessary
@@ -365,7 +365,7 @@ impl Project {
     /// Set the name of the target to use.  This must be done before
     /// calling `output` or `export`.
     pub fn set_current_target_name(&mut self, name: &str) -> Result<()> {
-        self.current_target = try!(self.target_or_err(name)).to_owned();
+        self.current_target = self.target_or_err(name)?.to_owned();
         Ok(())
     }
 
@@ -666,8 +666,7 @@ fn output_mounts_cloned_libraries() {
         .value()
         .unwrap();
     assert_eq!(mount.host, Some(dc::HostVolume::Path(src_path)));
-    assert_eq!(mount.container,
-               "/usr/src/app/vendor/coffee-rails");
+    assert_eq!(mount.container, "/usr/src/app/vendor/coffee-rails");
 }
 
 #[test]

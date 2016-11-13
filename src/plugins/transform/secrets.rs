@@ -55,7 +55,7 @@ impl PluginNew for Plugin {
     fn new(project: &Project) -> Result<Self> {
         let path = Self::config_path(project);
         let config = if path.exists() {
-            Some(try!(load_yaml(&path)))
+            Some(load_yaml(&path)?)
         } else {
             None
         };
@@ -125,8 +125,12 @@ fn injects_secrets_into_services() {
     let mut file = frontend.merged_file(target).unwrap();
     plugin.transform(Operation::Output, &ctx, &mut file).unwrap();
     let web = file.services.get("web").unwrap();
-    assert_eq!(web.environment.get("GLOBAL_PASSWORD").expect("has GLOBAL_PASSWORD").value().unwrap(),
+    let global_password =
+        web.environment.get("GLOBAL_PASSWORD").expect("has GLOBAL_PASSWORD");
+    assert_eq!(global_password.value().unwrap(),
                "more magic");
-    assert_eq!(web.environment.get("SOME_PASSWORD").expect("has SOME_PASSWORD").value().unwrap(),
+    let some_password =
+        web.environment.get("SOME_PASSWORD").expect("has SOME_PASSWORD");
+    assert_eq!(some_password.value().unwrap(),
                "production secret");
 }

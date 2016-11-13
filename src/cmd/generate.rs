@@ -51,19 +51,19 @@ impl CommandGenerate for Project {
         let proj_dir = parent_dir.join(name);
 
         // Generate our top-level files.
-        let mut proj_tmpl = try!(Template::new("new"));
+        let mut proj_tmpl = Template::new("new")?;
         let proj_info = ProjectInfo {
             name: name,
             cage_version: &version().to_string(),
         };
-        try!(proj_tmpl.generate(&proj_dir, &proj_info, &mut io::stdout()));
+        proj_tmpl.generate(&proj_dir, &proj_info, &mut io::stdout())?;
 
         // Generate a sample secrets.yml file.
-        let mut secrets_tmpl = try!(Template::new("secrets"));
-        try!(secrets_tmpl.generate(&proj_dir, &proj_info, &mut io::stdout()));
+        let mut secrets_tmpl = Template::new("secrets")?;
+        secrets_tmpl.generate(&proj_dir, &proj_info, &mut io::stdout())?;
 
         // Generate files for each target that uses our defaults.
-        let mut target_tmpl = try!(Template::new("new/pods/targets/_default"));
+        let mut target_tmpl = Template::new("new/pods/targets/_default")?;
         let targets_dir = proj_dir.join("pods").join("targets");
         for target in DEFAULT_TARGETS {
             let target_info = TargetInfo {
@@ -71,7 +71,7 @@ impl CommandGenerate for Project {
                 name: target,
             };
             let dir = targets_dir.join(target);
-            try!(target_tmpl.generate(&dir, &target_info, &mut io::stdout()));
+            target_tmpl.generate(&dir, &target_info, &mut io::stdout())?;
         }
 
         Ok(proj_dir)

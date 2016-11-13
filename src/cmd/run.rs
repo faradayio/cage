@@ -37,11 +37,11 @@ impl CommandRun for Project {
                -> Result<()>
         where CR: CommandRunner
     {
-        let pod = try!(self.pod(pod)
-            .ok_or_else(|| err!("Cannot find pod {}", pod)));
+        let pod = self.pod(pod)
+            .ok_or_else(|| err!("Cannot find pod {}", pod))?;
 
         // Get the single service in our pod.
-        let file = try!(pod.merged_file(self.current_target()));
+        let file = pod.merged_file(self.current_target())?;
         if file.services.len() != 1 {
             return Err(err!("Can only `run` pods with 1 service, {} has {}",
                             pod.name(),
@@ -56,7 +56,7 @@ impl CommandRun for Project {
             vec![]
         };
         runner.build("docker-compose")
-            .args(&try!(pod.compose_args(self)))
+            .args(&pod.compose_args(self)?)
             .arg("run")
             .args(&opts.to_args())
             .arg(service)
@@ -72,16 +72,16 @@ impl CommandRun for Project {
         where CR: CommandRunner
     {
         let target = self.current_target();
-        let (pod, service_name) = try!(self.service_or_err(service_name));
+        let (pod, service_name) = self.service_or_err(service_name)?;
 
         let command_args = if let Some(c) = command {
             c.to_args()
         } else {
-            let service = try!(pod.service_or_err(target, service_name));
-            try!(service.test_command()).iter().map(|s| s.into()).collect()
+            let service = pod.service_or_err(target, service_name)?;
+            service.test_command()?.iter().map(|s| s.into()).collect()
         };
         runner.build("docker-compose")
-            .args(&try!(pod.compose_args(self)))
+            .args(&pod.compose_args(self)?)
             .arg("run")
             .arg("--rm")
             .arg("--no-deps")

@@ -1,3 +1,4 @@
+use_try_shorthand = true
 ideal_width = 80
 # This is about how big emk's standard Emacs window is, and as the biggest
 # contributor, he gets to abuse his power.

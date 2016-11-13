@@ -20,15 +20,15 @@ impl ContextExt for dc::Context {
         match *self {
             dc::Context::GitUrl(ref git_url) => {
                 // Convert a regular URL so we can parse it.
-                let url: url::Url = try!(git_url.to_url());
+                let url: url::Url = git_url.to_url()?;
 
                 // Get the last component of the path.
                 //
                 // TODO LOW: We may need to unescape the path.
                 let url_path = Path::new(url.path()).to_owned();
-                let file_stem = try!(url_path.file_stem()
-                    .ok_or_else(|| err!("Can't get repo name from {}", &git_url)));
-                let base_alias = try!(file_stem.to_str_or_err()).to_owned();
+                let file_stem = url_path.file_stem()
+                    .ok_or_else(|| err!("Can't get repo name from {}", &git_url))?;
+                let base_alias = file_stem.to_str_or_err()?.to_owned();
 
                 // Get the branch.  If available, this will be stored in the query.
                 match url.fragment() {
@@ -42,7 +42,7 @@ impl ContextExt for dc::Context {
                     .ok_or_else(|| {
                         err!("Can't get repo name from {}", &path.display())
                     }));
-                Ok(try!(file_stem.to_str_or_err()).to_owned())
+                Ok(file_stem.to_str_or_err()?.to_owned())
             }
         }
     }

@@ -163,33 +163,33 @@ fn run(matches: &clap::ArgMatches) -> Result<()> {
     // directory.
     match sc_name {
         "sysinfo" => {
-            try!(all_versions());
+            all_versions()?;
             return Ok(());
         }
         "new" => {
-            try!(cage::Project::generate_new(&try!(env::current_dir()),
-                                             sc_matches.value_of("NAME").unwrap()));
+            cage::Project::generate_new(&env::current_dir()?,
+                                        sc_matches.value_of("NAME").unwrap())?;
             return Ok(());
         }
         _ => {}
     }
 
     // Handle our standard arguments that apply to all subcommands.
-    let mut proj = try!(cage::Project::from_current_dir());
+    let mut proj = cage::Project::from_current_dir()?;
     if let Some(project_name) = matches.value_of("project-name") {
         proj.set_name(project_name);
     }
     if let Some(default_tags_path) = matches.value_of("default-tags") {
-        let f = try!(fs::File::open(default_tags_path));
+        let f = fs::File::open(default_tags_path)?;
         let reader = io::BufReader::new(f);
-        proj.set_default_tags(try!(cage::DefaultTags::read(reader)));
+        proj.set_default_tags(cage::DefaultTags::read(reader)?);
     }
-    try!(proj.set_current_target_name(matches.target_name()));
+    proj.set_current_target_name(matches.target_name())?;
 
     // Output our project's `*.yml` files for `docker-compose` if we'll
     // need it.
     if matches.should_output_project() {
-        try!(proj.output());
+        proj.output()?;
     }
 
     // Handle our subcommands that require a `Project`.
@@ -197,64 +197,64 @@ fn run(matches: &clap::ArgMatches) -> Result<()> {
     match sc_name {
         "status" => {
             let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE");
-            try!(proj.status(&runner, &acts_on));
+            proj.status(&runner, &acts_on)?;
         }
         "pull" => {
             let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE");
-            try!(proj.pull(&runner, &acts_on));
+            proj.pull(&runner, &acts_on)?;
         }
         "build" => {
             let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE");
             let opts = cage::args::opts::Empty;
-            try!(proj.compose(&runner, "build", &acts_on, &opts));
+            proj.compose(&runner, "build", &acts_on, &opts)?;
         }
         "up" => {
             let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE");
             let opts = cage::args::opts::Up::new(sc_matches.is_present("init"));
-            try!(proj.up(&runner, &acts_on, &opts));
+            proj.up(&runner, &acts_on, &opts)?;
         }
         "stop" => {
             let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE");
             let opts = cage::args::opts::Empty;
-            try!(proj.compose(&runner, "stop", &acts_on, &opts));
+            proj.compose(&runner, "stop", &acts_on, &opts)?;
         }
         "rm" => {
             let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE");
             let opts = sc_matches.to_rm_options();
-            try!(proj.compose(&runner, "rm", &acts_on, &opts));
+            proj.compose(&runner, "rm", &acts_on, &opts)?;
         }
         "run" => {
             let opts = sc_matches.to_run_options();
             let cmd = sc_matches.to_exec_command();
             let pod = sc_matches.value_of("POD").unwrap();
-            try!(proj.run(&runner, pod, cmd.as_ref(), &opts));
+            proj.run(&runner, pod, cmd.as_ref(), &opts)?;
         }
         "exec" => {
             let service = sc_matches.value_of("SERVICE").unwrap();
             let opts = sc_matches.to_exec_options();
             let cmd = sc_matches.to_exec_command().unwrap();
-            try!(proj.exec(&runner, &service, &cmd, &opts));
+            proj.exec(&runner, service, &cmd, &opts)?;
         }
         "shell" => {
             let service = sc_matches.value_of("SERVICE").unwrap();
             let opts = sc_matches.to_exec_options();
-            try!(proj.shell(&runner, &service, &opts));
+            proj.shell(&runner, service, &opts)?;
         }
         "test" => {
             let service = sc_matches.value_of("SERVICE").unwrap();
             let cmd = sc_matches.to_exec_command();
-            try!(proj.test(&runner, &service, cmd.as_ref()));
+            proj.test(&runner, service, cmd.as_ref())?;
         }
-        "source" => try!(run_source(&runner, &mut proj, sc_matches)),
-        "generate" => try!(run_generate(&runner, &proj, sc_matches)),
+        "source" => run_source(&runner, &mut proj, sc_matches)?,
+        "generate" => run_generate(&runner, &proj, sc_matches)?,
         "logs" => {
             let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE");
             let opts = sc_matches.to_logs_options();
-            try!(proj.logs(&runner, &acts_on, &opts));
+            proj.logs(&runner, &acts_on, &opts)?;
         }
         "export" => {
             let dir = sc_matches.value_of("DIR").unwrap();
-            try!(proj.export(&Path::new(dir)));
+            proj.export(Path::new(dir))?;
         }
         unknown => unreachable!("Unexpected subcommand '{}'", unknown),
     }
@@ -279,26 +279,26 @@ fn run_source<R>(runner: &R,
     match sc_name {
         "ls" => {
             re_output = false;
-            try!(proj.source_list(runner));
+            proj.source_list(runner)?;
         }
         "clone" => {
             let alias = sc_matches.value_of("ALIAS").unwrap();
-            try!(proj.source_clone(runner, alias));
+            proj.source_clone(runner, alias)?;
         }
         "mount" => {
             let alias = sc_matches.value_of("ALIAS").unwrap();
-            try!(proj.source_set_mounted(runner, alias, true));
+            proj.source_set_mounted(runner, alias, true)?;
         }
         "unmount" => {
             let alias = sc_matches.value_of("ALIAS").unwrap();
-            try!(proj.source_set_mounted(runner, alias, false));
+            proj.source_set_mounted(runner, alias, false)?;
         }
         unknown => unreachable!("Unexpected subcommand '{}'", unknown),
     }
 
     // Regenerate our output if it might have changed.
     if re_output {
-        try!(proj.output());
+        proj.output()?;
     }
 
     Ok(())
@@ -327,7 +327,7 @@ fn run_generate<R>(_runner: &R,
             let cli_yaml = load_yaml!("cli.yml");
             cli(cli_yaml).gen_completions("cage", shell, proj.root_dir());
         }
-        other => try!(proj.generate(other)),
+        other => proj.generate(other)?,
     }
     Ok(())
 }
@@ -344,9 +344,9 @@ fn all_versions() -> Result<()> {
 
     let runner = OsCommandRunner::new();
     for tool in &["docker", "docker-compose", "git"] {
-        try!(runner.build(tool)
+        runner.build(tool)
             .arg("--version")
-            .exec());
+            .exec()?;
     }
     Ok(())
 }

@@ -40,8 +40,8 @@ impl DefaultTags {
         let mut tags = BTreeMap::new();
         let reader = io::BufReader::new(r);
         for line_result in reader.lines() {
-            let line = try!(line_result);
-            let image = try!(dc::Image::from_str(&line));
+            let line = line_result?;
+            let image = dc::Image::from_str(&line)?;
             if let (key, Some(_)) = (image.without_tag(), image.tag.as_ref()) {
                 match tags.entry(key.to_owned()) {
                     btree_map::Entry::Vacant(vacant) => {

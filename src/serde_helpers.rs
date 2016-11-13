@@ -19,7 +19,7 @@ pub fn load_yaml<T>(path: &Path) -> Result<T, errors::Error>
     where T: Deserialize
 {
     let mkerr = || ErrorKind::CouldNotReadFile(path.to_owned());
-    let f = try!(fs::File::open(&path).chain_err(&mkerr));
+    let f = fs::File::open(&path).chain_err(&mkerr)?;
     serde_yaml::from_reader(io::BufReader::new(f)).chain_err(&mkerr)
 }
 
@@ -28,8 +28,8 @@ pub fn dump_yaml<T>(path: &Path, data: &T) -> Result<(), errors::Error>
     where T: Serialize
 {
     let mkerr = || ErrorKind::CouldNotWriteFile(path.to_owned());
-    try!(path.with_guaranteed_parent().chain_err(&mkerr));
-    let f = try!(fs::File::create(&path).chain_err(&mkerr));
+    path.with_guaranteed_parent().chain_err(&mkerr)?;
+    let f = fs::File::create(&path).chain_err(&mkerr)?;
     serde_yaml::to_writer(&mut io::BufWriter::new(f), data).chain_err(&mkerr)
 }
 
@@ -39,7 +39,8 @@ pub fn deserialize_parsable<D, T>(deserializer: &mut D) -> Result<T, D::Error>
           T: FromStr,
           <T as FromStr>::Err: Display
 {
-    try!(String::deserialize(deserializer))
+    String::deserialize(deserializer)
+        ?
         .parse()
         .map_err(|e| serde::Error::custom(format!("{}", e)))
 }

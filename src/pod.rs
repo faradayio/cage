@@ -52,11 +52,11 @@ impl FileInfo {
             rel_path: rel_path.to_owned(),
             file: if path.exists() {
                 debug!("Parsing {}", path.display());
-                try!(dc::File::read_from_path(&path).map_err(|e| {
-                    // Make sure we tie parse errors to a specific file, for
-                    // the sake of sanity.
-                    err!("Error parsing {}: {}", path.display(), e)
-                }))
+                dc::File::read_from_path(&path).map_err(|e| {
+                        // Make sure we tie parse errors to a specific file, for
+                        // the sake of sanity.
+                        err!("Error parsing {}: {}", path.display(), e)
+                    })?
             } else {
                 Default::default()
             },
@@ -146,14 +146,14 @@ impl Pod {
         // Load our `*.metadata.yml` file, if any.
         let config_path = base_dir.join(&format!("{}.metadata.yml", &name));
         let config: Config = if config_path.exists() {
-            try!(load_yaml(&config_path))
+            load_yaml(&config_path)?
         } else {
             Config::default()
         };
 
         // Load our main `*.yml` file.
         let rel_path = Path::new(&format!("{}.yml", &name)).to_owned();
-        let mut file_info = try!(FileInfo::unnormalized(&base_dir, &rel_path));
+        let mut file_info = FileInfo::unnormalized(&base_dir, &rel_path)?;
         file_info.finish_normalization();
         let service_names = file_info.file.services.keys().cloned().collect();
 
@@ -163,9 +163,8 @@ impl Pod {
             let target_rel_path =
                 Path::new(&format!("targets/{}/{}.yml", target.name(), &name))
                     .to_owned();
-            let mut target_info = try!(FileInfo::unnormalized(&base_dir,
-                                                              &target_rel_path));
-            try!(target_info.ensure_same_services(&rel_path, &service_names));
+            let mut target_info = FileInfo::unnormalized(&base_dir, &target_rel_path)?;
+            target_info.ensure_same_services(&rel_path, &service_names)?;
             target_info.finish_normalization();
             target_infos.insert(target.to_owned(), target_info);
         }
@@ -230,12 +229,12 @@ impl Pod {
 
     /// The path to the specificied target file for this pod.
     pub fn target_rel_path(&self, target: &Target) -> Result<&Path> {
-        Ok(&(try!(self.target_file_info(target)).rel_path))
+        Ok(&(self.target_file_info(target)?.rel_path))
     }
 
     /// The `dc::File` for this target.
     pub fn target_file(&self, target: &Target) -> Result<&dc::File> {
-        Ok(&(try!(self.target_file_info(target)).file))
+        Ok(&(self.target_file_info(target)?.file))
     }
 
     /// Return the base file and the target file merged into a single
@@ -243,7 +242,7 @@ impl Pod {
     pub fn merged_file(&self, target: &Target) -> Result<dc::File> {
         // This is expensive so log it.
         debug!("Merging pod {} with target {}", self.name(), target.name());
-        Ok(self.file().merge_override(try!(self.target_file(target))))
+        Ok(self.file().merge_override(self.target_file(target)?))
     }
 
     /// All the targets associated with this pod.
@@ -263,21 +262,19 @@ impl Pod {
 
     /// Look up a service by name.
     pub fn service(&self, target: &Target, name: &str) -> Result<Option<dc::Service>> {
-        let file = try!(self.merged_file(target));
+        let file = self.merged_file(target)?;
         Ok(file.services.get(name).cloned())
     }
 
     /// Like `service`, but returns an error if the service can't be found.
     pub fn service_or_err(&self, target: &Target, name: &str) -> Result<dc::Service> {
-        try!(self.service(target, name))
+        self.service(target, name)?
             .ok_or_else(|| ErrorKind::UnknownService(name.to_owned()).into())
     }
 
     /// Command-line `-p` and `-f` arguments that we'll pass to
     /// `docker-compose` to describe this file.
-    pub fn compose_args(&self,
-                        proj: &Project)
-                        -> Result<Vec<OsString>> {
+    pub fn compose_args(&self, proj: &Project) -> Result<Vec<OsString>> {
         Ok(vec!["-p".into(),
                 proj.compose_name().into(),
                 "-f".into(),

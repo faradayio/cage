@@ -53,7 +53,7 @@ impl Sources {
                   context: &dc::Context)
                   -> Result<String> {
         // Figure out what alias we want to use.
-        let alias = try!(context.human_alias());
+        let alias = context.human_alias()?;
 
         // Look up whether we've mounted this container or not.
         let mounted = mounted_sources.get(&alias).cloned().unwrap_or(true);
@@ -94,7 +94,7 @@ impl Sources {
         // Load our `mounted` state, if we've saved it previously.
         let mounted_path = output_dir.join(MOUNTED_YML);
         let mounted: BTreeMap<String, bool> = if mounted_path.exists() {
-            try!(load_yaml(&mounted_path))
+            load_yaml(&mounted_path)?
         } else {
             Default::default()
         };
@@ -103,8 +103,8 @@ impl Sources {
         for pod in pods {
             for file in pod.all_files() {
                 for service in file.services.values() {
-                    if let Some(context) = try!(service.context()) {
-                        try!(Self::add_source(&mut sources, &mounted, context));
+                    if let Some(context) = service.context()? {
+                        Self::add_source(&mut sources, &mounted, context)?;
                     }
                 }
             }
@@ -113,10 +113,10 @@ impl Sources {
         // Scan our config files for more source trees.
         let path = root_dir.join(SOURCES_YML);
         if path.exists() {
-            let libs: BTreeMap<String, SourceConfig> = try!(load_yaml(&path));
+            let libs: BTreeMap<String, SourceConfig> = load_yaml(&path)?;
             for (lib_key, lib_info) in &libs {
-                let context = try!(lib_info.context.value());
-                let alias = try!(Self::add_source(&mut sources, &mounted, &context));
+                let context = lib_info.context.value()?;
+                let alias = Self::add_source(&mut sources, &mounted, context)?;
                 lib_keys.insert(lib_key.clone(), alias);
             }
         }
@@ -167,7 +167,7 @@ impl Sources {
                 mounted.insert(source.alias(), source.mounted());
             }
         }
-        try!(dump_yaml(&out_dir.join(MOUNTED_YML), &mounted));
+        dump_yaml(&out_dir.join(MOUNTED_YML), &mounted)?;
 
         Ok(())
     }
@@ -250,10 +250,10 @@ impl Source {
         where CR: CommandRunner
     {
         if let dc::Context::GitUrl(ref git_url) = self.context {
-            let dest = try!(self.path(project).with_guaranteed_parent());
+            let dest = self.path(project).with_guaranteed_parent()?;
             runner.build("git")
                 .arg("clone")
-                .args(&try!(git_url.clone_args()))
+                .args(&git_url.clone_args()?)
                 .arg(&dest)
                 .exec()
         } else {
@@ -265,7 +265,7 @@ impl Source {
     /// repository by creating an empty directory in the right place.
     #[cfg(test)]
     pub fn fake_clone_source(&self, project: &Project) -> Result<()> {
-        try!(fs::create_dir_all(self.path(project)));
+        fs::create_dir_all(self.path(project))?;
         Ok(())
     }
 }

@@ -79,13 +79,13 @@ impl ConductorPathExt for Path {
         };
 
         // Construct a full glob and run it.
-        let pat = format!("{}/{}", try!(self.to_str_or_err()), pattern);
-        Ok(try!(glob::glob_with(&pat, &opts)))
+        let pat = format!("{}/{}", self.to_str_or_err()?, pattern);
+        Ok(glob::glob_with(&pat, &opts)?)
     }
 
     fn with_guaranteed_parent(&self) -> Result<PathBuf> {
-        let parent = try!(self.parent()
-            .ok_or_else(|| err!("can't find parent path of {}", self.display())));
+        let parent = self.parent()
+            .ok_or_else(|| err!("can't find parent path of {}", self.display()))?;
 
         // Take an error message and elaborate a bit.  We use a trait
         // pointer here so we can use this for multiple error types,
@@ -116,12 +116,12 @@ impl ConductorPathExt for Path {
         });
         // Unwrap twice: Outer error is a possible retry failure, inner
         // error is a filesystem error.
-        try!(try!(retry_result.map_err(|e| wrap_err(&e))).map_err(|e| wrap_err(&e)));
+        retry_result.map_err(|e| wrap_err(&e))?.map_err(|e| wrap_err(&e))?;
         Ok(self.to_owned())
     }
 
     fn to_absolute(&self) -> Result<PathBuf> {
-        let path = try!(env::current_dir()).join(self);
+        let path = env::current_dir()?.join(self);
         assert!(path.is_absolute());
         Ok(path)
     }

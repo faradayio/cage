@@ -57,12 +57,12 @@ impl PluginTransform for Plugin {
         // Update each service to point to our locally cloned sources.
         let project = ctx.project;
         for service in &mut file.services.values_mut() {
-            for sources_result in try!(service.sources(project.sources())) {
-                let (mount_as, source) = try!(sources_result);
+            for sources_result in service.sources(project.sources())? {
+                let (mount_as, source) = sources_result?;
                 if source.is_available_locally(project) && source.mounted() {
                     // Build an absolute path to our source's local
                     // directory.
-                    let path = try!(source.path(project).to_absolute());
+                    let path = source.path(project).to_absolute()?;
 
                     // Add a mount point to the container.
                     let mount = dc::VolumeMount::host(&path, mount_as);
@@ -71,7 +71,7 @@ impl PluginTransform for Plugin {
                     // Update the `build` field if it's present and it
                     // corresponds to this `Source`.
                     if let Some(ref mut build) = service.build {
-                        if source.context() == try!(build.context.value()) {
+                        if source.context() == build.context.value()? {
                             build.context = dc::value(dc::Context::Dir(path));
                         }
                     }

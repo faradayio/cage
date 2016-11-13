@@ -51,23 +51,23 @@ impl PluginTransform for Plugin {
         for service in file.services.values_mut() {
             // Handle relative paths in `build:`.
             if let Some(ref mut build) = service.build {
-                let context: &mut _ = try!(build.context.value_mut());
+                let context: &mut _ = build.context.value_mut()?;
                 if let dc::Context::Dir(ref mut path) = *context {
-                    let new_path = try!(ctx.project
+                    let new_path = ctx.project
                         .pods_dir()
                         .join(&path)
-                        .to_absolute());
+                        .to_absolute()?;
                     *path = new_path;
                 }
             }
 
             for volume in &mut service.volumes {
-                let volume = try!(volume.value_mut());
+                let volume = volume.value_mut()?;
                 // TODO LOW: Move to `dc` library.
                 let new_host = match volume.host {
                     Some(dc::HostVolume::Path(ref path)) if path.is_relative() => {
                         let new_path = ctx.project.pods_dir().join(path);
-                        Some(dc::HostVolume::Path(try!(new_path.to_absolute())))
+                        Some(dc::HostVolume::Path(new_path.to_absolute()?))
                     }
                     Some(dc::HostVolume::UserRelativePath(ref path))
                         if path.is_relative() => {
@@ -75,7 +75,7 @@ impl PluginTransform for Plugin {
                         let home = try!(env::home_dir()
                             .ok_or_else(|| err("Cannot find HOME directory")));
                         let new_path = home.join(path);
-                        Some(dc::HostVolume::Path(try!(new_path.to_absolute())))
+                        Some(dc::HostVolume::Path(new_path.to_absolute()?))
                     }
                     ref other => other.to_owned(),
                 };

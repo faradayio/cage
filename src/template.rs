@@ -53,8 +53,8 @@ impl Template {
                 // Make sure it doesn't belong to a child template.
                 if !rel.starts_with('_') && !rel.contains("/_") {
                     // Load this file and add it to our list.
-                    let raw_data = try!(data::DATA.get(key)).into_owned();
-                    let data = try!(String::from_utf8(raw_data));
+                    let raw_data = data::DATA.get(key)?.into_owned();
+                    let data = String::from_utf8(raw_data)?;
                     files.insert(Path::new(rel).to_owned(), data);
                 }
             }
@@ -85,21 +85,21 @@ impl Template {
         for (rel_path, tmpl) in &self.files {
             let path = target_dir.join(rel_path);
             debug!("Output {}", path.display());
-            try!(writeln!(out, "Generating: {}", rel_path.display()));
+            writeln!(out, "Generating: {}", rel_path.display())?;
             let mkerr = || ErrorKind::CouldNotWriteFile(path.clone());
 
             // Make sure our parent directory exists.
-            try!(path.with_guaranteed_parent());
+            path.with_guaranteed_parent()?;
 
             // Create our output file.
-            let out = try!(fs::File::create(&path).chain_err(&mkerr));
+            let out = fs::File::create(&path).chain_err(&mkerr)?;
             let mut writer = io::BufWriter::new(out);
 
             // Render our template to the file.
             let ctx = hb::Context::wraps(&json);
-            try!(self.handlebars
+            self.handlebars
                 .template_renderw(tmpl, &ctx, &mut writer)
-                .chain_err(&mkerr));
+                .chain_err(&mkerr)?;
         }
         Ok(())
     }

@@ -51,16 +51,12 @@ impl CommandCompose for Project {
         where CR: CommandRunner
     {
         for pod_or_service in act_on.pods_or_services(self) {
-            match try!(pod_or_service) {
+            match pod_or_service? {
                 PodOrService::Pod(pod) => {
-                    try!(self.compose_pod(runner, command, pod, opts));
+                    self.compose_pod(runner, command, pod, opts)?;
                 }
                 PodOrService::Service(pod, service_name) => {
-                    try!(self.compose_service(runner,
-                                              command,
-                                              pod,
-                                              service_name,
-                                              opts));
+                    self.compose_service(runner, command, pod, service_name, opts)?;
                 }
             }
         }
@@ -77,11 +73,11 @@ impl CommandCompose for Project {
         where CR: CommandRunner
     {
         if pod.enabled_in(self.current_target()) {
-            try!(runner.build("docker-compose")
-                .args(&try!(pod.compose_args(self)))
+            runner.build("docker-compose")
+                .args(&pod.compose_args(self)?)
                 .arg(command)
                 .args(&opts.to_args())
-                .exec());
+                .exec()?;
         }
         Ok(())
     }
@@ -96,12 +92,12 @@ impl CommandCompose for Project {
         where CR: CommandRunner
     {
         if pod.enabled_in(self.current_target()) {
-            try!(runner.build("docker-compose")
-                .args(&try!(pod.compose_args(self)))
+            runner.build("docker-compose")
+                .args(&pod.compose_args(self)?)
                 .arg(command)
                 .args(&opts.to_args())
                 .arg(service_name)
-                .exec());
+                .exec()?;
         }
         Ok(())
     }

@@ -30,18 +30,18 @@ impl RuntimeState {
     fn for_project_inner(project: &Project) -> Result<RuntimeState> {
         let name = project.compose_name();
         let target = project.current_target().name().to_owned();
-        let docker = try!(boondock::Docker::connect_with_defaults());
+        let docker = boondock::Docker::connect_with_defaults()?;
 
         let mut services = BTreeMap::new();
         let opts = boondock::ContainerListOptions::default().all();
-        let containers = try!(docker.containers(opts));
+        let containers = docker.containers(opts)?;
         for container in &containers {
-            let info = try!(docker.container_info(&container));
+            let info = docker.container_info(container)?;
             let labels = &info.Config.Labels;
             if labels.get("com.docker.compose.project") == Some(&name) &&
                labels.get("io.fdy.cage.target") == Some(&target) {
                 if let Some(service) = labels.get("com.docker.compose.service") {
-                    let our_info = try!(ContainerInfo::new(&info));
+                    let our_info = ContainerInfo::new(&info)?;
                     services.entry(service.to_owned())
                         .or_insert_with(Vec::new)
                         .push(our_info);
@@ -84,8 +84,8 @@ impl ContainerInfo {
         // Get an IP address for this running container.
         let raw_ip_addr = &info.NetworkSettings.IPAddress[..];
         let ip_addr = if raw_ip_addr != "" {
-            Some(try!(raw_ip_addr.parse()
-                .chain_err(|| ErrorKind::parse("IP address", raw_ip_addr))))
+            Some(raw_ip_addr.parse()
+                .chain_err(|| ErrorKind::parse("IP address", raw_ip_addr))?)
         } else {
             None
         };
@@ -99,12 +99,10 @@ impl ContainerInfo {
                         .unwrap();
                 }
                 if let Some(caps) = TCP_PORT.captures(port_str) {
-                    let port = try!(caps.at(1)
+                    let port = caps.at(1)
                         .unwrap()
                         .parse()
-                        .chain_err(|| {
-                            ErrorKind::parse("TCP port", port_str.clone())
-                        }));
+                        .chain_err(|| ErrorKind::parse("TCP port", port_str.clone()))?;
                     ports.push(port);
                 }
             }

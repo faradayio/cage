@@ -45,15 +45,15 @@ impl CommandUp for Project {
                 }
             });
         for pod_or_service in pods_or_services {
-            match try!(pod_or_service) {
+            match pod_or_service? {
                 PodOrService::Pod(pod) => {
-                    try!(self.compose_pod(runner, "up", pod, opts));
+                    self.compose_pod(runner, "up", pod, opts)?;
                     if opts.init {
-                        try!(self.init_pod(runner, pod));
+                        self.init_pod(runner, pod)?;
                     }
                 }
                 PodOrService::Service(pod, service_name) => {
-                    try!(self.compose_service(runner, "up", pod, service_name, opts));
+                    self.compose_service(runner, "up", pod, service_name, opts)?;
                 }
             }
         }
@@ -72,7 +72,7 @@ impl CommandUp for Project {
         println!("Waiting for pod '{}' to be listening on all ports",
                  pod.name());
         loop {
-            let state: RuntimeState = try!(RuntimeState::for_project(self));
+            let state: RuntimeState = RuntimeState::for_project(self)?;
             let listening = pod.service_names()
                 .iter()
                 .map(|service_name| {
@@ -111,7 +111,7 @@ impl CommandUp for Project {
                 None
             };
             let opts = args::opts::Run::default();
-            try!(self.run(runner, pod_name, cmd.as_ref(), &opts));
+            self.run(runner, pod_name, cmd.as_ref(), &opts)?;
         }
         Ok(())
     }

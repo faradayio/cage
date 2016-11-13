@@ -41,9 +41,9 @@ impl CommandExec for Project {
                 -> Result<()>
         where CR: CommandRunner
     {
-        let (pod, service_name) = try!(self.service_or_err(service_name));
+        let (pod, service_name) = self.service_or_err(service_name)?;
         runner.build("docker-compose")
-            .args(&try!(pod.compose_args(self)))
+            .args(&pod.compose_args(self)?)
             .arg("exec")
             .args(&opts.to_args())
             .arg(service_name)
@@ -67,9 +67,9 @@ impl CommandExec for Project {
         }
 
         let target = self.current_target();
-        let (pod, service_name) = try!(self.service_or_err(service_name));
-        let service = try!(pod.service_or_err(target, service_name));
-        let shell = try!(service.shell());
+        let (pod, service_name) = self.service_or_err(service_name)?;
+        let service = pod.service_or_err(target, service_name)?;
+        let shell = service.shell()?;
         self.exec(runner, service_name, &args::Command::new(shell), opts)
     }
 }

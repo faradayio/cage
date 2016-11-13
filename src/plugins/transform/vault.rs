@@ -30,14 +30,14 @@ include!(concat!(env!("OUT_DIR"), "/plugins/transform/vault_config.rs"));
 /// Load a vault token from `~/.vault-token`, where the command line client
 /// puts it.
 fn load_vault_token_from_file() -> Result<String> {
-    let path = try!(env::home_dir()
-            .ok_or_else(|| err("You do not appear to have a home directory")))
+    let path = env::home_dir()
+        .ok_or_else(|| err("You do not appear to have a home directory"))?
         .join(".vault-token");
     let mkerr = || ErrorKind::CouldNotReadFile(path.clone());
-    let f = try!(fs::File::open(&path).chain_err(&mkerr));
+    let f = fs::File::open(&path).chain_err(&mkerr)?;
     let mut reader = io::BufReader::new(f);
     let mut result = String::new();
-    try!(reader.read_to_string(&mut result).chain_err(&mkerr));
+    reader.read_to_string(&mut result).chain_err(&mkerr)?;
     Ok(result.trim().to_owned())
 }
 
@@ -146,10 +146,10 @@ struct Vault {
 impl Vault {
     /// Create a new vault client.
     fn new() -> Result<Vault> {
-        let mut addr = try!(env::var("VAULT_ADDR").map_err(|_| {
-            err("Please set the environment variable VAULT_ADDR to the URL of \
-                 your vault server")
-        }));
+        let mut addr = env::var("VAULT_ADDR").map_err(|_| {
+                err("Please set the environment variable VAULT_ADDR to the URL of \
+                     your vault server")
+            })?;
         // TODO MED: Temporary fix because of broken URL handling in
         // hashicorp_vault.  Upstream bug:
         // https://github.com/ChrisMacNaughton/vault-rs/issues/14
@@ -157,7 +157,7 @@ impl Vault {
             let new_len = addr.len() - 1;
             addr.truncate(new_len);
         }
-        let token = try!(find_vault_token());
+        let token = find_vault_token()?;
         Ok(Vault {
             addr: addr,
             token: token,
@@ -182,14 +182,13 @@ impl GenerateToken for Vault {
         // probably not the worst idea, because it uses `hyper` for HTTP,
         // and `hyper` HTTP connections used to have expiration issues that
         // were tricky for clients to deal with correctly.
-        let client = try!(vault::Client::new(&self.addr, &self.token)
-            .chain_err(&mkerr));
+        let client = vault::Client::new(&self.addr, &self.token).chain_err(&mkerr)?;
         let opts = vault::client::TokenOptions::default()
             .display_name(display_name)
             .renewable(true)
             .ttl(ttl)
             .policies(policies);
-        let auth = try!(client.create_token(&opts).chain_err(&mkerr));
+        let auth = client.create_token(&opts).chain_err(&mkerr)?;
         Ok(auth.client_token)
     }
 }
@@ -217,7 +216,7 @@ impl Plugin {
     {
         let path = Self::config_path(project);
         let config = if path.exists() {
-            Some(try!(load_yaml(&path)))
+            Some(load_yaml(&path)?)
         } else {
             None
         };
@@ -248,8 +247,8 @@ impl PluginNew for Plugin {
         // An annoying special case.  We may be called as a code generator,
         // in which case we don't want to try to create a `GenerateToken`
         // instance.
-        let token_gen = if try!(Self::is_configured_for(project)) {
-            Some(try!(Vault::new()))
+        let token_gen = if Self::is_configured_for(project)? {
+            Some(Vault::new()?)
         } else {
             None
         };
@@ -297,7 +296,7 @@ impl PluginTransform for Plugin {
             // `RawOr<String>` values using `env`.
             let interpolated = |raw_val: &dc::RawOr<String>| -> Result<String> {
                 let mut val = raw_val.to_owned();
-                Ok(try!(val.interpolate_env(&env)).to_owned())
+                Ok(val.interpolate_env(&env)?.to_owned())
             };
 
             // Insert our VAULT_ADDR value into the generated files.
@@ -315,7 +314,7 @@ impl PluginTransform for Plugin {
             let mut policies = vec![];
             for result in raw_policies.iter().map(|p| interpolated(p)) {
                 // We'd like to use std::result::fold here but it's unstable.
-                policies.push(try!(result));
+                policies.push(result?);
             }
             debug!("Generating token for '{}' with policies {:?}",
                    name,
@@ -328,13 +327,14 @@ impl PluginTransform for Plugin {
                                        ctx.pod.name(),
                                        name);
             let ttl = VaultDuration::seconds(config.default_ttl);
-            let token = try!(generator.generate_token(&display_name, policies, ttl)
-                .chain_err(|| format!("could not generate token for '{}'", name)));
+            let token = generator.generate_token(&display_name, policies, ttl)
+                .chain_err(|| format!("could not generate token for '{}'", name))?;
             service.environment.insert("VAULT_TOKEN".to_owned(), dc::escape(token)?);
 
             // Add in any extra environment variables.
             for (var, val) in &config.extra_environment {
-                service.environment.insert(var.to_owned(), dc::escape(try!(interpolated(val)))?);
+                service.environment
+                    .insert(var.to_owned(), dc::escape(interpolated(val)?)?);
             }
         }
         Ok(())
@@ -361,12 +361,12 @@ fn interpolates_policies() {
     let mut file = frontend.merged_file(proj.current_target()).unwrap();
     plugin.transform(Operation::Output, &ctx, &mut file).unwrap();
     let web = file.services.get("web").unwrap();
-    assert_eq!(web.environment.get("VAULT_ADDR").expect("has VAULT_ADDR").value().unwrap(),
-               "http://example.com:8200/");
-    assert_eq!(web.environment.get("VAULT_TOKEN").expect("has VAULT_TOKEN").value().unwrap(),
-               "fake_token");
-    assert_eq!(web.environment.get("VAULT_ENV").expect("has VAULT_ENV").value().unwrap(),
-               "production");
+    let vault_addr = web.environment.get("VAULT_ADDR").expect("has VAULT_ADDR");
+    assert_eq!(vault_addr.value().unwrap(), "http://example.com:8200/");
+    let vault_token = web.environment.get("VAULT_TOKEN").expect("has VAULT_TOKEN");
+    assert_eq!(vault_token.value().unwrap(), "fake_token");
+    let vault_env = web.environment.get("VAULT_ENV").expect("has VAULT_ENV");
+    assert_eq!(vault_env.value().unwrap(), "production");
 
     let calls = calls.read().unwrap();
     assert_eq!(calls.len(), 1);

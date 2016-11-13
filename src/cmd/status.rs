@@ -26,19 +26,15 @@ impl CommandStatus for Project {
     fn status<CR>(&self, _runner: &CR, act_on: &args::ActOn) -> Result<()>
         where CR: CommandRunner
     {
-        let state = try!(RuntimeState::for_project(self));
+        let state = RuntimeState::for_project(self)?;
         for pod_or_service in act_on.pods_or_services(self) {
-            match try!(pod_or_service) {
-                PodOrService::Pod(pod) => try!(self.pod_status(&state, pod)),
+            match pod_or_service? {
+                PodOrService::Pod(pod) => self.pod_status(&state, pod)?,
                 PodOrService::Service(pod, service_name) => {
-                    try!(self.pod_header(pod));
+                    self.pod_header(pod)?;
                     let service = try!(pod.service_or_err(self.current_target(),
                                                           service_name));
-                    try!(self.service_status(&state,
-                                             pod,
-                                             service_name,
-                                             &service,
-                                             true));
+                    self.service_status(&state, pod, service_name, &service, true)?;
                 }
             }
         }
@@ -63,14 +59,14 @@ impl Project {
 
     /// Display information about a pod and its services.
     fn pod_status(&self, state: &RuntimeState, pod: &Pod) -> Result<()> {
-        try!(self.pod_header(pod));
-        let file = try!(pod.merged_file(self.current_target()));
+        self.pod_header(pod)?;
+        let file = pod.merged_file(self.current_target())?;
         for (i, (service_name, service)) in file.services.iter().enumerate() {
-            try!(self.service_status(state,
-                                     pod,
-                                     service_name,
-                                     service,
-                                     i + 1 == file.services.len()));
+            self.service_status(state,
+                                pod,
+                                service_name,
+                                service,
+                                i + 1 == file.services.len())?;
         }
         Ok(())
     }
@@ -101,9 +97,9 @@ impl Project {
         }
 
         // Print out ports with known host bindings.
-        let ports: Vec<String> = try!(service.ports
+        let ports: Vec<String> = service.ports
             .iter()
-            .map(|port| Ok(try!(port.value()).host_string()))
+            .map(|port| Ok(port.value()?.host_string()))
             .filter_map(|result| {
                 match result {
                     Ok(Some(val)) => Some(Ok(val)),
@@ -111,18 +107,18 @@ impl Project {
                     Err(err) => Some(Err(err)),
                 }
             })
-            .collect::<Result<_>>());
+            .collect::<Result<_>>()?;
         if !ports.is_empty() {
             print!(" ports:{}", ports.join(","));
         }
 
         // Print out mounted source code.
-        let sources: Vec<&Source> = try!(try!(service.sources(self.sources()))
-                .map(|source_result| {
-                    let (_, source) = try!(source_result);
-                    Ok(source)
-                })
-                .collect::<Result<_>>());
+        let sources: Vec<&Source> = service.sources(self.sources())?
+            .map(|source_result| {
+                let (_, source) = source_result?;
+                Ok(source)
+            })
+            .collect::<Result<_>>()?;
         let source_names: Vec<&str> = sources.iter()
             .filter(|s| s.is_available_locally(self) && s.mounted())
             .map(|s| s.alias())
