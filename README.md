@@ -1,6 +1,6 @@
 # Cage: Develop and deploy complex Docker applications
 
-[![Latest version](https://img.shields.io/crates/v/cage.svg)](https://crates.io/crates/cage) [![License](https://img.shields.io/crates/l/cage.svg)](https://opensource.org/licenses/MIT) [![Build Status](https://travis-ci.org/faradayio/cage.svg?branch=master)](https://travis-ci.org/faradayio/cage) [![Documentation](https://img.shields.io/badge/documentation-docs.rs-yellow.svg)](https://docs.rs/cage/)
+[![Latest version](https://img.shields.io/crates/v/cage.svg)](https://crates.io/crates/cage) [![License](https://img.shields.io/crates/l/cage.svg)](https://opensource.org/licenses/MIT) [![Build Status](https://travis-ci.org/faradayio/cage.svg?branch=master)](https://travis-ci.org/faradayio/cage) [![Build status](https://ci.appveyor.com/api/projects/status/3hn8cwckcdhpcasm/branch/master?svg=true)](https://ci.appveyor.com/project/emk/cage/branch/master) [![Documentation](https://img.shields.io/badge/documentation-docs.rs-yellow.svg)](https://docs.rs/cage/) [![Gitter](https://badges.gitter.im/faradayio/cage.svg)](https://gitter.im/faradayio/cage?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 <a href="http://cage.faraday.io/">
   <img src="http://cage.faraday.io/assets/cage-logo.svg" alt="Logo"
