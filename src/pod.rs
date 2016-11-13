@@ -52,10 +52,10 @@ impl FileInfo {
             rel_path: rel_path.to_owned(),
             file: if path.exists() {
                 debug!("Parsing {}", path.display());
-                dc::File::read_from_path(&path).map_err(|e| {
+                dc::File::read_from_path(&path).chain_err(|| {
                         // Make sure we tie parse errors to a specific file, for
                         // the sake of sanity.
-                        err!("Error parsing {}: {}", path.display(), e)
+                        ErrorKind::CouldNotReadFile(path.clone())
                     })?
             } else {
                 Default::default()

@@ -14,8 +14,8 @@ services:
       - "8080:80"
     links:
       - "web"
-    volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock"
+    #volumes:
+    #  - "/var/run/docker.sock:/var/run/docker.sock"
     # We can use `org.fdy.cage` labels to override some common
     # defaults.
     labels:
