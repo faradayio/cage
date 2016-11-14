@@ -35,7 +35,7 @@ after_help: |
 
       cage source ls                 # List available service source code
       cage source mount rails_hello  # Clone source and configure mounts
-      cage up                        # Restart application
+      cage up                        # Restart any affected services
       cage status                    # See how things have changed
 
   Now create `src/rails_hello/public/index.html` and reload in your browser.
@@ -77,8 +77,12 @@ subcommands:
             long: "init"
             help: "Run any pod initialization commands (for first startup)"
         - POD_OR_SERVICE: *pod_or_service
+  - restart:
+      about: "Restart all services associated with this project"
+      args:
+        - POD_OR_SERVICE: *pod_or_service
   - stop:
-      about: "Stop all containers associated with project"
+      about: "Stop all containers associated with this project"
       args:
         - POD_OR_SERVICE: *pod_or_service
   - rm:

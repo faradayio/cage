@@ -43,7 +43,8 @@ trait ArgMatchesExt {
     fn target_name(&self) -> &str;
 
     /// Determine what pods or services we're supposed to act on.
-    fn to_acts_on(&self, arg_name: &str) -> cage::args::ActOn;
+    fn to_acts_on(&self, arg_name: &str, include_tasks: bool)
+                  -> cage::args::ActOn;
 
     /// Extract options shared by `exec` and `run` from our command-line
     /// arguments.
@@ -81,14 +82,19 @@ impl<'a> ArgMatchesExt for clap::ArgMatches<'a> {
             })
     }
 
-    fn to_acts_on(&self, arg_name: &str) -> cage::args::ActOn {
+    fn to_acts_on(&self, arg_name: &str, include_tasks: bool)
+                  -> cage::args::ActOn {
         let names: Vec<String> = self.values_of(arg_name)
             .map_or_else(|| vec![], |p| p.collect())
             .iter()
             .map(|p| p.to_string())
             .collect();
         if names.is_empty() {
-            cage::args::ActOn::All
+            if include_tasks {
+                cage::args::ActOn::All
+            } else {
+                cage::args::ActOn::AllExceptTasks
+            }
         } else {
             cage::args::ActOn::Named(names)
         }
@@ -196,30 +202,35 @@ fn run(matches: &clap::ArgMatches) -> Result<()> {
     let runner = OsCommandRunner::new();
     match sc_name {
         "status" => {
-            let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE");
+            let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE", true);
             proj.status(&runner, &acts_on)?;
         }
         "pull" => {
-            let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE");
+            let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE", true);
             proj.pull(&runner, &acts_on)?;
         }
         "build" => {
-            let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE");
+            let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE", true);
             let opts = cage::args::opts::Empty;
             proj.compose(&runner, "build", &acts_on, &opts)?;
         }
         "up" => {
-            let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE");
+            let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE", false);
             let opts = cage::args::opts::Up::new(sc_matches.is_present("init"));
             proj.up(&runner, &acts_on, &opts)?;
         }
+        "restart" => {
+            let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE", false);
+            let opts = cage::args::opts::Empty;
+            proj.compose(&runner, "restart", &acts_on, &opts)?;
+        }
         "stop" => {
-            let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE");
+            let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE", false);
             let opts = cage::args::opts::Empty;
             proj.compose(&runner, "stop", &acts_on, &opts)?;
         }
         "rm" => {
-            let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE");
+            let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE", true);
             let opts = sc_matches.to_rm_options();
             proj.compose(&runner, "rm", &acts_on, &opts)?;
         }
@@ -248,7 +259,7 @@ fn run(matches: &clap::ArgMatches) -> Result<()> {
         "source" => run_source(&runner, &mut proj, sc_matches)?,
         "generate" => run_generate(&runner, &proj, sc_matches)?,
         "logs" => {
-            let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE");
+            let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE", true);
             let opts = sc_matches.to_logs_options();
             proj.logs(&runner, &acts_on, &opts)?;
         }
