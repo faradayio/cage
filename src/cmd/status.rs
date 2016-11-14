@@ -46,7 +46,7 @@ impl Project {
     /// Display information about a pod, but not any of its services.
     fn pod_header(&self, pod: &Pod) -> Result<()> {
         let enabled = if pod.enabled_in(self.current_target()) {
-            "enabled".green().bold()
+            "enabled".normal()
         } else {
             "disabled".red().bold()
         };
@@ -80,9 +80,9 @@ impl Project {
                       last: bool)
                       -> Result<()> {
         if last {
-            print!("└─ {:12}", service_name.blue());
+            print!("└─ {:12}", service_name.blue().bold());
         } else {
-            print!("├─ {:12}", service_name.blue());
+            print!("├─ {:12}", service_name.blue().bold());
         }
 
         // Print out our runtime status.
