@@ -25,6 +25,7 @@ use plugins::{self, Operation};
 use pod::{Pod, PodType};
 use sources::Sources;
 use rayon::prelude::*;
+use runtime_state::RuntimeState;
 use rustc_serialize::json::{Json, ToJson};
 use serde_helpers::deserialize_parsable_opt;
 use service_locations::ServiceLocations;
@@ -407,6 +408,21 @@ impl Project {
     /// Save persistent project settings to disk.
     pub fn save_settings(&mut self) -> Result<()> {
         self.sources.save_settings(&self.output_dir)
+    }
+
+    /// Find all enabled pods which do not appear to be running.
+    pub fn enabled_pods_that_are_not_running(&self) -> Result<Vec<&Pod>> {
+        let mut result = vec![];
+        let state = RuntimeState::for_project(self)?;
+        for pod in self.pods() {
+            if pod.enabled_in(&self.current_target) &&
+                pod.pod_type() != PodType::Task &&
+                !state.all_services_in_pod_are_running(pod)
+            {
+                result.push(pod);
+            }
+        }
+        Ok(result)
     }
 
     /// Process our pods, flattening and transforming them using our

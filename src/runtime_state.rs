@@ -6,6 +6,7 @@ use std::collections::BTreeMap;
 use std::net;
 
 use errors::*;
+use pod::Pod;
 use project::Project;
 
 /// Everything we know about the running application, based on querying Docker.
@@ -51,6 +52,24 @@ impl RuntimeState {
         Ok(RuntimeState { services: services })
     }
 
+    /// Is the specified pod running?
+    pub fn all_services_in_pod_are_running(&self, pod: &Pod) -> bool {
+        for service_name in pod.service_names() {
+            let containers = self.service_containers(service_name).iter()
+                .filter(|c| !c.is_one_off())
+                .collect::<Vec<_>>();
+            if containers.is_empty() {
+                // No containers are associated with this service.
+                return false;
+            }
+            if containers.iter().any(|c| c.state() != ContainerStatus::Running) {
+                // We have at least one container which isn't running.
+                return false;
+            }
+        }
+        true
+    }
+
     /// Get the containers associated with a service.  This will return the
     /// empty list if it can't find any containers related to the specified
     /// `service_name`.
@@ -67,6 +86,9 @@ pub struct ContainerInfo {
     /// The name of this container.
     name: String,
 
+    /// Was this a one-off container?
+    is_one_off: bool,
+
     /// The current state of this container.
     state: ContainerStatus,
 
@@ -81,6 +103,10 @@ pub struct ContainerInfo {
 impl ContainerInfo {
     /// Construct our summary from the raw data returned by Docker.
     fn new(info: &boondock::container::ContainerInfo) -> Result<ContainerInfo> {
+        // Was this a one-off container?
+        let one_off_label = info.Config.Labels.get("com.docker.compose.oneoff");
+        let is_one_off = Some("True") == one_off_label.map(|s| &s[..]);
+
         // Get an IP address for this running container.
         let raw_ip_addr = &info.NetworkSettings.IPAddress[..];
         let ip_addr = if raw_ip_addr != "" {
@@ -110,10 +136,16 @@ impl ContainerInfo {
 
         Ok(ContainerInfo {
             name: info.Name.to_owned(),
+            is_one_off: is_one_off,
             state: ContainerStatus::new(&info.State),
             ip_addr: ip_addr,
             container_tcp_ports: ports,
         })
+    }
+
+    /// Is this a one-off container created by `docker-compose run`?
+    pub fn is_one_off(&self) -> bool {
+        self.is_one_off
     }
 
     /// The current state of this container.
@@ -160,7 +192,7 @@ impl ContainerInfo {
 }
 
 /// Is a Docker container running? Stopped?
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ContainerStatus {
     /// The container has been created.
     Created,

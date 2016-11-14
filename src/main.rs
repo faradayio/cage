@@ -10,11 +10,13 @@ extern crate cage;
 #[macro_use]
 extern crate clap;
 extern crate env_logger;
+extern crate itertools;
 #[macro_use]
 extern crate log;
 extern crate rustc_serialize;
 extern crate yaml_rust;
 
+use itertools::Itertools;
 use std::env;
 use std::fs;
 use std::io::{self, Write};
@@ -157,6 +159,21 @@ impl<'a> ArgMatchesExt for clap::ArgMatches<'a> {
     }
 }
 
+/// Display a warning if we think some of our services should be running but
+/// they're not.
+fn warn_if_pods_are_enabled_but_not_running(project: &cage::Project)
+                                            -> Result<()> {
+    let pods = project.enabled_pods_that_are_not_running()?;
+    if !pods.is_empty() {
+        let pod_names = pods.iter().map(|p| p.name());
+        warn!("some pods are not running: {0} (you may want to try \
+               `cage --target={1} up` or `cage --target={1} status`)",
+              pod_names.format(", "),
+              project.current_target().name());
+    }
+    Ok(())
+}
+
 /// The function which does the real work.  Unlike `main`, we have a return
 /// type of `Result` and may therefore use `try!` to handle errors.
 fn run(matches: &clap::ArgMatches) -> Result<()> {
@@ -235,23 +252,27 @@ fn run(matches: &clap::ArgMatches) -> Result<()> {
             proj.compose(&runner, "rm", &acts_on, &opts)?;
         }
         "run" => {
+            warn_if_pods_are_enabled_but_not_running(&proj)?;
             let opts = sc_matches.to_run_options();
             let cmd = sc_matches.to_exec_command();
             let service = sc_matches.value_of("SERVICE").unwrap();
             proj.run(&runner, service, cmd.as_ref(), &opts)?;
         }
         "exec" => {
+            warn_if_pods_are_enabled_but_not_running(&proj)?;
             let service = sc_matches.value_of("SERVICE").unwrap();
             let opts = sc_matches.to_exec_options();
             let cmd = sc_matches.to_exec_command().unwrap();
             proj.exec(&runner, service, &cmd, &opts)?;
         }
         "shell" => {
+            warn_if_pods_are_enabled_but_not_running(&proj)?;
             let service = sc_matches.value_of("SERVICE").unwrap();
             let opts = sc_matches.to_exec_options();
             proj.shell(&runner, service, &opts)?;
         }
         "test" => {
+            warn_if_pods_are_enabled_but_not_running(&proj)?;
             let service = sc_matches.value_of("SERVICE").unwrap();
             let cmd = sc_matches.to_exec_command();
             proj.test(&runner, service, cmd.as_ref())?;
