@@ -64,6 +64,18 @@ impl CommandRun for Project {
         let target = self.current_target();
         let (pod, service_name) = self.service_or_err(service_name)?;
 
+        // If we don't have any mounted sources, warn.
+        let service = pod.service_or_err(target, service_name)?;
+        let sources = service.sources(self.sources())?
+            .collect::<Result<Vec<_>>>()?;
+        let mount_count = sources.iter()
+            .cloned()
+            .filter(|&(_, s)| s.is_available_locally(self) && s.mounted())
+            .count();
+        if mount_count == 0 {
+            warn!("No source code mounted into '{}/{}'", pod.name(), service_name);
+        }
+
         let command_args = if let Some(c) = command {
             c.to_args()
         } else {
