@@ -13,7 +13,7 @@ pub trait CommandRun {
     /// Run a specific pod as a one-shot task.
     fn run<CR>(&self,
                runner: &CR,
-               pod: &str,
+               service: &str,
                command: Option<&args::Command>,
                opts: &args::opts::Run)
                -> Result<()>
@@ -31,23 +31,13 @@ pub trait CommandRun {
 impl CommandRun for Project {
     fn run<CR>(&self,
                runner: &CR,
-               pod: &str,
+               service: &str,
                command: Option<&args::Command>,
                opts: &args::opts::Run)
                -> Result<()>
         where CR: CommandRunner
     {
-        let pod = self.pod(pod)
-            .ok_or_else(|| err!("Cannot find pod {}", pod))?;
-
-        // Get the single service in our pod.
-        let file = pod.merged_file(self.current_target())?;
-        if file.services.len() != 1 {
-            return Err(err!("Can only `run` pods with 1 service, {} has {}",
-                            pod.name(),
-                            file.services.len()));
-        }
-        let service = file.services.keys().next().expect("should have had a service");
+        let (pod, service_name) = self.service_or_err(service)?;
 
         // Build and run our command.
         let command_args = if let Some(c) = command {
@@ -59,7 +49,7 @@ impl CommandRun for Project {
             .args(&pod.compose_args(self)?)
             .arg("run")
             .args(&opts.to_args())
-            .arg(service)
+            .arg(service_name)
             .args(&command_args)
             .exec()
     }

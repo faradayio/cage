@@ -118,10 +118,10 @@ subcommands:
             number_of_values: 2
             value_delimiter: "="
             help: "Set an environment variable in the container"
-        - POD: &pod
-            value_name: "POD"
+        - SERVICE: &service
+            value_name: "SERVICE"
             required: true
-            help: "The name of the pod"
+            help: "The name of the service, either as `pod/service`, or as just `service` if unique"
         - COMMAND: &command
             value_name: "COMMAND"
             required: false
@@ -138,10 +138,7 @@ subcommands:
         - privileged: &privileged
             long: "privileged"
             help: "Run a command with elevated privileges"
-        - SERVICE: &service
-            value_name: "SERVICE"
-            required: true
-            help: "The name of the service, either as `pod/service`, or as just `service` if unique"
+        - SERVICE: *service
         - COMMAND:
             value_name: "COMMAND"
             required: true

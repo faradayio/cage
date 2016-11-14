@@ -226,8 +226,8 @@ fn run(matches: &clap::ArgMatches) -> Result<()> {
         "run" => {
             let opts = sc_matches.to_run_options();
             let cmd = sc_matches.to_exec_command();
-            let pod = sc_matches.value_of("POD").unwrap();
-            proj.run(&runner, pod, cmd.as_ref(), &opts)?;
+            let service = sc_matches.value_of("SERVICE").unwrap();
+            proj.run(&runner, service, cmd.as_ref(), &opts)?;
         }
         "exec" => {
             let service = sc_matches.value_of("SERVICE").unwrap();

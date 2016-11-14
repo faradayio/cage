@@ -104,14 +104,14 @@ impl CommandUp for Project {
                             must have at least one value"
                     .into());
             }
-            let pod_name = &cmd[0];
+            let service = &cmd[0];
             let cmd = if cmd.len() >= 2 {
                 Some(args::Command::new(&cmd[1]).with_args(&cmd[2..]))
             } else {
                 None
             };
             let opts = args::opts::Run::default();
-            self.run(runner, pod_name, cmd.as_ref(), &opts)?;
+            self.run(runner, service, cmd.as_ref(), &opts)?;
         }
         Ok(())
     }
