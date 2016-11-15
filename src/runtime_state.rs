@@ -29,6 +29,8 @@ impl RuntimeState {
 
     /// The actual implementation of `for_project`.
     fn for_project_inner(project: &Project) -> Result<RuntimeState> {
+        debug!("Querying Docker for running containers");
+
         let name = project.compose_name();
         let target = project.current_target().name().to_owned();
         let docker = boondock::Docker::connect_with_defaults()?;

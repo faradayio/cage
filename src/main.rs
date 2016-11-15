@@ -168,7 +168,7 @@ fn warn_if_pods_are_enabled_but_not_running(project: &cage::Project)
     let pods = project.enabled_pods_that_are_not_running()?;
     if !pods.is_empty() {
         let pod_names = pods.iter().map(|p| p.name());
-        warn!("some pods are not running: {0} (you may want to try \
+        warn!("You might want to start the following pods first: {0} (see \
                `cage --target={1} up` or `cage --target={1} status`)",
               pod_names.format(", "),
               project.current_target().name());
