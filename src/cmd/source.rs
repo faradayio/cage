@@ -32,10 +32,13 @@ impl CommandSource for Project {
         for source in self.sources().iter() {
             println!("{:25} {}", source.alias().green(), source.context());
             if source.is_available_locally(self) {
-                let path = source.path(self)
-                    .canonicalize()?
-                    .strip_prefix(self.root_dir())?
-                    .to_owned();
+                let canonical = source.path(self).canonicalize()?;
+                // Try to strip the prefix, but this may fail on Windows
+                // or if the source is in a weird location.
+                let path = match canonical.strip_prefix(self.root_dir()) {
+                    Ok(stripped) => stripped.to_owned(),
+                    Err(_) => canonical.to_owned(),
+                };
                 let mounted = if source.mounted() {
                     "(mounted)".normal()
                 } else {
