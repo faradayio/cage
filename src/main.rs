@@ -9,6 +9,7 @@
 extern crate cage;
 #[macro_use]
 extern crate clap;
+extern crate colored;
 extern crate env_logger;
 extern crate itertools;
 #[macro_use]
@@ -16,6 +17,7 @@ extern crate log;
 extern crate rustc_serialize;
 extern crate yaml_rust;
 
+use colored::Colorize;
 use itertools::Itertools;
 use std::env;
 use std::fs;
@@ -383,6 +385,16 @@ fn all_versions() -> Result<()> {
     Ok(())
 }
 
+fn log_level_label(level: log::LogLevel) -> colored::ColoredString {
+    match level {
+        log::LogLevel::Error => "ERROR:".red().bold(),
+        log::LogLevel::Warn => "WARNING:".yellow().bold(),
+        log::LogLevel::Info => "INFO:".bold(),
+        log::LogLevel::Debug => "DEBUG:".normal(),
+        log::LogLevel::Trace => "TRACE:".normal(),
+    }
+}
+
 /// Our main entry point.
 fn main() {
     // Initialize logging with some custom options, mostly so we can see
@@ -390,6 +402,17 @@ fn main() {
     let mut builder = env_logger::LogBuilder::new();
     builder.filter(Some("compose_yml"), log::LogLevelFilter::Warn);
     builder.filter(Some("cage"), log::LogLevelFilter::Warn);
+    builder.format(|record: &log::LogRecord| {
+        let msg = format!("{} {} (from {})",
+                          log_level_label(record.level()),
+                          record.args(),
+                          record.target());
+        if record.level() > log::LogLevel::Info {
+            format!("{}", msg.dimmed())
+        } else {
+            msg
+        }
+    });
     if let Ok(config) = env::var("RUST_LOG") {
         builder.parse(&config);
     }
