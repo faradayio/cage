@@ -312,6 +312,22 @@ ahead and fix your pull request, or ask us for help.
 
 [Clippy]: https://github.com/Manishearth/rust-clippy
 
+### On macOS
+
+The openssl crate needs a compatible version of the openssl libraries. macOS
+ships with a version using an old API. The best solution is to install latest
+openssl with homebrew and link to it:
+
+```
+brew install openssl
+export OPENSSL_INCLUDE_DIR=$(brew --prefix openssl)/include
+export OPENSSL_LIB_DIR=$(brew --prefix openssl)/lib
+cargo clean   # you need to do this if your macOS-versioned openssl build failed
+cargo build
+```
+
+[More info]: https://stackoverflow.com/questions/34612395/openssl-crate-fails-compilation-on-mac-os-x-10-11
+
 ### Official releases
 
 To make an official release, you need to be a maintainer, and you need to
