@@ -38,13 +38,15 @@ impl CommandSource for Project {
 
         for source in self.sources().iter() {
 
-            let status = if source.mounted() {
+            let available_locally = source.is_available_locally(self);
+
+            let status = if available_locally && source.mounted() {
                 "mounted"
             } else {
                 "unmounted"
             };
 
-            let local = if source.is_available_locally(self) {
+            let local = if available_locally {
                 let canonical = source.path(self).canonicalize()?;
                 // Try to strip the prefix, but this may fail on Windows
                 // or if the source is in a weird location.
