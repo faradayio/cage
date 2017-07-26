@@ -109,7 +109,7 @@ fn runs_docker_compose_on_all_pods() {
     let _ = env_logger::init();
     let proj = Project::from_example("rails_hello").unwrap();
     let runner = TestCommandRunner::new();
-    proj.output().unwrap();
+    proj.output("stop").unwrap();
 
     let opts = args::opts::Empty;
     proj.compose(&runner, "stop", &args::ActOn::All, &opts).unwrap();
@@ -143,7 +143,7 @@ fn runs_docker_compose_on_named_pods_and_services() {
     let _ = env_logger::init();
     let proj = Project::from_example("rails_hello").unwrap();
     let runner = TestCommandRunner::new();
-    proj.output().unwrap();
+    proj.output("stop").unwrap();
 
     let act_on = args::ActOn::Named(vec!("db".to_owned(), "web".to_owned()));
     let opts = args::opts::Empty;

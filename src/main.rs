@@ -212,7 +212,7 @@ fn run(matches: &clap::ArgMatches) -> Result<()> {
     // Output our project's `*.yml` files for `docker-compose` if we'll
     // need it.
     if matches.should_output_project() {
-        proj.output()?;
+        proj.output(sc_name)?;
     }
 
     // Handle our subcommands that require a `Project`.
@@ -337,7 +337,7 @@ fn run_source<R>(runner: &R,
 
     // Regenerate our output if it might have changed.
     if re_output {
-        proj.output()?;
+        proj.output(sc_name)?;
     }
 
     Ok(())

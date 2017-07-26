@@ -19,16 +19,19 @@ pub struct Context<'a> {
     pub project: &'a Project,
     /// The pod to which we're applying this plugin.
     pub pod: &'a Pod,
+    /// The subcommand to which we're applying this plugin.
+    pub subcommand: String,
     /// PRIVATE. Allow future extensibility without breaking the API.
     _nonexclusive: PhantomData<()>,
 }
 
 impl<'a> Context<'a> {
     /// Create a new plugin context.
-    pub fn new(project: &'a Project, pod: &'a Pod) -> Context<'a> {
+    pub fn new(project: &'a Project, pod: &'a Pod, subcommand: &str) -> Context<'a> {
         Context {
             project: project,
             pod: pod,
+            subcommand: subcommand.to_string(),
             _nonexclusive: PhantomData,
         }
     }
@@ -129,6 +132,7 @@ impl Manager {
         manager.register_transform::<transform::default_tags::Plugin>(proj)?;
         manager.register_transform::<transform::sources::Plugin>(proj)?;
         manager.register_transform::<transform::secrets::Plugin>(proj)?;
+        manager.register_transform::<transform::remove_build::Plugin>(proj)?;
         manager.register_vault_transform(proj)?;
 
         // Run this last, in case it wants to remove any labels used by
