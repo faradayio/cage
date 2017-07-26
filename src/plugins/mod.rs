@@ -129,6 +129,7 @@ impl Manager {
         manager.register_transform::<transform::default_tags::Plugin>(proj)?;
         manager.register_transform::<transform::sources::Plugin>(proj)?;
         manager.register_transform::<transform::secrets::Plugin>(proj)?;
+        manager.register_transform::<transform::remove_build::Plugin>(proj)?;
         manager.register_vault_transform(proj)?;
 
         // Run this last, in case it wants to remove any labels used by
