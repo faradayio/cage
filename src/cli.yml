@@ -131,6 +131,14 @@ subcommands:
             required: false
             multiple: true
             help: "The command to run, with any arguments"
+  - run-script:
+      about: "Run a named script defined in metadata for specified pods or services"
+      args:
+        - SCRIPT_NAME:
+            value_name: "SCRIPT_NAME"
+            required: true
+            help: "The named script to run"
+        - POD_OR_SERVICE: *pod_or_service
   - exec:
       about: "Run a command inside an existing container"
       settings:

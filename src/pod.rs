@@ -8,6 +8,9 @@ use std::ffi::OsString;
 use std::fmt;
 use std::path::{Path, PathBuf};
 
+use args;
+use cmd::CommandRun;
+use command_runner::CommandRunner;
 use errors::*;
 use target::Target;
 use project::Project;
@@ -284,6 +287,13 @@ impl Pod {
     /// The commands we should run to initialize this pod.
     pub fn run_on_init(&self) -> &[Vec<String>] {
         &self.config.run_on_init
+    }
+
+    /// Run a named script for specified service name
+    pub fn run_script<CR>(&self, runner: &CR, project: &Project, service_name: &str, script_name: &str) -> Result<()> 
+        where CR: CommandRunner
+    {
+        self.config.run_script(runner, &project, &service_name, &script_name)
     }
 }
 

@@ -239,6 +239,34 @@ hello
   </tr>
 </table>
 
+## Other commands
+
+### cage run-script
+
+The `run-script` command operates similarly to `npm run <script>` or 
+`rake <task>`. Simply define a set of named scripts in the pod's metadata:
+
+```yml
+# tasks.yml
+services:
+  runner:
+    build: .
+```
+
+```yml
+# tasks.metadata.yml
+
+services:
+  runner:
+    scripts:
+      populate:
+        - ["npm","run","populate"]
+```
+
+By running `cage run-script populate`, cage will find all services 
+that have a `populate` script and run it. You can also specify a 
+pod or service with `cage run-script tasks populate`.
+
 ## Reporting issues
 
 If you encounter an issue, it might help to set the following shell

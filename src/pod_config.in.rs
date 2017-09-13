@@ -46,4 +46,75 @@ struct Config {
     /// initialized.
     #[serde(default, skip_serializing_if="Vec::is_empty")]
     run_on_init: Vec<Vec<String>>,
+
+    /// List of per-service configurations for the pod.
+    #[serde(default, skip_serializing_if="BTreeMap::is_empty")]
+    services: BTreeMap<String, ServiceConfig>,
+}
+
+impl Config {
+
+    /// Run a named script for the specified service in this pod
+    pub fn run_script<CR>(&self, runner: &CR, project: &Project, service_name: &str, script_name: &str) -> Result<()> 
+        where CR: CommandRunner
+    {
+        match self.services.get(service_name) {
+            Some(service_config) => {
+                service_config.run_script(runner, &project, &service_name, &script_name)?
+            },
+            None => {}
+        }
+        Ok(())
+    }
+    
+}
+
+/// Individual, per-service configurations.
+#[derive(Debug, Default, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct ServiceConfig {
+    /// List of scripts that can be executed via `cage run-script <name>`.
+    #[serde(default, skip_serializing_if="BTreeMap::is_empty")]
+    scripts: BTreeMap<String, Script>,
+}
+
+impl ServiceConfig {
+
+    /// Run a named script for the given service
+    pub fn run_script<CR>(&self, runner: &CR, project: &Project, service_name: &str, script_name: &str) -> Result<()>
+        where CR: CommandRunner
+    {
+        if let Some(script) = self.scripts.get(script_name) {
+            script.run(runner, &project, service_name)?;
+        }
+        Ok(())
+    }
+
+}
+
+#[derive(Debug, Default, Serialize, Deserialize)]
+struct Script(Vec<Vec<String>>);
+
+impl Script {
+
+    /// Execute each command defined for the named script
+    pub fn run<CR>(&self, runner: &CR, project: &Project, service_name: &str) -> Result<()> 
+        where CR: CommandRunner
+    {
+        for cmd in &self.0 {
+            if cmd.len() < 1 {
+                return Err("all items in script must have at least one value"
+                    .into());
+            }
+            let cmd = if cmd.len() >= 2 {
+                Some(args::Command::new(&cmd[1]).with_args(&cmd[2..]))
+            } else {
+                None
+            };
+            let opts = args::opts::Run::default();
+            project.run(runner, service_name, cmd.as_ref(), &opts)?;
+        }
+        Ok(())
+    }
+
 }
