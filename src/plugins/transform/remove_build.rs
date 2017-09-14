@@ -36,12 +36,15 @@ impl PluginNew for Plugin {
 impl PluginTransform for Plugin {
     fn transform(&self,
                  _op: Operation,
-                 _: &plugins::Context,
+                 ctx: &plugins::Context,
                  file: &mut dc::File)
                  -> Result<()> {
 
-        for service in &mut file.services.values_mut() {
-            service.build = None;
+        // TODO: Test this
+        if ctx.subcommand != "build" {
+            for service in &mut file.services.values_mut() {
+                service.build = None;
+            }
         }
         Ok(())
     }

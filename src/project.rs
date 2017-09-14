@@ -410,7 +410,7 @@ impl Project {
 
     /// Process our pods, flattening and transforming them using our
     /// plugins, and output them to the specified directory.
-    fn output_helper(&self, op: Operation, export_dir: &Path) -> Result<()> {
+    fn output_helper(&self, op: Operation, subcommand: &str, export_dir: &Path) -> Result<()> {
         // Output each pod.  This isn't especially slow (except maybe the
         // Vault plugin), but parallelizing things is easy.
         self.pods.par_iter()
@@ -439,7 +439,7 @@ impl Project {
                 // output.
                 let mut file = try!(pod.merged_file(&self.current_target));
                 try!(file.make_standalone(&self.pods_dir()));
-                let ctx = plugins::Context::new(self, pod);
+                let ctx = plugins::Context::new(self, pod, subcommand);
                 try!(self.plugins().transform(op, &ctx, &mut file));
                 try!(file.write_to_path(out_path));
                 Ok(())
@@ -451,7 +451,7 @@ impl Project {
 
     /// Delete our existing output and replace it with a processed and
     /// expanded version of our pod definitions.
-    pub fn output(&self) -> Result<()> {
+    pub fn output(&self, subcommand: &str) -> Result<()> {
         // Get a path to our output pods directory (and delete it if it
         // exists).
         let out_pods = self.output_pods_dir();
@@ -460,7 +460,7 @@ impl Project {
                 .map_err(|e| err!("Cannot delete {}: {}", out_pods.display(), e)));
         }
 
-        self.output_helper(Operation::Output, &out_pods)
+        self.output_helper(Operation::Output, subcommand, &out_pods)
     }
 
     /// Export this project (with the specified target applied) as a set
@@ -477,7 +477,7 @@ impl Project {
             warn!("Exporting project without --default-tags");
         }
 
-        self.output_helper(Operation::Export, export_dir)
+        self.output_helper(Operation::Export, "export", export_dir)
     }
 }
 
