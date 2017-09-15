@@ -1,15 +1,13 @@
 //! The `run-script` command.
 
-use std::collections::BTreeMap;
-
 use args;
-use cmd::CommandCompose;
 use command_runner::CommandRunner;
 #[cfg(test)]
 use command_runner::TestCommandRunner;
 use errors::*;
 use project::{Project, PodOrService};
 
+/// Included into project in order to run named scripts on one ore more services
 pub trait CommandRunScript {
     /// Run a named script on all matching services
     fn run_script<CR>(&self, runner: &CR, act_on: &args::ActOn, script_name: &str) -> Result<()>
@@ -20,8 +18,6 @@ impl CommandRunScript for Project {
     fn run_script<CR>(&self, runner: &CR, act_on: &args::ActOn, script_name: &str) -> Result<()>
         where CR: CommandRunner
     {
-        let opts = args::opts::Empty;
-
         for pod_or_service in act_on.pods_or_services(self) {
             match pod_or_service? {
                 PodOrService::Pod(pod) => {
