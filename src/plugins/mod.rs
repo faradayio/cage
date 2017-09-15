@@ -8,6 +8,7 @@ use std::marker::PhantomData;
 use errors::*;
 use pod::Pod;
 use project::Project;
+use subcommand::Subcommand;
 use template::Template;
 
 pub mod transform;
@@ -20,18 +21,18 @@ pub struct Context<'a> {
     /// The pod to which we're applying this plugin.
     pub pod: &'a Pod,
     /// The subcommand to which we're applying this plugin.
-    pub subcommand: String,
+    pub subcommand: Subcommand,
     /// PRIVATE. Allow future extensibility without breaking the API.
     _nonexclusive: PhantomData<()>,
 }
 
 impl<'a> Context<'a> {
     /// Create a new plugin context.
-    pub fn new(project: &'a Project, pod: &'a Pod, subcommand: &str) -> Context<'a> {
+    pub fn new(project: &'a Project, pod: &'a Pod, subcommand: Subcommand) -> Context<'a> {
         Context {
             project: project,
             pod: pod,
-            subcommand: subcommand.to_string(),
+            subcommand: subcommand,
             _nonexclusive: PhantomData,
         }
     }

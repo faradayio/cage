@@ -12,6 +12,8 @@ use errors::*;
 use plugins;
 use plugins::{Operation, PluginGenerate, PluginNew, PluginTransform};
 use project::Project;
+#[cfg(test)]
+use subcommand::Subcommand;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde_helpers::load_yaml;
 
@@ -121,7 +123,7 @@ fn injects_secrets_into_services() {
 
     let target = proj.current_target();
     let frontend = proj.pod("frontend").unwrap();
-    let ctx = plugins::Context::new(&proj, frontend, "up");
+    let ctx = plugins::Context::new(&proj, frontend, Subcommand::Up);
     let mut file = frontend.merged_file(target).unwrap();
     plugin.transform(Operation::Output, &ctx, &mut file).unwrap();
     let web = file.services.get("web").unwrap();

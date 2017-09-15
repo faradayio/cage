@@ -23,6 +23,7 @@ use hook::HookManager;
 use target::Target;
 use plugins::{self, Operation};
 use pod::{Pod, PodType};
+use subcommand::Subcommand;
 use sources::Sources;
 use rayon::prelude::*;
 use runtime_state::RuntimeState;
@@ -410,7 +411,7 @@ impl Project {
 
     /// Process our pods, flattening and transforming them using our
     /// plugins, and output them to the specified directory.
-    fn output_helper(&self, op: Operation, subcommand: &str, export_dir: &Path) -> Result<()> {
+    fn output_helper(&self, op: Operation, subcommand: Subcommand, export_dir: &Path) -> Result<()> {
         // Output each pod.  This isn't especially slow (except maybe the
         // Vault plugin), but parallelizing things is easy.
         self.pods.par_iter()
@@ -451,7 +452,7 @@ impl Project {
 
     /// Delete our existing output and replace it with a processed and
     /// expanded version of our pod definitions.
-    pub fn output(&self, subcommand: &str) -> Result<()> {
+    pub fn output(&self, subcommand: Subcommand) -> Result<()> {
         // Get a path to our output pods directory (and delete it if it
         // exists).
         let out_pods = self.output_pods_dir();
@@ -477,7 +478,7 @@ impl Project {
             warn!("Exporting project without --default-tags");
         }
 
-        self.output_helper(Operation::Export, "export", export_dir)
+        self.output_helper(Operation::Export, Subcommand::Export, export_dir)
     }
 }
 
@@ -590,7 +591,7 @@ fn output_creates_a_directory_of_flat_yml_files() {
     use env_logger;
     let _ = env_logger::init();
     let proj = Project::from_example("rails_hello").unwrap();
-    proj.output("up").unwrap();
+    proj.output(Subcommand::Up).unwrap();
     assert!(proj.output_dir.join("pods").join("frontend.yml").exists());
     assert!(proj.output_dir.join("pods").join("db.yml").exists());
     assert!(proj.output_dir.join("pods").join("rake.yml").exists());
@@ -609,7 +610,7 @@ fn output_applies_expected_transforms() {
     proj.set_default_tags(default_tags);
     let source = proj.sources().find_by_alias("dockercloud-hello-world").unwrap();
     source.fake_clone_source(&proj).unwrap();
-    proj.output("build").unwrap();
+    proj.output(Subcommand::Build).unwrap();
 
     // Load the generated file and look at the `web` service we cloned.
     let frontend_file = proj.output_dir().join("pods").join("frontend.yml");
@@ -649,7 +650,7 @@ fn output_mounts_cloned_libraries() {
         .find_by_lib_key("coffee_rails")
         .expect("should define lib coffee_rails");
     source.fake_clone_source(&proj).unwrap();
-    proj.output("up").unwrap();
+    proj.output(Subcommand::Up).unwrap();
 
     // Load the generated file and look at the `web` service we cloned.
     let frontend_file = proj.output_dir().join("pods").join("frontend.yml");
@@ -671,7 +672,7 @@ fn output_mounts_cloned_libraries() {
 #[test]
 fn output_supports_in_tree_source_code() {
     let proj = Project::from_example("node_hello").unwrap();
-    proj.output("build").unwrap();
+    proj.output(Subcommand::Build).unwrap();
 
     // Load the generated file and look at the `web` service we cloned.
     let frontend_file = proj.output_dir().join("pods").join("frontend.yml");

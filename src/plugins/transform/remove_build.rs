@@ -7,6 +7,7 @@ use errors::*;
 use plugins;
 use plugins::{Operation, PluginNew, PluginTransform};
 use project::Project;
+use subcommand::Subcommand;
 
 /// Updates the `labels` in a `dc::File`.
 #[derive(Debug)]
@@ -40,7 +41,7 @@ impl PluginTransform for Plugin {
                  file: &mut dc::File)
                  -> Result<()> {
 
-        if ctx.subcommand != "build" {
+        if ctx.subcommand != Subcommand::Build {
             for service in &mut file.services.values_mut() {
                 service.build = None;
             }
@@ -58,7 +59,7 @@ fn removes_build_for_most_commands() {
 
     let target = proj.current_target();
     let frontend = proj.pod("frontend").unwrap();
-    let ctx = plugins::Context::new(&proj, frontend, "up");
+    let ctx = plugins::Context::new(&proj, frontend, Subcommand::Up);
     let mut file = frontend.merged_file(target).unwrap();
 
     plugin.transform(Operation::Output, &ctx, &mut file).unwrap();
@@ -76,7 +77,7 @@ fn leaves_build_in_when_building() {
 
     let target = proj.current_target();
     let frontend = proj.pod("frontend").unwrap();
-    let ctx = plugins::Context::new(&proj, frontend, "build");
+    let ctx = plugins::Context::new(&proj, frontend, Subcommand::Build);
     let mut file = frontend.merged_file(target).unwrap();
 
     plugin.transform(Operation::Output, &ctx, &mut file).unwrap();

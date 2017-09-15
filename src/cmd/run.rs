@@ -7,6 +7,8 @@ use command_runner::TestCommandRunner;
 use errors::*;
 use ext::service::ServiceExt;
 use project::Project;
+#[cfg(test)]
+use subcommand::Subcommand;
 
 /// We implement `run` with a trait so we put it in its own module.
 pub trait CommandRun {
@@ -99,7 +101,7 @@ fn fails_on_a_multi_service_pod() {
     let _ = env_logger::init();
     let proj = Project::from_example("hello").unwrap();
     let runner = TestCommandRunner::new();
-    proj.output("run").unwrap();
+    proj.output(Subcommand::Run).unwrap();
     let opts = Default::default();
     assert!(proj.run(&runner, "frontend", None, &opts).is_err());
 }
@@ -110,7 +112,7 @@ fn runs_a_single_service_pod() {
     let _ = env_logger::init();
     let proj = Project::from_example("rails_hello").unwrap();
     let runner = TestCommandRunner::new();
-    proj.output("run").unwrap();
+    proj.output(Subcommand::Run).unwrap();
     let cmd = args::Command::new("db:migrate");
     let mut opts = args::opts::Run::default();
     opts.allocate_tty = false;
@@ -136,7 +138,7 @@ fn runs_tests() {
     let mut proj = Project::from_example("hello").unwrap();
     proj.set_current_target_name("test").unwrap();
     let runner = TestCommandRunner::new();
-    proj.output("test").unwrap();
+    proj.output(Subcommand::Test).unwrap();
 
     proj.test(&runner, "frontend/proxy", None).unwrap();
 
@@ -164,7 +166,7 @@ fn runs_tests_with_custom_command() {
     let mut proj = Project::from_example("hello").unwrap();
     proj.set_current_target_name("test").unwrap();
     let runner = TestCommandRunner::new();
-    proj.output("test").unwrap();
+    proj.output(Subcommand::Test).unwrap();
 
     let cmd = args::Command::new("rspec").with_args(&["-t", "foo"]);
     proj.test(&runner, "proxy", Some(&cmd)).unwrap();

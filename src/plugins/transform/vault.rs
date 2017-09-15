@@ -19,6 +19,8 @@ use errors::*;
 use plugins;
 use plugins::{Operation, PluginGenerate, PluginNew, PluginTransform};
 use project::Project;
+#[cfg(test)]
+use subcommand::Subcommand;
 use serde_helpers::load_yaml;
 use util::err;
 
@@ -357,7 +359,7 @@ fn interpolates_policies() {
     let plugin = Plugin::new_with_generator(&proj, Some(vault)).unwrap();
 
     let frontend = proj.pod("frontend").unwrap();
-    let ctx = plugins::Context::new(&proj, frontend, "up");
+    let ctx = plugins::Context::new(&proj, frontend, Subcommand::Up);
     let mut file = frontend.merged_file(proj.current_target()).unwrap();
     plugin.transform(Operation::Output, &ctx, &mut file).unwrap();
     let web = file.services.get("web").unwrap();
@@ -392,7 +394,7 @@ fn only_applied_in_specified_targets() {
     let plugin = Plugin::new_with_generator(&proj, Some(vault)).unwrap();
 
     let frontend = proj.pod("frontend").unwrap();
-    let ctx = plugins::Context::new(&proj, frontend, "test");
+    let ctx = plugins::Context::new(&proj, frontend, Subcommand::Test);
     let mut file = frontend.merged_file(target).unwrap();
     plugin.transform(Operation::Output, &ctx, &mut file).unwrap();
     let web = file.services.get("web").unwrap();
