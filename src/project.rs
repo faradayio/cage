@@ -590,7 +590,7 @@ fn output_creates_a_directory_of_flat_yml_files() {
     use env_logger;
     let _ = env_logger::init();
     let proj = Project::from_example("rails_hello").unwrap();
-    proj.output().unwrap();
+    proj.output("up").unwrap();
     assert!(proj.output_dir.join("pods").join("frontend.yml").exists());
     assert!(proj.output_dir.join("pods").join("db.yml").exists());
     assert!(proj.output_dir.join("pods").join("rake.yml").exists());
@@ -609,7 +609,7 @@ fn output_applies_expected_transforms() {
     proj.set_default_tags(default_tags);
     let source = proj.sources().find_by_alias("dockercloud-hello-world").unwrap();
     source.fake_clone_source(&proj).unwrap();
-    proj.output().unwrap();
+    proj.output("build").unwrap();
 
     // Load the generated file and look at the `web` service we cloned.
     let frontend_file = proj.output_dir().join("pods").join("frontend.yml");
@@ -649,7 +649,7 @@ fn output_mounts_cloned_libraries() {
         .find_by_lib_key("coffee_rails")
         .expect("should define lib coffee_rails");
     source.fake_clone_source(&proj).unwrap();
-    proj.output().unwrap();
+    proj.output("up").unwrap();
 
     // Load the generated file and look at the `web` service we cloned.
     let frontend_file = proj.output_dir().join("pods").join("frontend.yml");
@@ -671,7 +671,7 @@ fn output_mounts_cloned_libraries() {
 #[test]
 fn output_supports_in_tree_source_code() {
     let proj = Project::from_example("node_hello").unwrap();
-    proj.output().unwrap();
+    proj.output("build").unwrap();
 
     // Load the generated file and look at the `web` service we cloned.
     let frontend_file = proj.output_dir().join("pods").join("frontend.yml");
@@ -721,12 +721,6 @@ fn export_applies_expected_transforms() {
     let frontend_file = export_dir.join("frontend.yml");
     let file = dc::File::read_from_path(frontend_file).unwrap();
     let web = file.services.get("web").unwrap();
-
-    // Make sure our `build` entry has not been pointed at the local source
-    // directory.
-    let url = "https://github.com/docker/dockercloud-hello-world.git";
-    assert_eq!(web.build.as_ref().unwrap().context.value().unwrap(),
-               &dc::Context::new(dc::GitUrl::new(url).unwrap()));
 
     // Make sure we've added our custom labels.
     assert_eq!(web.labels.get("io.fdy.cage.target").unwrap().value().unwrap(),

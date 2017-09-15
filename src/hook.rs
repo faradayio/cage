@@ -93,7 +93,7 @@ fn runs_requested_hook_scripts() {
     let _ = env_logger::init();
     let proj = Project::from_example("hello").unwrap();
     let runner = TestCommandRunner::new();
-    proj.output().unwrap();
+    proj.output("pull").unwrap();
 
     proj.hooks().invoke(&runner, "pull", &BTreeMap::default()).unwrap();
     assert_ran!(runner, {

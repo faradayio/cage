@@ -36,7 +36,7 @@ fn runs_docker_compose_pull_on_all_pods() {
     let _ = env_logger::init();
     let proj = Project::from_example("hello").unwrap();
     let runner = TestCommandRunner::new();
-    proj.output().unwrap();
+    proj.output("pull").unwrap();
 
     proj.pull(&runner, &args::ActOn::All).unwrap();
     assert_ran!(runner, {
