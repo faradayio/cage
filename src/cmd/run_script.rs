@@ -55,6 +55,7 @@ fn runs_scripts_on_all_services() {
          proj.output_dir().join("pods").join("rake.yml"),
          "run",
          "rake",
+         "rake",
          "routes"]
     });
 

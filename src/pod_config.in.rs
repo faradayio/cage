@@ -107,7 +107,7 @@ impl Script {
                     .into());
             }
             let cmd = if cmd.len() >= 2 {
-                Some(args::Command::new(&cmd[1]).with_args(&cmd[2..]))
+                Some(args::Command::new(&cmd[0]).with_args(&cmd[1..]))
             } else {
                 None
             };
