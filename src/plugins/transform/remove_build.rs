@@ -40,7 +40,6 @@ impl PluginTransform for Plugin {
                  file: &mut dc::File)
                  -> Result<()> {
 
-        // TODO: Test this
         if ctx.subcommand != "build" {
             for service in &mut file.services.values_mut() {
                 service.build = None;
@@ -48,4 +47,40 @@ impl PluginTransform for Plugin {
         }
         Ok(())
     }
+}
+
+#[test]
+fn removes_build_for_most_commands() {
+    use env_logger;
+    let _ = env_logger::init();
+    let proj = Project::from_example("rails_hello").unwrap();
+    let plugin = Plugin::new(&proj).unwrap();
+
+    let target = proj.current_target();
+    let frontend = proj.pod("frontend").unwrap();
+    let ctx = plugins::Context::new(&proj, frontend, "up");
+    let mut file = frontend.merged_file(target).unwrap();
+
+    plugin.transform(Operation::Output, &ctx, &mut file).unwrap();
+
+    let web = file.services.get("web").unwrap();
+    assert_eq!(web.build, None);
+}
+
+#[test]
+fn leaves_build_in_when_building() {
+    use env_logger;
+    let _ = env_logger::init();
+    let proj = Project::from_example("rails_hello").unwrap();
+    let plugin = Plugin::new(&proj).unwrap();
+
+    let target = proj.current_target();
+    let frontend = proj.pod("frontend").unwrap();
+    let ctx = plugins::Context::new(&proj, frontend, "build");
+    let mut file = frontend.merged_file(target).unwrap();
+
+    plugin.transform(Operation::Output, &ctx, &mut file).unwrap();
+
+    let web = file.services.get("web").unwrap();
+    assert!(web.build != None);
 }
