@@ -319,19 +319,19 @@ fn run_source<R>(runner: &R,
     // Dispatch our subcommand.
     let mut re_output = true;
     match subcommand {
-        Subcommand::Ls => {
+        Subcommand::SourceLs => {
             re_output = false;
             proj.source_list(runner)?;
         }
-        Subcommand::Clone => {
+        Subcommand::SourceClone => {
             let alias = sc_matches.value_of("ALIAS").unwrap();
             proj.source_clone(runner, alias)?;
         }
-        Subcommand::Mount => {
+        Subcommand::SourceMount => {
             let alias = sc_matches.value_of("ALIAS").unwrap();
             proj.source_set_mounted(runner, alias, true)?;
         }
-        Subcommand::Unmount => {
+        Subcommand::SourceUnmount => {
             let alias = sc_matches.value_of("ALIAS").unwrap();
             proj.source_set_mounted(runner, alias, false)?;
         }
@@ -361,7 +361,7 @@ fn run_generate<R>(_runner: &R,
 
     match subcommand {
         // TODO LOW: Allow running this without a project?
-        Subcommand::Completion => {
+        Subcommand::GenerateCompletion => {
             let shell = match sc_matches.value_of("SHELL").unwrap() {
                 "bash" => clap::Shell::Bash,
                 "fish" => clap::Shell::Fish,

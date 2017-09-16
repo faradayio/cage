@@ -61,25 +61,25 @@ pub enum Subcommand {
     Up,
 
     /// The `cage source clone` subcommand
-    Clone,
+    SourceClone,
 
     /// The `cage source ls` subcommand
-    Ls,
+    SourceLs,
 
     /// The `cage source mount` subcommand
-    Mount,
+    SourceMount,
 
     /// The `cage source unmount` subcommand
-    Unmount,
+    SourceUnmount,
 
     /// The `cage generate completion` subcommand
-    Completion,
+    GenerateCompletion,
 
     /// The `cage generate secrets` subcommand
-    Secrets,
+    GenerateSecrets,
 
     /// The `cage generate vault` subcommand
-    Vault,
+    GenerateVault,
 }
 
 impl FromStr for Subcommand {
@@ -106,14 +106,14 @@ impl FromStr for Subcommand {
             "test" => Ok(Subcommand::Test),
             "up" => Ok(Subcommand::Up),
 
-            "clone" => Ok(Subcommand::Clone),
-            "ls" => Ok(Subcommand::Ls),
-            "mount" => Ok(Subcommand::Mount),
-            "unmount" => Ok(Subcommand::Unmount),
+            "clone" => Ok(Subcommand::SourceClone),
+            "ls" => Ok(Subcommand::SourceLs),
+            "mount" => Ok(Subcommand::SourceMount),
+            "unmount" => Ok(Subcommand::SourceUnmount),
 
-            "completion" => Ok(Subcommand::Completion),
-            "secrets" => Ok(Subcommand::Secrets),
-            "vault" => Ok(Subcommand::Vault),
+            "completion" => Ok(Subcommand::GenerateCompletion),
+            "secrets" => Ok(Subcommand::GenerateSecrets),
+            "vault" => Ok(Subcommand::GenerateVault),
 
             _ => Err(()),
         }
