@@ -5,7 +5,6 @@
 
 #![deny(warnings)]
 
-#[macro_use]
 extern crate cage;
 #[macro_use]
 extern crate clap;
@@ -259,6 +258,12 @@ fn run(matches: &clap::ArgMatches) -> Result<()> {
             let cmd = sc_matches.to_exec_command();
             let service = sc_matches.value_of("SERVICE").unwrap();
             proj.run(&runner, service, cmd.as_ref(), &opts)?;
+        }
+        "run-script" => {
+            warn_if_pods_are_enabled_but_not_running(&proj)?;
+            let script_name = sc_matches.value_of("SCRIPT_NAME").unwrap();
+            let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE", true);
+            proj.run_script(&runner, &acts_on, script_name.as_ref())?;
         }
         "exec" => {
             warn_if_pods_are_enabled_but_not_running(&proj)?;

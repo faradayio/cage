@@ -63,7 +63,7 @@
 
 // Fail hard on warnings.  This will be automatically disabled when we're
 // used as a dependency by other crates, thanks to Cargo magic.
-#![deny(warnings)]
+// #![deny(warnings)]
 
 // Compiler plugins only work with Rust nightly builds, not with stable
 // compilers.  We want to work with both.

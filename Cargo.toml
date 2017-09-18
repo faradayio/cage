@@ -1,6 +1,6 @@
 [package]
 name = "cage"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["Eric Kidd <git@randomhacks.net>",
            "Derek Kastner <dkastner@gmail.com>"]
 
@@ -35,6 +35,10 @@ unstable-minimal = ["serde_derive", "compose_yml/unstable"]
 name = "cage"
 doc = false
 test = true
+
+[dev-dependencies]
+cli_test_dir = "0.1.4"
+copy_dir = "0.1"
 
 [build-dependencies]
 glob = "0.2.11"

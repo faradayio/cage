@@ -251,6 +251,7 @@ impl Command for TestCommand {
 ///    convert everything to an `OsString`.  So we need an internal `coerce`
 ///    helper that converts from `AsRef<OsStr>` (a very general trait
 ///    interface) to an actual `OsString`.
+#[allow(unused_macros)]
 macro_rules! assert_ran {
     ($runner:expr, { $( [ $($arg:expr),+ ] ),* }) => {
         use std::ops::Deref;
