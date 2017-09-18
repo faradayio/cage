@@ -1,6 +1,6 @@
 [package]
 name = "cage"
-version = "0.2.1"
+version = "0.2.2"
 authors = ["Eric Kidd <git@randomhacks.net>",
            "Derek Kastner <dkastner@gmail.com>"]
 
