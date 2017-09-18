@@ -18,15 +18,26 @@ impl CommandRunScript for Project {
     fn run_script<CR>(&self, runner: &CR, act_on: &args::ActOn, script_name: &str) -> Result<()>
         where CR: CommandRunner
     {
+        let target = self.current_target();
+
         for pod_or_service in act_on.pods_or_services(self) {
             match pod_or_service? {
                 PodOrService::Pod(pod) => {
-                    for service_name in pod.service_names() {
-                        pod.run_script(runner, &self, &service_name, &script_name)?;
+
+                    // Ignore any pods that aren't enabled in the current target
+                    if pod.enabled_in(&target) {
+                        for service_name in pod.service_names() {
+                            pod.run_script(runner, &self, &service_name, &script_name)?;
+                        }
                     }
                 }
                 PodOrService::Service(pod, service_name) => {
-                    pod.run_script(runner, &self, &service_name, &script_name)?;
+
+                    // Don't run this on any service whose pod isn't enabled in
+                    // the current target
+                    if pod.enabled_in(&target) {
+                        pod.run_script(runner, &self, &service_name, &script_name)?;
+                    }
                 }
             }
         }
