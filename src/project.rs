@@ -155,23 +155,6 @@ impl Project {
     /// Create a `Project` using the pre-existing project files in the
     /// current directory as input and the `.cage` subdirectory as
     /// output.
-    ///
-    /// ```
-    /// use cage::Project;
-    /// use std::env;
-    ///
-    /// let saved = env::current_dir().unwrap();
-    /// env::set_current_dir("examples/hello/pods").unwrap();
-    ///
-    /// let proj = Project::from_current_dir().unwrap();
-    /// assert_eq!(proj.root_dir(), saved.join("examples").join("hello"));
-    /// assert_eq!(proj.src_dir(),
-    ///            saved.join("examples").join("hello").join("src"));
-    /// assert_eq!(proj.output_dir(),
-    ///            saved.join("examples").join("hello").join(".cage"));
-    ///
-    /// env::set_current_dir(saved).unwrap();
-    /// ```
     pub fn from_current_dir() -> Result<Project> {
         // (We can only test this using a doc test because testing it
         // requires messing with `set_current_dir`, which isn't thread safe

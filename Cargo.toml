@@ -36,6 +36,10 @@ name = "cage"
 doc = false
 test = true
 
+[dev-dependencies]
+cli_test_dir = "0.1.4"
+copy_dir = "0.1"
+
 [build-dependencies]
 glob = "0.2.11"
 includedir_codegen = "0.2.1"
