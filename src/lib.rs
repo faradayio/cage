@@ -89,6 +89,8 @@ extern crate lazy_static;
 #[macro_use]
 extern crate log;
 extern crate phf;
+#[macro_use(row)]
+extern crate prettytable;
 #[cfg(test)]
 extern crate rand;
 extern crate rayon;

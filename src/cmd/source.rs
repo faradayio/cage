@@ -1,10 +1,12 @@
 //! The `source` subcommand.
 
-use colored::*;
-
 use command_runner::CommandRunner;
 use errors::*;
 use project::Project;
+
+extern crate prettytable;
+use self::prettytable::Table;
+use self::prettytable::format::FORMAT_BLANK;
 
 /// We implement `source` with a trait so we put it in its own module.
 pub trait CommandSource {
@@ -29,9 +31,22 @@ impl CommandSource for Project {
     fn source_list<CR>(&self, _runner: &CR) -> Result<()>
         where CR: CommandRunner
     {
+        let mut table = Table::new();
+        table.set_format(FORMAT_BLANK);
+
+        table.add_row(row!["SERVICE", "IMAGE", "STATUS", "LOCAL", "REMOTE"]);
+
         for source in self.sources().iter() {
-            println!("{:25} {}", source.alias().green(), source.context());
-            if source.is_available_locally(self) {
+
+            let available_locally = source.is_available_locally(self);
+
+            let status = if available_locally && source.mounted() {
+                "mounted"
+            } else {
+                "unmounted"
+            };
+
+            let local = if available_locally {
                 let canonical = source.path(self).canonicalize()?;
                 // Try to strip the prefix, but this may fail on Windows
                 // or if the source is in a weird location.
@@ -39,14 +54,23 @@ impl CommandSource for Project {
                     Ok(stripped) => stripped.to_owned(),
                     Err(_) => canonical.to_owned(),
                 };
-                let mounted = if source.mounted() {
-                    "(mounted)".normal()
-                } else {
-                    "(NOT MOUNTED)".red().bold()
-                };
-                println!("  Available at {} {}", path.display(), mounted);
-            }
+                format!("{}", path.display()).to_owned()
+            } else {
+                String::from("")
+            };
+
+            table.add_row(row![
+                source.alias(),
+                source.image(),
+                status,
+                local,
+                source.context()
+            ]);
+
         }
+
+        table.printstd();
+
         Ok(())
     }
 

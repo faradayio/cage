@@ -50,10 +50,17 @@ impl Sources {
     /// Add a source tree to a map, keyed by its alias.  Returns the alias.
     fn add_source(sources: &mut BTreeMap<String, Source>,
                   mounted_sources: &BTreeMap<String, bool>,
-                  context: &dc::Context)
+                  context: &dc::Context,
+                  image: Option<String>)
                   -> Result<String> {
         // Figure out what alias we want to use.
         let alias = context.human_alias()?;
+
+        // Get the fully qualified image name
+        let fq_image: String = match image {
+            Some(i) => { format!("{}", i) }
+            None =>    { String::from("") }
+        };
 
         // Look up whether we've mounted this container or not.
         let mounted = mounted_sources.get(&alias).cloned().unwrap_or(true);
@@ -61,6 +68,7 @@ impl Sources {
         // Build our Source object.
         let source = Source {
             alias: alias.clone(),
+            image: fq_image,
             context: context.clone(),
             mounted: mounted,
         };
@@ -104,7 +112,8 @@ impl Sources {
             for file in pod.all_files() {
                 for service in file.services.values() {
                     if let Some(context) = service.context()? {
-                        Self::add_source(&mut sources, &mounted, context)?;
+                        let image = format!("{}", service.image.clone().unwrap().to_string());
+                        Self::add_source(&mut sources, &mounted, context, Some(image))?;
                     }
                 }
             }
@@ -116,7 +125,7 @@ impl Sources {
             let libs: BTreeMap<String, SourceConfig> = load_yaml(&path)?;
             for (lib_key, lib_info) in &libs {
                 let context = lib_info.context.value()?;
-                let alias = Self::add_source(&mut sources, &mounted, context)?;
+                let alias = Self::add_source(&mut sources, &mounted, context, None)?;
                 lib_keys.insert(lib_key.clone(), alias);
             }
         }
@@ -195,6 +204,8 @@ impl<'a> Iterator for Iter<'a> {
 pub struct Source {
     /// A short name for this source tree.
     alias: String,
+    /// The fully qualified image used by the services this source maps to
+    image: String,
     /// The remote location from which we can clone this source tree, or
     /// the local directory where we can find it.
     context: dc::Context,
@@ -208,6 +219,11 @@ impl Source {
     /// a directory name or command-line argument.
     pub fn alias(&self) -> &str {
         &self.alias
+    }
+
+    /// The fully qualified image used by the services this source maps to
+    pub fn image(&self) -> &str {
+        &self.image
     }
 
     /// The remote git URL from which we can clone this source tree.
@@ -284,6 +300,7 @@ fn are_loaded_with_projects() {
     assert_eq!(hello.context(), &dc::Context::new(url));
     assert_eq!(hello.path(&proj),
                proj.src_dir().join("dockercloud-hello-world"));
+    assert_eq!(hello.image(), "dockercloud/hello-world");
 }
 
 #[test]
