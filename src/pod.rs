@@ -290,10 +290,16 @@ impl Pod {
     }
 
     /// Run a named script for specified service name
-    pub fn run_script<CR>(&self, runner: &CR, project: &Project, service_name: &str, script_name: &str) -> Result<()> 
+    pub fn run_script<CR>(&self,
+                          runner: &CR,
+                          project: &Project,
+                          service_name: &str,
+                          script_name: &str,
+                          opts: &args::opts::Run
+                          ) -> Result<()> 
         where CR: CommandRunner
     {
-        self.config.run_script(runner, &project, &service_name, &script_name)
+        self.config.run_script(runner, &project, &service_name, &script_name, &opts)
     }
 }
 

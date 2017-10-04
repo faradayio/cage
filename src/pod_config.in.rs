@@ -55,12 +55,23 @@ struct Config {
 impl Config {
 
     /// Run a named script for the specified service in this pod
-    pub fn run_script<CR>(&self, runner: &CR, project: &Project, service_name: &str, script_name: &str) -> Result<()> 
+    pub fn run_script<CR>(&self,
+                          runner: &CR,
+                          project: &Project,
+                          service_name: &str,
+                          script_name: &str,
+                          opts: &args::opts::Run
+                          ) -> Result<()> 
         where CR: CommandRunner
     {
         match self.services.get(service_name) {
             Some(service_config) => {
-                service_config.run_script(runner, &project, &service_name, &script_name)?
+                service_config.run_script(
+                    runner,
+                    &project,
+                    &service_name,
+                    &script_name,
+                    &opts)?
             },
             None => {}
         }
@@ -81,11 +92,17 @@ struct ServiceConfig {
 impl ServiceConfig {
 
     /// Run a named script for the given service
-    pub fn run_script<CR>(&self, runner: &CR, project: &Project, service_name: &str, script_name: &str) -> Result<()>
+    pub fn run_script<CR>(&self,
+                          runner: &CR,
+                          project: &Project,
+                          service_name: &str,
+                          script_name: &str,
+                          opts: &args::opts::Run
+                          ) -> Result<()>
         where CR: CommandRunner
     {
         if let Some(script) = self.scripts.get(script_name) {
-            script.run(runner, &project, service_name)?;
+            script.run(runner, &project, service_name, &opts)?;
         }
         Ok(())
     }
@@ -98,7 +115,12 @@ struct Script(Vec<Vec<String>>);
 impl Script {
 
     /// Execute each command defined for the named script
-    pub fn run<CR>(&self, runner: &CR, project: &Project, service_name: &str) -> Result<()> 
+    pub fn run<CR>(
+        &self,
+        runner: &CR,
+        project: &Project,
+        service_name: &str,
+        opts: &args::opts::Run) -> Result<()> 
         where CR: CommandRunner
     {
         for cmd in &self.0 {
@@ -111,7 +133,6 @@ impl Script {
             } else {
                 None
             };
-            let opts = args::opts::Run::default();
             project.run(runner, service_name, cmd.as_ref(), &opts)?;
         }
         Ok(())
