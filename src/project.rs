@@ -410,17 +410,10 @@ impl Project {
 
     /// Process our pods, flattening and transforming them using our
     /// plugins, and output them to the specified directory.
-    fn output_helper(&self, op: Operation, subcommand: &str, export_dir: &Path) -> Result<()> {
+    fn output_helper(&self, pods: Vec<&Pod>, op: Operation, subcommand: &str, export_dir: &Path) -> Result<()> {
         // Output each pod.  This isn't especially slow (except maybe the
         // Vault plugin), but parallelizing things is easy.
-        self.pods.par_iter()
-            // Don't export pods which aren't enabled.  However, we currently
-            // need to output these for `Operation::Output` in case the user
-            // wants to `run` a task using one of these pod definitions.
-            .filter(|pod| {
-                pod.enabled_in(&self.current_target) ||
-                    op == Operation::Output
-            })
+        pods.par_iter()
             // Process each pod in parallel.
             .map(|pod| -> Result<()> {
                 // Figure out where to put our pod.
@@ -452,6 +445,10 @@ impl Project {
     /// Delete our existing output and replace it with a processed and
     /// expanded version of our pod definitions.
     pub fn output(&self, subcommand: &str) -> Result<()> {
+        let pods = self.pods.iter().filter(|pod| {
+            pod.enabled_in(&self.current_target)
+        }).collect::<Vec<&_>>();
+
         // Get a path to our output pods directory (and delete it if it
         // exists).
         let out_pods = self.output_pods_dir();
@@ -460,13 +457,17 @@ impl Project {
                 .map_err(|e| err!("Cannot delete {}: {}", out_pods.display(), e)));
         }
 
-        self.output_helper(Operation::Output, subcommand, &out_pods)
+        self.output_helper(pods, Operation::Output, subcommand, &out_pods)
     }
 
     /// Export this project (with the specified target applied) as a set
     /// of standalone `*.yml` files with no environment variable
     /// interpolations and no external dependencies.
     pub fn export(&self, export_dir: &Path) -> Result<()> {
+        let pods = self.pods.iter().filter(|pod| {
+            pod.enabled_in(&self.current_target)
+        }).collect::<Vec<&_>>();
+
         // Don't clobber an existing directory.
         if export_dir.exists() {
             return Err(err!("The directory {} already exists", export_dir.display()));
@@ -477,8 +478,10 @@ impl Project {
             warn!("Exporting project without --default-tags");
         }
 
-        self.output_helper(Operation::Export, "export", export_dir)
+        self.output_helper(pods, Operation::Export, "export", export_dir)
     }
+
+
 }
 
 /// Convert to JSON for use in generator templates.
