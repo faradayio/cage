@@ -10,12 +10,22 @@ use project::{Project, PodOrService};
 /// Included into project in order to run named scripts on one ore more services
 pub trait CommandRunScript {
     /// Run a named script on all matching services
-    fn run_script<CR>(&self, runner: &CR, act_on: &args::ActOn, script_name: &str) -> Result<()>
+    fn run_script<CR>(&self,
+                      runner: &CR,
+                      act_on: &args::ActOn,
+                      script_name: &str,
+                      opts: &args::opts::Run
+                      ) -> Result<()>
         where CR: CommandRunner;
 }
 
 impl CommandRunScript for Project {
-    fn run_script<CR>(&self, runner: &CR, act_on: &args::ActOn, script_name: &str) -> Result<()>
+    fn run_script<CR>(&self,
+                      runner: &CR,
+                      act_on: &args::ActOn,
+                      script_name: &str,
+                      opts: &args::opts::Run
+                      ) -> Result<()>
         where CR: CommandRunner
     {
         let target = self.current_target();
@@ -27,7 +37,7 @@ impl CommandRunScript for Project {
                     // Ignore any pods that aren't enabled in the current target
                     if pod.enabled_in(&target) {
                         for service_name in pod.service_names() {
-                            pod.run_script(runner, &self, &service_name, &script_name)?;
+                            pod.run_script(runner, &self, &service_name, &script_name, &opts)?;
                         }
                     }
                 }
@@ -36,7 +46,7 @@ impl CommandRunScript for Project {
                     // Don't run this on any service whose pod isn't enabled in
                     // the current target
                     if pod.enabled_in(&target) {
-                        pod.run_script(runner, &self, &service_name, &script_name)?;
+                        pod.run_script(runner, &self, &service_name, &script_name, &opts)?;
                     }
                 }
             }
@@ -51,9 +61,10 @@ fn runs_scripts_on_all_services() {
     let _ = env_logger::init();
     let proj = Project::from_example("rails_hello").unwrap();
     let runner = TestCommandRunner::new();
+    let opts = args::opts::Run::default();
     proj.output().unwrap();
 
-    proj.run_script(&runner, &args::ActOn::All, "routes").unwrap();
+    proj.run_script(&runner, &args::ActOn::All, "routes", &opts).unwrap();
     assert_ran!(runner, {
         ["docker-compose",
          "-p",

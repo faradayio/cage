@@ -134,6 +134,9 @@ subcommands:
   - run-script:
       about: "Run a named script defined in metadata for specified pods or services"
       args:
+        - no-deps: &nodeps
+            long: "--no-deps"
+            help: "Do not start linked services when running scripts"
         - SCRIPT_NAME:
             value_name: "SCRIPT_NAME"
             required: true
