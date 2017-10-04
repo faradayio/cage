@@ -71,7 +71,9 @@ trait ArgMatchesExt {
 
 impl<'a> ArgMatchesExt for clap::ArgMatches<'a> {
     fn should_output_project(&self) -> bool {
-        self.subcommand_name() != Some("export")
+        let subcommand = self.subcommand_name();
+        subcommand != Some("export") &&
+            subcommand != Some("run-script")
     }
 
     fn target_name(&self) -> &str {
@@ -260,9 +262,9 @@ fn run(matches: &clap::ArgMatches) -> Result<()> {
             proj.run(&runner, service, cmd.as_ref(), &opts)?;
         }
         "run-script" => {
-            warn_if_pods_are_enabled_but_not_running(&proj)?;
             let script_name = sc_matches.value_of("SCRIPT_NAME").unwrap();
             let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE", true);
+            proj.output_enabled()?;
             proj.run_script(&runner, &acts_on, script_name.as_ref())?;
         }
         "exec" => {
