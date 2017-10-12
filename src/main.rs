@@ -261,6 +261,7 @@ fn run(matches: &clap::ArgMatches) -> Result<()> {
             proj.run(&runner, service, cmd.as_ref(), &opts)?;
         }
         "run-script" => {
+            warn_if_pods_are_enabled_but_not_running(&proj)?;
             let opts = sc_matches.to_run_options();
             let script_name = sc_matches.value_of("SCRIPT_NAME").unwrap();
             let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE", true);
