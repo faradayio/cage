@@ -284,7 +284,7 @@ impl PluginTransform for Plugin {
         }
 
         // Apply to each service.
-        for (name, mut service) in &mut file.services {
+        for (name, service) in &mut file.services {
             // Set up a ConfigEnvironment that we can use to perform
             // interpolations of values like `$SERVICE` in our config file.
             let env = ConfigEnvironment {
