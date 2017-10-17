@@ -3,8 +3,6 @@
 #![cfg_attr(feature="clippy", feature(plugin))]
 #![cfg_attr(feature="clippy", plugin(clippy))]
 
-#![deny(warnings)]
-
 extern crate cage;
 #[macro_use]
 extern crate clap;

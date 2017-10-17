@@ -61,10 +61,6 @@
 #![cfg_attr(all(not(test), feature="clippy"), warn(result_unwrap_used))]
 #![cfg_attr(feature="clippy", warn(wrong_pub_self_convention))]
 
-// Fail hard on warnings.  This will be automatically disabled when we're
-// used as a dependency by other crates, thanks to Cargo magic.
-// #![deny(warnings)]
-
 // Compiler plugins only work with Rust nightly builds, not with stable
 // compilers.  We want to work with both.
 #![cfg_attr(feature = "serde_derive", feature(proc_macro))]
