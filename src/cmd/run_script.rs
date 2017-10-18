@@ -6,6 +6,8 @@ use command_runner::CommandRunner;
 use command_runner::TestCommandRunner;
 use errors::*;
 use project::{Project, PodOrService};
+#[cfg(test)]
+use subcommand::Subcommand;
 
 /// Included into project in order to run named scripts on one ore more services
 pub trait CommandRunScript {
@@ -62,7 +64,7 @@ fn runs_scripts_on_all_services() {
     let proj = Project::from_example("rails_hello").unwrap();
     let runner = TestCommandRunner::new();
     let opts = args::opts::Run::default();
-    proj.output().unwrap();
+    proj.output(Subcommand::RunScript).unwrap();
 
     proj.run_script(&runner, &args::ActOn::All, "routes", &opts).unwrap();
     assert_ran!(runner, {
