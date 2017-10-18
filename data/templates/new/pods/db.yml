@@ -6,7 +6,7 @@ version: "2"
 
 services:
   db:
-    image: "postgres"
+    image: "postgres:alpine"
     # We can use a relative volume here because this pod is only used
     # in development mode.
     volumes:
