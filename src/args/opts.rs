@@ -172,7 +172,7 @@ fn exec_options_to_args_returns_appropriate_flags() {
     assert_eq!(opts.to_args(), expected);
 }
 
-/// Options for `docker_compose exec`.
+/// Options for `docker_compose run`.
 #[derive(Debug, Clone, Default)]
 pub struct Run {
     /// Our "superclass", faked using `Deref`.
@@ -184,6 +184,10 @@ pub struct Run {
     /// Override the container's entrypoint.  Specify `Some("".to_owned())`
     /// to reset the entrypoint to the default.
     pub entrypoint: Option<String>,
+
+    /// Don't start linked services when running specified service,
+    /// default: false
+    pub no_deps: bool,
 
     /// PRIVATE: This field is a stand-in for future options.
     /// See http://stackoverflow.com/q/39277157/12089
@@ -215,6 +219,9 @@ impl ToArgs for Run {
         if let Some(ref entrypoint) = self.entrypoint {
             args.push(OsStr::new("--entrypoint").to_owned());
             args.push(entrypoint.into());
+        }
+        if self.no_deps {
+            args.push(OsStr::new("--no-deps").to_owned());
         }
         args
     }
