@@ -722,6 +722,10 @@ fn export_applies_expected_transforms() {
     let file = dc::File::read_from_path(frontend_file).unwrap();
     let web = file.services.get("web").unwrap();
 
+    // Make sure our `build` entry has not been pointed at the local source
+    // directory.
+    assert!(web.build.is_none());
+
     // Make sure we've added our custom labels.
     assert_eq!(web.labels.get("io.fdy.cage.target").unwrap().value().unwrap(),
                "development");
