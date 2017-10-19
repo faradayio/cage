@@ -7,6 +7,8 @@ use command_runner::TestCommandRunner;
 use errors::*;
 use ext::service::ServiceExt;
 use project::Project;
+#[cfg(test)]
+use subcommand::Subcommand;
 use util::err;
 
 /// We implement `exec` with a trait so we can put it in its own
@@ -80,7 +82,7 @@ fn invokes_docker_exec() {
     let _ = env_logger::init();
     let proj = Project::from_example("hello").unwrap();
     let runner = TestCommandRunner::new();
-    proj.output().unwrap();
+    proj.output(Subcommand::Exec).unwrap();
 
     let command = args::Command::new("true");
     let mut opts = args::opts::Exec::default();
@@ -108,7 +110,7 @@ fn runs_shells() {
     let _ = env_logger::init();
     let proj = Project::from_example("hello").unwrap();
     let runner = TestCommandRunner::new();
-    proj.output().unwrap();
+    proj.output(Subcommand::Exec).unwrap();
 
     proj.shell(&runner, "web", &Default::default()).unwrap();
 

@@ -124,6 +124,7 @@ pub mod hook;
 pub mod plugins;
 mod pod;
 mod project;
+pub mod subcommand;
 mod runtime_state;
 mod serde_helpers;
 mod service_locations;

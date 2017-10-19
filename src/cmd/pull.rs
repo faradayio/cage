@@ -9,6 +9,8 @@ use command_runner::CommandRunner;
 use command_runner::TestCommandRunner;
 use errors::*;
 use project::Project;
+#[cfg(test)]
+use subcommand::Subcommand;
 
 /// We implement `pull` with a trait so we put it in its own module.
 pub trait CommandPull {
@@ -36,7 +38,7 @@ fn runs_docker_compose_pull_on_all_pods() {
     let _ = env_logger::init();
     let proj = Project::from_example("hello").unwrap();
     let runner = TestCommandRunner::new();
-    proj.output().unwrap();
+    proj.output(Subcommand::Pull).unwrap();
 
     proj.pull(&runner, &args::ActOn::All).unwrap();
     assert_ran!(runner, {

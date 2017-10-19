@@ -11,6 +11,8 @@ use command_runner::TestCommandRunner;
 use errors::*;
 use pod::{Pod, PodType};
 use project::{PodOrService, Project};
+#[cfg(test)]
+use subcommand::Subcommand;
 use runtime_state::RuntimeState;
 
 /// We implement `up` with a trait so we put it in its own module.
@@ -124,7 +126,7 @@ fn runs_docker_compose_up_honors_enable_in_targets() {
     let mut proj = Project::from_example("rails_hello").unwrap();
     proj.set_current_target_name("production").unwrap();
     let runner = TestCommandRunner::new();
-    proj.output().unwrap();
+    proj.output(Subcommand::Up).unwrap();
 
     let opts = args::opts::Up::default();
     proj.up(&runner, &args::ActOn::All, &opts).unwrap();

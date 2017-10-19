@@ -10,6 +10,8 @@ use command_runner::TestCommandRunner;
 use errors::*;
 #[cfg(test)]
 use project::Project;
+#[cfg(test)]
+use subcommand::Subcommand;
 use util::ToStrOrErr;
 
 /// Keeps track of hook scripts and invokes them at appropriate times.
@@ -93,7 +95,7 @@ fn runs_requested_hook_scripts() {
     let _ = env_logger::init();
     let proj = Project::from_example("hello").unwrap();
     let runner = TestCommandRunner::new();
-    proj.output().unwrap();
+    proj.output(Subcommand::Pull).unwrap();
 
     proj.hooks().invoke(&runner, "pull", &BTreeMap::default()).unwrap();
     assert_ran!(runner, {

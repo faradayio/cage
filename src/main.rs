@@ -26,6 +26,7 @@ use yaml_rust::yaml;
 use cage::command_runner::{Command, CommandRunner, OsCommandRunner};
 use cage::cmd::*;
 use cage::Result;
+use cage::subcommand::Subcommand;
 
 /// Load our command-line interface definitions from an external `clap`
 /// YAML file.  We could create these using code, but at the cost of more
@@ -180,16 +181,17 @@ fn run(matches: &clap::ArgMatches) -> Result<()> {
     // We know that we always have a subcommand because our `cli.yml`
     // requires this and `clap` is supposed to enforce it.
     let sc_name = matches.subcommand_name().unwrap();
+    let subcommand = sc_name.parse::<Subcommand>().unwrap();
     let sc_matches: &clap::ArgMatches = matches.subcommand_matches(sc_name).unwrap();
 
     // Handle any subcommands that we can handle without a project
     // directory.
-    match sc_name {
-        "sysinfo" => {
+    match subcommand {
+        Subcommand::Sysinfo => {
             all_versions()?;
             return Ok(());
         }
-        "new" => {
+        Subcommand::New => {
             cage::Project::generate_new(&env::current_dir()?,
                                         sc_matches.value_of("NAME").unwrap())?;
             return Ok(());
@@ -212,90 +214,90 @@ fn run(matches: &clap::ArgMatches) -> Result<()> {
     // Output our project's `*.yml` files for `docker-compose` if we'll
     // need it.
     if matches.should_output_project() {
-        proj.output()?;
+        proj.output(subcommand)?;
     }
 
     // Handle our subcommands that require a `Project`.
     let runner = OsCommandRunner::new();
-    match sc_name {
-        "status" => {
+    match subcommand {
+        Subcommand::Status => {
             let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE", true);
             proj.status(&runner, &acts_on)?;
         }
-        "pull" => {
+        Subcommand::Pull => {
             let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE", true);
             proj.pull(&runner, &acts_on)?;
         }
-        "build" => {
+        Subcommand::Build => {
             let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE", true);
             let opts = cage::args::opts::Empty;
             proj.compose(&runner, "build", &acts_on, &opts)?;
         }
-        "up" => {
+        Subcommand::Up => {
             let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE", false);
             let opts = cage::args::opts::Up::new(sc_matches.is_present("init"));
             proj.up(&runner, &acts_on, &opts)?;
         }
-        "restart" => {
+        Subcommand::Restart => {
             let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE", false);
             let opts = cage::args::opts::Empty;
             proj.compose(&runner, "restart", &acts_on, &opts)?;
         }
-        "stop" => {
+        Subcommand::Stop => {
             let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE", false);
             let opts = cage::args::opts::Empty;
             proj.compose(&runner, "stop", &acts_on, &opts)?;
         }
-        "rm" => {
+        Subcommand::Rm => {
             let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE", true);
             let opts = sc_matches.to_rm_options();
             proj.compose(&runner, "rm", &acts_on, &opts)?;
         }
-        "run" => {
+        Subcommand::Run => {
             warn_if_pods_are_enabled_but_not_running(&proj)?;
             let opts = sc_matches.to_run_options();
             let cmd = sc_matches.to_exec_command();
             let service = sc_matches.value_of("SERVICE").unwrap();
             proj.run(&runner, service, cmd.as_ref(), &opts)?;
         }
-        "run-script" => {
+        Subcommand::RunScript => {
             warn_if_pods_are_enabled_but_not_running(&proj)?;
             let opts = sc_matches.to_run_options();
             let script_name = sc_matches.value_of("SCRIPT_NAME").unwrap();
             let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE", true);
             proj.run_script(&runner, &acts_on, script_name.as_ref(), &opts)?;
         }
-        "exec" => {
+        Subcommand::Exec => {
             warn_if_pods_are_enabled_but_not_running(&proj)?;
             let service = sc_matches.value_of("SERVICE").unwrap();
             let opts = sc_matches.to_exec_options();
             let cmd = sc_matches.to_exec_command().unwrap();
             proj.exec(&runner, service, &cmd, &opts)?;
         }
-        "shell" => {
+        Subcommand::Shell => {
             warn_if_pods_are_enabled_but_not_running(&proj)?;
             let service = sc_matches.value_of("SERVICE").unwrap();
             let opts = sc_matches.to_exec_options();
             proj.shell(&runner, service, &opts)?;
         }
-        "test" => {
+        Subcommand::Test => {
             warn_if_pods_are_enabled_but_not_running(&proj)?;
             let service = sc_matches.value_of("SERVICE").unwrap();
             let cmd = sc_matches.to_exec_command();
             proj.test(&runner, service, cmd.as_ref())?;
         }
-        "source" => run_source(&runner, &mut proj, sc_matches)?,
-        "generate" => run_generate(&runner, &proj, sc_matches)?,
-        "logs" => {
+        Subcommand::Source => run_source(&runner, &mut proj, sc_matches)?,
+        Subcommand::Generate => run_generate(&runner, &proj, sc_matches)?,
+        Subcommand::Logs => {
             let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE", true);
             let opts = sc_matches.to_logs_options();
             proj.logs(&runner, &acts_on, &opts)?;
         }
-        "export" => {
+        Subcommand::Export => {
             let dir = sc_matches.value_of("DIR").unwrap();
             proj.export(Path::new(dir))?;
         }
-        unknown => unreachable!("Unexpected subcommand '{}'", unknown),
+        unknown => unreachable!("Unexpected subcommand '{:?}'", unknown),
     }
 
     Ok(())
@@ -311,33 +313,34 @@ fn run_source<R>(runner: &R,
     // We know that we always have a subcommand because our `cli.yml`
     // requires this and `clap` is supposed to enforce it.
     let sc_name = matches.subcommand_name().unwrap();
+    let subcommand = sc_name.parse::<Subcommand>().unwrap();
     let sc_matches: &clap::ArgMatches = matches.subcommand_matches(sc_name).unwrap();
 
     // Dispatch our subcommand.
     let mut re_output = true;
-    match sc_name {
-        "ls" => {
+    match subcommand {
+        Subcommand::SourceLs => {
             re_output = false;
             proj.source_list(runner)?;
         }
-        "clone" => {
+        Subcommand::SourceClone => {
             let alias = sc_matches.value_of("ALIAS").unwrap();
             proj.source_clone(runner, alias)?;
         }
-        "mount" => {
+        Subcommand::SourceMount => {
             let alias = sc_matches.value_of("ALIAS").unwrap();
             proj.source_set_mounted(runner, alias, true)?;
         }
-        "unmount" => {
+        Subcommand::SourceUnmount => {
             let alias = sc_matches.value_of("ALIAS").unwrap();
             proj.source_set_mounted(runner, alias, false)?;
         }
-        unknown => unreachable!("Unexpected subcommand '{}'", unknown),
+        unknown => unreachable!("Unexpected subcommand '{:?}'", unknown),
     }
 
     // Regenerate our output if it might have changed.
     if re_output {
-        proj.output()?;
+        proj.output(subcommand)?;
     }
 
     Ok(())
@@ -353,11 +356,12 @@ fn run_generate<R>(_runner: &R,
     // We know that we always have a subcommand because our `cli.yml`
     // requires this and `clap` is supposed to enforce it.
     let sc_name = matches.subcommand_name().unwrap();
+    let subcommand = sc_name.parse::<Subcommand>().unwrap();
     let sc_matches: &clap::ArgMatches = matches.subcommand_matches(sc_name).unwrap();
 
-    match sc_name {
+    match subcommand {
         // TODO LOW: Allow running this without a project?
-        "completion" => {
+        Subcommand::GenerateCompletion => {
             let shell = match sc_matches.value_of("SHELL").unwrap() {
                 "bash" => clap::Shell::Bash,
                 "fish" => clap::Shell::Fish,
@@ -366,7 +370,7 @@ fn run_generate<R>(_runner: &R,
             let cli_yaml = load_yaml!("cli.yml");
             cli(cli_yaml).gen_completions("cage", shell, proj.root_dir());
         }
-        other => proj.generate(other)?,
+        _ => proj.generate(sc_name)?,
     }
     Ok(())
 }
