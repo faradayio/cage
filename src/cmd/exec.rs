@@ -80,7 +80,7 @@ fn invokes_docker_exec() {
     let _ = env_logger::init();
     let proj = Project::from_example("hello").unwrap();
     let runner = TestCommandRunner::new();
-    proj.output().unwrap();
+    proj.output("exec").unwrap();
 
     let command = args::Command::new("true");
     let mut opts = args::opts::Exec::default();
@@ -108,7 +108,7 @@ fn runs_shells() {
     let _ = env_logger::init();
     let proj = Project::from_example("hello").unwrap();
     let runner = TestCommandRunner::new();
-    proj.output().unwrap();
+    proj.output("exec").unwrap();
 
     proj.shell(&runner, "web", &Default::default()).unwrap();
 

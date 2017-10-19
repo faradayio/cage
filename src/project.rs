@@ -410,7 +410,7 @@ impl Project {
 
     /// Process our pods, flattening and transforming them using our
     /// plugins, and output them to the specified directory.
-    fn output_helper(&self, op: Operation, export_dir: &Path) -> Result<()> {
+    fn output_helper(&self, op: Operation, subcommand: &str, export_dir: &Path) -> Result<()> {
         // Output each pod.  This isn't especially slow (except maybe the
         // Vault plugin), but parallelizing things is easy.
         self.pods.par_iter()
@@ -439,7 +439,7 @@ impl Project {
                 // output.
                 let mut file = try!(pod.merged_file(&self.current_target));
                 try!(file.make_standalone(&self.pods_dir()));
-                let ctx = plugins::Context::new(self, pod);
+                let ctx = plugins::Context::new(self, pod, subcommand);
                 try!(self.plugins().transform(op, &ctx, &mut file));
                 try!(file.write_to_path(out_path));
                 Ok(())
@@ -451,7 +451,7 @@ impl Project {
 
     /// Delete our existing output and replace it with a processed and
     /// expanded version of our pod definitions.
-    pub fn output(&self) -> Result<()> {
+    pub fn output(&self, subcommand: &str) -> Result<()> {
         // Get a path to our output pods directory (and delete it if it
         // exists).
         let out_pods = self.output_pods_dir();
@@ -460,7 +460,7 @@ impl Project {
                 .map_err(|e| err!("Cannot delete {}: {}", out_pods.display(), e)));
         }
 
-        self.output_helper(Operation::Output, &out_pods)
+        self.output_helper(Operation::Output, subcommand, &out_pods)
     }
 
     /// Export this project (with the specified target applied) as a set
@@ -477,7 +477,7 @@ impl Project {
             warn!("Exporting project without --default-tags");
         }
 
-        self.output_helper(Operation::Export, export_dir)
+        self.output_helper(Operation::Export, "export", export_dir)
     }
 }
 
@@ -590,7 +590,7 @@ fn output_creates_a_directory_of_flat_yml_files() {
     use env_logger;
     let _ = env_logger::init();
     let proj = Project::from_example("rails_hello").unwrap();
-    proj.output().unwrap();
+    proj.output("up").unwrap();
     assert!(proj.output_dir.join("pods").join("frontend.yml").exists());
     assert!(proj.output_dir.join("pods").join("db.yml").exists());
     assert!(proj.output_dir.join("pods").join("rake.yml").exists());
@@ -609,7 +609,7 @@ fn output_applies_expected_transforms() {
     proj.set_default_tags(default_tags);
     let source = proj.sources().find_by_alias("dockercloud-hello-world").unwrap();
     source.fake_clone_source(&proj).unwrap();
-    proj.output().unwrap();
+    proj.output("build").unwrap();
 
     // Load the generated file and look at the `web` service we cloned.
     let frontend_file = proj.output_dir().join("pods").join("frontend.yml");
@@ -649,7 +649,7 @@ fn output_mounts_cloned_libraries() {
         .find_by_lib_key("coffee_rails")
         .expect("should define lib coffee_rails");
     source.fake_clone_source(&proj).unwrap();
-    proj.output().unwrap();
+    proj.output("up").unwrap();
 
     // Load the generated file and look at the `web` service we cloned.
     let frontend_file = proj.output_dir().join("pods").join("frontend.yml");
@@ -671,7 +671,7 @@ fn output_mounts_cloned_libraries() {
 #[test]
 fn output_supports_in_tree_source_code() {
     let proj = Project::from_example("node_hello").unwrap();
-    proj.output().unwrap();
+    proj.output("build").unwrap();
 
     // Load the generated file and look at the `web` service we cloned.
     let frontend_file = proj.output_dir().join("pods").join("frontend.yml");
@@ -724,9 +724,7 @@ fn export_applies_expected_transforms() {
 
     // Make sure our `build` entry has not been pointed at the local source
     // directory.
-    let url = "https://github.com/docker/dockercloud-hello-world.git";
-    assert_eq!(web.build.as_ref().unwrap().context.value().unwrap(),
-               &dc::Context::new(dc::GitUrl::new(url).unwrap()));
+    assert!(web.build.is_none());
 
     // Make sure we've added our custom labels.
     assert_eq!(web.labels.get("io.fdy.cage.target").unwrap().value().unwrap(),

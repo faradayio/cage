@@ -62,7 +62,7 @@ fn runs_scripts_on_all_services() {
     let proj = Project::from_example("rails_hello").unwrap();
     let runner = TestCommandRunner::new();
     let opts = args::opts::Run::default();
-    proj.output().unwrap();
+    proj.output("run-script").unwrap();
 
     proj.run_script(&runner, &args::ActOn::All, "routes", &opts).unwrap();
     assert_ran!(runner, {

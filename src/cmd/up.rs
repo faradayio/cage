@@ -124,7 +124,7 @@ fn runs_docker_compose_up_honors_enable_in_targets() {
     let mut proj = Project::from_example("rails_hello").unwrap();
     proj.set_current_target_name("production").unwrap();
     let runner = TestCommandRunner::new();
-    proj.output().unwrap();
+    proj.output("up").unwrap();
 
     let opts = args::opts::Up::default();
     proj.up(&runner, &args::ActOn::All, &opts).unwrap();

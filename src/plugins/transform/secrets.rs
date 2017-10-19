@@ -121,7 +121,7 @@ fn injects_secrets_into_services() {
 
     let target = proj.current_target();
     let frontend = proj.pod("frontend").unwrap();
-    let ctx = plugins::Context::new(&proj, frontend);
+    let ctx = plugins::Context::new(&proj, frontend, "up");
     let mut file = frontend.merged_file(target).unwrap();
     plugin.transform(Operation::Output, &ctx, &mut file).unwrap();
     let web = file.services.get("web").unwrap();

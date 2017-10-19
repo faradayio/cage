@@ -42,7 +42,7 @@ fn runs_docker_compose_logs() {
     let _ = env_logger::init();
     let proj = Project::from_example("rails_hello").unwrap();
     let runner = TestCommandRunner::new();
-    proj.output().unwrap();
+    proj.output("logs").unwrap();
 
     let opts = args::opts::Logs::default();
     proj.logs(&runner,
@@ -67,7 +67,7 @@ fn errors_when_act_on_specifies_multiple_containers() {
     let _ = env_logger::init();
     let proj = Project::from_example("rails_hello").unwrap();
     let runner = TestCommandRunner::new();
-    proj.output().unwrap();
+    proj.output("logs").unwrap();
 
     let opts = args::opts::Logs::default();
     assert!(proj.logs(&runner, &args::ActOn::All, &opts).is_err());
