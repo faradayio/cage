@@ -115,7 +115,7 @@ impl Project {
         // Print out mounted source code.
         let sources: Vec<&Source> = service.sources(self.sources())?
             .map(|source_result| {
-                let (_, source) = source_result?;
+                let (_, _, source) = source_result?;
                 Ok(source)
             })
             .collect::<Result<_>>()?;

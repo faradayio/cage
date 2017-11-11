@@ -61,7 +61,7 @@ impl Sources {
         // Build our Source object.
         let source = Source {
             alias: alias.clone(),
-            context: context.clone(),
+            context: context.without_subdirectory(),
             mounted: mounted,
         };
 

@@ -8,6 +8,7 @@ use errors::*;
 #[cfg(test)]
 use project::Project;
 use sources::{self, Source};
+use ext::context::ContextExt;
 use util::err;
 
 /// These methods will appear as regular methods on `Service` in any module
@@ -20,6 +21,10 @@ pub trait ServiceExt {
     /// The directory in which to mount our source code if it's checked
     /// out.
     fn source_mount_dir(&self) -> Result<String>;
+
+    /// The subdirectory inside the git repository where the source code
+    /// for this service is located.
+    fn repo_subdir(&self) -> Result<Option<String>>;
 
     /// Get the default shell associated with this service.  Used for
     /// getting interactive access to a container.
@@ -55,6 +60,18 @@ impl ServiceExt for dc::Service {
         Ok(srcdir.value()?.to_owned())
     }
 
+    fn repo_subdir(&self) -> Result<Option<String>> {
+        if let Some(context) = self.context()? {
+            match *context {
+                dc::Context::Dir(_) => (),
+                dc::Context::GitUrl(ref git_url) => {
+                    return Ok(git_url.subdirectory())
+                },
+            }
+        }
+        Ok(None)
+    }
+
     fn shell(&self) -> Result<String> {
         let default = dc::escape("sh")?;
         let shell = self.labels
@@ -83,7 +100,8 @@ impl ServiceExt for dc::Service {
                        -> Result<Sources<'b>> {
         // Get our `context`, if any.
         let source_mount_dir = self.source_mount_dir()?;
-        let context = self.context()?.map(|ctx| (source_mount_dir, ctx.clone()));
+        let repo_subdir = self.repo_subdir()?;
+        let context = self.context()?.map(|ctx| (source_mount_dir, repo_subdir, ctx.clone()));
 
         // Get our library keys and mount points.
         let mut libs = vec![];
@@ -109,23 +127,23 @@ pub struct Sources<'a> {
     /// All `Source` trees available for this repository.
     sources: &'a sources::Sources,
     /// Do we need to iterate over our `context` field?
-    context: Option<(String, dc::Context)>,
+    context: Option<(String, Option<String>, dc::Context)>,
     /// Libraries
     libs: vec::IntoIter<(String, String)>,
 }
 
 impl<'a> Iterator for Sources<'a> {
-    type Item = Result<(String, &'a Source)>;
+    type Item = Result<(String, Option<String>, &'a Source)>;
 
     fn next(&mut self) -> Option<Self::Item> {
         // Check for a `dc::Context` using `take`, which moves data out of
         // an `Option` value and leaves `None` in its place,
         // simulataneously updating our internal state and keeping the
         // borrow checker happy.
-        if let Some((container_path, context)) = self.context.take() {
-            if let Some(source) = self.sources.find_by_context(&context) {
+        if let Some((container_path, repo_subdir, context)) = self.context.take() {
+            if let Some(source) = self.sources.find_by_alias(&context.human_alias().unwrap()) {
                 // We have a `context` and a `source`, so return them.
-                Some(Ok((container_path, source)))
+                Some(Ok((container_path, repo_subdir, source)))
             } else {
                 // We have a `context` but it doesn't correspond to a known
                 // `Source`, so move on the next step of the iteration.
@@ -136,7 +154,7 @@ impl<'a> Iterator for Sources<'a> {
             self.libs.next().map(|(container_path, name)| {
                 match self.sources.find_by_lib_key(&name) {
                     None => Err(ErrorKind::UnknownLibKey(name).into()),
-                    Some(source) => Ok((container_path, source)),
+                    Some(source) => Ok((container_path, None, source)),
                 }
             })
         }
@@ -161,6 +179,26 @@ fn src_dir_returns_the_source_directory_for_this_service() {
     let merged = frontend.merged_file(target).unwrap();
     let proxy = merged.services.get("web").unwrap();
     assert_eq!(proxy.source_mount_dir().unwrap(), "/usr/src/app");
+}
+
+#[test]
+fn build_context_can_specify_a_subdirectory() {
+    use env_logger;
+    let _ = env_logger::init();
+    let proj: Project = Project::from_example("rails_hello_with_subdir").unwrap();
+    let target = proj.target("development").unwrap();
+
+    // Default value.
+    let db = proj.pod("db").unwrap();
+    let merged = db.merged_file(target).unwrap();
+    let db = merged.services.get("db").unwrap();
+    assert_eq!(db.repo_subdir().unwrap(), None);
+
+    // Custom value.
+    let frontend = proj.pod("frontend").unwrap();
+    let merged = frontend.merged_file(target).unwrap();
+    let web = merged.services.get("web").unwrap();
+    assert_eq!(web.repo_subdir().unwrap(), Some("myfolder".to_string()));
 }
 
 #[test]
