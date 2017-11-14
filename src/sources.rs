@@ -120,6 +120,9 @@ impl Sources {
             let libs: BTreeMap<String, SourceConfig> = load_yaml(&path)?;
             for (lib_key, lib_info) in &libs {
                 let context = lib_info.context.value()?;
+                if *context != context.without_repository_subdirectory() {
+                    Err(ErrorKind::LibHasRepoSubdirectory(lib_key.clone()))?;
+                }
                 let alias = Self::add_source(&mut sources, &mounted, context)?;
                 lib_keys.insert(lib_key.clone(), alias);
             }
@@ -302,6 +305,13 @@ fn are_loaded_from_config_sources_yml() {
     assert_eq!(lib.context(),
                &dc::Context::new("https://github.com/rails/coffee-rails.git"));
     assert_eq!(lib.path(&proj), proj.src_dir().join("coffee-rails"));
+}
+
+#[test]
+fn rejects_libs_with_subdirectories() {
+    use env_logger;
+    let _ = env_logger::init();
+    assert!(Project::from_fixture("with_lib_subdir").is_err())
 }
 
 #[test]

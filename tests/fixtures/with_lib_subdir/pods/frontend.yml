@@ -1,0 +1,9 @@
+version: "2"
+
+services:
+  web:
+    image: "faraday/rails_hello"
+    build: "https://github.com/faradayio/rails_hello.git"
+    labels:
+      io.fdy.cage.srcdir: "/usr/src/app"
+      io.fdy.cage.lib.coffee_rails: "/usr/src/app/vendor/coffee-rails"

@@ -1,0 +1,5 @@
+# This source has a subdirectory in its URL, which is not supported by Cage.
+# This fixture exists to make sure we return a useful error message in this case.
+
+coffee_rails:
+  context: "https://github.com/rails/coffee-rails.git#branch:subdir"
