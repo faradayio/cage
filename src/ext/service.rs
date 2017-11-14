@@ -22,9 +22,8 @@ pub trait ServiceExt {
     /// out.
     fn source_mount_dir(&self) -> Result<String>;
 
-    /// The subdirectory inside the git repository where the source code
-    /// for this service is located.
-    fn repo_subdir(&self) -> Result<Option<String>>;
+    /// The subdirectory inside the source where the code for this service is located.
+    fn source_subdirectory(&self) -> Result<Option<String>>;
 
     /// Get the default shell associated with this service.  Used for
     /// getting interactive access to a container.
@@ -60,12 +59,12 @@ impl ServiceExt for dc::Service {
         Ok(srcdir.value()?.to_owned())
     }
 
-    fn repo_subdir(&self) -> Result<Option<String>> {
+    fn source_subdirectory(&self) -> Result<Option<String>> {
         if let Some(context) = self.context()? {
-            match *context {
-                dc::Context::Dir(_) => (),
+            return match *context {
+                dc::Context::Dir(_) => Ok(None),
                 dc::Context::GitUrl(ref git_url) => {
-                    return Ok(git_url.subdirectory())
+                    Ok(git_url.subdirectory().map(|subdir| subdir.to_string()))
                 },
             }
         }
@@ -99,65 +98,69 @@ impl ServiceExt for dc::Service {
                        sources: &'b sources::Sources)
                        -> Result<Sources<'b>> {
         // Get our `context`, if any.
-        let source_mount_dir = self.source_mount_dir()?;
-        let repo_subdir = self.repo_subdir()?;
-        let context = self.context()?.map(|ctx| (source_mount_dir, repo_subdir, ctx.clone()));
+        let container_path = self.source_mount_dir()?;
+        let source_subdirectory = self.source_subdirectory()?;
+
+        let context = self.context()?
+            .and_then(|ctx| {
+                // human_alias is called on every context when constructing Sources
+                let alias = &ctx.human_alias().expect("human_alias failed on a context that worked previously");
+                sources.find_by_alias(alias)
+            })
+            .and_then(|source| {
+                Some(SourceMount { container_path, source, source_subdirectory })
+            });
 
         // Get our library keys and mount points.
         let mut libs = vec![];
         for (label, mount_as) in &self.labels {
             let prefix = "io.fdy.cage.lib.";
             if label.starts_with(prefix) {
-                libs.push((mount_as.value()?.to_owned(),
-                           (&label[prefix.len()..]).to_owned()));
+                let lib_name = label[prefix.len()..].to_string();
+                let source: Result<&Source> = sources
+                    .find_by_lib_key(&lib_name)
+                    .ok_or_else(|| ErrorKind::UnknownLibKey(lib_name).into());
+
+                libs.push(SourceMount {
+                    container_path: mount_as.value()?.to_owned(),
+                    source: source?,
+                    source_subdirectory: None,
+                })
             }
         }
 
-        Ok(Sources {
-            sources: sources,
-            context: context,
-            libs: libs.into_iter(),
-        })
+        Ok(Sources { context, libs: libs.into_iter() })
     }
 }
 
 /// Iterator over all the `Source` trees which can be mounted into this
 /// `Service`.
 pub struct Sources<'a> {
-    /// All `Source` trees available for this repository.
-    sources: &'a sources::Sources,
     /// Do we need to iterate over our `context` field?
-    context: Option<(String, Option<String>, dc::Context)>,
+    context: Option<SourceMount<'a>>,
     /// Libraries
-    libs: vec::IntoIter<(String, String)>,
+    libs: vec::IntoIter<SourceMount<'a>>,
+}
+
+#[derive(Clone)]
+pub struct SourceMount<'a> {
+    pub container_path: String,
+    pub source: &'a Source,
+    pub source_subdirectory: Option<String>,
 }
 
 impl<'a> Iterator for Sources<'a> {
-    type Item = Result<(String, Option<String>, &'a Source)>;
+    type Item = SourceMount<'a>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        // Check for a `dc::Context` using `take`, which moves data out of
+        // Check for a `SourceMount` using `take`, which moves data out of
         // an `Option` value and leaves `None` in its place,
         // simulataneously updating our internal state and keeping the
         // borrow checker happy.
-        if let Some((container_path, repo_subdir, context)) = self.context.take() {
-            if let Some(source) = self.sources.find_by_alias(&context.human_alias().unwrap()) {
-                // We have a `context` and a `source`, so return them.
-                Some(Ok((container_path, repo_subdir, source)))
-            } else {
-                // We have a `context` but it doesn't correspond to a known
-                // `Source`, so move on the next step of the iteration.
-                self.next()
-            }
-        } else {
-            // Iterate over any "libs"-style mounts.
-            self.libs.next().map(|(container_path, name)| {
-                match self.sources.find_by_lib_key(&name) {
-                    None => Err(ErrorKind::UnknownLibKey(name).into()),
-                    Some(source) => Ok((container_path, None, source)),
-                }
-            })
-        }
+        self.context.take().or_else(|| {
+             // If there is no SourceMount for the service itself, iterate over libs
+            self.libs.next()
+        })
     }
 }
 
@@ -192,13 +195,13 @@ fn build_context_can_specify_a_subdirectory() {
     let db = proj.pod("db").unwrap();
     let merged = db.merged_file(target).unwrap();
     let db = merged.services.get("db").unwrap();
-    assert_eq!(db.repo_subdir().unwrap(), None);
+    assert_eq!(db.source_subdirectory().unwrap(), None);
 
     // Custom value.
     let frontend = proj.pod("frontend").unwrap();
     let merged = frontend.merged_file(target).unwrap();
     let web = merged.services.get("web").unwrap();
-    assert_eq!(web.repo_subdir().unwrap(), Some("myfolder".to_string()));
+    assert_eq!(web.source_subdirectory().unwrap(), Some("myfolder".to_string()));
 }
 
 #[test]

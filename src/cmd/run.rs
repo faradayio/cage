@@ -67,10 +67,12 @@ impl CommandRun for Project {
         // If we don't have any mounted sources, warn.
         let service = pod.service_or_err(target, service_name)?;
         let sources = service.sources(self.sources())?
-            .collect::<Result<Vec<_>>>()?;
+            .collect::<Vec<_>>();
         let mount_count = sources.iter()
             .cloned()
-            .filter(|&(_, _, s)| s.is_available_locally(self) && s.mounted())
+            .filter(|ref source_mount| {
+                source_mount.source.is_available_locally(self) && source_mount.source.mounted()
+            })
             .count();
         if mount_count == 0 {
             warn!("No source code mounted into '{}/{}'", pod.name(), service_name);

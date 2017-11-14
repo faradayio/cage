@@ -58,10 +58,14 @@ impl Sources {
         // Look up whether we've mounted this container or not.
         let mounted = mounted_sources.get(&alias).cloned().unwrap_or(true);
 
-        // Build our Source object.
+        // Build our Source object. If two services share a git repo but
+        // use different subdirectories, we only create a single Source
+        // object, which we ensure by stripping the subdirectory part of
+        // any git URL when creating the Source. This also prevents us
+        // from trying to clone an invalid git URL containing a subdir.
         let source = Source {
             alias: alias.clone(),
-            context: context.without_subdirectory(),
+            context: context.without_repository_subdirectory(),
             mounted: mounted,
         };
 
