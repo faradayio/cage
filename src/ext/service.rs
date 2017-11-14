@@ -188,7 +188,7 @@ fn src_dir_returns_the_source_directory_for_this_service() {
 fn build_context_can_specify_a_subdirectory() {
     use env_logger;
     let _ = env_logger::init();
-    let proj: Project = Project::from_example("rails_hello_with_subdir").unwrap();
+    let proj: Project = Project::from_fixture("with_repo_subdir").unwrap();
     let target = proj.target("development").unwrap();
 
     // Default value.

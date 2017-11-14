@@ -89,7 +89,7 @@ impl PluginTransform for Plugin {
 fn adds_a_volume_with_a_subdirectory() {
     use env_logger;
     let _ = env_logger::init();
-    let proj = Project::from_example("rails_hello_with_subdir").unwrap();
+    let proj = Project::from_fixture("with_repo_subdir").unwrap();
     let plugin = Plugin::new(&proj).unwrap();
 
     let source = proj.sources().find_by_alias("rails_hello").unwrap();
