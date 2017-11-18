@@ -31,6 +31,7 @@ impl ContextExt for dc::Context {
                 let base_alias = file_stem.to_str_or_err()?.to_owned();
 
                 // Get the branch.  If available, this will be stored in the query.
+                // We exclude any subdirectory part of the URL from the alias.
                 match git_url.branch() {
                     None => Ok(base_alias),
                     Some(branch) => Ok(format!("{}_{}", base_alias, branch)),

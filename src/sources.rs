@@ -121,6 +121,8 @@ impl Sources {
             for (lib_key, lib_info) in &libs {
                 let context = lib_info.context.value()?;
                 if *context != context.without_repository_subdirectory() {
+                    // We might actually be able to handle this case, but lib sources
+                    // are already awkward enough without adding more features.
                     Err(ErrorKind::LibHasRepoSubdirectory(lib_key.clone()))?;
                 }
                 let alias = Self::add_source(&mut sources, &mounted, context)?;

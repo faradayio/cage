@@ -23,7 +23,11 @@ pub trait ServiceExt {
     fn source_mount_dir(&self) -> Result<String>;
 
     /// The subdirectory inside the source where the code for this service is located.
-    fn source_subdirectory(&self) -> Result<Option<String>>;
+    /// `Ok(None)` either means that this service has no build context, or that
+    /// its context is not a git repository, or that its context is a git repository
+    /// without a subdirectory. `Ok(Some(dir)` means that the service's build context
+    /// is a git repository, with a subdirectory of `dir`.
+    fn repository_subdirectory(&self) -> Result<Option<String>>;
 
     /// Get the default shell associated with this service.  Used for
     /// getting interactive access to a container.
@@ -59,7 +63,7 @@ impl ServiceExt for dc::Service {
         Ok(srcdir.value()?.to_owned())
     }
 
-    fn source_subdirectory(&self) -> Result<Option<String>> {
+    fn repository_subdirectory(&self) -> Result<Option<String>> {
         if let Some(context) = self.context()? {
             return match *context {
                 dc::Context::Dir(_) => Ok(None),
@@ -99,7 +103,7 @@ impl ServiceExt for dc::Service {
                        -> Result<Sources<'b>> {
         // Get our `context`, if any.
         let container_path = self.source_mount_dir()?;
-        let source_subdirectory = self.source_subdirectory()?;
+        let source_subdirectory = self.repository_subdirectory()?;
 
         let context = self.context()?
             .and_then(|ctx| {
@@ -195,13 +199,13 @@ fn build_context_can_specify_a_subdirectory() {
     let db = proj.pod("db").unwrap();
     let merged = db.merged_file(target).unwrap();
     let db = merged.services.get("db").unwrap();
-    assert_eq!(db.source_subdirectory().unwrap(), None);
+    assert_eq!(db.repository_subdirectory().unwrap(), None);
 
     // Custom value.
     let frontend = proj.pod("frontend").unwrap();
     let merged = frontend.merged_file(target).unwrap();
     let web = merged.services.get("web").unwrap();
-    assert_eq!(web.source_subdirectory().unwrap(), Some("myfolder".to_string()));
+    assert_eq!(web.repository_subdirectory().unwrap(), Some("myfolder".to_string()));
 }
 
 #[test]
