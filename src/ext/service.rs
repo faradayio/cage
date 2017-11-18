@@ -121,13 +121,13 @@ impl ServiceExt for dc::Service {
             let prefix = "io.fdy.cage.lib.";
             if label.starts_with(prefix) {
                 let lib_name = label[prefix.len()..].to_string();
-                let source: Result<&Source> = sources
+                let source = sources
                     .find_by_lib_key(&lib_name)
-                    .ok_or_else(|| ErrorKind::UnknownLibKey(lib_name).into());
+                    .ok_or_else(|| -> Error { ErrorKind::UnknownLibKey(lib_name).into() })?;
 
                 libs.push(SourceMount {
                     container_path: mount_as.value()?.to_owned(),
-                    source: source?,
+                    source,
                     source_subdirectory: None,
                 })
             }
