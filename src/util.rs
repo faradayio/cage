@@ -47,8 +47,10 @@ impl ToStrOrErr for OsStr {
 impl ToStrOrErr for Path {
     fn to_str_or_err(&self) -> Result<&str> {
         self.to_str().ok_or_else(|| {
-            err!("the path {} contains non-Unicode characters",
-                 self.display())
+            err!(
+                "the path {} contains non-Unicode characters",
+                self.display()
+            )
         })
     }
 }
@@ -91,9 +93,11 @@ impl ConductorPathExt for Path {
         // pointer here so we can use this for multiple error types,
         // because Rust closures don't seem to support type parameters.
         let wrap_err = |err: &error::Error| -> Error {
-            err!("error creating parent directories for {}: {}",
-                 parent.display(),
-                 err)
+            err!(
+                "error creating parent directories for {}: {}",
+                parent.display(),
+                err
+            )
         };
 
         // On certain file systems, `create_dir_all` is not terribly thread
@@ -116,7 +120,9 @@ impl ConductorPathExt for Path {
         });
         // Unwrap twice: Outer error is a possible retry failure, inner
         // error is a filesystem error.
-        retry_result.map_err(|e| wrap_err(&e))?.map_err(|e| wrap_err(&e))?;
+        retry_result
+            .map_err(|e| wrap_err(&e))?
+            .map_err(|e| wrap_err(&e))?;
         Ok(self.to_owned())
     }
 

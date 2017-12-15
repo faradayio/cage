@@ -9,25 +9,31 @@ use project::Project;
 /// We implement `source` with a trait so we put it in its own module.
 pub trait CommandSource {
     /// List all the source trees associated with a project.
-    fn source_list<CR>(&self, runner: &CR) -> Result<()> where CR: CommandRunner;
+    fn source_list<CR>(&self, runner: &CR) -> Result<()>
+    where
+        CR: CommandRunner;
 
     /// Clone the specified source tree.
     fn source_clone<CR>(&self, runner: &CR, alias: &str) -> Result<()>
-        where CR: CommandRunner;
+    where
+        CR: CommandRunner;
 
     /// Set the `mounted` flag on the specified source tree.
-    fn source_set_mounted<CR>(&mut self,
-                              runner: &CR,
-                              alias: &str,
-                              mounted: bool)
-                              -> Result<()>
-        where CR: CommandRunner;
+    fn source_set_mounted<CR>(
+        &mut self,
+        runner: &CR,
+        alias: &str,
+        mounted: bool,
+    ) -> Result<()>
+    where
+        CR: CommandRunner;
 }
 
 
 impl CommandSource for Project {
     fn source_list<CR>(&self, _runner: &CR) -> Result<()>
-        where CR: CommandRunner
+    where
+        CR: CommandRunner,
     {
         for source in self.sources().iter() {
             println!("{:25} {}", source.alias().green(), source.context());
@@ -51,7 +57,8 @@ impl CommandSource for Project {
     }
 
     fn source_clone<CR>(&self, runner: &CR, alias: &str) -> Result<()>
-        where CR: CommandRunner
+    where
+        CR: CommandRunner,
     {
         let source = self.sources()
             .find_by_alias(alias)
@@ -64,12 +71,14 @@ impl CommandSource for Project {
         Ok(())
     }
 
-    fn source_set_mounted<CR>(&mut self,
-                              runner: &CR,
-                              alias: &str,
-                              mounted: bool)
-                              -> Result<()>
-        where CR: CommandRunner
+    fn source_set_mounted<CR>(
+        &mut self,
+        runner: &CR,
+        alias: &str,
+        mounted: bool,
+    ) -> Result<()>
+    where
+        CR: CommandRunner,
     {
         {
             // Look up the source mutably.  We do this in a block so we can

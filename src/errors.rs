@@ -156,7 +156,8 @@ error_chain! {
 impl ErrorKind {
     /// Build an `ErrorKind::CouldNotParse` value.
     pub fn parse<S>(parsing_as: &'static str, input: S) -> ErrorKind
-        where S: Into<String>
+    where
+        S: Into<String>,
     {
         ErrorKind::CouldNotParse(parsing_as, input.into())
     }
@@ -164,7 +165,9 @@ impl ErrorKind {
 
 /// Convert a command-line into a string.
 fn command_to_string(command: &[OsString]) -> String {
-    let cmd: Vec<_> =
-        command.iter().map(|s| s.to_string_lossy().into_owned()).collect();
+    let cmd: Vec<_> = command
+        .iter()
+        .map(|s| s.to_string_lossy().into_owned())
+        .collect();
     cmd.join(" ")
 }

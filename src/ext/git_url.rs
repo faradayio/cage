@@ -26,13 +26,15 @@ impl GitUrlExt for dc::GitUrl {
 
 #[test]
 fn clone_args_handles_branch() {
-    let master = dc::GitUrl::new("https://github.com/faradayio/rails_hello.git")
-        .unwrap();
+    let master =
+        dc::GitUrl::new("https://github.com/faradayio/rails_hello.git").unwrap();
     let expected_url: OsString = master.to_string().into();
     assert_eq!(master.clone_args().unwrap(), vec![expected_url.clone()]);
 
-    let branch = dc::GitUrl::new("https://github.com/faradayio/rails_hello.git#dev")
-        .unwrap();
-    assert_eq!(branch.clone_args().unwrap(),
-               vec!["-b".into(), "dev".into(), expected_url.clone()]);
+    let branch =
+        dc::GitUrl::new("https://github.com/faradayio/rails_hello.git#dev").unwrap();
+    assert_eq!(
+        branch.clone_args().unwrap(),
+        vec!["-b".into(), "dev".into(), expected_url.clone()]
+    );
 }

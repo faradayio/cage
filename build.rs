@@ -2,8 +2,8 @@
 //! can include 3rd-party Rust dependencies and use them to generate Rust
 //! source code for us to compile.
 
-extern crate includedir_codegen;
 extern crate glob;
+extern crate includedir_codegen;
 
 use includedir_codegen::Compression;
 
@@ -19,4 +19,3 @@ fn main() {
         .build("data.rs")
         .unwrap();
 }
-

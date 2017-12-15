@@ -29,17 +29,19 @@ impl PluginNew for Plugin {
     }
 
     fn new(_project: &Project) -> Result<Self> {
-        Ok(Plugin { _placeholder: PhantomData })
+        Ok(Plugin {
+            _placeholder: PhantomData,
+        })
     }
 }
 
 impl PluginTransform for Plugin {
-    fn transform(&self,
-                 _op: Operation,
-                 ctx: &plugins::Context,
-                 file: &mut dc::File)
-                 -> Result<()> {
-
+    fn transform(
+        &self,
+        _op: Operation,
+        ctx: &plugins::Context,
+        file: &mut dc::File,
+    ) -> Result<()> {
         if ctx.subcommand != "build" {
             for service in &mut file.services.values_mut() {
                 service.build = None;
@@ -61,7 +63,9 @@ fn removes_build_for_most_commands() {
     let ctx = plugins::Context::new(&proj, frontend, "up");
     let mut file = frontend.merged_file(target).unwrap();
 
-    plugin.transform(Operation::Output, &ctx, &mut file).unwrap();
+    plugin
+        .transform(Operation::Output, &ctx, &mut file)
+        .unwrap();
 
     let web = file.services.get("web").unwrap();
     assert_eq!(web.build, None);
@@ -79,7 +83,9 @@ fn leaves_build_in_when_building() {
     let ctx = plugins::Context::new(&proj, frontend, "build");
     let mut file = frontend.merged_file(target).unwrap();
 
-    plugin.transform(Operation::Output, &ctx, &mut file).unwrap();
+    plugin
+        .transform(Operation::Output, &ctx, &mut file)
+        .unwrap();
 
     let web = file.services.get("web").unwrap();
     assert!(web.build != None);

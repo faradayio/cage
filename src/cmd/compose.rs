@@ -11,44 +11,52 @@ use project::{PodOrService, Project};
 /// Pass simple commands directly through to `docker-compose`.
 pub trait CommandCompose {
     /// Pass simple commands directly through to `docker-compose`.
-    fn compose<CR>(&self,
-                   runner: &CR,
-                   command: &str,
-                   act_on: &args::ActOn,
-                   opts: &args::ToArgs)
-                   -> Result<()>
-        where CR: CommandRunner;
+    fn compose<CR>(
+        &self,
+        runner: &CR,
+        command: &str,
+        act_on: &args::ActOn,
+        opts: &args::ToArgs,
+    ) -> Result<()>
+    where
+        CR: CommandRunner;
 
     /// Run a `docker-compose` command on a single pod.  If the pod is
     /// disabled, this does nothing.
-    fn compose_pod<CR>(&self,
-                       runner: &CR,
-                       command: &str,
-                       pod: &Pod,
-                       opts: &args::ToArgs)
-                       -> Result<()>
-        where CR: CommandRunner;
+    fn compose_pod<CR>(
+        &self,
+        runner: &CR,
+        command: &str,
+        pod: &Pod,
+        opts: &args::ToArgs,
+    ) -> Result<()>
+    where
+        CR: CommandRunner;
 
     /// Run a `docker-compose` command on a single service.  If the pod is
     /// disabled, this does nothing.
-    fn compose_service<CR>(&self,
-                           runner: &CR,
-                           command: &str,
-                           pod: &Pod,
-                           service_name: &str,
-                           opts: &args::ToArgs)
-                           -> Result<()>
-        where CR: CommandRunner;
+    fn compose_service<CR>(
+        &self,
+        runner: &CR,
+        command: &str,
+        pod: &Pod,
+        service_name: &str,
+        opts: &args::ToArgs,
+    ) -> Result<()>
+    where
+        CR: CommandRunner;
 }
 
 impl CommandCompose for Project {
-    fn compose<CR>(&self,
-                   runner: &CR,
-                   command: &str,
-                   act_on: &args::ActOn,
-                   opts: &args::ToArgs)
-                   -> Result<()>
-        where CR: CommandRunner
+    fn compose<CR>(
+        &self,
+        runner: &CR,
+        command: &str,
+        act_on: &args::ActOn,
+        opts: &args::ToArgs,
+    ) -> Result<()>
+    where
+        CR: CommandRunner,
     {
         for pod_or_service in act_on.pods_or_services(self) {
             match pod_or_service? {
@@ -64,16 +72,19 @@ impl CommandCompose for Project {
         Ok(())
     }
 
-    fn compose_pod<CR>(&self,
-                       runner: &CR,
-                       command: &str,
-                       pod: &Pod,
-                       opts: &args::ToArgs)
-                       -> Result<()>
-        where CR: CommandRunner
+    fn compose_pod<CR>(
+        &self,
+        runner: &CR,
+        command: &str,
+        pod: &Pod,
+        opts: &args::ToArgs,
+    ) -> Result<()>
+    where
+        CR: CommandRunner,
     {
         if pod.enabled_in(self.current_target()) {
-            runner.build("docker-compose")
+            runner
+                .build("docker-compose")
                 .args(&pod.compose_args(self)?)
                 .arg(command)
                 .args(&opts.to_args())
@@ -82,17 +93,20 @@ impl CommandCompose for Project {
         Ok(())
     }
 
-    fn compose_service<CR>(&self,
-                           runner: &CR,
-                           command: &str,
-                           pod: &Pod,
-                           service_name: &str,
-                           opts: &args::ToArgs)
-                           -> Result<()>
-        where CR: CommandRunner
+    fn compose_service<CR>(
+        &self,
+        runner: &CR,
+        command: &str,
+        pod: &Pod,
+        service_name: &str,
+        opts: &args::ToArgs,
+    ) -> Result<()>
+    where
+        CR: CommandRunner,
     {
         if pod.enabled_in(self.current_target()) {
-            runner.build("docker-compose")
+            runner
+                .build("docker-compose")
                 .args(&pod.compose_args(self)?)
                 .arg(command)
                 .args(&opts.to_args())
@@ -112,7 +126,8 @@ fn runs_docker_compose_on_all_pods() {
     proj.output("stop").unwrap();
 
     let opts = args::opts::Empty;
-    proj.compose(&runner, "stop", &args::ActOn::All, &opts).unwrap();
+    proj.compose(&runner, "stop", &args::ActOn::All, &opts)
+        .unwrap();
     assert_ran!(runner, {
         ["docker-compose",
          "-p",
@@ -145,7 +160,7 @@ fn runs_docker_compose_on_named_pods_and_services() {
     let runner = TestCommandRunner::new();
     proj.output("stop").unwrap();
 
-    let act_on = args::ActOn::Named(vec!("db".to_owned(), "web".to_owned()));
+    let act_on = args::ActOn::Named(vec!["db".to_owned(), "web".to_owned()]);
     let opts = args::opts::Empty;
     proj.compose(&runner, "stop", &act_on, &opts).unwrap();
     assert_ran!(runner, {

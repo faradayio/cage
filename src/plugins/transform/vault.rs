@@ -45,9 +45,11 @@ fn find_vault_token() -> Result<String> {
         .or_else(|_| env::var("VAULT_TOKEN"))
         .or_else(|_| load_vault_token_from_file())
         .map_err(|e| {
-            err!("{}.  You probably want to log in using the vault client or set \
-                  VAULT_MASTER_TOKEN",
-                 e)
+            err!(
+                "{}.  You probably want to log in using the vault client or set \
+                 VAULT_MASTER_TOKEN",
+                e
+            )
         })
 }
 
@@ -82,11 +84,12 @@ trait GenerateToken: Debug + Sync {
     /// Get a `VAULT_ADDR` value to use along with this token.
     fn addr(&self) -> &str;
     /// Generate a token with the specified parameters.
-    fn generate_token(&self,
-                      display_name: &str,
-                      policies: Vec<String>,
-                      ttl: VaultDuration)
-                      -> Result<String>;
+    fn generate_token(
+        &self,
+        display_name: &str,
+        policies: Vec<String>,
+        ttl: VaultDuration,
+    ) -> Result<String>;
 }
 
 /// A list of calls made to a `MockVault` instance.
@@ -107,7 +110,9 @@ struct MockVault {
 impl MockVault {
     /// Create a new MockVault.
     fn new() -> MockVault {
-        MockVault { calls: Arc::new(RwLock::new(vec![])) }
+        MockVault {
+            calls: Arc::new(RwLock::new(vec![])),
+        }
     }
 
     /// Return a reference to record of calls made to our vault.
@@ -122,12 +127,16 @@ impl GenerateToken for MockVault {
         "http://example.com:8200/"
     }
 
-    fn generate_token(&self,
-                      display_name: &str,
-                      policies: Vec<String>,
-                      ttl: VaultDuration)
-                      -> Result<String> {
-        self.calls.write().unwrap().push((display_name.to_owned(), policies, ttl));
+    fn generate_token(
+        &self,
+        display_name: &str,
+        policies: Vec<String>,
+        ttl: VaultDuration,
+    ) -> Result<String> {
+        self.calls
+            .write()
+            .unwrap()
+            .push((display_name.to_owned(), policies, ttl));
         Ok("fake_token".to_owned())
     }
 }
@@ -145,9 +154,11 @@ impl Vault {
     /// Create a new vault client.
     fn new() -> Result<Vault> {
         let mut addr = env::var("VAULT_ADDR").map_err(|_| {
-                err("Please set the environment variable VAULT_ADDR to the URL of \
-                     your vault server")
-            })?;
+            err(
+                "Please set the environment variable VAULT_ADDR to the URL of \
+                 your vault server",
+            )
+        })?;
         // TODO MED: Temporary fix because of broken URL handling in
         // hashicorp_vault.  Upstream bug:
         // https://github.com/ChrisMacNaughton/vault-rs/issues/14
@@ -168,11 +179,12 @@ impl GenerateToken for Vault {
         &self.addr
     }
 
-    fn generate_token(&self,
-                      display_name: &str,
-                      policies: Vec<String>,
-                      ttl: VaultDuration)
-                      -> Result<String> {
+    fn generate_token(
+        &self,
+        display_name: &str,
+        policies: Vec<String>,
+        ttl: VaultDuration,
+    ) -> Result<String> {
         let mkerr = || ErrorKind::VaultError(self.addr.clone());
 
         // We can't store `client` in `self`, because it has some obnoxious
@@ -210,7 +222,8 @@ impl Plugin {
 
     /// Create a new plugin, specifying an alternate source for tokens.
     fn new_with_generator<G>(project: &Project, generator: Option<G>) -> Result<Plugin>
-        where G: GenerateToken + 'static
+    where
+        G: GenerateToken + 'static,
     {
         let path = Self::config_path(project);
         let config = if path.exists() {
@@ -261,12 +274,12 @@ impl PluginGenerate for Plugin {
 }
 
 impl PluginTransform for Plugin {
-    fn transform(&self,
-                 _op: Operation,
-                 ctx: &plugins::Context,
-                 file: &mut dc::File)
-                 -> Result<()> {
-
+    fn transform(
+        &self,
+        _op: Operation,
+        ctx: &plugins::Context,
+        file: &mut dc::File,
+    ) -> Result<()> {
         // Get our plugin config.
         let config = self.config
             .as_ref()
@@ -298,15 +311,19 @@ impl PluginTransform for Plugin {
             };
 
             // Insert our VAULT_ADDR value into the generated files.
-            service.environment
+            service
+                .environment
                 .insert("VAULT_ADDR".to_owned(), dc::escape(generator.addr())?);
 
             // Get a list of policy "patterns" that apply to this service.
             let mut raw_policies = config.default_policies.clone();
-            raw_policies.extend(config.pods
-                .get(ctx.pod.name())
-                .and_then(|pod| pod.get(name))
-                .map_or_else(|| vec![], |s| s.policies.clone()));
+            raw_policies.extend(
+                config
+                    .pods
+                    .get(ctx.pod.name())
+                    .and_then(|pod| pod.get(name))
+                    .map_or_else(|| vec![], |s| s.policies.clone()),
+            );
 
             // Interpolate the variables found in our policy patterns.
             let mut policies = vec![];
@@ -314,24 +331,32 @@ impl PluginTransform for Plugin {
                 // We'd like to use std::result::fold here but it's unstable.
                 policies.push(result?);
             }
-            debug!("Generating token for '{}' with policies {:?}",
-                   name,
-                   &policies);
+            debug!(
+                "Generating token for '{}' with policies {:?}",
+                name,
+                &policies
+            );
 
             // Generate a VAULT_TOKEN.
-            let display_name = format!("{}_{}_{}_{}",
-                                       ctx.project.name(),
-                                       ctx.project.current_target().name(),
-                                       ctx.pod.name(),
-                                       name);
+            let display_name = format!(
+                "{}_{}_{}_{}",
+                ctx.project.name(),
+                ctx.project.current_target().name(),
+                ctx.pod.name(),
+                name
+            );
             let ttl = VaultDuration::seconds(config.default_ttl);
-            let token = generator.generate_token(&display_name, policies, ttl)
+            let token = generator
+                .generate_token(&display_name, policies, ttl)
                 .chain_err(|| format!("could not generate token for '{}'", name))?;
-            service.environment.insert("VAULT_TOKEN".to_owned(), dc::escape(token)?);
+            service
+                .environment
+                .insert("VAULT_TOKEN".to_owned(), dc::escape(token)?);
 
             // Add in any extra environment variables.
             for (var, val) in &config.extra_environment {
-                service.environment
+                service
+                    .environment
                     .insert(var.to_owned(), dc::escape(interpolated(val)?)?);
             }
         }
@@ -357,7 +382,9 @@ fn interpolates_policies() {
     let frontend = proj.pod("frontend").unwrap();
     let ctx = plugins::Context::new(&proj, frontend, "up");
     let mut file = frontend.merged_file(proj.current_target()).unwrap();
-    plugin.transform(Operation::Output, &ctx, &mut file).unwrap();
+    plugin
+        .transform(Operation::Output, &ctx, &mut file)
+        .unwrap();
     let web = file.services.get("web").unwrap();
     let vault_addr = web.environment.get("VAULT_ADDR").expect("has VAULT_ADDR");
     assert_eq!(vault_addr.value().unwrap(), "http://example.com:8200/");
@@ -370,10 +397,14 @@ fn interpolates_policies() {
     assert_eq!(calls.len(), 1);
     let (ref display_name, ref policies, ref ttl) = calls[0];
     assert_eq!(display_name, "vault_integration_production_frontend_web");
-    assert_eq!(policies,
-               &["vault_integration-production".to_owned(),
-                 "vault_integration-production-frontend-web".to_owned(),
-                 "vault_integration-production-ssl".to_owned()]);
+    assert_eq!(
+        policies,
+        &[
+            "vault_integration-production".to_owned(),
+            "vault_integration-production-frontend-web".to_owned(),
+            "vault_integration-production-ssl".to_owned()
+        ]
+    );
     assert_eq!(ttl, &VaultDuration::seconds(2592000));
 }
 
@@ -392,7 +423,9 @@ fn only_applied_in_specified_targets() {
     let frontend = proj.pod("frontend").unwrap();
     let ctx = plugins::Context::new(&proj, frontend, "test");
     let mut file = frontend.merged_file(target).unwrap();
-    plugin.transform(Operation::Output, &ctx, &mut file).unwrap();
+    plugin
+        .transform(Operation::Output, &ctx, &mut file)
+        .unwrap();
     let web = file.services.get("web").unwrap();
     assert_eq!(web.environment.get("VAULT_ADDR"), None);
 }

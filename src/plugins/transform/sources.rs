@@ -41,16 +41,19 @@ impl PluginNew for Plugin {
     }
 
     fn new(_project: &Project) -> Result<Self> {
-        Ok(Plugin { _placeholder: PhantomData })
+        Ok(Plugin {
+            _placeholder: PhantomData,
+        })
     }
 }
 
 impl PluginTransform for Plugin {
-    fn transform(&self,
-                 op: Operation,
-                 ctx: &plugins::Context,
-                 file: &mut dc::File)
-                 -> Result<()> {
+    fn transform(
+        &self,
+        op: Operation,
+        ctx: &plugins::Context,
+        file: &mut dc::File,
+    ) -> Result<()> {
         // Give up immediately if we're not doing this for local output.
         if op != Operation::Output {
             return Ok(());
@@ -63,11 +66,16 @@ impl PluginTransform for Plugin {
                 let source = source_mount.source;
                 if source.is_available_locally(project) && source.mounted() {
                     // Build an absolute path to our source's local directory.
-                    let source_subdirectory = source_mount.source_subdirectory.unwrap_or("".to_string());
-                    let path = source.path(project).join(source_subdirectory).to_absolute()?;
+                    let source_subdirectory =
+                        source_mount.source_subdirectory.unwrap_or("".to_string());
+                    let path = source
+                        .path(project)
+                        .join(source_subdirectory)
+                        .to_absolute()?;
 
                     // Add a mount point to the container.
-                    let mount = dc::VolumeMount::host(&path, source_mount.container_path);
+                    let mount =
+                        dc::VolumeMount::host(&path, source_mount.container_path);
                     service.volumes.push(dc::value(mount));
 
                     // Update the `build` field if it's present and it
@@ -100,7 +108,9 @@ fn adds_a_volume_with_a_subdirectory() {
     let ctx = plugins::Context::new(&proj, frontend, "up");
     let mut file = frontend.merged_file(target).unwrap();
 
-    plugin.transform(Operation::Output, &ctx, &mut file).unwrap();
+    plugin
+        .transform(Operation::Output, &ctx, &mut file)
+        .unwrap();
 
     let web = file.services.get("web").unwrap();
     let src_volume = web.volumes[0].value().unwrap();

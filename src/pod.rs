@@ -52,10 +52,10 @@ impl FileInfo {
             file: if path.exists() {
                 debug!("Parsing {}", path.display());
                 dc::File::read_from_path(&path).chain_err(|| {
-                        // Make sure we tie parse errors to a specific file, for
-                        // the sake of sanity.
-                        ErrorKind::CouldNotReadFile(path.clone())
-                    })?
+                    // Make sure we tie parse errors to a specific file, for
+                    // the sake of sanity.
+                    ErrorKind::CouldNotReadFile(path.clone())
+                })?
             } else {
                 Default::default()
             },
@@ -65,10 +65,11 @@ impl FileInfo {
     /// Make sure that all services from `base` are also present in this
     /// file.  If you're going tp call this, it must be called after
     /// `finish_normalization`
-    fn ensure_same_services(&mut self,
-                            base_file: &Path,
-                            service_names: &BTreeSet<String>)
-                            -> Result<()> {
+    fn ensure_same_services(
+        &mut self,
+        base_file: &Path,
+        service_names: &BTreeSet<String>,
+    ) -> Result<()> {
         // Check for any newly-introduced services.  These are problematic
         // because (1) in our previous experience, they lead to really
         // confusing and unmaintanable targets, and (2) the rest of this
@@ -77,10 +78,13 @@ impl FileInfo {
         let introduced: Vec<String> =
             ours.difference(service_names).cloned().collect();
         if !introduced.is_empty() {
-            return Err(ErrorKind::ServicesAddedInTarget(base_file.to_owned(),
-                                                        self.rel_path.clone(),
-                                                        introduced)
-                .into());
+            return Err(
+                ErrorKind::ServicesAddedInTarget(
+                    base_file.to_owned(),
+                    self.rel_path.clone(),
+                    introduced,
+                ).into(),
+            );
         }
 
         // Add any missing services.
@@ -136,8 +140,9 @@ impl Pod {
     /// pod definitions and the name of the pod.
     #[doc(hidden)]
     pub fn new<P, S>(base_dir: P, name: S, targets: &[Target]) -> Result<Pod>
-        where P: Into<PathBuf>,
-              S: Into<String>
+    where
+        P: Into<PathBuf>,
+        S: Into<String>,
     {
         let base_dir = base_dir.into();
         let name = name.into();
@@ -159,9 +164,9 @@ impl Pod {
         // Load our target `*.yml` files.
         let mut target_infos = BTreeMap::new();
         for target in targets {
-            let target_rel_path =
-                Path::new(&format!("targets/{}/{}.yml", target.name(), &name))
-                    .to_owned();
+            let target_rel_path = Path::new(
+                &format!("targets/{}/{}.yml", target.name(), &name),
+            ).to_owned();
             let mut target_info = FileInfo::unnormalized(&base_dir, &target_rel_path)?;
             target_info.ensure_same_services(&rel_path, &service_names)?;
             target_info.finish_normalization();
@@ -246,7 +251,9 @@ impl Pod {
 
     /// All the targets associated with this pod.
     pub fn target_files(&self) -> TargetFiles {
-        TargetFiles { iter: self.target_file_infos.iter() }
+        TargetFiles {
+            iter: self.target_file_infos.iter(),
+        }
     }
 
     /// Iterate over all `dc::File` objects associated with this pod, including
@@ -274,10 +281,12 @@ impl Pod {
     /// Command-line `-p` and `-f` arguments that we'll pass to
     /// `docker-compose` to describe this file.
     pub fn compose_args(&self, proj: &Project) -> Result<Vec<OsString>> {
-        Ok(vec!["-p".into(),
-                proj.compose_name().into(),
-                "-f".into(),
-                proj.output_pods_dir().join(self.rel_path()).into()])
+        Ok(vec![
+            "-p".into(),
+            proj.compose_name().into(),
+            "-f".into(),
+            proj.output_pods_dir().join(self.rel_path()).into(),
+        ])
     }
 
     /// The commands we should run to initialize this pod.
@@ -286,16 +295,19 @@ impl Pod {
     }
 
     /// Run a named script for specified service name
-    pub fn run_script<CR>(&self,
-                          runner: &CR,
-                          project: &Project,
-                          service_name: &str,
-                          script_name: &str,
-                          opts: &args::opts::Run
-                          ) -> Result<()>
-        where CR: CommandRunner
+    pub fn run_script<CR>(
+        &self,
+        runner: &CR,
+        project: &Project,
+        service_name: &str,
+        script_name: &str,
+        opts: &args::opts::Run,
+    ) -> Result<()>
+    where
+        CR: CommandRunner,
     {
-        self.config.run_script(runner, &project, &service_name, &script_name, &opts)
+        self.config
+            .run_script(runner, &project, &service_name, &script_name, &opts)
     }
 }
 
@@ -310,7 +322,9 @@ impl<'a> Iterator for TargetFiles<'a> {
     type Item = (&'a Target, &'a dc::File);
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next().map(|(target, file_info)| (target, &file_info.file))
+        self.iter
+            .next()
+            .map(|(target, file_info)| (target, &file_info.file))
     }
 }
 
@@ -374,14 +388,17 @@ fn pods_are_normalized_on_load() {
     // This test assumes that there's no `web` entry in the `production`
     // target, so we have to create everything from scratch.
     let production = proj.target("production").unwrap();
-    let web_target = frontend.target_file(production)
+    let web_target = frontend
+        .target_file(production)
         .unwrap()
         .services
         .get("web")
         .unwrap();
     assert_eq!(web_target.env_files.len(), 1);
-    assert_eq!(web_target.env_files[0].value().unwrap(),
-               Path::new("targets/production/common.env"));
+    assert_eq!(
+        web_target.env_files[0].value().unwrap(),
+        Path::new("targets/production/common.env")
+    );
 }
 
 #[test]

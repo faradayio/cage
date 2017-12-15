@@ -41,11 +41,13 @@ impl RuntimeState {
         for container in &containers {
             let info = docker.container_info(container)?;
             let labels = &info.Config.Labels;
-            if labels.get("com.docker.compose.project") == Some(&name) &&
-               labels.get("io.fdy.cage.target") == Some(&target) {
+            if labels.get("com.docker.compose.project") == Some(&name)
+                && labels.get("io.fdy.cage.target") == Some(&target)
+            {
                 if let Some(service) = labels.get("com.docker.compose.service") {
                     let our_info = ContainerInfo::new(&info)?;
-                    services.entry(service.to_owned())
+                    services
+                        .entry(service.to_owned())
                         .or_insert_with(Vec::new)
                         .push(our_info);
                 }
@@ -57,14 +59,18 @@ impl RuntimeState {
     /// Is the specified pod running?
     pub fn all_services_in_pod_are_running(&self, pod: &Pod) -> bool {
         for service_name in pod.service_names() {
-            let containers = self.service_containers(service_name).iter()
+            let containers = self.service_containers(service_name)
+                .iter()
                 .filter(|c| !c.is_one_off())
                 .collect::<Vec<_>>();
             if containers.is_empty() {
                 // No containers are associated with this service.
                 return false;
             }
-            if containers.iter().any(|c| c.state() != ContainerStatus::Running) {
+            if containers
+                .iter()
+                .any(|c| c.state() != ContainerStatus::Running)
+            {
                 // We have at least one container which isn't running.
                 return false;
             }
@@ -112,7 +118,8 @@ impl ContainerInfo {
         // Get an IP address for this running container.
         let raw_ip_addr = &info.NetworkSettings.IPAddress[..];
         let ip_addr = if raw_ip_addr != "" {
-            Some(raw_ip_addr.parse()
+            Some(raw_ip_addr
+                .parse()
                 .chain_err(|| ErrorKind::parse("IP address", raw_ip_addr))?)
         } else {
             None
@@ -127,11 +134,10 @@ impl ContainerInfo {
                         .unwrap();
                 }
                 if let Some(caps) = TCP_PORT.captures(port_str) {
-                    let port = caps.get(1)
-                        .unwrap()
-                        .as_str()
-                        .parse()
-                        .chain_err(|| ErrorKind::parse("TCP port", port_str.clone()))?;
+                    let port =
+                        caps.get(1).unwrap().as_str().parse().chain_err(
+                            || ErrorKind::parse("TCP port", port_str.clone()),
+                        )?;
                     ports.push(port);
                 }
             }

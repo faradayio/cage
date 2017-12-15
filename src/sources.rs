@@ -44,10 +44,11 @@ pub struct Sources {
 
 impl Sources {
     /// Add a source tree to a map, keyed by its alias.  Returns the alias.
-    fn add_source(sources: &mut BTreeMap<String, Source>,
-                  mounted_sources: &BTreeMap<String, bool>,
-                  context: &dc::Context)
-                  -> Result<String> {
+    fn add_source(
+        sources: &mut BTreeMap<String, Source>,
+        mounted_sources: &BTreeMap<String, bool>,
+        context: &dc::Context,
+    ) -> Result<String> {
         // Figure out what alias we want to use.
         let alias = context.human_alias()?;
 
@@ -73,11 +74,13 @@ impl Sources {
             }
             btree_map::Entry::Occupied(occupied) => {
                 if &source.context != &occupied.get().context {
-                    return Err(err!("{} and {} would both alias to \
-                                     {}",
-                                    &occupied.get().context,
-                                    &source.context,
-                                    &source.alias));
+                    return Err(err!(
+                        "{} and {} would both alias to \
+                         {}",
+                        &occupied.get().context,
+                        &source.context,
+                        &source.alias
+                    ));
                 }
             }
         }
@@ -136,7 +139,9 @@ impl Sources {
     ///
     /// TODO LOW: Replace with IntoIterator.
     pub fn iter(&self) -> Iter {
-        Iter { iter: self.sources.iter() }
+        Iter {
+            iter: self.sources.iter(),
+        }
     }
 
     /// Look up a source tree using the short-form local alias.
@@ -252,11 +257,13 @@ impl Source {
 
     /// Clone the source code of this repository using git.
     pub fn clone_source<CR>(&self, runner: &CR, project: &Project) -> Result<()>
-        where CR: CommandRunner
+    where
+        CR: CommandRunner,
     {
         if let dc::Context::GitUrl(ref git_url) = self.context {
             let dest = self.path(project).with_guaranteed_parent()?;
-            runner.build("git")
+            runner
+                .build("git")
                 .arg("clone")
                 .args(&git_url.clone_args()?)
                 .arg(&dest)
@@ -282,13 +289,16 @@ fn are_loaded_with_projects() {
     let proj = Project::from_example("hello").unwrap();
     let sources = proj.sources();
     assert_eq!(sources.iter().count(), 2);
-    let hello = sources.find_by_alias("dockercloud-hello-world")
+    let hello = sources
+        .find_by_alias("dockercloud-hello-world")
         .expect("sources should include dockercloud-hello-world");
     assert_eq!(hello.alias(), "dockercloud-hello-world");
     let url = "https://github.com/docker/dockercloud-hello-world.git";
     assert_eq!(hello.context(), &dc::Context::new(url));
-    assert_eq!(hello.path(&proj),
-               proj.src_dir().join("dockercloud-hello-world"));
+    assert_eq!(
+        hello.path(&proj),
+        proj.src_dir().join("dockercloud-hello-world")
+    );
 }
 
 #[test]
@@ -297,11 +307,14 @@ fn are_loaded_from_config_sources_yml() {
     let _ = env_logger::init();
     let proj = Project::from_example("rails_hello").unwrap();
     let sources = proj.sources();
-    let lib = sources.find_by_lib_key("coffee_rails")
+    let lib = sources
+        .find_by_lib_key("coffee_rails")
         .expect("libs should include coffee_rails");
     assert_eq!(lib.alias(), "coffee-rails");
-    assert_eq!(lib.context(),
-               &dc::Context::new("https://github.com/rails/coffee-rails.git"));
+    assert_eq!(
+        lib.context(),
+        &dc::Context::new("https://github.com/rails/coffee-rails.git")
+    );
     assert_eq!(lib.path(&proj), proj.src_dir().join("coffee-rails"));
 }
 
@@ -317,13 +330,13 @@ fn can_be_cloned() {
     use env_logger;
     let _ = env_logger::init();
     let proj = Project::from_example("hello").unwrap();
-    let source = proj.sources().find_by_alias("dockercloud-hello-world").unwrap();
+    let source = proj.sources()
+        .find_by_alias("dockercloud-hello-world")
+        .unwrap();
     let runner = TestCommandRunner::new();
     source.clone_source(&runner, &proj).unwrap();
     let url = "https://github.com/docker/dockercloud-hello-world.git";
-    assert_ran!(runner, {
-        ["git", "clone", url, source.path(&proj)]
-    });
+    assert_ran!(runner, { ["git", "clone", url, source.path(&proj)] });
     proj.remove_test_output().unwrap();
 }
 
@@ -332,7 +345,9 @@ fn can_be_checked_to_see_if_cloned() {
     use env_logger;
     let _ = env_logger::init();
     let proj = Project::from_example("hello").unwrap();
-    let source = proj.sources().find_by_alias("dockercloud-hello-world").unwrap();
+    let source = proj.sources()
+        .find_by_alias("dockercloud-hello-world")
+        .unwrap();
     assert!(!source.is_available_locally(&proj));
     source.fake_clone_source(&proj).unwrap();
     assert!(source.is_available_locally(&proj));

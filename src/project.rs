@@ -50,8 +50,7 @@ impl<'a> PodOrService<'a> {
     /// service.
     pub fn pod_type(&self) -> PodType {
         match *self {
-            PodOrService::Pod(pod) |
-            PodOrService::Service(pod, _) => pod.pod_type(),
+            PodOrService::Pod(pod) | PodOrService::Service(pod, _) => pod.pod_type(),
         }
     }
 }
@@ -109,12 +108,14 @@ pub struct Project {
 
 impl Project {
     /// Create a `Project`, specifying what directories to use.
-    fn from_dirs(root_dir: &Path,
-                 src_dir: &Path,
-                 output_dir: &Path)
-                 -> Result<Project> {
+    fn from_dirs(
+        root_dir: &Path,
+        src_dir: &Path,
+        output_dir: &Path,
+    ) -> Result<Project> {
         let targets = Project::find_targets(root_dir)?;
-        let current_target = targets.iter()
+        let current_target = targets
+            .iter()
             .find(|target| target.name() == "development")
             .ok_or_else(|| ErrorKind::UnknownTarget("development".into()))?
             .to_owned();
@@ -124,11 +125,12 @@ impl Project {
         let config_path = root_dir.join(PROJECT_CONFIG_PATH.deref());
         let config = ProjectConfig::new(&config_path)?;
         let absolute_root = root_dir.to_absolute()?;
-        let name = try!(absolute_root.file_name()
-                .and_then(|s| s.to_str())
-                .ok_or_else(|| {
-                    err!("Can't find directory name for {}", root_dir.display())
-                }));
+        let name = absolute_root
+            .file_name()
+            .and_then(|s| s.to_str())
+            .ok_or_else(|| {
+                err!("Can't find directory name for {}", root_dir.display())
+            })?;
         let mut proj = Project {
             name: name.to_owned(),
             root_dir: root_dir.to_owned(),
@@ -284,7 +286,9 @@ impl Project {
 
     /// Iterate over all pods in this project.
     pub fn pods(&self) -> Pods {
-        Pods { iter: self.pods.iter() }
+        Pods {
+            iter: self.pods.iter(),
+        }
     }
 
     /// Look up the named pod.
@@ -312,9 +316,10 @@ impl Project {
 
     /// Look for a name as a pod first, and if that fails, look for it as a
     /// service.
-    pub fn pod_or_service<'a, 'b>(&'a self,
-                                  name: &'b str)
-                                  -> Option<PodOrService<'a>> {
+    pub fn pod_or_service<'a, 'b>(
+        &'a self,
+        name: &'b str,
+    ) -> Option<PodOrService<'a>> {
         if let Some(pod) = self.pod(name) {
             Some(PodOrService::Pod(pod))
         } else if let Some((pod, service_name)) = self.service(name) {
@@ -326,16 +331,19 @@ impl Project {
 
     /// Like `pod_or_service`, but returns an error if no pod or service of
     /// that name can be found.
-    pub fn pod_or_service_or_err<'a, 'b>(&'a self,
-                                         name: &'b str)
-                                         -> Result<PodOrService<'a>> {
+    pub fn pod_or_service_or_err<'a, 'b>(
+        &'a self,
+        name: &'b str,
+    ) -> Result<PodOrService<'a>> {
         self.pod_or_service(name)
             .ok_or_else(|| ErrorKind::UnknownPodOrService(name.to_owned()).into())
     }
 
     /// Iterate over all targets in this project.
     pub fn targets(&self) -> Targets {
-        Targets { iter: self.targets.iter() }
+        Targets {
+            iter: self.targets.iter(),
+        }
     }
 
     /// Look up the named target.  We name this function `target` instead of
@@ -346,7 +354,8 @@ impl Project {
 
     /// Like `target`, but returns an error if no each target is found.
     pub fn target_or_err(&self, name: &str) -> Result<&Target> {
-        self.target(name).ok_or_else(|| ErrorKind::UnknownTarget(name.into()).into())
+        self.target(name)
+            .ok_or_else(|| ErrorKind::UnknownTarget(name.into()).into())
     }
 
     /// Get the current target that we're using with this project.
@@ -406,9 +415,8 @@ impl Project {
         let mut result = vec![];
         let state = RuntimeState::for_project(self)?;
         for pod in self.pods() {
-            if pod.enabled_in(&self.current_target) &&
-                pod.pod_type() != PodType::Task &&
-                !state.all_services_in_pod_are_running(pod)
+            if pod.enabled_in(&self.current_target) && pod.pod_type() != PodType::Task
+                && !state.all_services_in_pod_are_running(pod)
             {
                 result.push(pod);
             }
@@ -418,7 +426,12 @@ impl Project {
 
     /// Process our pods, flattening and transforming them using our
     /// plugins, and output them to the specified directory.
-    fn output_helper(&self, op: Operation, subcommand: &str, export_dir: &Path) -> Result<()> {
+    fn output_helper(
+        &self,
+        op: Operation,
+        subcommand: &str,
+        export_dir: &Path,
+    ) -> Result<()> {
         // Output each pod.  This isn't especially slow (except maybe the
         // Vault plugin), but parallelizing things is easy.
         self.pods.par_iter()
@@ -464,8 +477,8 @@ impl Project {
         // exists).
         let out_pods = self.output_pods_dir();
         if out_pods.exists() {
-            try!(fs::remove_dir_all(&out_pods)
-                .map_err(|e| err!("Cannot delete {}: {}", out_pods.display(), e)));
+            fs::remove_dir_all(&out_pods)
+                .map_err(|e| err!("Cannot delete {}: {}", out_pods.display(), e))?;
         }
 
         self.output_helper(Operation::Output, subcommand, &out_pods)
@@ -477,7 +490,10 @@ impl Project {
     pub fn export(&self, export_dir: &Path) -> Result<()> {
         // Don't clobber an existing directory.
         if export_dir.exists() {
-            return Err(err!("The directory {} already exists", export_dir.display()));
+            return Err(err!(
+                "The directory {} already exists",
+                export_dir.display()
+            ));
         }
 
         // You should really supply default tags if you're going to export.
@@ -491,7 +507,8 @@ impl Project {
 
 impl Serialize for Project {
     fn serialize<S>(&self, serializer: S) -> result::Result<S::Ok, S::Error>
-        where S: Serializer
+    where
+        S: Serializer,
     {
         let mut map = serializer.serialize_map(Some(1))?;
         map.serialize_entry("name", self.name())?;
@@ -538,11 +555,15 @@ fn new_from_example_uses_example_and_target() {
     let proj = Project::from_example("hello").unwrap();
     assert_eq!(proj.root_dir, Path::new("examples/hello"));
     let output_dir = proj.output_dir.to_str_or_err().unwrap();
-    assert!(output_dir.starts_with("target/test_output/hello-") ||
-            output_dir.starts_with("target/test_output\\hello-"));
+    assert!(
+        output_dir.starts_with("target/test_output/hello-")
+            || output_dir.starts_with("target/test_output\\hello-")
+    );
     let src_dir = proj.src_dir.to_str_or_err().unwrap();
-    assert!(src_dir.starts_with("target/test_output/hello-") ||
-            src_dir.starts_with("target/test_output\\hello-"));
+    assert!(
+        src_dir.starts_with("target/test_output/hello-")
+            || src_dir.starts_with("target/test_output\\hello-")
+    );
 }
 
 #[test]
@@ -616,7 +637,9 @@ fn output_applies_expected_transforms() {
 
     let mut proj = Project::from_example("hello").unwrap();
     proj.set_default_tags(default_tags);
-    let source = proj.sources().find_by_alias("dockercloud-hello-world").unwrap();
+    let source = proj.sources()
+        .find_by_alias("dockercloud-hello-world")
+        .unwrap();
     source.fake_clone_source(&proj).unwrap();
     proj.output("build").unwrap();
 
@@ -628,8 +651,10 @@ fn output_applies_expected_transforms() {
 
     // Make sure our `build` entry has been pointed at the local source
     // directory.
-    assert_eq!(web.build.as_ref().unwrap().context.value().unwrap(),
-               &dc::Context::new(src_path.to_str().unwrap()));
+    assert_eq!(
+        web.build.as_ref().unwrap().context.value().unwrap(),
+        &dc::Context::new(src_path.to_str().unwrap())
+    );
 
     // Make sure the local source directory is being mounted into the
     // container.
@@ -642,8 +667,10 @@ fn output_applies_expected_transforms() {
     assert_eq!(mount.container, "/app");
 
     // Make sure that our image versions were correctly defaulted.
-    assert_eq!(web.image.as_ref().unwrap().value().unwrap(),
-               &dc::Image::new("dockercloud/hello-world:staging").unwrap());
+    assert_eq!(
+        web.image.as_ref().unwrap().value().unwrap(),
+        &dc::Image::new("dockercloud/hello-world:staging").unwrap()
+    );
 
     proj.remove_test_output().unwrap();
 }
@@ -694,8 +721,10 @@ fn output_supports_in_tree_source_code() {
         .join("node_hello")
         .to_absolute()
         .unwrap();
-    assert_eq!(web.build.as_ref().unwrap().context.value().unwrap(),
-               &dc::Context::Dir(abs_src));
+    assert_eq!(
+        web.build.as_ref().unwrap().context.value().unwrap(),
+        &dc::Context::Dir(abs_src)
+    );
 }
 
 #[test]
@@ -721,7 +750,9 @@ fn export_applies_expected_transforms() {
     // `output`.
 
     let proj = Project::from_example("hello").unwrap();
-    let source = proj.sources().find_by_alias("dockercloud-hello-world").unwrap();
+    let source = proj.sources()
+        .find_by_alias("dockercloud-hello-world")
+        .unwrap();
     source.fake_clone_source(&proj).unwrap();
     let export_dir = proj.output_dir.join("hello_export");
     proj.export(&export_dir).unwrap();
@@ -736,8 +767,16 @@ fn export_applies_expected_transforms() {
     assert!(web.build.is_none());
 
     // Make sure we've added our custom labels.
-    assert_eq!(web.labels.get("io.fdy.cage.target").unwrap().value().unwrap(),
-               "development");
-    assert_eq!(web.labels.get("io.fdy.cage.pod").unwrap().value().unwrap(),
-               "frontend");
+    assert_eq!(
+        web.labels
+            .get("io.fdy.cage.target")
+            .unwrap()
+            .value()
+            .unwrap(),
+        "development"
+    );
+    assert_eq!(
+        web.labels.get("io.fdy.cage.pod").unwrap().value().unwrap(),
+        "frontend"
+    );
 }

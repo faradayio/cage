@@ -37,8 +37,9 @@ pub trait Command {
 
     /// Set an environment variable for the process we're about to run.
     fn env<K, V>(&mut self, key: K, val: V) -> &mut Self
-        where K: AsRef<OsStr>,
-              V: AsRef<OsStr>;
+    where
+        K: AsRef<OsStr>,
+        V: AsRef<OsStr>;
 
     /// Set the current working directory for the child process we'll
     /// create.
@@ -75,7 +76,9 @@ pub struct OsCommandRunner {
 impl OsCommandRunner {
     /// Create a new OsCommandRunner.
     pub fn new() -> OsCommandRunner {
-        OsCommandRunner { _nonexhaustive: PhantomData }
+        OsCommandRunner {
+            _nonexhaustive: PhantomData,
+        }
     }
 }
 
@@ -117,8 +120,9 @@ impl Command for OsCommand {
     }
 
     fn env<K, V>(&mut self, key: K, val: V) -> &mut Self
-        where K: AsRef<OsStr>,
-              V: AsRef<OsStr>
+    where
+        K: AsRef<OsStr>,
+        V: AsRef<OsStr>,
     {
         self.command.env(key, val);
         self
@@ -131,7 +135,9 @@ impl Command for OsCommand {
 
     fn status(&mut self) -> Result<process::ExitStatus> {
         debug!("Running {:?}", &self.arg_log);
-        self.command.status().chain_err(|| self.command_failed_error())
+        self.command
+            .status()
+            .chain_err(|| self.command_failed_error())
     }
 
     fn command_failed_error(&self) -> ErrorKind {
@@ -158,7 +164,9 @@ pub struct TestCommandRunner {
 impl TestCommandRunner {
     /// Create a new `TestCommandRunner`.
     pub fn new() -> TestCommandRunner {
-        TestCommandRunner { cmds: Rc::new(RefCell::new(vec![])) }
+        TestCommandRunner {
+            cmds: Rc::new(RefCell::new(vec![])),
+        }
     }
 
     /// Access the list of commands run.
@@ -211,8 +219,9 @@ impl Command for TestCommand {
     }
 
     fn env<K, V>(&mut self, _key: K, _val: V) -> &mut Self
-        where K: AsRef<OsStr>,
-              V: AsRef<OsStr>
+    where
+        K: AsRef<OsStr>,
+        V: AsRef<OsStr>,
     {
         // Just ignore this in test mode.
         self
@@ -269,7 +278,8 @@ macro_rules! assert_ran {
 pub fn test_command_runner_logs_commands() {
     let runner = TestCommandRunner::new();
 
-    let exit_code = runner.build("git")
+    let exit_code = runner
+        .build("git")
         .args(&["clone", "https://github.com/torvalds/linux"])
         .status()
         .unwrap();

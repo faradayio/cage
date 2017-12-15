@@ -1,7 +1,7 @@
 //! Our main CLI tool.
 
-#![cfg_attr(feature="clippy", feature(plugin))]
-#![cfg_attr(feature="clippy", plugin(clippy))]
+#![cfg_attr(feature = "clippy", feature(plugin))]
+#![cfg_attr(feature = "clippy", plugin(clippy))]
 
 extern crate cage;
 #[macro_use]
@@ -44,8 +44,7 @@ trait ArgMatchesExt {
     fn target_name(&self) -> &str;
 
     /// Determine what pods or services we're supposed to act on.
-    fn to_acts_on(&self, arg_name: &str, include_tasks: bool)
-                  -> cage::args::ActOn;
+    fn to_acts_on(&self, arg_name: &str, include_tasks: bool) -> cage::args::ActOn;
 
     /// Extract options shared by `exec` and `run` from our command-line
     /// arguments.
@@ -73,18 +72,16 @@ impl<'a> ArgMatchesExt for clap::ArgMatches<'a> {
     }
 
     fn target_name(&self) -> &str {
-        self.value_of("target")
-            .unwrap_or_else(|| {
-                if self.subcommand_name() == Some("test") {
-                    "test"
-                } else {
-                    "development"
-                }
-            })
+        self.value_of("target").unwrap_or_else(|| {
+            if self.subcommand_name() == Some("test") {
+                "test"
+            } else {
+                "development"
+            }
+        })
     }
 
-    fn to_acts_on(&self, arg_name: &str, include_tasks: bool)
-                  -> cage::args::ActOn {
+    fn to_acts_on(&self, arg_name: &str, include_tasks: bool) -> cage::args::ActOn {
         let names: Vec<String> = self.values_of(arg_name)
             .map_or_else(|| vec![], |p| p.collect())
             .iter()
@@ -127,7 +124,8 @@ impl<'a> ArgMatchesExt for clap::ArgMatches<'a> {
                     // Clap should prevent this.
                     panic!("Environment binding '{}' has no value", env_val[0]);
                 }
-                opts.environment.insert(env_val[0].to_owned(), env_val[1].to_owned());
+                opts.environment
+                    .insert(env_val[0].to_owned(), env_val[1].to_owned());
             }
         }
         opts.no_deps = self.is_present("no-deps");
@@ -161,15 +159,16 @@ impl<'a> ArgMatchesExt for clap::ArgMatches<'a> {
 
 /// Display a warning if we think some of our services should be running but
 /// they're not.
-fn warn_if_pods_are_enabled_but_not_running(project: &cage::Project)
-                                            -> Result<()> {
+fn warn_if_pods_are_enabled_but_not_running(project: &cage::Project) -> Result<()> {
     let pods = project.enabled_pods_that_are_not_running()?;
     if !pods.is_empty() {
         let pod_names = pods.iter().map(|p| p.name());
-        warn!("You might want to start the following pods first: {0} (see \
-               `cage --target={1} up` or `cage --target={1} status`)",
-              pod_names.format(", "),
-              project.current_target().name());
+        warn!(
+            "You might want to start the following pods first: {0} (see \
+             `cage --target={1} up` or `cage --target={1} status`)",
+            pod_names.format(", "),
+            project.current_target().name()
+        );
     }
     Ok(())
 }
@@ -190,8 +189,10 @@ fn run(matches: &clap::ArgMatches) -> Result<()> {
             return Ok(());
         }
         "new" => {
-            cage::Project::generate_new(&env::current_dir()?,
-                                        sc_matches.value_of("NAME").unwrap())?;
+            cage::Project::generate_new(
+                &env::current_dir()?,
+                sc_matches.value_of("NAME").unwrap(),
+            )?;
             return Ok(());
         }
         _ => {}
@@ -302,11 +303,13 @@ fn run(matches: &clap::ArgMatches) -> Result<()> {
 }
 
 /// Our `source` subcommand.
-fn run_source<R>(runner: &R,
-                 proj: &mut cage::Project,
-                 matches: &clap::ArgMatches)
-                 -> Result<()>
-    where R: CommandRunner
+fn run_source<R>(
+    runner: &R,
+    proj: &mut cage::Project,
+    matches: &clap::ArgMatches,
+) -> Result<()>
+where
+    R: CommandRunner,
 {
     // We know that we always have a subcommand because our `cli.yml`
     // requires this and `clap` is supposed to enforce it.
@@ -344,11 +347,13 @@ fn run_source<R>(runner: &R,
 }
 
 /// Our `generate` subcommand.
-fn run_generate<R>(_runner: &R,
-                   proj: &cage::Project,
-                   matches: &clap::ArgMatches)
-                   -> Result<()>
-    where R: CommandRunner
+fn run_generate<R>(
+    _runner: &R,
+    proj: &cage::Project,
+    matches: &clap::ArgMatches,
+) -> Result<()>
+where
+    R: CommandRunner,
 {
     // We know that we always have a subcommand because our `cli.yml`
     // requires this and `clap` is supposed to enforce it.
@@ -383,9 +388,7 @@ fn all_versions() -> Result<()> {
 
     let runner = OsCommandRunner::new();
     for tool in &["docker", "docker-compose", "git"] {
-        runner.build(tool)
-            .arg("--version")
-            .exec()?;
+        runner.build(tool).arg("--version").exec()?;
     }
     Ok(())
 }
@@ -410,10 +413,12 @@ fn main() {
     builder.filter(Some("compose_yml"), log::LogLevelFilter::Warn);
     builder.filter(Some("cage"), log::LogLevelFilter::Warn);
     builder.format(|record: &log::LogRecord| {
-        let msg = format!("{} {} (from {})",
-                          log_level_label(record.level()),
-                          record.args(),
-                          record.target());
+        let msg = format!(
+            "{} {} (from {})",
+            log_level_label(record.level()),
+            record.args(),
+            record.target()
+        );
         if record.level() > log::LogLevel::Info {
             format!("{}", msg.dimmed())
         } else {

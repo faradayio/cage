@@ -68,12 +68,12 @@ impl PluginGenerate for Plugin {
 }
 
 impl PluginTransform for Plugin {
-    fn transform(&self,
-                 _op: Operation,
-                 ctx: &plugins::Context,
-                 file: &mut dc::File)
-                 -> Result<()> {
-
+    fn transform(
+        &self,
+        _op: Operation,
+        ctx: &plugins::Context,
+        file: &mut dc::File,
+    ) -> Result<()> {
         let config = self.config
             .as_ref()
             .expect("config should always be present for transform");
@@ -87,11 +87,15 @@ impl PluginTransform for Plugin {
             };
 
         for (name, mut service) in &mut file.services {
-            service.environment.append(&mut config.common.to_compose_env());
+            service
+                .environment
+                .append(&mut config.common.to_compose_env());
             append_service(&mut service, &config.pods, name);
             let target_name = ctx.project.current_target().name();
             if let Some(target) = config.targets.get(target_name) {
-                service.environment.append(&mut target.common.to_compose_env());
+                service
+                    .environment
+                    .append(&mut target.common.to_compose_env());
                 append_service(&mut service, &target.pods, name);
             }
         }
@@ -121,14 +125,16 @@ fn injects_secrets_into_services() {
     let frontend = proj.pod("frontend").unwrap();
     let ctx = plugins::Context::new(&proj, frontend, "up");
     let mut file = frontend.merged_file(target).unwrap();
-    plugin.transform(Operation::Output, &ctx, &mut file).unwrap();
+    plugin
+        .transform(Operation::Output, &ctx, &mut file)
+        .unwrap();
     let web = file.services.get("web").unwrap();
-    let global_password =
-        web.environment.get("GLOBAL_PASSWORD").expect("has GLOBAL_PASSWORD");
-    assert_eq!(global_password.value().unwrap(),
-               "more magic");
-    let some_password =
-        web.environment.get("SOME_PASSWORD").expect("has SOME_PASSWORD");
-    assert_eq!(some_password.value().unwrap(),
-               "production secret");
+    let global_password = web.environment
+        .get("GLOBAL_PASSWORD")
+        .expect("has GLOBAL_PASSWORD");
+    assert_eq!(global_password.value().unwrap(), "more magic");
+    let some_password = web.environment
+        .get("SOME_PASSWORD")
+        .expect("has SOME_PASSWORD");
+    assert_eq!(some_password.value().unwrap(), "production secret");
 }

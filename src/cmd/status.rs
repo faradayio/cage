@@ -19,12 +19,14 @@ pub trait CommandStatus {
     /// Get the current status of the project.  This is eventually intended
     /// to include a fair bit of detail.
     fn status<CR>(&self, runner: &CR, act_on: &args::ActOn) -> Result<()>
-        where CR: CommandRunner;
+    where
+        CR: CommandRunner;
 }
 
 impl CommandStatus for Project {
     fn status<CR>(&self, _runner: &CR, act_on: &args::ActOn) -> Result<()>
-        where CR: CommandRunner
+    where
+        CR: CommandRunner,
     {
         let state = RuntimeState::for_project(self)?;
         for pod_or_service in act_on.pods_or_services(self) {
@@ -32,8 +34,8 @@ impl CommandStatus for Project {
                 PodOrService::Pod(pod) => self.pod_status(&state, pod)?,
                 PodOrService::Service(pod, service_name) => {
                     self.pod_header(pod)?;
-                    let service = try!(pod.service_or_err(self.current_target(),
-                                                          service_name));
+                    let service =
+                        pod.service_or_err(self.current_target(), service_name)?;
                     self.service_status(&state, pod, service_name, &service, true)?;
                 }
             }
@@ -50,10 +52,12 @@ impl Project {
         } else {
             "disabled".red().bold()
         };
-        println!("{:15} {} type:{}",
-                 pod.name().blue().bold(),
-                 enabled,
-                 pod.pod_type());
+        println!(
+            "{:15} {} type:{}",
+            pod.name().blue().bold(),
+            enabled,
+            pod.pod_type()
+        );
         Ok(())
     }
 
@@ -62,23 +66,26 @@ impl Project {
         self.pod_header(pod)?;
         let file = pod.merged_file(self.current_target())?;
         for (i, (service_name, service)) in file.services.iter().enumerate() {
-            self.service_status(state,
-                                pod,
-                                service_name,
-                                service,
-                                i + 1 == file.services.len())?;
+            self.service_status(
+                state,
+                pod,
+                service_name,
+                service,
+                i + 1 == file.services.len(),
+            )?;
         }
         Ok(())
     }
 
     /// Display information about a service.
-    fn service_status(&self,
-                      state: &RuntimeState,
-                      _pod: &Pod,
-                      service_name: &str,
-                      service: &dc::Service,
-                      last: bool)
-                      -> Result<()> {
+    fn service_status(
+        &self,
+        state: &RuntimeState,
+        _pod: &Pod,
+        service_name: &str,
+        service: &dc::Service,
+        last: bool,
+    ) -> Result<()> {
         if last {
             print!("└─ {:12}", service_name.blue().bold());
         } else {
@@ -97,15 +104,14 @@ impl Project {
         }
 
         // Print out ports with known host bindings.
-        let ports: Vec<String> = service.ports
+        let ports: Vec<String> = service
+            .ports
             .iter()
             .map(|port| Ok(port.value()?.host_string()))
-            .filter_map(|result| {
-                match result {
-                    Ok(Some(val)) => Some(Ok(val)),
-                    Ok(None) => None,
-                    Err(err) => Some(Err(err)),
-                }
+            .filter_map(|result| match result {
+                Ok(Some(val)) => Some(Ok(val)),
+                Ok(None) => None,
+                Err(err) => Some(Err(err)),
             })
             .collect::<Result<_>>()?;
         if !ports.is_empty() {
@@ -113,10 +119,12 @@ impl Project {
         }
 
         // Print out mounted source code.
-        let sources: Vec<&Source> = service.sources(self.sources())?
-            .map(|source_mount| { Ok(source_mount.source) })
+        let sources: Vec<&Source> = service
+            .sources(self.sources())?
+            .map(|source_mount| Ok(source_mount.source))
             .collect::<Result<_>>()?;
-        let source_names: Vec<&str> = sources.iter()
+        let source_names: Vec<&str> = sources
+            .iter()
             .filter(|s| s.is_available_locally(self) && s.mounted())
             .map(|s| s.alias())
             .collect();

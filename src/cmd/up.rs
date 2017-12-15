@@ -16,25 +16,30 @@ use runtime_state::RuntimeState;
 /// We implement `up` with a trait so we put it in its own module.
 pub trait CommandUp {
     /// Up all the images in the specified pods.
-    fn up<CR>(&self,
-              runner: &CR,
-              act_on: &args::ActOn,
-              opts: &args::opts::Up)
-              -> Result<()>
-        where CR: CommandRunner;
+    fn up<CR>(
+        &self,
+        runner: &CR,
+        act_on: &args::ActOn,
+        opts: &args::opts::Up,
+    ) -> Result<()>
+    where
+        CR: CommandRunner;
 
     /// Run the initialization functions for the specified pod.
     fn init_pod<CR>(&self, runner: &CR, pod: &Pod) -> Result<()>
-        where CR: CommandRunner;
+    where
+        CR: CommandRunner;
 }
 
 impl CommandUp for Project {
-    fn up<CR>(&self,
-              runner: &CR,
-              act_on: &args::ActOn,
-              opts: &args::opts::Up)
-              -> Result<()>
-        where CR: CommandRunner
+    fn up<CR>(
+        &self,
+        runner: &CR,
+        act_on: &args::ActOn,
+        opts: &args::opts::Up,
+    ) -> Result<()>
+    where
+        CR: CommandRunner,
     {
         let pods_or_services = act_on.pods_or_services(self)
             // TODO LOW: Refactor this into a `filter_result` helper?
@@ -61,7 +66,8 @@ impl CommandUp for Project {
     }
 
     fn init_pod<CR>(&self, runner: &CR, pod: &Pod) -> Result<()>
-        where CR: CommandRunner
+    where
+        CR: CommandRunner,
     {
         // Skip initialization for this pod if there's nothing to do.
         if pod.run_on_init().is_empty() {
@@ -69,8 +75,10 @@ impl CommandUp for Project {
         }
 
         // Wait for the pod's ports to be open.
-        println!("Waiting for pod '{}' to be listening on all ports",
-                 pod.name());
+        println!(
+            "Waiting for pod '{}' to be listening on all ports",
+            pod.name()
+        );
         loop {
             let state: RuntimeState = RuntimeState::for_project(self)?;
             let listening = pod.service_names()
@@ -84,7 +92,8 @@ impl CommandUp for Project {
                         false
                     } else {
                         // If we have at least one container, scan it.
-                        containers.iter()
+                        containers
+                            .iter()
                             .map(|container| container.is_listening_to_ports())
                             .all(|listening| listening)
                     }
@@ -100,9 +109,11 @@ impl CommandUp for Project {
         println!("Initializing pod '{}'", pod.name());
         for cmd in pod.run_on_init() {
             if cmd.len() < 1 {
-                return Err("all `run_on_init` items for '{}' \
-                            must have at least one value"
-                    .into());
+                return Err(
+                    "all `run_on_init` items for '{}' \
+                     must have at least one value"
+                        .into(),
+                );
             }
             let service = &cmd[0];
             let cmd = if cmd.len() >= 2 {
@@ -129,13 +140,15 @@ fn runs_docker_compose_up_honors_enable_in_targets() {
     let opts = args::opts::Up::default();
     proj.up(&runner, &args::ActOn::All, &opts).unwrap();
     assert_ran!(runner, {
-        ["docker-compose",
-         "-p",
-         "railshello",
-         "-f",
-         proj.output_dir().join("pods").join("frontend.yml"),
-         "up",
-         "-d"]
+        [
+            "docker-compose",
+            "-p",
+            "railshello",
+            "-f",
+            proj.output_dir().join("pods").join("frontend.yml"),
+            "up",
+            "-d",
+        ]
     });
 
     proj.remove_test_output().unwrap();

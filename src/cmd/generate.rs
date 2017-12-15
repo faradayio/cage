@@ -5,7 +5,7 @@ use std::env;
 #[cfg(test)]
 use std::fs;
 use std::io;
-use std::path::{PathBuf, Path};
+use std::path::{Path, PathBuf};
 
 use errors::*;
 use project::Project;
@@ -77,9 +77,11 @@ impl CommandGenerate for Project {
 
     fn generate_list(&self) -> Result<()> {
         for generator in self.plugins().generators() {
-            println!("{:19} {}",
-                     generator.name(),
-                     generator.generator_description());
+            println!(
+                "{:19} {}",
+                generator.name(),
+                generator.generator_description()
+            );
         }
         Ok(())
     }

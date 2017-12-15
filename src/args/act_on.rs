@@ -25,8 +25,8 @@ impl ActOn {
         let state = match *self {
             ActOn::All => State::PodIter(project.pods()),
             ActOn::AllExceptTasks => {
-                let iter = project.pods()
-                    .filter(all_except_tasks as fn(&&Pod) -> bool);
+                let iter =
+                    project.pods().filter(all_except_tasks as fn(&&Pod) -> bool);
                 State::FilteredPodIter(iter)
             }
             ActOn::Named(ref names) => State::NameIter(names.into_iter()),
@@ -47,7 +47,7 @@ fn all_except_tasks(pod: &&Pod) -> bool {
 
 /// Internal state for `PodsOrServices` iterator.
 #[derive(Debug)]
-#[cfg_attr(feature="clippy", allow(enum_variant_names))]
+#[cfg_attr(feature = "clippy", allow(enum_variant_names))]
 enum State<'a> {
     /// This corresponds to `ActOn::All`.
     PodIter(Pods<'a>),
@@ -78,13 +78,11 @@ impl<'a> Iterator for PodsOrServices<'a> {
             State::FilteredPodIter(ref mut iter) => {
                 iter.next().map(|pod| Ok(PodOrService::Pod(pod)))
             }
-            State::NameIter(ref mut iter) => {
-                if let Some(name) = iter.next() {
-                    Some(self.project.pod_or_service_or_err(name))
-                } else {
-                    None
-                }
-            }
+            State::NameIter(ref mut iter) => if let Some(name) = iter.next() {
+                Some(self.project.pod_or_service_or_err(name))
+            } else {
+                None
+            },
         }
     }
 }

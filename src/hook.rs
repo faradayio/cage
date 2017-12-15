@@ -26,7 +26,8 @@ impl HookManager {
     /// Create a new hook manager that runs hooks from the specified
     /// directory.
     pub fn new<P>(root_dir: P) -> Result<HookManager>
-        where P: Into<PathBuf>
+    where
+        P: Into<PathBuf>,
     {
         let root_dir: PathBuf = root_dir.into();
         Ok(HookManager {
@@ -37,20 +38,23 @@ impl HookManager {
 
     /// Invoke all scripts available for the specified hook, passing
     /// `args` as environment variables.
-    pub fn invoke<CR>(&self,
-                      runner: &CR,
-                      hook_name: &str,
-                      env: &BTreeMap<String, String>)
-                      -> Result<()>
-        where CR: CommandRunner
+    pub fn invoke<CR>(
+        &self,
+        runner: &CR,
+        hook_name: &str,
+        env: &BTreeMap<String, String>,
+    ) -> Result<()>
+    where
+        CR: CommandRunner,
     {
-
         let d_dir = self.hooks_dir.join(format!("{}.d", hook_name));
         if !d_dir.exists() {
             // Bail early if we don't have a hooks dir.
-            debug!("No hooks for '{}' because {} does not exist",
-                   hook_name,
-                   &d_dir.display());
+            debug!(
+                "No hooks for '{}' because {} does not exist",
+                hook_name,
+                &d_dir.display()
+            );
             return Ok(());
         }
 
@@ -62,7 +66,8 @@ impl HookManager {
             let entry = entry.chain_err(&mkerr)?;
             let path = entry.path();
             trace!("Checking {} to see if it's a hook", path.display());
-            let ty = entry.file_type()
+            let ty = entry
+                .file_type()
                 .chain_err(|| ErrorKind::CouldNotReadFile(path.clone()))?;
             let os_name = entry.file_name();
             let name = os_name.to_str_or_err()?;
@@ -95,13 +100,17 @@ fn runs_requested_hook_scripts() {
     let runner = TestCommandRunner::new();
     proj.output("pull").unwrap();
 
-    proj.hooks().invoke(&runner, "pull", &BTreeMap::default()).unwrap();
+    proj.hooks()
+        .invoke(&runner, "pull", &BTreeMap::default())
+        .unwrap();
     assert_ran!(runner, {
-        [proj.root_dir()
-             .join("config")
-             .join("hooks")
-             .join("pull.d")
-             .join("hello.hook")]
+        [
+            proj.root_dir()
+                .join("config")
+                .join("hooks")
+                .join("pull.d")
+                .join("hello.hook"),
+        ]
     });
 
     proj.remove_test_output().unwrap();

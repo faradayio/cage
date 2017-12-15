@@ -23,7 +23,8 @@ pub struct Target {
 impl Target {
     /// Create a new target with the specified name.
     pub fn new<S>(name: S) -> Target
-        where S: Into<String>
+    where
+        S: Into<String>,
     {
         Target { name: name.into() }
     }
@@ -77,6 +78,8 @@ impl Target {
         lazy_static! {
             static ref NON_ALNUM: Regex = Regex::new(r#"[^a-z0-9]"#).unwrap();
         }
-        NON_ALNUM.replace_all(&base_name.to_lowercase(), "").into_owned()
+        NON_ALNUM
+            .replace_all(&base_name.to_lowercase(), "")
+            .into_owned()
     }
 }

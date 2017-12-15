@@ -11,31 +11,37 @@ use project::Project;
 /// We implement `run` with a trait so we put it in its own module.
 pub trait CommandRun {
     /// Run a specific pod as a one-shot task.
-    fn run<CR>(&self,
-               runner: &CR,
-               service: &str,
-               command: Option<&args::Command>,
-               opts: &args::opts::Run)
-               -> Result<()>
-        where CR: CommandRunner;
+    fn run<CR>(
+        &self,
+        runner: &CR,
+        service: &str,
+        command: Option<&args::Command>,
+        opts: &args::opts::Run,
+    ) -> Result<()>
+    where
+        CR: CommandRunner;
 
     /// Execute tests inside a fresh container.
-    fn test<CR>(&self,
-                runner: &CR,
-                service: &str,
-                command: Option<&args::Command>)
-                -> Result<()>
-        where CR: CommandRunner;
+    fn test<CR>(
+        &self,
+        runner: &CR,
+        service: &str,
+        command: Option<&args::Command>,
+    ) -> Result<()>
+    where
+        CR: CommandRunner;
 }
 
 impl CommandRun for Project {
-    fn run<CR>(&self,
-               runner: &CR,
-               service: &str,
-               command: Option<&args::Command>,
-               opts: &args::opts::Run)
-               -> Result<()>
-        where CR: CommandRunner
+    fn run<CR>(
+        &self,
+        runner: &CR,
+        service: &str,
+        command: Option<&args::Command>,
+        opts: &args::opts::Run,
+    ) -> Result<()>
+    where
+        CR: CommandRunner,
     {
         let (pod, service_name) = self.service_or_err(service)?;
 
@@ -45,7 +51,8 @@ impl CommandRun for Project {
         } else {
             vec![]
         };
-        runner.build("docker-compose")
+        runner
+            .build("docker-compose")
             .args(&pod.compose_args(self)?)
             .arg("run")
             .args(&opts.to_args())
@@ -54,28 +61,35 @@ impl CommandRun for Project {
             .exec()
     }
 
-    fn test<CR>(&self,
-                runner: &CR,
-                service_name: &str,
-                command: Option<&args::Command>)
-                -> Result<()>
-        where CR: CommandRunner
+    fn test<CR>(
+        &self,
+        runner: &CR,
+        service_name: &str,
+        command: Option<&args::Command>,
+    ) -> Result<()>
+    where
+        CR: CommandRunner,
     {
         let target = self.current_target();
         let (pod, service_name) = self.service_or_err(service_name)?;
 
         // If we don't have any mounted sources, warn.
         let service = pod.service_or_err(target, service_name)?;
-        let sources = service.sources(self.sources())?
-            .collect::<Vec<_>>();
-        let mount_count = sources.iter()
+        let sources = service.sources(self.sources())?.collect::<Vec<_>>();
+        let mount_count = sources
+            .iter()
             .cloned()
             .filter(|ref source_mount| {
-                source_mount.source.is_available_locally(self) && source_mount.source.mounted()
+                source_mount.source.is_available_locally(self)
+                    && source_mount.source.mounted()
             })
             .count();
         if mount_count == 0 {
-            warn!("No source code mounted into '{}/{}'", pod.name(), service_name);
+            warn!(
+                "No source code mounted into '{}/{}'",
+                pod.name(),
+                service_name
+            );
         }
 
         let command_args = if let Some(c) = command {
@@ -84,7 +98,8 @@ impl CommandRun for Project {
             let service = pod.service_or_err(target, service_name)?;
             service.test_command()?.iter().map(|s| s.into()).collect()
         };
-        runner.build("docker-compose")
+        runner
+            .build("docker-compose")
             .args(&pod.compose_args(self)?)
             .arg("run")
             .arg("--rm")
@@ -118,15 +133,17 @@ fn runs_a_single_service_pod() {
     opts.allocate_tty = false;
     proj.run(&runner, "rake", Some(&cmd), &opts).unwrap();
     assert_ran!(runner, {
-        ["docker-compose",
-         "-p",
-         "railshello",
-         "-f",
-         proj.output_dir().join("pods").join("rake.yml"),
-         "run",
-         "-T",
-         "rake",
-         "db:migrate"]
+        [
+            "docker-compose",
+            "-p",
+            "railshello",
+            "-f",
+            proj.output_dir().join("pods").join("rake.yml"),
+            "run",
+            "-T",
+            "rake",
+            "db:migrate",
+        ]
     });
     proj.remove_test_output().unwrap();
 }
@@ -143,17 +160,19 @@ fn runs_tests() {
     proj.test(&runner, "frontend/proxy", None).unwrap();
 
     assert_ran!(runner, {
-        ["docker-compose",
-         "-p",
-         "hellotest",
-         "-f",
-         proj.output_pods_dir().join("frontend.yml"),
-         "run",
-         "--rm",
-         "--no-deps",
-         "proxy",
-         "echo",
-         "All tests passed"]
+        [
+            "docker-compose",
+            "-p",
+            "hellotest",
+            "-f",
+            proj.output_pods_dir().join("frontend.yml"),
+            "run",
+            "--rm",
+            "--no-deps",
+            "proxy",
+            "echo",
+            "All tests passed",
+        ]
     });
 
     proj.remove_test_output().unwrap();
@@ -172,18 +191,20 @@ fn runs_tests_with_custom_command() {
     proj.test(&runner, "proxy", Some(&cmd)).unwrap();
 
     assert_ran!(runner, {
-        ["docker-compose",
-         "-p",
-         "hellotest",
-         "-f",
-         proj.output_pods_dir().join("frontend.yml"),
-         "run",
-         "--rm",
-         "--no-deps",
-         "proxy",
-         "rspec",
-         "-t",
-         "foo"]
+        [
+            "docker-compose",
+            "-p",
+            "hellotest",
+            "-f",
+            proj.output_pods_dir().join("frontend.yml"),
+            "run",
+            "--rm",
+            "--no-deps",
+            "proxy",
+            "rspec",
+            "-t",
+            "foo",
+        ]
     });
 
     proj.remove_test_output().unwrap();

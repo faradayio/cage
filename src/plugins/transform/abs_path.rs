@@ -8,7 +8,7 @@ use errors::*;
 use plugins;
 use plugins::{Operation, PluginNew, PluginTransform};
 use project::Project;
-use util::{ConductorPathExt, err};
+use util::{err, ConductorPathExt};
 
 /// Plugin which converts all paths in a `dc::File` to absolute.
 #[derive(Debug)]
@@ -31,16 +31,19 @@ impl PluginNew for Plugin {
     }
 
     fn new(_project: &Project) -> Result<Self> {
-        Ok(Plugin { _placeholder: PhantomData })
+        Ok(Plugin {
+            _placeholder: PhantomData,
+        })
     }
 }
 
 impl PluginTransform for Plugin {
-    fn transform(&self,
-                 op: Operation,
-                 ctx: &plugins::Context,
-                 file: &mut dc::File)
-                 -> Result<()> {
+    fn transform(
+        &self,
+        op: Operation,
+        ctx: &plugins::Context,
+        file: &mut dc::File,
+    ) -> Result<()> {
         // Give up immediately if we're not doing this for local output.
         // It's not yet clear what we should do with relative paths in
         // exported output, anyway.
@@ -53,10 +56,7 @@ impl PluginTransform for Plugin {
             if let Some(ref mut build) = service.build {
                 let context: &mut _ = build.context.value_mut()?;
                 if let dc::Context::Dir(ref mut path) = *context {
-                    let new_path = ctx.project
-                        .pods_dir()
-                        .join(&path)
-                        .to_absolute()?;
+                    let new_path = ctx.project.pods_dir().join(&path).to_absolute()?;
                     *path = new_path;
                 }
             }
@@ -70,10 +70,10 @@ impl PluginTransform for Plugin {
                         Some(dc::HostVolume::Path(new_path.to_absolute()?))
                     }
                     Some(dc::HostVolume::UserRelativePath(ref path))
-                        if path.is_relative() => {
-
-                        let home = try!(env::home_dir()
-                            .ok_or_else(|| err("Cannot find HOME directory")));
+                        if path.is_relative() =>
+                    {
+                        let home = env::home_dir()
+                            .ok_or_else(|| err("Cannot find HOME directory"))?;
                         let new_path = home.join(path);
                         Some(dc::HostVolume::Path(new_path.to_absolute()?))
                     }

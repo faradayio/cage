@@ -35,7 +35,8 @@ pub struct DefaultTags {
 impl DefaultTags {
     /// Read in tag defaults from a stream.
     pub fn read<R>(r: R) -> Result<Self>
-        where R: io::Read
+    where
+        R: io::Read,
     {
         let mut tags = BTreeMap::new();
         let reader = io::BufReader::new(r);
@@ -87,12 +88,18 @@ alpine:4.3
 ";
     let cursor = io::Cursor::new(file);
     let default_tags = DefaultTags::read(cursor).unwrap();
-    assert_eq!(default_tags.default_for(&dc::Image::new("alpine").unwrap()),
-               dc::Image::new("alpine:4.3").unwrap());
-    assert_eq!(default_tags.default_for(&dc::Image::new("alpine:4.2").unwrap()),
-               dc::Image::new("alpine:4.2").unwrap());
+    assert_eq!(
+        default_tags.default_for(&dc::Image::new("alpine").unwrap()),
+        dc::Image::new("alpine:4.3").unwrap()
+    );
+    assert_eq!(
+        default_tags.default_for(&dc::Image::new("alpine:4.2").unwrap()),
+        dc::Image::new("alpine:4.2").unwrap()
+    );
     // TODO LOW: I'm not sure how we should actually handle `latest`.
     // Should it default?
-    assert_eq!(default_tags.default_for(&dc::Image::new("alpine:latest").unwrap()),
-               dc::Image::new("alpine:latest").unwrap());
+    assert_eq!(
+        default_tags.default_for(&dc::Image::new("alpine:latest").unwrap()),
+        dc::Image::new("alpine:latest").unwrap()
+    );
 }

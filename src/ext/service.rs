@@ -41,9 +41,8 @@ pub trait ServiceExt {
     /// `Service` object, so you can use it to decide how you want to
     /// update other fields of this object without running afoul of the
     /// borrow checker.
-    fn sources<'a, 'b>(&'a self,
-                       sources: &'b sources::Sources)
-                       -> Result<Sources<'b>>;
+    fn sources<'a, 'b>(&'a self, sources: &'b sources::Sources)
+        -> Result<Sources<'b>>;
 }
 
 impl ServiceExt for dc::Service {
@@ -69,8 +68,8 @@ impl ServiceExt for dc::Service {
                 dc::Context::Dir(_) => Ok(None),
                 dc::Context::GitUrl(ref git_url) => {
                     Ok(git_url.subdirectory().map(|subdir| subdir.to_string()))
-                },
-            }
+                }
+            };
         }
         Ok(None)
     }
@@ -84,11 +83,9 @@ impl ServiceExt for dc::Service {
     }
 
     fn test_command(&self) -> Result<Vec<String>> {
-        let raw = self.labels
-            .get("io.fdy.cage.test")
-            .ok_or_else(|| {
-                err("specify a value for the label io.fdy.cage.test to run tests")
-            })?;
+        let raw = self.labels.get("io.fdy.cage.test").ok_or_else(|| {
+            err("specify a value for the label io.fdy.cage.test to run tests")
+        })?;
         let mut lexer = shlex::Shlex::new(raw.value()?);
         let result: Vec<String> = lexer.by_ref().map(|w| w.to_owned()).collect();
         if lexer.had_error {
@@ -98,9 +95,10 @@ impl ServiceExt for dc::Service {
         }
     }
 
-    fn sources<'a, 'b>(&'a self,
-                       sources: &'b sources::Sources)
-                       -> Result<Sources<'b>> {
+    fn sources<'a, 'b>(
+        &'a self,
+        sources: &'b sources::Sources,
+    ) -> Result<Sources<'b>> {
         // Get our `context`, if any.
         let container_path = self.source_mount_dir()?;
         let source_subdirectory = self.repository_subdirectory()?;
@@ -108,11 +106,16 @@ impl ServiceExt for dc::Service {
         let context = self.context()?
             .and_then(|ctx| {
                 // human_alias is called on every context when constructing Sources
-                let alias = &ctx.human_alias().expect("human_alias failed on a context that worked previously");
+                let alias = &ctx.human_alias()
+                    .expect("human_alias failed on a context that worked previously");
                 sources.find_by_alias(alias)
             })
             .and_then(|source| {
-                Some(SourceMount { container_path, source, source_subdirectory })
+                Some(SourceMount {
+                    container_path,
+                    source,
+                    source_subdirectory,
+                })
             });
 
         // Get our library keys and mount points.
@@ -121,9 +124,9 @@ impl ServiceExt for dc::Service {
             let prefix = "io.fdy.cage.lib.";
             if label.starts_with(prefix) {
                 let lib_name = label[prefix.len()..].to_string();
-                let source = sources
-                    .find_by_lib_key(&lib_name)
-                    .ok_or_else(|| -> Error { ErrorKind::UnknownLibKey(lib_name).into() })?;
+                let source = sources.find_by_lib_key(&lib_name).ok_or_else(
+                    || -> Error { ErrorKind::UnknownLibKey(lib_name).into() },
+                )?;
 
                 libs.push(SourceMount {
                     container_path: mount_as.value()?.to_owned(),
@@ -133,7 +136,10 @@ impl ServiceExt for dc::Service {
             }
         }
 
-        Ok(Sources { context, libs: libs.into_iter() })
+        Ok(Sources {
+            context,
+            libs: libs.into_iter(),
+        })
     }
 }
 
@@ -162,7 +168,7 @@ impl<'a> Iterator for Sources<'a> {
         // simulataneously updating our internal state and keeping the
         // borrow checker happy.
         self.context.take().or_else(|| {
-             // If there is no SourceMount for the service itself, iterate over libs
+            // If there is no SourceMount for the service itself, iterate over libs
             self.libs.next()
         })
     }
@@ -205,7 +211,10 @@ fn build_context_can_specify_a_subdirectory() {
     let frontend = proj.pod("frontend").unwrap();
     let merged = frontend.merged_file(target).unwrap();
     let web = merged.services.get("web").unwrap();
-    assert_eq!(web.repository_subdirectory().unwrap(), Some("myfolder".to_string()));
+    assert_eq!(
+        web.repository_subdirectory().unwrap(),
+        Some("myfolder".to_string())
+    );
 }
 
 #[test]

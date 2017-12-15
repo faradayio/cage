@@ -14,12 +14,14 @@ use project::Project;
 pub trait CommandPull {
     /// Pull all the images associated with a project.
     fn pull<CR>(&self, runner: &CR, act_on: &args::ActOn) -> Result<()>
-        where CR: CommandRunner;
+    where
+        CR: CommandRunner;
 }
 
 impl CommandPull for Project {
     fn pull<CR>(&self, runner: &CR, act_on: &args::ActOn) -> Result<()>
-        where CR: CommandRunner
+    where
+        CR: CommandRunner,
     {
         // Run our hook.
         self.hooks().invoke(runner, "pull", &BTreeMap::new())?;

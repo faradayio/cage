@@ -36,8 +36,10 @@ impl ServiceLocations {
         for pod in pods {
             for service in pod.service_names() {
                 // Add long names immediately as `pod/service`.
-                locations.insert(format!("{}/{}", pod.name(), service),
-                                 (pod.name().to_owned(), service.to_owned()));
+                locations.insert(
+                    format!("{}/{}", pod.name(), service),
+                    (pod.name().to_owned(), service.to_owned()),
+                );
 
                 // Keep track of short names to see if we have a unique
                 // name `service`.
@@ -55,12 +57,14 @@ impl ServiceLocations {
         // Add our unique short names.
         for (service, status) in short_names {
             if let ShortNameStatus::UniqueInPod(pod) = status {
-                locations.insert(service.to_owned(),
-                                 (pod.to_owned(), service.to_owned()));
+                locations
+                    .insert(service.to_owned(), (pod.to_owned(), service.to_owned()));
             }
         }
 
-        ServiceLocations { locations: locations }
+        ServiceLocations {
+            locations: locations,
+        }
     }
 
     /// Find a service by name.

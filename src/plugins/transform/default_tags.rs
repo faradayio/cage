@@ -29,16 +29,19 @@ impl PluginNew for Plugin {
     }
 
     fn new(_project: &Project) -> Result<Self> {
-        Ok(Plugin { _placeholder: PhantomData })
+        Ok(Plugin {
+            _placeholder: PhantomData,
+        })
     }
 }
 
 impl PluginTransform for Plugin {
-    fn transform(&self,
-                 _op: Operation,
-                 ctx: &plugins::Context,
-                 file: &mut dc::File)
-                 -> Result<()> {
+    fn transform(
+        &self,
+        _op: Operation,
+        ctx: &plugins::Context,
+        file: &mut dc::File,
+    ) -> Result<()> {
         // Do we have any default tags specified for this project?
         if let Some(tags) = ctx.project.default_tags() {
             // Apply the tags to each service.

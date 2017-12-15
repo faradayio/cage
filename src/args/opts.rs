@@ -104,7 +104,8 @@ fn process_options_to_args_returns_appropriate_flags() {
         ..Default::default()
     };
     let raw_expected = &["-d", "--user", "root", "-T"];
-    let expected: Vec<OsString> = raw_expected.iter()
+    let expected: Vec<OsString> = raw_expected
+        .iter()
         .map(|s| OsStr::new(s).to_owned())
         .collect();
     assert_eq!(opts.to_args(), expected);
@@ -166,7 +167,8 @@ fn exec_options_to_args_returns_appropriate_flags() {
     opts.detached = true;
     opts.privileged = true;
     let raw_expected = &["-d", "--privileged"];
-    let expected: Vec<OsString> = raw_expected.iter()
+    let expected: Vec<OsString> = raw_expected
+        .iter()
         .map(|s| OsStr::new(s).to_owned())
         .collect();
     assert_eq!(opts.to_args(), expected);
@@ -234,7 +236,8 @@ fn run_options_to_args_returns_appropriate_flags() {
     opts.environment.insert("FOO".to_owned(), "foo".to_owned());
     opts.entrypoint = Some("/helper.sh".to_owned());
     let raw_expected = &["-d", "-e", "FOO=foo", "--entrypoint", "/helper.sh"];
-    let expected: Vec<OsString> = raw_expected.iter()
+    let expected: Vec<OsString> = raw_expected
+        .iter()
         .map(|s| OsStr::new(s).to_owned())
         .collect();
     assert_eq!(opts.to_args(), expected);
@@ -276,7 +279,8 @@ fn logs_options_to_args_returns_appropriate_flags() {
     opts.follow = true;
     opts.number = Some("12".to_owned());
     let raw_expected = &["-f", "--tail=12"];
-    let expected: Vec<OsString> = raw_expected.iter()
+    let expected: Vec<OsString> = raw_expected
+        .iter()
         .map(|s| OsStr::new(s).to_owned())
         .collect();
     assert_eq!(opts.to_args(), expected);
@@ -317,7 +321,8 @@ fn rm_options_to_args_returns_appropriate_flags() {
     opts.force = true;
     opts.remove_volumes = true;
     let raw_expected = &["-f", "-v"];
-    let expected: Vec<OsString> = raw_expected.iter()
+    let expected: Vec<OsString> = raw_expected
+        .iter()
         .map(|s| OsStr::new(s).to_owned())
         .collect();
     assert_eq!(opts.to_args(), expected);

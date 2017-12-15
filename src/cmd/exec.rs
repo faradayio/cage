@@ -15,34 +15,41 @@ pub trait CommandExec {
     /// Exectute a command inside a running container.  Even though we
     /// package up most of our arguments into structs, we still have a
     /// ridiculous number of arguments.
-    fn exec<CR>(&self,
-                runner: &CR,
-                service_name: &str,
-                command: &args::Command,
-                opts: &args::opts::Exec)
-                -> Result<()>
-        where CR: CommandRunner;
+    fn exec<CR>(
+        &self,
+        runner: &CR,
+        service_name: &str,
+        command: &args::Command,
+        opts: &args::opts::Exec,
+    ) -> Result<()>
+    where
+        CR: CommandRunner;
 
     /// Execute an interactive shell inside a running container.
-    fn shell<CR>(&self,
-                 runner: &CR,
-                 service_name: &str,
-                 opts: &args::opts::Exec)
-                 -> Result<()>
-        where CR: CommandRunner;
+    fn shell<CR>(
+        &self,
+        runner: &CR,
+        service_name: &str,
+        opts: &args::opts::Exec,
+    ) -> Result<()>
+    where
+        CR: CommandRunner;
 }
 
 impl CommandExec for Project {
-    fn exec<CR>(&self,
-                runner: &CR,
-                service_name: &str,
-                command: &args::Command,
-                opts: &args::opts::Exec)
-                -> Result<()>
-        where CR: CommandRunner
+    fn exec<CR>(
+        &self,
+        runner: &CR,
+        service_name: &str,
+        command: &args::Command,
+        opts: &args::opts::Exec,
+    ) -> Result<()>
+    where
+        CR: CommandRunner,
     {
         let (pod, service_name) = self.service_or_err(service_name)?;
-        runner.build("docker-compose")
+        runner
+            .build("docker-compose")
             .args(&pod.compose_args(self)?)
             .arg("exec")
             .args(&opts.to_args())
@@ -51,12 +58,14 @@ impl CommandExec for Project {
             .exec()
     }
 
-    fn shell<CR>(&self,
-                 runner: &CR,
-                 service_name: &str,
-                 opts: &args::opts::Exec)
-                 -> Result<()>
-        where CR: CommandRunner
+    fn shell<CR>(
+        &self,
+        runner: &CR,
+        service_name: &str,
+        opts: &args::opts::Exec,
+    ) -> Result<()>
+    where
+        CR: CommandRunner,
     {
         // Sanity-check our arguments.
         if opts.detached {
@@ -88,15 +97,17 @@ fn invokes_docker_exec() {
     proj.exec(&runner, "web", &command, &opts).unwrap();
 
     assert_ran!(runner, {
-        ["docker-compose",
-         "-p",
-         "hello",
-         "-f",
-         proj.output_dir().join("pods").join("frontend.yml"),
-         "exec",
-         "-T",
-         "web",
-         "true"]
+        [
+            "docker-compose",
+            "-p",
+            "hello",
+            "-f",
+            proj.output_dir().join("pods").join("frontend.yml"),
+            "exec",
+            "-T",
+            "web",
+            "true",
+        ]
     });
 
     proj.remove_test_output().unwrap();
@@ -113,14 +124,16 @@ fn runs_shells() {
     proj.shell(&runner, "web", &Default::default()).unwrap();
 
     assert_ran!(runner, {
-        ["docker-compose",
-         "-p",
-         "hello",
-         "-f",
-         proj.output_dir().join("pods").join("frontend.yml"),
-         "exec",
-         "web",
-         "sh"]
+        [
+            "docker-compose",
+            "-p",
+            "hello",
+            "-f",
+            proj.output_dir().join("pods").join("frontend.yml"),
+            "exec",
+            "web",
+            "sh",
+        ]
     });
 
     proj.remove_test_output().unwrap();

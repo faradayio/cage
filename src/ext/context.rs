@@ -26,7 +26,8 @@ impl ContextExt for dc::Context {
                 //
                 // TODO LOW: We may need to unescape the path.
                 let url_path = Path::new(url.path()).to_owned();
-                let file_stem = url_path.file_stem()
+                let file_stem = url_path
+                    .file_stem()
                     .ok_or_else(|| err!("Can't get repo name from {}", &git_url))?;
                 let base_alias = file_stem.to_str_or_err()?.to_owned();
 
@@ -39,10 +40,9 @@ impl ContextExt for dc::Context {
             }
 
             dc::Context::Dir(ref path) => {
-                let file_stem = try!(path.file_stem()
-                    .ok_or_else(|| {
-                        err!("Can't get repo name from {}", &path.display())
-                    }));
+                let file_stem = path.file_stem().ok_or_else(
+                    || { err!("Can't get repo name from {}", &path.display()) }
+                )?;
                 Ok(file_stem.to_str_or_err()?.to_owned())
             }
         }
@@ -57,10 +57,12 @@ fn human_alias_uses_dir_name_and_branch_but_ignores_subdir() {
     let branch = dc::Context::new("https://github.com/faradayio/rails_hello.git#dev");
     assert_eq!(branch.human_alias().unwrap(), "rails_hello_dev");
 
-    let branch = dc::Context::new("https://github.com/faradayio/rails_hello.git#:some_dir");
+    let branch =
+        dc::Context::new("https://github.com/faradayio/rails_hello.git#:some_dir");
     assert_eq!(branch.human_alias().unwrap(), "rails_hello");
 
-    let branch = dc::Context::new("https://github.com/faradayio/rails_hello.git#dev:some_dir");
+    let branch =
+        dc::Context::new("https://github.com/faradayio/rails_hello.git#dev:some_dir");
     assert_eq!(branch.human_alias().unwrap(), "rails_hello_dev");
 
     let local = dc::Context::new("../src/node_hello");

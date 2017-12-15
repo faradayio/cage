@@ -16,9 +16,11 @@ pub fn find_project(start_dir: &Path) -> Result<PathBuf> {
         } else if let Some(parent) = dir.parent() {
             dir = parent;
         } else {
-            let err = err!("could not find cage project in {} or any directory \
-                            above it",
-                           start_dir.display());
+            let err = err!(
+                "could not find cage project in {} or any directory \
+                 above it",
+                start_dir.display()
+            );
             return Err(err);
         }
     }
@@ -26,9 +28,13 @@ pub fn find_project(start_dir: &Path) -> Result<PathBuf> {
 
 #[test]
 fn find_project_walks_up_directory_tree() {
-    assert_eq!(find_project(Path::new("examples/hello")).unwrap(),
-               Path::new("examples/hello"));
-    assert_eq!(find_project(Path::new("examples/hello/pods")).unwrap(),
-               Path::new("examples/hello"));
+    assert_eq!(
+        find_project(Path::new("examples/hello")).unwrap(),
+        Path::new("examples/hello")
+    );
+    assert_eq!(
+        find_project(Path::new("examples/hello/pods")).unwrap(),
+        Path::new("examples/hello")
+    );
     assert!(find_project(Path::new("examples")).is_err());
 }

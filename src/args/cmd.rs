@@ -25,21 +25,20 @@ impl Command {
     /// Create a new `Command` object from a vec, assuming first item is the command
     pub fn from_ordered_vec(list: Vec<String>) -> Option<Command> {
         match list.split_first() {
-            Some((executable, args)) => {
-                Some(Command {
-                    command: OsString::from(executable),
-                    args: args.into_iter().map(|arg| arg.into()).collect()
-                })
-            },
-            None => None
+            Some((executable, args)) => Some(Command {
+                command: OsString::from(executable),
+                args: args.into_iter().map(|arg| arg.into()).collect(),
+            }),
+            None => None,
         }
     }
 
     /// Add arguments to a `Command` object.  This is meant to be chained
     /// immediately after `new`, and it consumes `self` and returns it.
     pub fn with_args<A>(mut self, args: A) -> Command
-        where A: IntoIterator,
-              A::Item: Into<OsString>
+    where
+        A: IntoIterator,
+        A::Item: Into<OsString>,
     {
         self.args = args.into_iter().map(|arg| arg.into()).collect();
         self
@@ -58,6 +57,8 @@ impl ToArgs for Command {
 #[test]
 fn command_to_args_converts_to_arguments() {
     assert_eq!(Command::new("foo").to_args(), vec![OsStr::new("foo")]);
-    assert_eq!(Command::new("foo").with_args(&["--opt"]).to_args(),
-               vec![OsStr::new("foo"), OsStr::new("--opt")]);
+    assert_eq!(
+        Command::new("foo").with_args(&["--opt"]).to_args(),
+        vec![OsStr::new("foo"), OsStr::new("--opt")]
+    );
 }

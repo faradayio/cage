@@ -84,11 +84,12 @@ pub trait PluginNew: Plugin + Sized + fmt::Debug {
 /// A plugin which transforms a `dc::File` object.
 pub trait PluginTransform: Plugin {
     /// Transform the specified file.
-    fn transform(&self,
-                 op: Operation,
-                 ctx: &Context,
-                 file: &mut dc::File)
-                 -> Result<()>;
+    fn transform(
+        &self,
+        op: Operation,
+        ctx: &Context,
+        file: &mut dc::File,
+    ) -> Result<()>;
 }
 
 /// A plugin which can generate source code.
@@ -150,14 +151,16 @@ impl Manager {
     /// Create a new plugin, returning a reasonably helpful error if we
     /// fail.
     fn new_plugin<T>(&self, proj: &Project) -> Result<T>
-        where T: PluginNew + 'static
+    where
+        T: PluginNew + 'static,
     {
         T::new(proj).chain_err(|| ErrorKind::PluginFailed(T::plugin_name().to_owned()))
     }
 
     /// Register a generator with this manager.
     fn register_generator<T>(&mut self, proj: &Project) -> Result<()>
-        where T: PluginNew + PluginGenerate + 'static
+    where
+        T: PluginNew + PluginGenerate + 'static,
     {
         let plugin: T = self.new_plugin(proj)?;
         self.generators.push(Box::new(plugin));
@@ -166,14 +169,14 @@ impl Manager {
 
     /// Register our vault generator.  We put this in a separate function
     /// so we can use `cfg`.
-    #[cfg(feature="hashicorp_vault")]
+    #[cfg(feature = "hashicorp_vault")]
     fn register_vault_generator(&mut self, proj: &Project) -> Result<()> {
         self.register_generator::<transform::vault::Plugin>(proj)
     }
 
     /// Pretend to register our vault generator, but just leave a note in
     /// the logs.
-    #[cfg(not(feature="hashicorp_vault"))]
+    #[cfg(not(feature = "hashicorp_vault"))]
     fn register_vault_generator(&mut self, _: &Project) -> Result<()> {
         debug!("vault generator was disabled at build time");
         Ok(())
@@ -181,7 +184,8 @@ impl Manager {
 
     /// Register a transform with this manager.
     fn register_transform<T>(&mut self, proj: &Project) -> Result<()>
-        where T: PluginNew + PluginTransform + 'static
+    where
+        T: PluginNew + PluginTransform + 'static,
     {
         if T::is_configured_for(proj)? {
             let plugin: T = self.new_plugin(proj)?;
@@ -192,14 +196,14 @@ impl Manager {
 
     /// Register our vault transform.  We put this in a separate function
     /// so we can use `cfg`.
-    #[cfg(feature="hashicorp_vault")]
+    #[cfg(feature = "hashicorp_vault")]
     fn register_vault_transform(&mut self, proj: &Project) -> Result<()> {
         self.register_transform::<transform::vault::Plugin>(proj)
     }
 
     /// Pretend to register our vault transform, but just leave a note in
     /// the logs.
-    #[cfg(not(feature="hashicorp_vault"))]
+    #[cfg(not(feature = "hashicorp_vault"))]
     fn register_vault_transform(&mut self, _: &Project) -> Result<()> {
         debug!("vault transform was disabled at build time");
         Ok(())
@@ -215,11 +219,12 @@ impl Manager {
     }
 
     /// Run the specified generator in the current project.
-    pub fn generate(&self,
-                    project: &Project,
-                    name: &str,
-                    out: &mut io::Write)
-                    -> Result<()> {
+    pub fn generate(
+        &self,
+        project: &Project,
+        name: &str,
+        out: &mut io::Write,
+    ) -> Result<()> {
         let generator = self.generators
             .iter()
             .find(|g| g.name() == name)
@@ -229,14 +234,16 @@ impl Manager {
     }
 
     /// Apply all our transform plugins.
-    pub fn transform(&self,
-                     op: Operation,
-                     ctx: &Context,
-                     file: &mut dc::File)
-                     -> Result<()> {
+    pub fn transform(
+        &self,
+        op: Operation,
+        ctx: &Context,
+        file: &mut dc::File,
+    ) -> Result<()> {
         for plugin in &self.transforms {
             trace!("transforming '{}' with {}", ctx.pod.name(), plugin.name());
-            plugin.transform(op, ctx, file)
+            plugin
+                .transform(op, ctx, file)
                 .chain_err(|| ErrorKind::PluginFailed(plugin.name().to_owned()))?;
         }
         Ok(())
