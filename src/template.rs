@@ -2,7 +2,7 @@
 //! implementing things like the `new` command.
 
 use handlebars as hb;
-use rustc_serialize::json::ToJson;
+use serde::Serialize;
 use std::collections::BTreeMap;
 use std::fmt;
 use std::fs;
@@ -78,10 +78,9 @@ impl Template {
                        data: &T,
                        out: &mut io::Write)
                        -> Result<()>
-        where T: ToJson + fmt::Debug
+        where T: Serialize + fmt::Debug
     {
-        let json = data.to_json();
-        debug!("Generating {} with {}", &self.name, &json);
+        debug!("Generating {} with {:?}", &self.name, data);
         for (rel_path, tmpl) in &self.files {
             let path = target_dir.join(rel_path);
             debug!("Output {}", path.display());
@@ -96,9 +95,8 @@ impl Template {
             let mut writer = io::BufWriter::new(out);
 
             // Render our template to the file.
-            let ctx = hb::Context::wraps(&json);
             self.handlebars
-                .template_renderw(tmpl, &ctx, &mut writer)
+                .template_renderw(tmpl, &data, &mut writer)
                 .chain_err(&mkerr)?;
         }
         Ok(())

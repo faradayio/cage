@@ -61,10 +61,6 @@
 #![cfg_attr(all(not(test), feature="clippy"), warn(result_unwrap_used))]
 #![cfg_attr(feature="clippy", warn(wrong_pub_self_convention))]
 
-// Compiler plugins only work with Rust nightly builds, not with stable
-// compilers.  We want to work with both.
-#![cfg_attr(feature = "serde_derive", feature(proc_macro))]
-
 // The `error_chain` documentation says we need this.
 #![recursion_limit = "1024"]
 
@@ -90,12 +86,11 @@ extern crate rand;
 extern crate rayon;
 extern crate regex;
 extern crate retry;
-extern crate rustc_serialize;
 extern crate semver;
 extern crate serde;
-#[cfg(feature = "serde_derive")]
 #[macro_use]
 extern crate serde_derive;
+extern crate serde_json;
 extern crate serde_yaml;
 extern crate shlex;
 extern crate url;

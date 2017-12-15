@@ -11,7 +11,7 @@ extern crate env_logger;
 extern crate itertools;
 #[macro_use]
 extern crate log;
-extern crate rustc_serialize;
+extern crate openssl_probe;
 extern crate yaml_rust;
 
 use colored::Colorize;
@@ -402,6 +402,8 @@ fn log_level_label(level: log::LogLevel) -> colored::ColoredString {
 
 /// Our main entry point.
 fn main() {
+    openssl_probe::init_ssl_cert_env_vars();
+
     // Initialize logging with some custom options, mostly so we can see
     // our own warnings.
     let mut builder = env_logger::LogBuilder::new();

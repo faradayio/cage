@@ -127,8 +127,9 @@ impl ContainerInfo {
                         .unwrap();
                 }
                 if let Some(caps) = TCP_PORT.captures(port_str) {
-                    let port = caps.at(1)
+                    let port = caps.get(1)
                         .unwrap()
+                        .as_str()
                         .parse()
                         .chain_err(|| ErrorKind::parse("TCP port", port_str.clone()))?;
                     ports.push(port);

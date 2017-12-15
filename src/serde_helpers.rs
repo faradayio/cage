@@ -1,9 +1,9 @@
 //! Helper functions for use with `serde`.
 
 use serde::{self, Deserialize, Deserializer, Serialize};
-use serde::de::Visitor;
+use serde::de::{DeserializeOwned, Visitor};
 use serde_yaml;
-use std::fmt::Display;
+use std::fmt::{self, Display};
 use std::fs;
 use std::io;
 use std::marker::PhantomData;
@@ -16,7 +16,7 @@ use util::ConductorPathExt;
 /// Load a YAML file using `serde`, and generate the best error we can if
 /// it fails.
 pub fn load_yaml<T>(path: &Path) -> Result<T, errors::Error>
-    where T: Deserialize
+    where T: DeserializeOwned
 {
     let mkerr = || ErrorKind::CouldNotReadFile(path.to_owned());
     let f = fs::File::open(&path).chain_err(&mkerr)?;
@@ -34,15 +34,15 @@ pub fn dump_yaml<T>(path: &Path, data: &T) -> Result<(), errors::Error>
 }
 
 /// Deserialize a type that we can parse using `FromStr`.
-pub fn deserialize_parsable<D, T>(deserializer: &mut D) -> Result<T, D::Error>
-    where D: Deserializer,
+pub fn deserialize_parsable<'de, D, T>(deserializer: D) -> Result<T, D::Error>
+    where D: Deserializer<'de>,
           T: FromStr,
           <T as FromStr>::Err: Display
 {
     String::deserialize(deserializer)
         ?
         .parse()
-        .map_err(|e| serde::Error::custom(format!("{}", e)))
+        .map_err(|e| serde::de::Error::custom(format!("{}", e)))
 }
 
 /// Deserialize an `Option` wrapping a type that we can parse using
@@ -51,9 +51,9 @@ pub fn deserialize_parsable<D, T>(deserializer: &mut D) -> Result<T, D::Error>
 /// There may be a better way to do this.  See [serde issue #576][issue].
 ///
 /// [issue]: https://github.com/serde-rs/serde/issues/576
-pub fn deserialize_parsable_opt<D, T>(deserializer: &mut D)
-                                      -> Result<Option<T>, D::Error>
-    where D: Deserializer,
+pub fn deserialize_parsable_opt<'de, D, T>(deserializer: D)
+                                           -> Result<Option<T>, D::Error>
+    where D: Deserializer<'de>,
           T: FromStr,
           <T as FromStr>::Err: Display
 {
@@ -62,34 +62,37 @@ pub fn deserialize_parsable_opt<D, T>(deserializer: &mut D)
     struct Wrap<T>(Option<T>);
 
     #[allow(unused_qualifications)]
-    impl<T> Deserialize for Wrap<T>
+    impl<'de, T> Deserialize<'de> for Wrap<T>
         where T: FromStr,
               <T as FromStr>::Err: Display
     {
-        fn deserialize<D>(deserializer: &mut D) -> Result<Self, D::Error>
-            where D: Deserializer
+        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+            where D: Deserializer<'de>
         {
             /// Declare an internal visitor type to handle our input.
             struct OptVisitor<T>(PhantomData<T>);
 
-            impl<T> Visitor for OptVisitor<T>
+            impl<'de, T> Visitor<'de> for OptVisitor<T>
                 where T: FromStr,
                       <T as FromStr>::Err: Display
             {
                 type Value = Wrap<T>;
 
-                fn visit_none<E>(&mut self) -> Result<Self::Value, E>
-                    where E: serde::Error
+                fn visit_none<E>(self) -> Result<Self::Value, E>
+                    where E: serde::de::Error
                 {
                     Ok(Wrap(None))
                 }
 
-                fn visit_some<D>(&mut self,
-                                 deserializer: &mut D)
+                fn visit_some<D>(self, deserializer: D)
                                  -> Result<Self::Value, D::Error>
-                    where D: Deserializer
+                    where D: Deserializer<'de>
                 {
                     deserialize_parsable(deserializer).map(|v| Wrap(Some(v)))
+                }
+
+                fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                    formatter.write_str("a string or null")
                 }
             }
 

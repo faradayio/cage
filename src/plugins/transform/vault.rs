@@ -22,10 +22,8 @@ use project::Project;
 use serde_helpers::load_yaml;
 use util::err;
 
-#[cfg(feature = "serde_derive")]
-include!(concat!("vault_config.in.rs"));
-#[cfg(feature = "serde_codegen")]
-include!(concat!(env!("OUT_DIR"), "/plugins/transform/vault_config.rs"));
+// TODO: This old-style serde `include!` should be inline or a module.
+include!("vault_config.in.rs");
 
 /// Load a vault token from `~/.vault-token`, where the command line client
 /// puts it.

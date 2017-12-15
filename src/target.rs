@@ -77,6 +77,6 @@ impl Target {
         lazy_static! {
             static ref NON_ALNUM: Regex = Regex::new(r#"[^a-z0-9]"#).unwrap();
         }
-        NON_ALNUM.replace_all(&base_name.to_lowercase(), "")
+        NON_ALNUM.replace_all(&base_name.to_lowercase(), "").into_owned()
     }
 }

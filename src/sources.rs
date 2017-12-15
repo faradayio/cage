@@ -28,12 +28,8 @@ const SOURCES_YML: &'static str = "config/sources.yml";
 /// The file where we store our `mounted` state.
 const MOUNTED_YML: &'static str = "mounted.yml";
 
-// Include some source code containing data structures we need to run
-// through serde.
-#[cfg(feature = "serde_derive")]
-include!(concat!("source_config.in.rs"));
-#[cfg(feature = "serde_codegen")]
-include!(concat!(env!("OUT_DIR"), "/source_config.rs"));
+// TODO: This old-style serde `include!` should be inline or a module.
+include!("source_config.in.rs");
 
 /// All the source trees associated with a project's Docker images.
 #[derive(Debug)]

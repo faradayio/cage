@@ -1,7 +1,5 @@
 //! The `new` and `generate` commands.
 
-use rustc_serialize::json::{Json, ToJson};
-use std::collections::BTreeMap;
 #[cfg(test)]
 use std::env;
 #[cfg(test)]
@@ -113,7 +111,7 @@ fn generate_new_creates_a_project() {
 
 /// Information about the project we're generating.  This will be passed to
 /// our templates.
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 struct ProjectInfo<'a> {
     /// The current version of cage.
     cage_version: &'a str,
@@ -122,34 +120,12 @@ struct ProjectInfo<'a> {
     name: &'a str,
 }
 
-// Convert to JSON for use in a Handlebars template.  We could get
-// Handlebars and serde to convert to JSON automatically, but it's less
-// work to define it by hand.
-impl<'a> ToJson for ProjectInfo<'a> {
-    fn to_json(&self) -> Json {
-        let mut info: BTreeMap<String, Json> = BTreeMap::new();
-        info.insert("cage_version".to_string(),
-                    self.cage_version.to_string().to_json());
-        info.insert("name".to_string(), self.name.to_json());
-        info.to_json()
-    }
-}
-
 /// Information about the target we're generating.  This will be passed
 /// to our templates.
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 struct TargetInfo<'a> {
     /// The project in which this target appears.
     project: &'a ProjectInfo<'a>,
     /// The name of this target.
     name: &'a str,
-}
-
-impl<'a> ToJson for TargetInfo<'a> {
-    fn to_json(&self) -> Json {
-        let mut info: BTreeMap<String, Json> = BTreeMap::new();
-        info.insert("project".to_string(), self.project.to_json());
-        info.insert("name".to_string(), self.name.to_json());
-        info.to_json()
-    }
 }

@@ -1,13 +1,8 @@
 language: rust
 dist: trusty
-cache:
-  apt: true
-  cargo: true
-  pip: true
-  directories:
-  - "$TRAVIS_BUILD_DIR/target"
-  - "$HOME/Library/Python/2.7"
 sudo: required
+services:
+- docker
 matrix:
   fast_finish: true
   allow_failures:
@@ -21,30 +16,15 @@ matrix:
     env: "FEATURE_OPTS=''"
   - os: linux
     rust: nightly
-    # We get an extra `--features unstable` from travis-cargo.
-    env: "FEATURE_OPTS='--no-default-features'"
+    env: "FEATURE_OPTS=''"
   - os: osx
     rust: stable
-    # Disable OpenSSL on MacOS X, because the binaries aren't really
-    # portable between machines.  Also we want to test this config anyway.
-    env: "FEATURE_OPTS='--no-default-features --features default-minimal'"
-services:
-- docker
-before_script:
-- |
-  (cargo install rustfmt || true) &&
-  pip install 'travis-cargo<0.2' --user &&
-  export PATH=$HOME/.local/bin:$HOME/Library/Python/2.7/bin:$HOME/.cargo/bin:$PATH
+    # Still no SSL on the Mac, because upgrading would need to deal with
+    # https://github.com/faradayio/boondock/issues/14
+    env: "FEATURE_OPTS='--no-default-features'"
 script:
-- |
-  travis-cargo test -- $FEATURE_OPTS &&
-  travis-cargo build -- $FEATURE_OPTS &&
-  (cargo fmt -- --write-mode=diff || true) &&
-  if [[ "$TRAVIS_RUST_VERSION" == beta ]]; then
-    PATH="`pwd`/target/debug:$PATH" && examples/tutorial.sh &&
-    travis-cargo bench -- $FEATURE_OPTS &&
-    travis-cargo doc -- $FEATURE_OPTS
-  fi
+- cargo test $FEATURE_OPTS
+- cargo build $FEATURE_OPTS
 before_deploy: "./build-release cage ${TRAVIS_TAG}-${TRAVIS_OS_NAME}"
 deploy:
   provider: releases

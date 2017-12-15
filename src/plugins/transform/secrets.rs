@@ -15,10 +15,8 @@ use project::Project;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde_helpers::load_yaml;
 
-#[cfg(feature = "serde_derive")]
-include!(concat!("secrets_config.in.rs"));
-#[cfg(feature = "serde_codegen")]
-include!(concat!(env!("OUT_DIR"), "/plugins/transform/secrets_config.rs"));
+// TODO: This old-style serde `include!` should be inline or a module.
+include!("secrets_config.in.rs");
 
 /// Loads a `config/secrets.yml` file and merges in into a project.
 #[derive(Debug)]

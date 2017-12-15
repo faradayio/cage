@@ -19,9 +19,9 @@ impl ServiceSecrets {
     }
 }
 
-impl Deserialize for ServiceSecrets {
-    fn deserialize<D>(deserializer: &mut D) -> result::Result<Self, D::Error>
-        where D: Deserializer,
+impl<'de> Deserialize<'de> for ServiceSecrets {
+    fn deserialize<D>(deserializer: D) -> result::Result<Self, D::Error>
+        where D: Deserializer<'de>,
     {
         let secrets = Deserialize::deserialize(deserializer)?;
         Ok(ServiceSecrets { secrets: secrets })
@@ -29,7 +29,7 @@ impl Deserialize for ServiceSecrets {
 }
 
 impl Serialize for ServiceSecrets {
-    fn serialize<S>(&self, serializer: &mut S) -> result::Result<(), S::Error>
+    fn serialize<S>(&self, serializer: S) -> result::Result<S::Ok, S::Error>
         where S: Serializer
     {
         self.secrets.serialize(serializer)

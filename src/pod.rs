@@ -16,12 +16,8 @@ use target::Target;
 use project::Project;
 use serde_helpers::load_yaml;
 
-// Include some source code containing data structures we need to run
-// through serde.
-#[cfg(feature = "serde_derive")]
-include!(concat!("pod_config.in.rs"));
-#[cfg(feature = "serde_codegen")]
-include!(concat!(env!("OUT_DIR"), "/pod_config.rs"));
+// TODO: This old-style serde `include!` should be inline or a module.
+include!("pod_config.in.rs");
 
 /// Information about a `docker-compose.yml` file, including its path
 /// relative to `base_dir` (`base_dir` is normally `$PROJECT/pods`), and
@@ -296,7 +292,7 @@ impl Pod {
                           service_name: &str,
                           script_name: &str,
                           opts: &args::opts::Run
-                          ) -> Result<()> 
+                          ) -> Result<()>
         where CR: CommandRunner
     {
         self.config.run_script(runner, &project, &service_name, &script_name, &opts)

@@ -3,8 +3,9 @@
 #[cfg(test)]
 use compose_yml::v2 as dc;
 use semver;
+use serde::{Serialize, Serializer};
+use serde::ser::SerializeMap;
 use serde_yaml;
-use std::collections::BTreeMap;
 use std::env;
 use std::fs;
 use std::io;
@@ -13,6 +14,7 @@ use std::marker::PhantomData;
 use std::ops::Deref;
 use std::path::Path;
 use std::path::PathBuf;
+use std::result;
 use std::slice;
 use std::str;
 
@@ -26,18 +28,13 @@ use pod::{Pod, PodType};
 use sources::Sources;
 use rayon::prelude::*;
 use runtime_state::RuntimeState;
-use rustc_serialize::json::{Json, ToJson};
 use serde_helpers::deserialize_parsable_opt;
 use service_locations::ServiceLocations;
 use util::{ConductorPathExt, ToStrOrErr};
 use version;
 
-// Include some source code containing data structures we need to run
-// through serde.
-#[cfg(feature = "serde_derive")]
-include!(concat!("project_config.in.rs"));
-#[cfg(feature = "serde_codegen")]
-include!(concat!(env!("OUT_DIR"), "/project_config.rs"));
+// TODO: This old-style serde `include!` should be inline or a module.
+include!("project_config.in.rs");
 
 /// Represents either a `Pod` object or a `Service` object.
 #[derive(Debug)]
@@ -492,12 +489,13 @@ impl Project {
     }
 }
 
-/// Convert to JSON for use in generator templates.
-impl<'a> ToJson for Project {
-    fn to_json(&self) -> Json {
-        let mut info: BTreeMap<String, Json> = BTreeMap::new();
-        info.insert("name".to_string(), self.name().to_json());
-        info.to_json()
+impl Serialize for Project {
+    fn serialize<S>(&self, serializer: S) -> result::Result<S::Ok, S::Error>
+        where S: Serializer
+    {
+        let mut map = serializer.serialize_map(Some(1))?;
+        map.serialize_entry("name", self.name())?;
+        map.end()
     }
 }
 
