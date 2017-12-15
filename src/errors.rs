@@ -113,6 +113,12 @@ error_chain! {
             display("no library '{}' defined in `config/sources.yml`", &lib_key)
         }
 
+        /// The user tried to specify a repo subdirectory on a library
+        LibHasRepoSubdirectory(lib_key: String) {
+            description("invalid library context URL")
+            display("library '{}' may not specify a subdirectory in its git URL", &lib_key)
+        }
+
         /// The requested target does not appear to exist.
         UnknownTarget(target_name: String) {
             description("unknown target")

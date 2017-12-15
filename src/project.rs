@@ -183,6 +183,17 @@ impl Project {
         Project::from_dirs(&root_dir, &test_output.join("src"), &test_output)
     }
 
+    /// (Tests only.) Create a `Project` from a subdirectory of `tests/fixtures`,
+    /// with an output directory under `target/test_output/$NAME`.
+    #[cfg(test)]
+    pub fn from_fixture(name: &str) -> Result<Project> {
+        use rand::random;
+        let root_dir = Path::new("tests/fixtures").join(name);
+        let rand_name = format!("{}-{}", name, random::<u16>());
+        let test_output = Path::new("target/test_output").join(&rand_name);
+        Project::from_dirs(&root_dir, &test_output.join("src"), &test_output)
+    }
+
     /// (Tests only.) Remove our output directory after a test.
     #[cfg(test)]
     pub fn remove_test_output(&self) -> Result<()> {

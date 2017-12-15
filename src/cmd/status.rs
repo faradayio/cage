@@ -114,10 +114,7 @@ impl Project {
 
         // Print out mounted source code.
         let sources: Vec<&Source> = service.sources(self.sources())?
-            .map(|source_result| {
-                let (_, source) = source_result?;
-                Ok(source)
-            })
+            .map(|source_mount| { Ok(source_mount.source) })
             .collect::<Result<_>>()?;
         let source_names: Vec<&str> = sources.iter()
             .filter(|s| s.is_available_locally(self) && s.mounted())

@@ -4,6 +4,8 @@
 
 use compose_yml::v2 as dc;
 use std::marker::PhantomData;
+#[cfg(test)]
+use std::path::Path;
 
 use errors::*;
 use ext::service::ServiceExt;
@@ -57,15 +59,15 @@ impl PluginTransform for Plugin {
         // Update each service to point to our locally cloned sources.
         let project = ctx.project;
         for service in &mut file.services.values_mut() {
-            for sources_result in service.sources(project.sources())? {
-                let (mount_as, source) = sources_result?;
+            for source_mount in service.sources(project.sources())? {
+                let source = source_mount.source;
                 if source.is_available_locally(project) && source.mounted() {
-                    // Build an absolute path to our source's local
-                    // directory.
-                    let path = source.path(project).to_absolute()?;
+                    // Build an absolute path to our source's local directory.
+                    let source_subdirectory = source_mount.source_subdirectory.unwrap_or("".to_string());
+                    let path = source.path(project).join(source_subdirectory).to_absolute()?;
 
                     // Add a mount point to the container.
-                    let mount = dc::VolumeMount::host(&path, mount_as);
+                    let mount = dc::VolumeMount::host(&path, source_mount.container_path);
                     service.volumes.push(dc::value(mount));
 
                     // Update the `build` field if it's present and it
@@ -80,4 +82,33 @@ impl PluginTransform for Plugin {
         }
         Ok(())
     }
+}
+
+
+#[test]
+fn adds_a_volume_with_a_subdirectory() {
+    use env_logger;
+    let _ = env_logger::init();
+    let proj = Project::from_fixture("with_repo_subdir").unwrap();
+    let plugin = Plugin::new(&proj).unwrap();
+
+    let source = proj.sources().find_by_alias("rails_hello").unwrap();
+    source.fake_clone_source(&proj).unwrap();
+
+    let target = proj.current_target();
+    let frontend = proj.pod("frontend").unwrap();
+    let ctx = plugins::Context::new(&proj, frontend, "up");
+    let mut file = frontend.merged_file(target).unwrap();
+
+    plugin.transform(Operation::Output, &ctx, &mut file).unwrap();
+
+    let web = file.services.get("web").unwrap();
+    let src_volume = web.volumes[0].value().unwrap();
+    let host_path = match src_volume.clone().host.unwrap() {
+        dc::HostVolume::Path(ref path_buf) => path_buf.clone(),
+        _ => unreachable!(),
+    };
+
+    assert!(host_path.ends_with(Path::new("src/rails_hello/myfolder")));
+    assert_eq!(src_volume.container, "/usr/src/app");
 }

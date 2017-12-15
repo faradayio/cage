@@ -1,0 +1,15 @@
+# An example of a pod whose source/Dockerfile lives in a subdirectory
+
+version: "2"
+
+services:
+  web:
+    image: "faraday/rails_hello"
+    build: "https://github.com/faradayio/rails_hello.git#:myfolder"
+    labels:
+      io.fdy.cage.srcdir: "/usr/src/app"
+  other_web:
+    image: "faraday/rails_hello"
+    build: "https://github.com/faradayio/rails_hello.git#:otherfolder"
+    labels:
+      io.fdy.cage.srcdir: "/usr/src/app"
