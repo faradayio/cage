@@ -142,7 +142,7 @@ fn runs_a_single_service_pod() {
             "run",
             "-T",
             "rake",
-            "db:migrate",
+            "db:migrate"
         ]
     });
     proj.remove_test_output().unwrap();
@@ -171,7 +171,7 @@ fn runs_tests() {
             "--no-deps",
             "proxy",
             "echo",
-            "All tests passed",
+            "All tests passed"
         ]
     });
 
@@ -203,7 +203,7 @@ fn runs_tests_with_custom_command() {
             "proxy",
             "rspec",
             "-t",
-            "foo",
+            "foo"
         ]
     });
 

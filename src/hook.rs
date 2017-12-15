@@ -109,7 +109,7 @@ fn runs_requested_hook_scripts() {
                 .join("config")
                 .join("hooks")
                 .join("pull.d")
-                .join("hello.hook"),
+                .join("hello.hook")
         ]
     });
 

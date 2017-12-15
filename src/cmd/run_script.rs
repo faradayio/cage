@@ -90,7 +90,7 @@ fn runs_scripts_on_all_services() {
             "run",
             "rake",
             "rake",
-            "routes",
+            "routes"
         ]
     });
 

@@ -106,7 +106,7 @@ fn invokes_docker_exec() {
             "exec",
             "-T",
             "web",
-            "true",
+            "true"
         ]
     });
 
@@ -132,7 +132,7 @@ fn runs_shells() {
             proj.output_dir().join("pods").join("frontend.yml"),
             "exec",
             "web",
-            "sh",
+            "sh"
         ]
     });
 
