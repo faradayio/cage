@@ -86,7 +86,7 @@ dependencies = [
 
 [[package]]
 name = "cage"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "boondock 0.0.49 (registry+https://github.com/rust-lang/crates.io-index)",
  "clap 2.29.0 (registry+https://github.com/rust-lang/crates.io-index)",

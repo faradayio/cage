@@ -243,7 +243,7 @@ hello
 
 ### cage run-script
 
-The `run-script` command operates similarly to `npm run <script>` or 
+The `run-script` command operates similarly to `npm run <script>` or
 `rake <task>`. Simply define a set of named scripts in the pod's metadata:
 
 ```yml
@@ -263,8 +263,8 @@ services:
         - ["npm","run","populate"]
 ```
 
-By running `cage run-script populate`, cage will find all services 
-that have a `populate` script and run it. You can also specify a 
+By running `cage run-script populate`, cage will find all services
+that have a `populate` script and run it. You can also specify a
 pod or service with `cage run-script tasks populate`.
 
 ## Reporting issues
@@ -316,15 +316,13 @@ rustup override set stable
 If you're using `nightly`, run the following in a terminal as you edit:
 
 ```sh
-cargo watch "test --no-default-features --features unstable --color=always" \
-    "build --no-default-features --features unstable --color=always"
+cargo watch "test --features clippy"
 ```
 
-If you're using `stable`, leave out `--no-default-features --features
-unstable`:
+If you're using `stable`, leave out `--features clippy`:
 
 ```sh
-cargo watch "test --color=always" "build --color=always"
+cargo watch test
 ```
 
 Before committing your code, run:
