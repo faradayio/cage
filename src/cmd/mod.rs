@@ -13,6 +13,7 @@
 pub use self::compose::CommandCompose;
 pub use self::exec::CommandExec;
 pub use self::generate::CommandGenerate;
+pub use self::kill::CommandKill;
 pub use self::logs::CommandLogs;
 pub use self::pull::CommandPull;
 pub use self::run::CommandRun;
@@ -24,6 +25,7 @@ pub use self::up::CommandUp;
 mod compose;
 mod exec;
 mod generate;
+mod kill;
 mod logs;
 mod pull;
 mod run;

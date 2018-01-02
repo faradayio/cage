@@ -59,6 +59,9 @@ trait ArgMatchesExt {
     /// Extract `exec::Command` from our command-line arguments.
     fn to_exec_command(&self) -> Option<cage::args::Command>;
 
+    /// Extract `kill` options from our command-line arguments.
+    fn to_kill_options(&self) -> cage::args::opts::Kill;
+
     /// Extract 'logs' options from our command-line arguments.
     fn to_logs_options(&self) -> cage::args::opts::Logs;
 
@@ -129,6 +132,12 @@ impl<'a> ArgMatchesExt for clap::ArgMatches<'a> {
             }
         }
         opts.no_deps = self.is_present("no-deps");
+        opts
+    }
+
+    fn to_kill_options(&self) -> cage::args::opts::Kill {
+        let mut opts = cage::args::opts::Kill::default();
+        opts.signal = self.value_of("signal").map(|v| v.to_owned());
         opts
     }
 
@@ -287,6 +296,11 @@ fn run(matches: &clap::ArgMatches) -> Result<()> {
         }
         "source" => run_source(&runner, &mut proj, sc_matches)?,
         "generate" => run_generate(&runner, &proj, sc_matches)?,
+        "kill" => {
+            let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE", true);
+            let opts = sc_matches.to_kill_options();
+            proj.kill(&runner, &acts_on, &opts)?;
+        }
         "logs" => {
             let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE", true);
             let opts = sc_matches.to_logs_options();
