@@ -320,6 +320,41 @@ fn logs_options_to_args_returns_appropriate_flags() {
     assert_eq!(opts.to_args(), expected);
 }
 
+/// Command-line flags for use with `docker-compose ps`.
+#[derive(Debug, Clone, Default)]
+#[allow(missing_copy_implementations)]
+pub struct Ps {
+    /// Only show ids.
+    pub only_ids: bool,
+
+    /// PRIVATE: This field is a stand-in for future options.
+    /// See http://stackoverflow.com/q/39277157/12089
+    #[doc(hidden)]
+    pub _nonexhaustive: (),
+}
+
+impl ToArgs for Ps {
+    fn to_args(&self) -> Vec<OsString> {
+        let mut args: Vec<OsString> = vec![];
+        if self.only_ids {
+            args.push(OsStr::new("-q").to_owned());
+        }
+        args
+    }
+}
+
+#[test]
+fn ps_options_to_args_returns_appropriate_flags() {
+    let mut opts = Ps::default();
+    opts.only_ids = true;
+    let raw_expected = &["-q"];
+    let expected: Vec<OsString> = raw_expected
+        .iter()
+        .map(|s| OsStr::new(s).to_owned())
+        .collect();
+    assert_eq!(opts.to_args(), expected);
+}
+
 /// Command-line flags for use with `docker-compose rm`.
 #[derive(Debug, Clone, Default)]
 #[allow(missing_copy_implementations)]

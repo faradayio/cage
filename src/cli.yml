@@ -217,6 +217,13 @@ subcommands:
             help: "Number of lines from end of output to display"
         - POD_OR_SERVICE: *pod_or_service
 
+  - ps:
+      about: "List containers"
+      args:
+        - only_ids:
+            short: "q"
+            help: "Only display IDs"
+        - POD_OR_SERVICE: *pod_or_service
 
   - source:
       about: "Commands for working with git repositories and local source trees"
