@@ -63,7 +63,8 @@ fn runs_docker_compose_kill() {
             "-f",
             proj.output_dir().join("pods").join("frontend.yml"),
             "kill",
-            "-s FOO"
+            "-s",
+            "FOO"
         ]
     });
 

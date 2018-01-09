@@ -260,7 +260,8 @@ impl ToArgs for Kill {
     fn to_args(&self) -> Vec<OsString> {
         let mut args: Vec<OsString> = vec![];
         if let Some(ref signal) = self.signal {
-            args.push(OsStr::new(&format!("-s {}", signal)).to_owned());
+            args.push(OsStr::new("-s").to_owned());
+            args.push(OsStr::new(signal).to_owned());
         }
         args
     }
@@ -270,7 +271,7 @@ impl ToArgs for Kill {
 fn kill_options_to_args_returns_appropriate_flags() {
     let mut opts = Kill::default();
     opts.signal = Some("FOO".to_owned());
-    let raw_expected = &["-s FOO"];
+    let raw_expected = &["-s", "FOO"];
     let expected: Vec<OsString> = raw_expected
         .iter()
         .map(|s| OsStr::new(s).to_owned())
