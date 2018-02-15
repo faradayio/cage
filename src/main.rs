@@ -411,6 +411,7 @@ fn main() {
     // our own warnings.
     let mut builder = env_logger::LogBuilder::new();
     builder.filter(Some("compose_yml"), log::LogLevelFilter::Warn);
+    builder.filter(Some("compose_yml::v2::validate"), log::LogLevelFilter::Error);
     builder.filter(Some("cage"), log::LogLevelFilter::Warn);
     builder.format(|record: &log::LogRecord| {
         let msg = format!(
