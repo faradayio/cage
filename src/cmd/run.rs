@@ -27,6 +27,7 @@ pub trait CommandRun {
         runner: &CR,
         service: &str,
         command: Option<&args::Command>,
+        opts: &args::opts::Run,
     ) -> Result<()>
     where
         CR: CommandRunner;
@@ -66,6 +67,7 @@ impl CommandRun for Project {
         runner: &CR,
         service_name: &str,
         command: Option<&args::Command>,
+        opts: &args::opts::Run,
     ) -> Result<()>
     where
         CR: CommandRunner,
@@ -102,6 +104,7 @@ impl CommandRun for Project {
             .build("docker-compose")
             .args(&pod.compose_args(self)?)
             .arg("run")
+            .args(&opts.to_args())
             .arg("--rm")
             .arg("--no-deps")
             .arg(service_name)
@@ -156,8 +159,9 @@ fn runs_tests() {
     proj.set_current_target_name("test").unwrap();
     let runner = TestCommandRunner::new();
     proj.output("test").unwrap();
+    let opts = Default::default();
 
-    proj.test(&runner, "frontend/proxy", None).unwrap();
+    proj.test(&runner, "frontend/proxy", None, &opts).unwrap();
 
     assert_ran!(runner, {
         [
@@ -186,9 +190,10 @@ fn runs_tests_with_custom_command() {
     proj.set_current_target_name("test").unwrap();
     let runner = TestCommandRunner::new();
     proj.output("test").unwrap();
+    let opts = Default::default();
 
     let cmd = args::Command::new("rspec").with_args(&["-t", "foo"]);
-    proj.test(&runner, "proxy", Some(&cmd)).unwrap();
+    proj.test(&runner, "proxy", Some(&cmd), &opts).unwrap();
 
     assert_ran!(runner, {
         [

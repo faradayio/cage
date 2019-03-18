@@ -67,6 +67,9 @@ pub struct Process {
     /// Defaults to true for `docker-compose`.
     pub allocate_tty: bool,
 
+    /// Forward service ports?
+    pub service_ports: bool,
+
     /// PRIVATE: This field is a stand-in for future options.
     /// See http://stackoverflow.com/q/39277157/12089
     #[doc(hidden)]
@@ -86,6 +89,9 @@ impl ToArgs for Process {
         if !self.allocate_tty {
             args.push(OsStr::new("-T").to_owned());
         }
+        if !self.service_ports {
+            args.push(OsStr::new("--service-ports").to_owned());
+        }
         args
     }
 }
@@ -101,6 +107,7 @@ fn process_options_to_args_returns_appropriate_flags() {
         detached: true,
         user: Some("root".to_owned()),
         allocate_tty: false,
+        service_ports: false,
         ..Default::default()
     };
     let raw_expected = &["-d", "--user", "root", "-T"];
@@ -117,6 +124,7 @@ impl Default for Process {
             detached: false,
             user: None,
             allocate_tty: true, // Not false!
+            service_ports: false,
             _nonexhaustive: (),
         }
     }

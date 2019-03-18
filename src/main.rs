@@ -283,7 +283,8 @@ fn run(matches: &clap::ArgMatches) -> Result<()> {
             warn_if_pods_are_enabled_but_not_running(&proj)?;
             let service = sc_matches.value_of("SERVICE").unwrap();
             let cmd = sc_matches.to_exec_command();
-            proj.test(&runner, service, cmd.as_ref())?;
+            let opts = sc_matches.to_run_options();
+            proj.test(&runner, service, cmd.as_ref(), &opts)?;
         }
         "source" => run_source(&runner, &mut proj, sc_matches)?,
         "generate" => run_generate(&runner, &proj, sc_matches)?,
