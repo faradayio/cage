@@ -129,6 +129,7 @@ impl<'a> ArgMatchesExt for clap::ArgMatches<'a> {
             }
         }
         opts.no_deps = self.is_present("no-deps");
+        opts.service_ports = self.is_present("service-ports");
         opts
     }
 
@@ -281,9 +282,9 @@ fn run(matches: &clap::ArgMatches) -> Result<()> {
         }
         "test" => {
             warn_if_pods_are_enabled_but_not_running(&proj)?;
-            let service = sc_matches.value_of("SERVICE").unwrap();
-            let cmd = sc_matches.to_exec_command();
             let opts = sc_matches.to_run_options();
+            let cmd = sc_matches.to_exec_command();
+            let service = sc_matches.value_of("SERVICE").unwrap();
             proj.test(&runner, service, cmd.as_ref(), &opts)?;
         }
         "source" => run_source(&runner, &mut proj, sc_matches)?,
