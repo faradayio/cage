@@ -22,7 +22,7 @@ pub enum PodType {
 
 /// In addition to serde serialization, also provide basic formatting.
 impl fmt::Display for PodType {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             PodType::Placeholder => write!(f, "placeholder"),
             PodType::Service => write!(f, "service"),

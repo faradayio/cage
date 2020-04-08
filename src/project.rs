@@ -24,7 +24,6 @@ use crate::errors::*;
 use crate::hook::HookManager;
 use crate::plugins::{self, Operation};
 use crate::pod::{Pod, PodType};
-use rayon::prelude::*;
 use crate::runtime_state::RuntimeState;
 use crate::serde_helpers::deserialize_parsable_opt;
 use crate::service_locations::ServiceLocations;
@@ -32,6 +31,7 @@ use crate::sources::Sources;
 use crate::target::Target;
 use crate::util::{ConductorPathExt, ToStrOrErr};
 use crate::version;
+use rayon::prelude::*;
 
 // TODO: This old-style serde `include!` should be inline or a module.
 include!("project_config.in.rs");
@@ -285,7 +285,7 @@ impl Project {
     }
 
     /// Iterate over all pods in this project.
-    pub fn pods(&self) -> Pods {
+    pub fn pods(&self) -> Pods<'_> {
         Pods {
             iter: self.pods.iter(),
         }
@@ -340,7 +340,7 @@ impl Project {
     }
 
     /// Iterate over all targets in this project.
-    pub fn targets(&self) -> Targets {
+    pub fn targets(&self) -> Targets<'_> {
         Targets {
             iter: self.targets.iter(),
         }

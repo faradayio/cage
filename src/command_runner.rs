@@ -170,7 +170,7 @@ impl TestCommandRunner {
     }
 
     /// Access the list of commands run.
-    pub fn cmds(&self) -> Ref<Vec<Vec<OsString>>> {
+    pub fn cmds(&self) -> Ref<'_, Vec<Vec<OsString>>> {
         self.cmds.borrow()
     }
 }

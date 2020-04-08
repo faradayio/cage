@@ -32,7 +32,7 @@ impl ServiceLocations {
 
         // Iterate over our pods.
         let mut locations = BTreeMap::new();
-        let mut short_names: BTreeMap<String, ShortNameStatus> = BTreeMap::new();
+        let mut short_names: BTreeMap<String, ShortNameStatus<'_>> = BTreeMap::new();
         for pod in pods {
             for service in pod.service_names() {
                 // Add long names immediately as `pod/service`.

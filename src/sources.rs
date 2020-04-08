@@ -137,7 +137,7 @@ impl Sources {
     /// Iterate over all source trees associated with this project.
     ///
     /// TODO LOW: Replace with IntoIterator.
-    pub fn iter(&self) -> Iter {
+    pub fn iter(&self) -> Iter<'_> {
         Iter {
             iter: self.sources.iter(),
         }

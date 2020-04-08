@@ -39,7 +39,7 @@ impl PluginTransform for Plugin {
     fn transform(
         &self,
         _op: Operation,
-        ctx: &plugins::Context,
+        ctx: &plugins::Context<'_>,
         file: &mut dc::File,
     ) -> Result<()> {
         if ctx.subcommand != "build" {

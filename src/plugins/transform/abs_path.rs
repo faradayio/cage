@@ -41,7 +41,7 @@ impl PluginTransform for Plugin {
     fn transform(
         &self,
         op: Operation,
-        ctx: &plugins::Context,
+        ctx: &plugins::Context<'_>,
         file: &mut dc::File,
     ) -> Result<()> {
         // Give up immediately if we're not doing this for local output.

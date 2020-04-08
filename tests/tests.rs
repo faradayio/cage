@@ -1,6 +1,3 @@
-extern crate cli_test_dir;
-extern crate copy_dir;
-
 use cli_test_dir::*;
 use copy_dir::copy_dir;
 use std::env;

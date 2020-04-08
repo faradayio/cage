@@ -64,36 +64,23 @@
 // The `error_chain` documentation says we need this.
 #![recursion_limit = "1024"]
 
-extern crate boondock;
-extern crate colored;
-extern crate compose_yml;
 #[cfg(test)]
 extern crate env_logger;
 #[macro_use]
 extern crate error_chain;
-extern crate glob;
-extern crate handlebars;
+
 #[cfg(feature = "hashicorp_vault")]
 extern crate hashicorp_vault as vault;
-extern crate includedir;
+
 #[macro_use]
 extern crate lazy_static;
 #[macro_use]
 extern crate log;
-extern crate phf;
-#[cfg(test)]
-extern crate rand;
-extern crate rayon;
-extern crate regex;
-extern crate retry;
-extern crate semver;
-extern crate serde;
+
+use semver;
+
 #[macro_use]
 extern crate serde_derive;
-extern crate serde_json;
-extern crate serde_yaml;
-extern crate shlex;
-extern crate url;
 
 pub use crate::default_tags::DefaultTags;
 pub use crate::errors::*;

@@ -12,8 +12,8 @@ use crate::errors::*;
 use crate::plugins;
 use crate::plugins::{Operation, PluginGenerate, PluginNew, PluginTransform};
 use crate::project::Project;
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use crate::serde_helpers::load_yaml;
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 // TODO: This old-style serde `include!` should be inline or a module.
 include!("secrets_config.in.rs");
@@ -71,7 +71,7 @@ impl PluginTransform for Plugin {
     fn transform(
         &self,
         _op: Operation,
-        ctx: &plugins::Context,
+        ctx: &plugins::Context<'_>,
         file: &mut dc::File,
     ) -> Result<()> {
         let config = self

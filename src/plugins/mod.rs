@@ -87,7 +87,7 @@ pub trait PluginTransform: Plugin {
     fn transform(
         &self,
         op: Operation,
-        ctx: &Context,
+        ctx: &Context<'_>,
         file: &mut dc::File,
     ) -> Result<()>;
 }
@@ -238,7 +238,7 @@ impl Manager {
     pub fn transform(
         &self,
         op: Operation,
-        ctx: &Context,
+        ctx: &Context<'_>,
         file: &mut dc::File,
     ) -> Result<()> {
         for plugin in &self.transforms {
@@ -252,7 +252,7 @@ impl Manager {
 }
 
 impl fmt::Debug for Manager {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut names: Vec<_> = vec![];
         names.extend_from_slice(
             &self.transforms.iter().map(|p| p.name()).collect::<Vec<_>>(),

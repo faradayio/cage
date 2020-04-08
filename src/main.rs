@@ -3,16 +3,15 @@
 #![cfg_attr(feature = "clippy", feature(plugin))]
 #![cfg_attr(feature = "clippy", plugin(clippy))]
 
-extern crate cage;
+use cage;
 #[macro_use]
 extern crate clap;
-extern crate colored;
-extern crate env_logger;
-extern crate itertools;
+use colored;
+use env_logger;
+
 #[macro_use]
 extern crate log;
-extern crate openssl_probe;
-extern crate yaml_rust;
+use openssl_probe;
 
 use colored::Colorize;
 use itertools::Itertools;
@@ -30,7 +29,7 @@ use cage::Result;
 /// Load our command-line interface definitions from an external `clap`
 /// YAML file.  We could create these using code, but at the cost of more
 /// verbosity.
-fn cli(yaml: &yaml::Yaml) -> clap::App {
+fn cli(yaml: &yaml::Yaml) -> clap::App<'_, '_> {
     clap::App::from_yaml(yaml).version(crate_version!())
 }
 
@@ -176,11 +175,12 @@ fn warn_if_pods_are_enabled_but_not_running(project: &cage::Project) -> Result<(
 
 /// The function which does the real work.  Unlike `main`, we have a return
 /// type of `Result` and may therefore use `try!` to handle errors.
-fn run(matches: &clap::ArgMatches) -> Result<()> {
+fn run(matches: &clap::ArgMatches<'_>) -> Result<()> {
     // We know that we always have a subcommand because our `cli.yml`
     // requires this and `clap` is supposed to enforce it.
     let sc_name = matches.subcommand_name().unwrap();
-    let sc_matches: &clap::ArgMatches = matches.subcommand_matches(sc_name).unwrap();
+    let sc_matches: &clap::ArgMatches<'_> =
+        matches.subcommand_matches(sc_name).unwrap();
 
     // Handle any subcommands that we can handle without a project
     // directory.
@@ -307,7 +307,7 @@ fn run(matches: &clap::ArgMatches) -> Result<()> {
 fn run_source<R>(
     runner: &R,
     proj: &mut cage::Project,
-    matches: &clap::ArgMatches,
+    matches: &clap::ArgMatches<'_>,
 ) -> Result<()>
 where
     R: CommandRunner,
@@ -315,7 +315,8 @@ where
     // We know that we always have a subcommand because our `cli.yml`
     // requires this and `clap` is supposed to enforce it.
     let sc_name = matches.subcommand_name().unwrap();
-    let sc_matches: &clap::ArgMatches = matches.subcommand_matches(sc_name).unwrap();
+    let sc_matches: &clap::ArgMatches<'_> =
+        matches.subcommand_matches(sc_name).unwrap();
 
     // Dispatch our subcommand.
     let mut re_output = true;
@@ -351,7 +352,7 @@ where
 fn run_generate<R>(
     _runner: &R,
     proj: &cage::Project,
-    matches: &clap::ArgMatches,
+    matches: &clap::ArgMatches<'_>,
 ) -> Result<()>
 where
     R: CommandRunner,
@@ -359,7 +360,8 @@ where
     // We know that we always have a subcommand because our `cli.yml`
     // requires this and `clap` is supposed to enforce it.
     let sc_name = matches.subcommand_name().unwrap();
-    let sc_matches: &clap::ArgMatches = matches.subcommand_matches(sc_name).unwrap();
+    let sc_matches: &clap::ArgMatches<'_> =
+        matches.subcommand_matches(sc_name).unwrap();
 
     match sc_name {
         // TODO LOW: Allow running this without a project?
@@ -417,7 +419,7 @@ fn main() {
         log::LogLevelFilter::Error,
     );
     builder.filter(Some("cage"), log::LogLevelFilter::Warn);
-    builder.format(|record: &log::LogRecord| {
+    builder.format(|record: &log::LogRecord<'_>| {
         let msg = format!(
             "{} {} (from {})",
             log_level_label(record.level()),
@@ -437,7 +439,7 @@ fn main() {
 
     // Parse our command-line arguments.
     let cli_yaml = load_yaml!("cli.yml");
-    let matches: clap::ArgMatches = cli(cli_yaml).get_matches();
+    let matches: clap::ArgMatches<'_> = cli(cli_yaml).get_matches();
     debug!("Arguments: {:?}", &matches);
 
     // Defer all our real work to `run`, and handle any errors.  This is a

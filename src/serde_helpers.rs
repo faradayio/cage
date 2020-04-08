@@ -102,7 +102,10 @@ where
                     deserialize_parsable(deserializer).map(|v| Wrap(Some(v)))
                 }
 
-                fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                fn expecting(
+                    &self,
+                    formatter: &mut fmt::Formatter<'_>,
+                ) -> fmt::Result {
                     formatter.write_str("a string or null")
                 }
             }

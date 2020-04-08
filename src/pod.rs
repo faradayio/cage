@@ -249,7 +249,7 @@ impl Pod {
     }
 
     /// All the targets associated with this pod.
-    pub fn target_files(&self) -> TargetFiles {
+    pub fn target_files(&self) -> TargetFiles<'_> {
         TargetFiles {
             iter: self.target_file_infos.iter(),
         }
@@ -257,7 +257,7 @@ impl Pod {
 
     /// Iterate over all `dc::File` objects associated with this pod, including
     /// both the main `file()` and all the files in `target_files()`.
-    pub fn all_files(&self) -> AllFiles {
+    pub fn all_files(&self) -> AllFiles<'_> {
         // Defer all the hard work to our iterator type.
         AllFiles {
             pod: self,
@@ -373,8 +373,8 @@ impl<'a> Iterator for AllFiles<'a> {
 
 #[test]
 fn pods_are_normalized_on_load() {
-    use env_logger;
     use crate::project::Project;
+    use env_logger;
     let _ = env_logger::init();
 
     let proj = Project::from_example("hello").unwrap();

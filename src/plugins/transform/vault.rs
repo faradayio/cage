@@ -1,5 +1,7 @@
 //! Plugin which issues vault tokens to services.
 
+use crate::vault;
+use crate::vault::client::VaultDuration;
 use compose_yml::v2 as dc;
 use std::collections::BTreeMap;
 use std::env;
@@ -12,8 +14,6 @@ use std::path::PathBuf;
 use std::result;
 #[cfg(test)]
 use std::sync::{Arc, RwLock};
-use crate::vault;
-use crate::vault::client::VaultDuration;
 
 use crate::errors::*;
 use crate::plugins;
@@ -233,7 +233,8 @@ impl Plugin {
         };
         Ok(Plugin {
             config: config,
-            generator: generator.map(|gen: G| -> Box<dyn GenerateToken> { Box::new(gen) }),
+            generator: generator
+                .map(|gen: G| -> Box<dyn GenerateToken> { Box::new(gen) }),
         })
     }
 }
@@ -277,7 +278,7 @@ impl PluginTransform for Plugin {
     fn transform(
         &self,
         _op: Operation,
-        ctx: &plugins::Context,
+        ctx: &plugins::Context<'_>,
         file: &mut dc::File,
     ) -> Result<()> {
         // Get our plugin config.
