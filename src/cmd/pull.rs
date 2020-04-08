@@ -35,7 +35,7 @@ impl CommandPull for Project {
 #[test]
 fn runs_docker_compose_pull_on_all_pods() {
     use env_logger;
-    let _ = env_logger::init();
+    let _ = env_logger::try_init();
     let proj = Project::from_example("hello").unwrap();
     let runner = TestCommandRunner::new();
     proj.output("pull").unwrap();

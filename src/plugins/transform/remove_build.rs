@@ -54,7 +54,7 @@ impl PluginTransform for Plugin {
 #[test]
 fn removes_build_for_most_commands() {
     use env_logger;
-    let _ = env_logger::init();
+    let _ = env_logger::try_init();
     let proj = Project::from_example("rails_hello").unwrap();
     let plugin = Plugin::new(&proj).unwrap();
 
@@ -74,7 +74,7 @@ fn removes_build_for_most_commands() {
 #[test]
 fn leaves_build_in_when_building() {
     use env_logger;
-    let _ = env_logger::init();
+    let _ = env_logger::try_init();
     let proj = Project::from_example("rails_hello").unwrap();
     let plugin = Plugin::new(&proj).unwrap();
 

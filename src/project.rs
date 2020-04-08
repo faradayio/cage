@@ -662,7 +662,7 @@ impl<'a> Iterator for Targets<'a> {
 #[test]
 fn new_from_example_uses_example_and_target() {
     use env_logger;
-    let _ = env_logger::init();
+    let _ = env_logger::try_init();
     let proj = Project::from_example("hello").unwrap();
     assert_eq!(proj.root_dir, Path::new("examples/hello"));
     let output_dir = proj.output_dir.to_str_or_err().unwrap();
@@ -680,7 +680,7 @@ fn new_from_example_uses_example_and_target() {
 #[test]
 fn name_defaults_to_project_dir_but_can_be_overridden() {
     use env_logger;
-    let _ = env_logger::init();
+    let _ = env_logger::try_init();
     let mut proj = Project::from_example("hello").unwrap();
     assert_eq!(proj.name(), "hello");
     proj.set_name("hi");
@@ -690,7 +690,7 @@ fn name_defaults_to_project_dir_but_can_be_overridden() {
 #[test]
 fn pod_or_service_finds_either() {
     use env_logger;
-    let _ = env_logger::init();
+    let _ = env_logger::try_init();
     let proj = Project::from_example("hello").unwrap();
 
     match proj.pod_or_service("frontend").unwrap() {
@@ -710,7 +710,7 @@ fn pod_or_service_finds_either() {
 #[test]
 fn pods_are_loaded() {
     use env_logger;
-    let _ = env_logger::init();
+    let _ = env_logger::try_init();
     let proj = Project::from_example("rails_hello").unwrap();
     let names: Vec<_> = proj.pods.iter().map(|pod| pod.name()).collect();
     // Placeholders before everything else.
@@ -720,7 +720,7 @@ fn pods_are_loaded() {
 #[test]
 fn targets_are_loaded() {
     use env_logger;
-    let _ = env_logger::init();
+    let _ = env_logger::try_init();
     let proj = Project::from_example("hello").unwrap();
     let names: Vec<_> = proj.targets.iter().map(|o| o.name()).collect();
     assert_eq!(names, ["development", "production", "test"]);
@@ -729,7 +729,7 @@ fn targets_are_loaded() {
 #[test]
 fn output_creates_a_directory_of_flat_yml_files() {
     use env_logger;
-    let _ = env_logger::init();
+    let _ = env_logger::try_init();
     let proj = Project::from_example("rails_hello").unwrap();
     proj.output("up").unwrap();
     assert!(proj.output_dir.join("pods").join("frontend.yml").exists());
@@ -741,7 +741,7 @@ fn output_creates_a_directory_of_flat_yml_files() {
 #[test]
 fn output_applies_expected_transforms() {
     use env_logger;
-    let _ = env_logger::init();
+    let _ = env_logger::try_init();
 
     let cursor = io::Cursor::new("dockercloud/hello-world:staging\n");
     let default_tags = DefaultTags::read(cursor).unwrap();
@@ -791,7 +791,7 @@ fn output_applies_expected_transforms() {
 #[test]
 fn output_mounts_cloned_libraries() {
     use env_logger;
-    let _ = env_logger::init();
+    let _ = env_logger::try_init();
 
     let proj = Project::from_example("rails_hello").unwrap();
     let source = proj
@@ -846,7 +846,7 @@ fn output_supports_in_tree_source_code() {
 #[test]
 fn export_creates_a_directory_of_flat_yml_files() {
     use env_logger;
-    let _ = env_logger::init();
+    let _ = env_logger::try_init();
     let mut proj = Project::from_example("rails_hello").unwrap();
     let export_dir = proj.output_dir.join("hello_export");
     proj.set_current_target_name("production").unwrap();
@@ -860,7 +860,7 @@ fn export_creates_a_directory_of_flat_yml_files() {
 #[test]
 fn export_applies_expected_transforms() {
     use env_logger;
-    let _ = env_logger::init();
+    let _ = env_logger::try_init();
 
     // We only test the ways in which `export`'s transforms differ from
     // `output`.

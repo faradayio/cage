@@ -511,7 +511,7 @@ impl<'a> Iterator for AllFiles<'a> {
 fn pods_are_normalized_on_load() {
     use crate::project::Project;
     use env_logger;
-    let _ = env_logger::init();
+    let _ = env_logger::try_init();
 
     let proj = Project::from_example("hello").unwrap();
     let frontend = proj.pod("frontend").unwrap();
@@ -539,7 +539,7 @@ fn pods_are_normalized_on_load() {
 #[test]
 fn can_merge_base_file_and_target() {
     use env_logger;
-    let _ = env_logger::init();
+    let _ = env_logger::try_init();
     let proj: Project = Project::from_example("hello").unwrap();
     let target = proj.target("development").unwrap();
     let frontend = proj.pod("frontend").unwrap();
@@ -551,7 +551,7 @@ fn can_merge_base_file_and_target() {
 #[test]
 fn pod_type_returns_type_of_pod() {
     use env_logger;
-    let _ = env_logger::init();
+    let _ = env_logger::try_init();
     let proj: Project = Project::from_example("rails_hello").unwrap();
     let frontend = proj.pod("frontend").unwrap();
     assert_eq!(frontend.pod_type(), PodType::Service);

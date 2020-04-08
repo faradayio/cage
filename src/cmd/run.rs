@@ -113,7 +113,7 @@ impl CommandRun for Project {
 #[test]
 fn fails_on_a_multi_service_pod() {
     use env_logger;
-    let _ = env_logger::init();
+    let _ = env_logger::try_init();
     let proj = Project::from_example("hello").unwrap();
     let runner = TestCommandRunner::new();
     proj.output("run").unwrap();
@@ -124,7 +124,7 @@ fn fails_on_a_multi_service_pod() {
 #[test]
 fn runs_a_single_service_pod() {
     use env_logger;
-    let _ = env_logger::init();
+    let _ = env_logger::try_init();
     let proj = Project::from_example("rails_hello").unwrap();
     let runner = TestCommandRunner::new();
     proj.output("run").unwrap();
@@ -151,7 +151,7 @@ fn runs_a_single_service_pod() {
 #[test]
 fn runs_tests() {
     use env_logger;
-    let _ = env_logger::init();
+    let _ = env_logger::try_init();
     let mut proj = Project::from_example("hello").unwrap();
     proj.set_current_target_name("test").unwrap();
     let runner = TestCommandRunner::new();
@@ -181,7 +181,7 @@ fn runs_tests() {
 #[test]
 fn runs_tests_with_custom_command() {
     use env_logger;
-    let _ = env_logger::init();
+    let _ = env_logger::try_init();
     let mut proj = Project::from_example("hello").unwrap();
     proj.set_current_target_name("test").unwrap();
     let runner = TestCommandRunner::new();

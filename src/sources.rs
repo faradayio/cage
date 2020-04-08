@@ -292,7 +292,7 @@ impl Source {
 #[test]
 fn are_loaded_with_projects() {
     use env_logger;
-    let _ = env_logger::init();
+    let _ = env_logger::try_init();
     let proj = Project::from_example("hello").unwrap();
     let sources = proj.sources();
     assert_eq!(sources.iter().count(), 2);
@@ -311,7 +311,7 @@ fn are_loaded_with_projects() {
 #[test]
 fn are_loaded_from_config_sources_yml() {
     use env_logger;
-    let _ = env_logger::init();
+    let _ = env_logger::try_init();
     let proj = Project::from_example("rails_hello").unwrap();
     let sources = proj.sources();
     let lib = sources
@@ -328,14 +328,14 @@ fn are_loaded_from_config_sources_yml() {
 #[test]
 fn rejects_libs_with_subdirectories() {
     use env_logger;
-    let _ = env_logger::init();
+    let _ = env_logger::try_init();
     assert!(Project::from_fixture("with_lib_subdir").is_err())
 }
 
 #[test]
 fn can_be_cloned() {
     use env_logger;
-    let _ = env_logger::init();
+    let _ = env_logger::try_init();
     let proj = Project::from_example("hello").unwrap();
     let source = proj
         .sources()
@@ -351,7 +351,7 @@ fn can_be_cloned() {
 #[test]
 fn can_be_checked_to_see_if_cloned() {
     use env_logger;
-    let _ = env_logger::init();
+    let _ = env_logger::try_init();
     let proj = Project::from_example("hello").unwrap();
     let source = proj
         .sources()
@@ -366,7 +366,7 @@ fn can_be_checked_to_see_if_cloned() {
 #[test]
 fn dir_context_is_always_available_locally() {
     use env_logger;
-    let _ = env_logger::init();
+    let _ = env_logger::try_init();
     let proj = Project::from_example("node_hello").unwrap();
     let source = proj.sources().find_by_alias("node_hello").unwrap();
     assert!(source.is_available_locally(&proj));
@@ -376,7 +376,7 @@ fn dir_context_is_always_available_locally() {
 #[test]
 fn mounted_state_is_saved_between_runs() {
     use env_logger;
-    let _ = env_logger::init();
+    let _ = env_logger::try_init();
     use rand::random;
     let id: u16 = random();
 

@@ -72,7 +72,7 @@ impl CommandRunScript for Project {
 #[test]
 fn runs_scripts_on_all_services() {
     use env_logger;
-    let _ = env_logger::init();
+    let _ = env_logger::try_init();
     let proj = Project::from_example("rails_hello").unwrap();
     let runner = TestCommandRunner::new();
     let opts = args::opts::Run::default();

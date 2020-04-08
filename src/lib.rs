@@ -113,13 +113,6 @@ mod sources;
 mod target;
 mod template;
 
-/// Include raw data files into our binary at compile time using the
-/// `includedir_codegen` and `includedir` crates.  The actual code
-/// generation is performed by our top-level `build.rs` script.
-mod data {
-    include!(concat!(env!("OUT_DIR"), "/data.rs"));
-}
-
 /// The version of this crate.
 pub fn version() -> &'static semver::Version {
     lazy_static! {

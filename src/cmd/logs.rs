@@ -43,7 +43,7 @@ impl CommandLogs for Project {
 #[test]
 fn runs_docker_compose_logs() {
     use env_logger;
-    let _ = env_logger::init();
+    let _ = env_logger::try_init();
     let proj = Project::from_example("rails_hello").unwrap();
     let runner = TestCommandRunner::new();
     proj.output("logs").unwrap();
@@ -72,7 +72,7 @@ fn runs_docker_compose_logs() {
 #[test]
 fn errors_when_act_on_specifies_multiple_containers() {
     use env_logger;
-    let _ = env_logger::init();
+    let _ = env_logger::try_init();
     let proj = Project::from_example("rails_hello").unwrap();
     let runner = TestCommandRunner::new();
     proj.output("logs").unwrap();

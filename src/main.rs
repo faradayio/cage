@@ -396,13 +396,13 @@ fn all_versions() -> Result<()> {
     Ok(())
 }
 
-fn log_level_label(level: log::LogLevel) -> colored::ColoredString {
+fn log_level_label(level: log::Level) -> colored::ColoredString {
     match level {
-        log::LogLevel::Error => "ERROR:".red().bold(),
-        log::LogLevel::Warn => "WARNING:".yellow().bold(),
-        log::LogLevel::Info => "INFO:".bold(),
-        log::LogLevel::Debug => "DEBUG:".normal(),
-        log::LogLevel::Trace => "TRACE:".normal(),
+        log::Level::Error => "ERROR:".red().bold(),
+        log::Level::Warn => "WARNING:".yellow().bold(),
+        log::Level::Info => "INFO:".bold(),
+        log::Level::Debug => "DEBUG:".normal(),
+        log::Level::Trace => "TRACE:".normal(),
     }
 }
 
@@ -412,30 +412,29 @@ fn main() {
 
     // Initialize logging with some custom options, mostly so we can see
     // our own warnings.
-    let mut builder = env_logger::LogBuilder::new();
-    builder.filter(Some("compose_yml"), log::LogLevelFilter::Warn);
-    builder.filter(
-        Some("compose_yml::v2::validate"),
-        log::LogLevelFilter::Error,
+    let mut builder = env_logger::Builder::new();
+    builder.filter(Some("compose_yml"), log::LevelFilter::Warn);
+    builder.filter(Some("compose_yml::v2::validate"), log::LevelFilter::Error);
+    builder.filter(Some("cage"), log::LevelFilter::Warn);
+    builder.format(
+        |f: &mut env_logger::fmt::Formatter, record: &log::Record<'_>| {
+            let msg = format!(
+                "{} {} (from {})",
+                log_level_label(record.level()),
+                record.args(),
+                record.target()
+            );
+            if record.level() > log::Level::Info {
+                write!(f, "{}", msg.dimmed())
+            } else {
+                write!(f, "{}", msg)
+            }
+        },
     );
-    builder.filter(Some("cage"), log::LogLevelFilter::Warn);
-    builder.format(|record: &log::LogRecord<'_>| {
-        let msg = format!(
-            "{} {} (from {})",
-            log_level_label(record.level()),
-            record.args(),
-            record.target()
-        );
-        if record.level() > log::LogLevel::Info {
-            format!("{}", msg.dimmed())
-        } else {
-            msg
-        }
-    });
     if let Ok(config) = env::var("RUST_LOG") {
-        builder.parse(&config);
+        builder.parse_filters(&config);
     }
-    builder.init().unwrap();
+    builder.init();
 
     // Parse our command-line arguments.
     let cli_yaml = load_yaml!("cli.yml");

@@ -1,7 +1,7 @@
 //! Miscellaneous utility macros and functions.
 
 use glob;
-use retry::retry;
+use retry::{delay, retry};
 use std::env;
 use std::error;
 use std::ffi::OsStr;
@@ -82,7 +82,7 @@ impl ConductorPathExt for Path {
 
         // Construct a full glob and run it.
         let pat = format!("{}/{}", self.to_str_or_err()?, pattern);
-        Ok(glob::glob_with(&pat, &opts)?)
+        Ok(glob::glob_with(&pat, opts)?)
     }
 
     fn with_guaranteed_parent(&self) -> Result<PathBuf> {
@@ -108,22 +108,13 @@ impl ConductorPathExt for Path {
         // https://github.com/jpetazzo/dind/issues/73.  So we're going to
         // retry this function if it fails, because it will fail to
         // create directories below the one that already existed.
-        let retry_fn = || {
-            // The function to re-try.
-            fs::create_dir_all(&parent)
-        };
-        let retry_result = retry(5, 50, retry_fn, |result| {
-            // Return true if we're done retrying.
-            match *result {
-                Err(ref err) if err.kind() == io::ErrorKind::AlreadyExists => false,
-                _ => true,
-            }
-        });
-        // Unwrap twice: Outer error is a possible retry failure, inner
-        // error is a filesystem error.
-        retry_result
-            .map_err(|e| wrap_err(&e))?
-            .map_err(|e| wrap_err(&e))?;
+        let delay = delay::Fixed::from_millis(50).take(10);
+        retry(delay, || match fs::create_dir_all(&parent) {
+            Ok(()) => Ok(()),
+            Err(ref err) if err.kind() == io::ErrorKind::AlreadyExists => Ok(()),
+            Err(err) => Err(err),
+        })
+        .map_err(|e| wrap_err(&e))?;
         Ok(self.to_owned())
     }
 

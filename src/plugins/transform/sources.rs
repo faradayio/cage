@@ -95,7 +95,7 @@ impl PluginTransform for Plugin {
 #[test]
 fn adds_a_volume_with_a_subdirectory() {
     use env_logger;
-    let _ = env_logger::init();
+    let _ = env_logger::try_init();
     let proj = Project::from_fixture("with_repo_subdir").unwrap();
     let plugin = Plugin::new(&proj).unwrap();
 

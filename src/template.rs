@@ -2,6 +2,7 @@
 //! implementing things like the `new` command.
 
 use handlebars as hb;
+use include_dir::{include_dir, Dir, DirEntry};
 use serde::Serialize;
 use std::collections::BTreeMap;
 use std::fmt;
@@ -9,9 +10,11 @@ use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
 
-use crate::data;
 use crate::errors::*;
 use crate::util::ConductorPathExt;
+
+/// A data directory, built into our app at compile-time.
+static DATA: Dir = include_dir!("data");
 
 /// Escape double quotes and backslashes in a string that we're rendering,
 /// which should work well more-or-less well enough for all the formats
@@ -29,8 +32,6 @@ pub struct Template {
     name: String,
     /// File data associated with this template.
     files: BTreeMap<PathBuf, String>,
-    /// Our templating engine.
-    handlebars: hb::Handlebars,
 }
 
 impl Template {
@@ -38,36 +39,28 @@ impl Template {
     /// specified by `template_name`.
     pub fn new<S: Into<String>>(name: S) -> Result<Template> {
         let name = name.into();
-        let prefix = format!("data/templates/{}/", &name);
+        let prefix = format!("templates/{}/", &name);
+        let glob = format!("{}**/*", prefix);
 
-        // Iterate over all files built into this library at compile time,
-        // loading the ones which belong to us.
-        //
-        // We cheat and use a private API, but see
-        // https://github.com/tilpner/includedir/pull/1 for a proposed API.
+        // Iterate over all matching files built into this library at compile time.
         let mut files = BTreeMap::new();
-        for key in data::DATA.files.keys() {
-            // Does this file belong to our template?
-            if key.starts_with(&prefix) {
-                let rel: &str = &key[prefix.len()..];
+        for entry in DATA.find(&glob)? {
+            if let DirEntry::File(file) = entry {
+                assert!(file.path.starts_with(&prefix));
+                let rel: &str = &file.path[prefix.len()..];
                 // Make sure it doesn't belong to a child template.
                 if !rel.starts_with('_') && !rel.contains("/_") {
                     // Load this file and add it to our list.
-                    let raw_data = data::DATA.get(key)?.into_owned();
+                    let raw_data = file.contents().to_owned();
                     let data = String::from_utf8(raw_data)?;
                     files.insert(Path::new(rel).to_owned(), data);
                 }
             }
         }
 
-        // Create our Handlebars template engine.
-        let mut hb = hb::Handlebars::new();
-        hb.register_escape_fn(escape_double_quotes);
-
         Ok(Template {
             name: name,
             files: files,
-            handlebars: hb,
         })
     }
 
@@ -97,8 +90,10 @@ impl Template {
             let mut writer = io::BufWriter::new(out);
 
             // Render our template to the file.
-            self.handlebars
-                .template_renderw(tmpl, &data, &mut writer)
+            // Create our Handlebars template engine.
+            let mut hb = hb::Handlebars::new();
+            hb.register_escape_fn(escape_double_quotes);
+            hb.render_template_to_write(tmpl, &data, &mut writer)
                 .chain_err(&mkerr)?;
         }
         Ok(())

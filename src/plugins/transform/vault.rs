@@ -244,7 +244,8 @@ impl GenerateToken for Vault {
         // probably not the worst idea, because it uses `hyper` for HTTP,
         // and `hyper` HTTP connections used to have expiration issues that
         // were tricky for clients to deal with correctly.
-        let client = vault::Client::new(&self.addr, &self.token).chain_err(&mkerr)?;
+        let client =
+            vault::Client::new(&self.addr[..], &self.token).chain_err(&mkerr)?;
         let opts = vault::client::TokenOptions::default()
             .display_name(display_name)
             .renewable(true)
@@ -421,7 +422,7 @@ impl PluginTransform for Plugin {
 #[test]
 fn interpolates_policies() {
     use env_logger;
-    let _ = env_logger::init();
+    let _ = env_logger::try_init();
 
     env::set_var("VAULT_ADDR", "http://example.com:8200/");
     env::set_var("VAULT_MASTER_TOKEN", "fake master token");
@@ -465,7 +466,7 @@ fn interpolates_policies() {
 #[test]
 fn only_applied_in_specified_targets() {
     use env_logger;
-    let _ = env_logger::init();
+    let _ = env_logger::try_init();
 
     let mut proj = Project::from_example("vault_integration").unwrap();
     proj.set_current_target_name("test").unwrap();

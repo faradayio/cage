@@ -20,12 +20,6 @@ use crate::project::PROJECT_CONFIG_PATH;
 use crate::version;
 
 error_chain! {
-    // Hook up to other libraries which also use `error_chain`.  These
-    // conversions are implicit.
-    links {
-        boondock::errors::Error, boondock::errors::ErrorKind, Docker;
-    }
-
     // TODO HIGH: Most of these will go away as we convert them to more
     // meaningful errors.
     foreign_links {
@@ -72,6 +66,12 @@ error_chain! {
         CouldNotWriteFile(path: PathBuf) {
             description("could not write to a file")
             display("could not write to '{}'", path.display())
+        }
+
+        /// A Docker-related error.
+        Docker(error: dockworker::errors::Error) {
+            description("A Docker error occurred")
+            display("A Docker error occurred: {}", error)
         }
 
         /// A feature was disabled at compile time.
@@ -159,6 +159,12 @@ impl ErrorKind {
         S: Into<String>,
     {
         ErrorKind::CouldNotParse(parsing_as, input.into())
+    }
+}
+
+impl From<dockworker::errors::Error> for Error {
+    fn from(err: dockworker::errors::Error) -> Self {
+        ErrorKind::Docker(err).into()
     }
 }
 

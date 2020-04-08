@@ -181,7 +181,7 @@ impl PluginTransform for Plugin {
 #[test]
 fn enabled_for_projects_with_config_file() {
     use env_logger;
-    let _ = env_logger::init();
+    let _ = env_logger::try_init();
     let proj1 = Project::from_example("hello").unwrap();
     assert!(!Plugin::is_configured_for(&proj1).unwrap());
     let proj2 = Project::from_example("rails_hello").unwrap();
@@ -191,7 +191,7 @@ fn enabled_for_projects_with_config_file() {
 #[test]
 fn injects_secrets_into_services() {
     use env_logger;
-    let _ = env_logger::init();
+    let _ = env_logger::try_init();
     let mut proj = Project::from_example("rails_hello").unwrap();
     proj.set_current_target_name("production").unwrap();
     let plugin = Plugin::new(&proj).unwrap();

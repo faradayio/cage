@@ -93,7 +93,7 @@ impl PluginTransform for Plugin {
 // #[test]
 // fn converts_relative_paths_to_absolute() {
 //     use env_logger;
-//     let _ = env_logger::init();
+//     let _ = env_logger::try_init();
 //     let proj = Project::from_example("rails_hello").unwrap();
 //     proj.output().unwrap();
 //
