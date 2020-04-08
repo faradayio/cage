@@ -1,7 +1,6 @@
 //! Plugin which converts all paths in a `dc::File` to absolute.
 
 use compose_yml::v2 as dc;
-use std::env;
 use std::marker::PhantomData;
 
 use crate::errors::*;
@@ -72,7 +71,7 @@ impl PluginTransform for Plugin {
                     Some(dc::HostVolume::UserRelativePath(ref path))
                         if path.is_relative() =>
                     {
-                        let home = env::home_dir()
+                        let home = dirs::home_dir()
                             .ok_or_else(|| err("Cannot find HOME directory"))?;
                         let new_path = home.join(path);
                         Some(dc::HostVolume::Path(new_path.to_absolute()?))

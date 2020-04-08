@@ -28,7 +28,7 @@ include!("vault_config.in.rs");
 /// Load a vault token from `~/.vault-token`, where the command line client
 /// puts it.
 fn load_vault_token_from_file() -> Result<String> {
-    let path = env::home_dir()
+    let path = dirs::home_dir()
         .ok_or_else(|| err("You do not appear to have a home directory"))?
         .join(".vault-token");
     let mkerr = || ErrorKind::CouldNotReadFile(path.clone());
