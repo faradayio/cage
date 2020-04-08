@@ -10,7 +10,7 @@ use std::marker::PhantomData;
 use std::path::Path;
 use std::str::FromStr;
 
-use crate::errors::{self, ChainErr, ErrorKind};
+use crate::errors::{self, ErrorKind, ResultExt};
 use crate::util::ConductorPathExt;
 
 /// Load a YAML file using `serde`, and generate the best error we can if

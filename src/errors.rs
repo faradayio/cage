@@ -19,16 +19,17 @@ use std::string::FromUtf8Error;
 use crate::project::PROJECT_CONFIG_PATH;
 use crate::version;
 
+// TODO: Replace `error-chain` with `anyhow` as soon as backtraces stablize.
 error_chain! {
     // TODO HIGH: Most of these will go away as we convert them to more
     // meaningful errors.
     foreign_links {
-        dc::Error, Compose;
-        FromUtf8Error, Utf8Error;
-        glob::GlobError, Glob;
-        glob::PatternError, GlobPattern;
-        io::Error, Io;
-        StripPrefixError, StripPrefix;
+        Compose(dc::Error);
+        Utf8Error(FromUtf8Error);
+        Glob(glob::GlobError);
+        GlobPattern(glob::PatternError);
+        Io(io::Error);
+        StripPrefix(StripPrefixError);
     }
 
     errors {
