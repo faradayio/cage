@@ -23,8 +23,8 @@ use std::path::Path;
 use std::process;
 use yaml_rust::yaml;
 
-use cage::command_runner::{Command, CommandRunner, OsCommandRunner};
 use cage::cmd::*;
+use cage::command_runner::{Command, CommandRunner, OsCommandRunner};
 use cage::Result;
 
 /// Load our command-line interface definitions from an external `clap`
@@ -82,7 +82,8 @@ impl<'a> ArgMatchesExt for clap::ArgMatches<'a> {
     }
 
     fn to_acts_on(&self, arg_name: &str, include_tasks: bool) -> cage::args::ActOn {
-        let names: Vec<String> = self.values_of(arg_name)
+        let names: Vec<String> = self
+            .values_of(arg_name)
             .map_or_else(|| vec![], |p| p.collect())
             .iter()
             .map(|p| p.to_string())
@@ -411,7 +412,10 @@ fn main() {
     // our own warnings.
     let mut builder = env_logger::LogBuilder::new();
     builder.filter(Some("compose_yml"), log::LogLevelFilter::Warn);
-    builder.filter(Some("compose_yml::v2::validate"), log::LogLevelFilter::Error);
+    builder.filter(
+        Some("compose_yml::v2::validate"),
+        log::LogLevelFilter::Error,
+    );
     builder.filter(Some("cage"), log::LogLevelFilter::Warn);
     builder.format(|record: &log::LogRecord| {
         let msg = format!(

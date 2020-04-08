@@ -36,8 +36,14 @@
 // Enable as many useful Rust and Clippy warnings as we can stand.  We'd
 // also enable `trivial_casts`, but we're waiting for
 // https://github.com/rust-lang/rust/issues/23416.
-#![warn(missing_copy_implementations, missing_debug_implementations, missing_docs,
-        trivial_numeric_casts, unsafe_code, unused_import_braces)]
+#![warn(
+    missing_copy_implementations,
+    missing_debug_implementations,
+    missing_docs,
+    trivial_numeric_casts,
+    unsafe_code,
+    unused_import_braces
+)]
 // We disabled `unused_extern_crates` because it's failing on macro-only crates.
 // We disabled `unused_qualifications` because it's failing on `try!`.
 #![cfg_attr(feature = "clippy", warn(cast_possible_truncation))]
@@ -91,11 +97,11 @@ extern crate url;
 
 pub use default_tags::DefaultTags;
 pub use errors::*;
-pub use project::{PodOrService, Pods, Project, ProjectConfig, Targets};
 pub use pod::{AllFiles, Pod, PodType, TargetFiles};
+pub use project::{PodOrService, Pods, Project, ProjectConfig, Targets};
 pub use runtime_state::RuntimeState;
-pub use sources::{Source, Sources};
 pub use sources::Iter as SourceIter;
+pub use sources::{Source, Sources};
 pub use target::Target;
 pub use util::err;
 

@@ -29,7 +29,6 @@ pub trait CommandSource {
         CR: CommandRunner;
 }
 
-
 impl CommandSource for Project {
     fn source_list<CR>(&self, _runner: &CR) -> Result<()>
     where
@@ -60,7 +59,8 @@ impl CommandSource for Project {
     where
         CR: CommandRunner,
     {
-        let source = self.sources()
+        let source = self
+            .sources()
             .find_by_alias(alias)
             .ok_or_else(|| ErrorKind::UnknownSource(alias.to_owned()))?;
         if !source.is_available_locally(self) {
@@ -84,7 +84,8 @@ impl CommandSource for Project {
             // Look up the source mutably.  We do this in a block so we can
             // drop the mutable borrow before continuing and keep Rust
             // happy.
-            let source = self.sources_mut()
+            let source = self
+                .sources_mut()
                 .find_by_alias_mut(alias)
                 .ok_or_else(|| ErrorKind::UnknownSource(alias.to_owned()))?;
 
@@ -97,7 +98,8 @@ impl CommandSource for Project {
 
         // Clone the source if we're mounting it but don't have a local
         // copy yet.
-        let source = self.sources()
+        let source = self
+            .sources()
             .find_by_alias(alias)
             .ok_or_else(|| ErrorKind::UnknownSource(alias.to_owned()))?;
         if source.mounted() && !source.is_available_locally(self) {

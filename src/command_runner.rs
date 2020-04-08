@@ -262,7 +262,7 @@ impl Command for TestCommand {
 ///    interface) to an actual `OsString`.
 #[allow(unused_macros)]
 macro_rules! assert_ran {
-    ($runner:expr, { $( [ $($arg:expr),+ ] ),* }) => {
+    ($runner:expr, { $( [ $($arg:expr),+ $(,)? ] ),* }) => {
         use std::ops::Deref;
         fn coerce<S: AsRef<$crate::std::ffi::OsStr>>(s: S) ->
             $crate::std::ffi::OsString
@@ -271,7 +271,7 @@ macro_rules! assert_ran {
         }
         let expected = vec!( $( vec!( $( coerce($arg) ),+ ) ),* );
         assert_eq!($runner.cmds().deref(), &expected);
-    }
+    };
 }
 
 #[test]

@@ -3,8 +3,8 @@
 #[cfg(test)]
 use compose_yml::v2 as dc;
 use semver;
-use serde::{Serialize, Serializer};
 use serde::ser::SerializeMap;
+use serde::{Serialize, Serializer};
 use serde_yaml;
 use std::env;
 use std::fs;
@@ -22,14 +22,14 @@ use default_tags::DefaultTags;
 use dir;
 use errors::*;
 use hook::HookManager;
-use target::Target;
 use plugins::{self, Operation};
 use pod::{Pod, PodType};
-use sources::Sources;
 use rayon::prelude::*;
 use runtime_state::RuntimeState;
 use serde_helpers::deserialize_parsable_opt;
 use service_locations::ServiceLocations;
+use sources::Sources;
+use target::Target;
 use util::{ConductorPathExt, ToStrOrErr};
 use version;
 
@@ -415,7 +415,8 @@ impl Project {
         let mut result = vec![];
         let state = RuntimeState::for_project(self)?;
         for pod in self.pods() {
-            if pod.enabled_in(&self.current_target) && pod.pod_type() != PodType::Task
+            if pod.enabled_in(&self.current_target)
+                && pod.pod_type() != PodType::Task
                 && !state.all_services_in_pod_are_running(pod)
             {
                 result.push(pod);
@@ -434,13 +435,13 @@ impl Project {
     ) -> Result<()> {
         // Output each pod.  This isn't especially slow (except maybe the
         // Vault plugin), but parallelizing things is easy.
-        self.pods.par_iter()
+        self.pods
+            .par_iter()
             // Don't export pods which aren't enabled.  However, we currently
             // need to output these for `Operation::Output` in case the user
             // wants to `run` a task using one of these pod definitions.
             .filter(|pod| {
-                pod.enabled_in(&self.current_target) ||
-                    op == Operation::Output
+                pod.enabled_in(&self.current_target) || op == Operation::Output
             })
             // Process each pod in parallel.
             .map(|pod| -> Result<()> {
@@ -452,8 +453,8 @@ impl Project {
                     }
                     _ => Path::new(&file_name).to_owned(),
                 };
-                let out_path = try!(export_dir.join(&rel_path)
-                    .with_guaranteed_parent());
+                let out_path =
+                    try!(export_dir.join(&rel_path).with_guaranteed_parent());
                 debug!("Outputting {}", out_path.display());
 
                 // Combine targets, make it standalone, tweak as needed, and
@@ -637,7 +638,8 @@ fn output_applies_expected_transforms() {
 
     let mut proj = Project::from_example("hello").unwrap();
     proj.set_default_tags(default_tags);
-    let source = proj.sources()
+    let source = proj
+        .sources()
         .find_by_alias("dockercloud-hello-world")
         .unwrap();
     source.fake_clone_source(&proj).unwrap();
@@ -658,7 +660,8 @@ fn output_applies_expected_transforms() {
 
     // Make sure the local source directory is being mounted into the
     // container.
-    let mount = web.volumes
+    let mount = web
+        .volumes
         .last()
         .expect("expected web service to have volumes")
         .value()
@@ -681,7 +684,8 @@ fn output_mounts_cloned_libraries() {
     let _ = env_logger::init();
 
     let proj = Project::from_example("rails_hello").unwrap();
-    let source = proj.sources()
+    let source = proj
+        .sources()
         .find_by_lib_key("coffee_rails")
         .expect("should define lib coffee_rails");
     source.fake_clone_source(&proj).unwrap();
@@ -695,7 +699,8 @@ fn output_mounts_cloned_libraries() {
 
     // Make sure the local source directory is being mounted into the
     // container.
-    let mount = web.volumes
+    let mount = web
+        .volumes
         .last()
         .expect("expected web service to have volumes")
         .value()
@@ -714,7 +719,8 @@ fn output_supports_in_tree_source_code() {
     let file = dc::File::read_from_path(frontend_file).unwrap();
     let web = file.services.get("web").unwrap();
 
-    let abs_src = proj.root_dir()
+    let abs_src = proj
+        .root_dir()
         .join("pods")
         .join("..")
         .join("src")
@@ -750,7 +756,8 @@ fn export_applies_expected_transforms() {
     // `output`.
 
     let proj = Project::from_example("hello").unwrap();
-    let source = proj.sources()
+    let source = proj
+        .sources()
         .find_by_alias("dockercloud-hello-world")
         .unwrap();
     source.fake_clone_source(&proj).unwrap();

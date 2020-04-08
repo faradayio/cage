@@ -110,7 +110,6 @@ fn generate_new_creates_a_project() {
     fs::remove_dir_all(&proj_dir.as_path()).unwrap();
 }
 
-
 /// Information about the project we're generating.  This will be passed to
 /// our templates.
 #[derive(Debug, Serialize)]

@@ -2,8 +2,8 @@
 //! external source.
 
 use compose_yml::v2 as dc;
-use std::collections::BTreeMap;
 use std::collections::btree_map;
+use std::collections::BTreeMap;
 use std::io::{self, BufRead};
 use std::str::FromStr;
 

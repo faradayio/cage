@@ -2,24 +2,23 @@
 //! Docker images.
 
 use compose_yml::v2 as dc;
-use std::collections::BTreeMap;
 use std::collections::btree_map;
+use std::collections::BTreeMap;
 #[cfg(test)]
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use command_runner::{Command, CommandRunner};
 #[cfg(test)]
 use command_runner::TestCommandRunner;
+use command_runner::{Command, CommandRunner};
 use errors::*;
 use ext::context::ContextExt;
 use ext::git_url::GitUrlExt;
 use ext::service::ServiceExt;
-use project::Project;
 use pod::Pod;
+use project::Project;
 use serde_helpers::{dump_yaml, load_yaml};
 use util::ConductorPathExt;
-
 
 /// The file where we define extra source trees for libraries used by our
 /// services.
@@ -330,7 +329,8 @@ fn can_be_cloned() {
     use env_logger;
     let _ = env_logger::init();
     let proj = Project::from_example("hello").unwrap();
-    let source = proj.sources()
+    let source = proj
+        .sources()
         .find_by_alias("dockercloud-hello-world")
         .unwrap();
     let runner = TestCommandRunner::new();
@@ -345,7 +345,8 @@ fn can_be_checked_to_see_if_cloned() {
     use env_logger;
     let _ = env_logger::init();
     let proj = Project::from_example("hello").unwrap();
-    let source = proj.sources()
+    let source = proj
+        .sources()
         .find_by_alias("dockercloud-hello-world")
         .unwrap();
     assert!(!source.is_available_locally(&proj));

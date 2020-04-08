@@ -92,7 +92,6 @@ impl PluginTransform for Plugin {
     }
 }
 
-
 #[test]
 fn adds_a_volume_with_a_subdirectory() {
     use env_logger;

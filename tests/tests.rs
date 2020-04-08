@@ -15,7 +15,8 @@ fn project_from_current_dir() {
 
     testdir.expect_path("hello/pods");
 
-    testdir.cmd()
+    testdir
+        .cmd()
         // We want to make sure this test runs in a subdirectory in the project
         // and is able to resolve the project root.
         .current_dir(testdir.path("hello/pods"))

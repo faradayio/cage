@@ -86,7 +86,8 @@ impl ConductorPathExt for Path {
     }
 
     fn with_guaranteed_parent(&self) -> Result<PathBuf> {
-        let parent = self.parent()
+        let parent = self
+            .parent()
             .ok_or_else(|| err!("can't find parent path of {}", self.display()))?;
 
         // Take an error message and elaborate a bit.  We use a trait
@@ -136,7 +137,8 @@ impl ConductorPathExt for Path {
 #[test]
 fn path_glob_uses_path_as_base() {
     let base = Path::new("examples/hello/pods/targets");
-    let paths: Vec<_> = base.glob("test/*.env")
+    let paths: Vec<_> = base
+        .glob("test/*.env")
         .unwrap()
         .map(|p| p.unwrap().strip_prefix(base).unwrap().to_owned())
         .collect();

@@ -59,7 +59,8 @@ impl RuntimeState {
     /// Is the specified pod running?
     pub fn all_services_in_pod_are_running(&self, pod: &Pod) -> bool {
         for service_name in pod.service_names() {
-            let containers = self.service_containers(service_name)
+            let containers = self
+                .service_containers(service_name)
                 .iter()
                 .filter(|c| !c.is_one_off())
                 .collect::<Vec<_>>();
@@ -118,9 +119,11 @@ impl ContainerInfo {
         // Get an IP address for this running container.
         let raw_ip_addr = &info.NetworkSettings.IPAddress[..];
         let ip_addr = if raw_ip_addr != "" {
-            Some(raw_ip_addr
-                .parse()
-                .chain_err(|| ErrorKind::parse("IP address", raw_ip_addr))?)
+            Some(
+                raw_ip_addr
+                    .parse()
+                    .chain_err(|| ErrorKind::parse("IP address", raw_ip_addr))?,
+            )
         } else {
             None
         };
@@ -130,14 +133,13 @@ impl ContainerInfo {
         if let Some(ref port_strs) = info.NetworkSettings.Ports {
             for port_str in port_strs.keys() {
                 lazy_static! {
-                    static ref TCP_PORT: Regex = Regex::new(r#"^(\d+)/tcp$"#)
-                        .unwrap();
+                    static ref TCP_PORT: Regex = Regex::new(r#"^(\d+)/tcp$"#).unwrap();
                 }
                 if let Some(caps) = TCP_PORT.captures(port_str) {
                     let port =
-                        caps.get(1).unwrap().as_str().parse().chain_err(
-                            || ErrorKind::parse("TCP port", port_str.clone()),
-                        )?;
+                        caps.get(1).unwrap().as_str().parse().chain_err(|| {
+                            ErrorKind::parse("TCP port", port_str.clone())
+                        })?;
                     ports.push(port);
                 }
             }

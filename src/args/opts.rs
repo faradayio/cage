@@ -243,7 +243,6 @@ fn run_options_to_args_returns_appropriate_flags() {
     assert_eq!(opts.to_args(), expected);
 }
 
-
 /// Command-line flags with for `docker-compose logs`.
 #[derive(Debug, Clone, Default)]
 #[allow(missing_copy_implementations)]

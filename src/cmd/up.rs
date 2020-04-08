@@ -41,13 +41,12 @@ impl CommandUp for Project {
     where
         CR: CommandRunner,
     {
-        let pods_or_services = act_on.pods_or_services(self)
+        let pods_or_services = act_on
+            .pods_or_services(self)
             // TODO LOW: Refactor this into a `filter_result` helper?
-            .filter(|v| {
-                match *v {
-                    Ok(ref p_s) => p_s.pod_type() != PodType::Task,
-                    Err(_) => true,
-                }
+            .filter(|v| match *v {
+                Ok(ref p_s) => p_s.pod_type() != PodType::Task,
+                Err(_) => true,
             });
         for pod_or_service in pods_or_services {
             match pod_or_service? {
@@ -81,7 +80,8 @@ impl CommandUp for Project {
         );
         loop {
             let state: RuntimeState = RuntimeState::for_project(self)?;
-            let listening = pod.service_names()
+            let listening = pod
+                .service_names()
                 .iter()
                 .map(|service_name| {
                     debug!("scanning service '{}'", service_name);
@@ -109,11 +109,9 @@ impl CommandUp for Project {
         println!("Initializing pod '{}'", pod.name());
         for cmd in pod.run_on_init() {
             if cmd.len() < 1 {
-                return Err(
-                    "all `run_on_init` items for '{}' \
+                return Err("all `run_on_init` items for '{}' \
                      must have at least one value"
-                        .into(),
-                );
+                    .into());
             }
             let service = &cmd[0];
             let cmd = if cmd.len() >= 2 {
@@ -147,7 +145,7 @@ fn runs_docker_compose_up_honors_enable_in_targets() {
             "-f",
             proj.output_dir().join("pods").join("frontend.yml"),
             "up",
-            "-d"
+            "-d",
         ]
     });
 

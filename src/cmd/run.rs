@@ -1,9 +1,9 @@
 //! The `run` command.
 
 use args::{self, ToArgs};
-use command_runner::{Command, CommandRunner};
 #[cfg(test)]
 use command_runner::TestCommandRunner;
+use command_runner::{Command, CommandRunner};
 use errors::*;
 use ext::service::ServiceExt;
 use project::Project;
@@ -142,7 +142,7 @@ fn runs_a_single_service_pod() {
             "run",
             "-T",
             "rake",
-            "db:migrate"
+            "db:migrate",
         ]
     });
     proj.remove_test_output().unwrap();
@@ -171,7 +171,7 @@ fn runs_tests() {
             "--no-deps",
             "proxy",
             "echo",
-            "All tests passed"
+            "All tests passed",
         ]
     });
 
@@ -203,7 +203,7 @@ fn runs_tests_with_custom_command() {
             "proxy",
             "rspec",
             "-t",
-            "foo"
+            "foo",
         ]
     });
 

@@ -1,7 +1,7 @@
 //! Keeps track of what pods contain what services.
 
-use std::collections::BTreeMap;
 use std::collections::btree_map::Entry;
+use std::collections::BTreeMap;
 
 use pod::Pod;
 

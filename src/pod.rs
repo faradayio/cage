@@ -2,8 +2,8 @@
 
 use compose_yml::v2 as dc;
 use compose_yml::v2::MergeOverride;
-use std::collections::{BTreeMap, BTreeSet};
 use std::collections::btree_map;
+use std::collections::{BTreeMap, BTreeSet};
 use std::ffi::OsString;
 use std::fmt;
 use std::path::{Path, PathBuf};
@@ -12,9 +12,9 @@ use args;
 use cmd::CommandRun;
 use command_runner::CommandRunner;
 use errors::*;
-use target::Target;
 use project::Project;
 use serde_helpers::load_yaml;
+use target::Target;
 
 // TODO: This old-style serde `include!` should be inline or a module.
 include!("pod_config.in.rs");
@@ -78,13 +78,12 @@ impl FileInfo {
         let introduced: Vec<String> =
             ours.difference(service_names).cloned().collect();
         if !introduced.is_empty() {
-            return Err(
-                ErrorKind::ServicesAddedInTarget(
-                    base_file.to_owned(),
-                    self.rel_path.clone(),
-                    introduced,
-                ).into(),
-            );
+            return Err(ErrorKind::ServicesAddedInTarget(
+                base_file.to_owned(),
+                self.rel_path.clone(),
+                introduced,
+            )
+            .into());
         }
 
         // Add any missing services.
@@ -164,9 +163,9 @@ impl Pod {
         // Load our target `*.yml` files.
         let mut target_infos = BTreeMap::new();
         for target in targets {
-            let target_rel_path = Path::new(
-                &format!("targets/{}/{}.yml", target.name(), &name),
-            ).to_owned();
+            let target_rel_path =
+                Path::new(&format!("targets/{}/{}.yml", target.name(), &name))
+                    .to_owned();
             let mut target_info = FileInfo::unnormalized(&base_dir, &target_rel_path)?;
             target_info.ensure_same_services(&rel_path, &service_names)?;
             target_info.finish_normalization();

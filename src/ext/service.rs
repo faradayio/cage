@@ -5,10 +5,10 @@ use shlex;
 use std::vec;
 
 use errors::*;
+use ext::context::ContextExt;
 #[cfg(test)]
 use project::Project;
 use sources::{self, Source};
-use ext::context::ContextExt;
 use util::err;
 
 /// These methods will appear as regular methods on `Service` in any module
@@ -56,7 +56,8 @@ impl ServiceExt for dc::Service {
 
     fn source_mount_dir(&self) -> Result<String> {
         let default = dc::escape("/app")?;
-        let srcdir = self.labels
+        let srcdir = self
+            .labels
             .get("io.fdy.cage.srcdir")
             .unwrap_or_else(|| &default);
         Ok(srcdir.value()?.to_owned())
@@ -76,7 +77,8 @@ impl ServiceExt for dc::Service {
 
     fn shell(&self) -> Result<String> {
         let default = dc::escape("sh")?;
-        let shell = self.labels
+        let shell = self
+            .labels
             .get("io.fdy.cage.shell")
             .unwrap_or_else(|| &default);
         Ok(shell.value()?.to_owned())
@@ -103,10 +105,12 @@ impl ServiceExt for dc::Service {
         let container_path = self.source_mount_dir()?;
         let source_subdirectory = self.repository_subdirectory()?;
 
-        let context = self.context()?
+        let context = self
+            .context()?
             .and_then(|ctx| {
                 // human_alias is called on every context when constructing Sources
-                let alias = &ctx.human_alias()
+                let alias = &ctx
+                    .human_alias()
                     .expect("human_alias failed on a context that worked previously");
                 sources.find_by_alias(alias)
             })
@@ -124,9 +128,10 @@ impl ServiceExt for dc::Service {
             let prefix = "io.fdy.cage.lib.";
             if label.starts_with(prefix) {
                 let lib_name = label[prefix.len()..].to_string();
-                let source = sources.find_by_lib_key(&lib_name).ok_or_else(
-                    || -> Error { ErrorKind::UnknownLibKey(lib_name).into() },
-                )?;
+                let source =
+                    sources.find_by_lib_key(&lib_name).ok_or_else(|| -> Error {
+                        ErrorKind::UnknownLibKey(lib_name).into()
+                    })?;
 
                 libs.push(SourceMount {
                     container_path: mount_as.value()?.to_owned(),

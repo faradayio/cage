@@ -4,9 +4,9 @@ use std::collections::BTreeMap;
 use std::fs;
 use std::path::PathBuf;
 
-use command_runner::{Command, CommandRunner};
 #[cfg(test)]
 use command_runner::TestCommandRunner;
+use command_runner::{Command, CommandRunner};
 use errors::*;
 #[cfg(test)]
 use project::Project;
@@ -104,13 +104,12 @@ fn runs_requested_hook_scripts() {
         .invoke(&runner, "pull", &BTreeMap::default())
         .unwrap();
     assert_ran!(runner, {
-        [
-            proj.root_dir()
-                .join("config")
-                .join("hooks")
-                .join("pull.d")
-                .join("hello.hook")
-        ]
+        [proj
+            .root_dir()
+            .join("config")
+            .join("hooks")
+            .join("pull.d")
+            .join("hello.hook")]
     });
 
     proj.remove_test_output().unwrap();

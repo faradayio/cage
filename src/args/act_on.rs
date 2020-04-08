@@ -78,11 +78,13 @@ impl<'a> Iterator for PodsOrServices<'a> {
             State::FilteredPodIter(ref mut iter) => {
                 iter.next().map(|pod| Ok(PodOrService::Pod(pod)))
             }
-            State::NameIter(ref mut iter) => if let Some(name) = iter.next() {
-                Some(self.project.pod_or_service_or_err(name))
-            } else {
-                None
-            },
+            State::NameIter(ref mut iter) => {
+                if let Some(name) = iter.next() {
+                    Some(self.project.pod_or_service_or_err(name))
+                } else {
+                    None
+                }
+            }
         }
     }
 }

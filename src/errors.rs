@@ -8,8 +8,8 @@
 #![allow(missing_docs)]
 #![cfg_attr(feature="clippy", allow(redundant_closure))]
 
-use compose_yml::v2 as dc;
 use boondock::errors as boondock;
+use compose_yml::v2 as dc;
 use glob;
 use semver;
 use std::ffi::OsString;

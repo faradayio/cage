@@ -53,7 +53,8 @@ fn runs_docker_compose_logs() {
         &runner,
         &args::ActOn::Named(vec!["frontend".to_owned()]),
         &opts,
-    ).unwrap();
+    )
+    .unwrap();
     assert_ran!(runner, {
         [
             "docker-compose",
@@ -61,7 +62,7 @@ fn runs_docker_compose_logs() {
             "railshello",
             "-f",
             proj.output_dir().join("pods").join("frontend.yml"),
-            "logs"
+            "logs",
         ]
     });
 

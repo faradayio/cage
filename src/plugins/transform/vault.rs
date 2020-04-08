@@ -1,7 +1,6 @@
 //! Plugin which issues vault tokens to services.
 
 use compose_yml::v2 as dc;
-use std::result;
 use std::collections::BTreeMap;
 use std::env;
 use std::fmt::Debug;
@@ -10,6 +9,7 @@ use std::io::{self, Read};
 #[cfg(test)]
 use std::path::Path;
 use std::path::PathBuf;
+use std::result;
 #[cfg(test)]
 use std::sync::{Arc, RwLock};
 use vault;
@@ -281,10 +281,12 @@ impl PluginTransform for Plugin {
         file: &mut dc::File,
     ) -> Result<()> {
         // Get our plugin config.
-        let config = self.config
+        let config = self
+            .config
             .as_ref()
             .expect("config should always be present for transform");
-        let generator = self.generator
+        let generator = self
+            .generator
             .as_ref()
             .expect("generator should always be present for transform");
 
@@ -333,8 +335,7 @@ impl PluginTransform for Plugin {
             }
             debug!(
                 "Generating token for '{}' with policies {:?}",
-                name,
-                &policies
+                name, &policies
             );
 
             // Generate a VAULT_TOKEN.

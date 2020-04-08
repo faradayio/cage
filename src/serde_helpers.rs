@@ -1,7 +1,7 @@
 //! Helper functions for use with `serde`.
 
-use serde::{self, Deserialize, Deserializer, Serialize};
 use serde::de::{DeserializeOwned, Visitor};
+use serde::{self, Deserialize, Deserializer, Serialize};
 use serde_yaml;
 use std::fmt::{self, Display};
 use std::fs;

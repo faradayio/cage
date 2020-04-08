@@ -110,7 +110,5 @@ fn loads_correct_files_for_template() {
     let tmpl = Template::new("test_tmpl").unwrap();
     let keys: Vec<_> = tmpl.files.keys().cloned().collect();
     assert!(keys.contains(&Path::new("test.txt").to_owned()));
-    assert!(!keys.contains(
-        &Path::new("_child_tmpl/child.txt").to_owned()
-    ));
+    assert!(!keys.contains(&Path::new("_child_tmpl/child.txt").to_owned()));
 }

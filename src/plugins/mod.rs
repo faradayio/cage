@@ -225,7 +225,8 @@ impl Manager {
         name: &str,
         out: &mut io::Write,
     ) -> Result<()> {
-        let generator = self.generators
+        let generator = self
+            .generators
             .iter()
             .find(|g| g.name() == name)
             .ok_or_else(|| self.missing_plugin(name))?;
@@ -253,10 +254,9 @@ impl Manager {
 impl fmt::Debug for Manager {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut names: Vec<_> = vec![];
-        names.extend_from_slice(&self.transforms
-            .iter()
-            .map(|p| p.name())
-            .collect::<Vec<_>>());
+        names.extend_from_slice(
+            &self.transforms.iter().map(|p| p.name()).collect::<Vec<_>>(),
+        );
         write!(f, "plugins::Manager {{ {:?} }}", &names)
     }
 }

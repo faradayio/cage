@@ -1,9 +1,9 @@
 //! The `exec` command.
 
 use args::{self, ToArgs};
-use command_runner::{Command, CommandRunner};
 #[cfg(test)]
 use command_runner::TestCommandRunner;
+use command_runner::{Command, CommandRunner};
 use errors::*;
 use ext::service::ServiceExt;
 use project::Project;
@@ -106,7 +106,7 @@ fn invokes_docker_exec() {
             "exec",
             "-T",
             "web",
-            "true"
+            "true",
         ]
     });
 
@@ -132,7 +132,7 @@ fn runs_shells() {
             proj.output_dir().join("pods").join("frontend.yml"),
             "exec",
             "web",
-            "sh"
+            "sh",
         ]
     });
 

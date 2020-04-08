@@ -1,9 +1,9 @@
 //! Pass simple commands directly through to `docker-compose`.
 
 use args;
-use command_runner::{Command, CommandRunner};
 #[cfg(test)]
 use command_runner::TestCommandRunner;
+use command_runner::{Command, CommandRunner};
 use errors::*;
 use pod::Pod;
 use project::{PodOrService, Project};
