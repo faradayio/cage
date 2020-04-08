@@ -43,7 +43,12 @@ impl RuntimeState {
             ContainerFilters::default(),
         )?;
         for container in &containers {
-            let info = docker.container_info(&container.Id)?;
+            let info = docker
+                .container_info(&container.Id)
+                .map_err(Error::from)
+                .chain_err(|| {
+                    format!("error looking up container {:?}", container.Id)
+                })?;
             let labels = &info.Config.Labels;
             if labels.get("com.docker.compose.project") == Some(&name)
                 && labels.get("io.fdy.cage.target") == Some(&target)
