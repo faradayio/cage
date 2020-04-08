@@ -132,7 +132,7 @@ impl Project {
             print!(" mounted:{}", source_names.join(","));
         }
 
-        println!("");
+        println!();
         Ok(())
     }
 }

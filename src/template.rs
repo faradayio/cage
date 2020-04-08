@@ -58,10 +58,7 @@ impl Template {
             }
         }
 
-        Ok(Template {
-            name: name,
-            files: files,
-        })
+        Ok(Template { name, files })
     }
 
     /// Generate this template into `target_dir`, passing `data` to the

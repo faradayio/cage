@@ -57,7 +57,7 @@ impl RuntimeState {
                 }
             }
         }
-        Ok(RuntimeState { services: services })
+        Ok(RuntimeState { services })
     }
 
     /// Is the specified pod running?
@@ -149,9 +149,9 @@ impl ContainerInfo {
 
         Ok(ContainerInfo {
             name: info.Name.to_owned(),
-            is_one_off: is_one_off,
+            is_one_off,
             state: ContainerStatus::new(&info.State),
-            ip_addr: ip_addr,
+            ip_addr,
             container_tcp_ports: ports,
         })
     }

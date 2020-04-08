@@ -89,7 +89,7 @@ impl ServiceExt for dc::Service {
             err("specify a value for the label io.fdy.cage.test to run tests")
         })?;
         let mut lexer = shlex::Shlex::new(raw.value()?);
-        let result: Vec<String> = lexer.by_ref().map(|w| w.to_owned()).collect();
+        let result: Vec<String> = lexer.by_ref().collect();
         if lexer.had_error {
             Err(err!("cannot parse <{}> into shell words", raw))
         } else {
@@ -114,12 +114,10 @@ impl ServiceExt for dc::Service {
                     .expect("human_alias failed on a context that worked previously");
                 sources.find_by_alias(alias)
             })
-            .and_then(|source| {
-                Some(SourceMount {
-                    container_path,
-                    source,
-                    source_subdirectory,
-                })
+            .map(|source| SourceMount {
+                container_path,
+                source,
+                source_subdirectory,
             });
 
         // Get our library keys and mount points.

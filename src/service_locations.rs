@@ -62,9 +62,7 @@ impl ServiceLocations {
             }
         }
 
-        ServiceLocations {
-            locations: locations,
-        }
+        ServiceLocations { locations }
     }
 
     /// Find a service by name.

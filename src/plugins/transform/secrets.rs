@@ -39,7 +39,7 @@ impl<'de> Deserialize<'de> for ServiceSecrets {
         D: Deserializer<'de>,
     {
         let secrets = Deserialize::deserialize(deserializer)?;
-        Ok(ServiceSecrets { secrets: secrets })
+        Ok(ServiceSecrets { secrets })
     }
 }
 
@@ -131,7 +131,7 @@ impl PluginNew for Plugin {
         } else {
             None
         };
-        Ok(Plugin { config: config })
+        Ok(Plugin { config })
     }
 }
 

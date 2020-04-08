@@ -29,8 +29,8 @@ impl<'a> Context<'a> {
     /// Create a new plugin context.
     pub fn new(project: &'a Project, pod: &'a Pod, subcommand: &str) -> Context<'a> {
         Context {
-            project: project,
-            pod: pod,
+            project,
+            pod,
             subcommand: subcommand.to_string(),
             _nonexclusive: PhantomData,
         }

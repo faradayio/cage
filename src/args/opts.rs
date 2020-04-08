@@ -35,7 +35,7 @@ impl Up {
     /// Create new `Up` options.
     pub fn new(init: bool) -> Up {
         Up {
-            init: init,
+            init,
             _nonexhaustive: (),
         }
     }

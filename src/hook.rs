@@ -32,7 +32,7 @@ impl HookManager {
         let root_dir: PathBuf = root_dir.into();
         Ok(HookManager {
             hooks_dir: root_dir.join("config").join("hooks"),
-            root_dir: root_dir,
+            root_dir,
         })
     }
 

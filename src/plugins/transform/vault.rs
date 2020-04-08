@@ -219,10 +219,7 @@ impl Vault {
             addr.truncate(new_len);
         }
         let token = find_vault_token()?;
-        Ok(Vault {
-            addr: addr,
-            token: token,
-        })
+        Ok(Vault { addr, token })
     }
 }
 
@@ -285,7 +282,7 @@ impl Plugin {
             None
         };
         Ok(Plugin {
-            config: config,
+            config,
             generator: generator
                 .map(|gen: G| -> Box<dyn GenerateToken> { Box::new(gen) }),
         })
@@ -354,10 +351,7 @@ impl PluginTransform for Plugin {
         for (name, service) in &mut file.services {
             // Set up a ConfigEnvironment that we can use to perform
             // interpolations of values like `$SERVICE` in our config file.
-            let env = ConfigEnvironment {
-                ctx: ctx,
-                service: name,
-            };
+            let env = ConfigEnvironment { ctx, service: name };
 
             // Define a local helper function to interpolate
             // `RawOr<String>` values using `env`.

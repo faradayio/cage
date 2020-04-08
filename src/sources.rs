@@ -22,10 +22,10 @@ use crate::util::ConductorPathExt;
 
 /// The file where we define extra source trees for libraries used by our
 /// services.
-const SOURCES_YML: &'static str = "config/sources.yml";
+const SOURCES_YML: &str = "config/sources.yml";
 
 /// The file where we store our `mounted` state.
-const MOUNTED_YML: &'static str = "mounted.yml";
+const MOUNTED_YML: &str = "mounted.yml";
 
 /// Configuration for an individual source tree.
 #[derive(Debug, Clone, Deserialize)]
@@ -70,7 +70,7 @@ impl Sources {
         let source = Source {
             alias: alias.clone(),
             context: context.without_repository_subdirectory(),
-            mounted: mounted,
+            mounted,
         };
 
         // Insert our Source object into our map, checking for alias
@@ -80,7 +80,7 @@ impl Sources {
                 vacant.insert(source);
             }
             btree_map::Entry::Occupied(occupied) => {
-                if &source.context != &occupied.get().context {
+                if source.context != occupied.get().context {
                     return Err(err!(
                         "{} and {} would both alias to \
                          {}",
@@ -129,17 +129,16 @@ impl Sources {
                 if *context != context.without_repository_subdirectory() {
                     // We might actually be able to handle this case, but lib sources
                     // are already awkward enough without adding more features.
-                    Err(ErrorKind::LibHasRepoSubdirectory(lib_key.clone()))?;
+                    return Err(
+                        ErrorKind::LibHasRepoSubdirectory(lib_key.clone()).into()
+                    );
                 }
                 let alias = Self::add_source(&mut sources, &mounted, context)?;
                 lib_keys.insert(lib_key.clone(), alias);
             }
         }
 
-        Ok(Sources {
-            sources: sources,
-            lib_keys: lib_keys,
-        })
+        Ok(Sources { sources, lib_keys })
     }
 
     /// Iterate over all source trees associated with this project.

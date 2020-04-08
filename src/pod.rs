@@ -82,15 +82,14 @@ impl Config {
     where
         CR: CommandRunner,
     {
-        match self.services.get(service_name) {
-            Some(service_config) => service_config.run_script(
+        if let Some(service_config) = self.services.get(service_name) {
+            service_config.run_script(
                 runner,
                 &project,
                 &service_name,
                 &script_name,
                 &opts,
-            )?,
-            None => {}
+            )?;
         }
         Ok(())
     }
@@ -141,7 +140,7 @@ impl Script {
         CR: CommandRunner,
     {
         for cmd in &self.0 {
-            if cmd.len() < 1 {
+            if cmd.is_empty() {
                 return Err("all items in script must have at least one value".into());
             }
             let cmd = if cmd.len() >= 2 {
@@ -309,12 +308,12 @@ impl Pod {
         }
 
         Ok(Pod {
-            base_dir: base_dir,
-            name: name,
-            file_info: file_info,
+            base_dir,
+            name,
+            file_info,
             target_file_infos: target_infos,
-            config: config,
-            service_names: service_names,
+            config,
+            service_names,
         })
     }
 

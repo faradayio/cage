@@ -1,8 +1,5 @@
 //! Our main CLI tool.
 
-#![cfg_attr(feature = "clippy", feature(plugin))]
-#![cfg_attr(feature = "clippy", plugin(clippy))]
-
 use cage;
 #[macro_use]
 extern crate clap;
@@ -85,7 +82,7 @@ impl<'a> ArgMatchesExt for clap::ArgMatches<'a> {
             .values_of(arg_name)
             .map_or_else(|| vec![], |p| p.collect())
             .iter()
-            .map(|p| p.to_string())
+            .map(|&p| p.to_string())
             .collect();
         if names.is_empty() {
             if include_tasks {
@@ -149,7 +146,7 @@ impl<'a> ArgMatchesExt for clap::ArgMatches<'a> {
     fn to_exec_command(&self) -> Option<cage::args::Command> {
         if self.is_present("COMMAND") {
             let values: Vec<&str> = self.values_of("COMMAND").unwrap().collect();
-            assert!(values.len() >= 1, "too few values from CLI parser");
+            assert!(!values.is_empty(), "too few values from CLI parser");
             Some(cage::args::Command::new(values[0]).with_args(&values[1..]))
         } else {
             None
@@ -447,12 +444,12 @@ fn main() {
         // We use `unwrap` here to turn I/O errors into application panics.
         // If we can't print a message to stderr without an I/O error,
         // the situation is hopeless.
-        write!(io::stderr(), "Error: ").unwrap();
+        eprintln!("Error: ");
         for e in err.iter() {
-            write!(io::stderr(), "{}\n", e).unwrap();
+            eprintln!("{}", e);
         }
         if let Some(backtrace) = err.backtrace() {
-            write!(io::stderr(), "{:?}\n", backtrace).unwrap();
+            eprintln!("{:?}", backtrace);
         }
         process::exit(1);
     }

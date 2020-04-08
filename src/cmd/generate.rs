@@ -14,7 +14,7 @@ use crate::version;
 
 /// A list of standard targets to generate.  We handle `production`
 /// manually.
-const DEFAULT_TARGETS: &'static [&'static str] = &["development", "test"];
+const DEFAULT_TARGETS: &[&str] = &["development", "test"];
 
 /// Interface to various file-generation commands.
 pub trait CommandGenerate {
@@ -51,7 +51,7 @@ impl CommandGenerate for Project {
         // Generate our top-level files.
         let mut proj_tmpl = Template::new("new")?;
         let proj_info = ProjectInfo {
-            name: name,
+            name,
             cage_version: &version().to_string(),
         };
         proj_tmpl.generate(&proj_dir, &proj_info, &mut io::stdout())?;

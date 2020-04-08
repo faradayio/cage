@@ -58,7 +58,7 @@ impl DefaultTags {
                 return Err(err!("Default image must have tag: {}", &image));
             }
         }
-        Ok(DefaultTags { tags: tags })
+        Ok(DefaultTags { tags })
     }
 
     /// Default the `tag` field of `image` if necessary, returning the old

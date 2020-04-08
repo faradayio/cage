@@ -56,12 +56,9 @@ impl Target {
         if let Some(ref enable_in) = *enable_in_targets {
             // If a list is supplied, we need to appear in it.
             enable_in.contains(&self.name().to_owned())
-        } else if self.name() == "test" {
-            // `test` is excluded by default.
-            false
         } else {
-            // All other targets are included by default.
-            true
+            // All other targets except `test` are included by default.
+            self.name() != "test"
         }
     }
 

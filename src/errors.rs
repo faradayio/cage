@@ -5,8 +5,7 @@
 //!
 //! [error_chain]: https://github.com/brson/error-chain
 
-#![allow(missing_docs)]
-#![cfg_attr(feature = "clippy", allow(redundant_closure))]
+#![allow(missing_docs, clippy::redundant_closure)]
 
 use compose_yml::v2 as dc;
 use glob;

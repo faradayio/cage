@@ -27,7 +27,7 @@ impl Command {
         match list.split_first() {
             Some((executable, args)) => Some(Command {
                 command: OsString::from(executable),
-                args: args.into_iter().map(|arg| arg.into()).collect(),
+                args: args.iter().map(|arg| arg.into()).collect(),
             }),
             None => None,
         }

@@ -66,8 +66,9 @@ impl PluginTransform for Plugin {
                 let source = source_mount.source;
                 if source.is_available_locally(project) && source.mounted() {
                     // Build an absolute path to our source's local directory.
-                    let source_subdirectory =
-                        source_mount.source_subdirectory.unwrap_or("".to_string());
+                    let source_subdirectory = source_mount
+                        .source_subdirectory
+                        .unwrap_or_else(|| "".to_string());
                     let path = source
                         .path(project)
                         .join(source_subdirectory)

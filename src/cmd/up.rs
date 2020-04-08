@@ -108,7 +108,7 @@ impl CommandUp for Project {
         // Run our initialization commands.
         println!("Initializing pod '{}'", pod.name());
         for cmd in pod.run_on_init() {
-            if cmd.len() < 1 {
+            if cmd.is_empty() {
                 return Err("all `run_on_init` items for '{}' \
                      must have at least one value"
                     .into());
