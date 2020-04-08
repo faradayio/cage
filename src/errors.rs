@@ -24,13 +24,13 @@ error_chain! {
     // Hook up to other libraries which also use `error_chain`.  These
     // conversions are implicit.
     links {
-        dc::Error, dc::ErrorKind, Compose;
         boondock::Error, boondock::ErrorKind, Docker;
     }
 
     // TODO HIGH: Most of these will go away as we convert them to more
     // meaningful errors.
     foreign_links {
+        dc::Error, Compose;
         FromUtf8Error, Utf8Error;
         glob::GlobError, Glob;
         glob::PatternError, GlobPattern;

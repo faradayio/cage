@@ -29,11 +29,11 @@ impl ProjectConfig {
     pub fn new(path: &Path) -> Result<Self> {
         if path.exists() {
             let mkerr = || ErrorKind::CouldNotReadFile(path.to_owned());
-            let f = try!(fs::File::open(path).chain_err(&mkerr));
+            let f = fs::File::open(path).chain_err(&mkerr)?;
             let mut reader = io::BufReader::new(f);
             let mut yaml = String::new();
-            try!(reader.read_to_string(&mut yaml).chain_err(&mkerr));
-            try!(Self::check_config_version(&path, &yaml));
+            reader.read_to_string(&mut yaml).chain_err(&mkerr)?;
+            Self::check_config_version(&path, &yaml)?;
             serde_yaml::from_str(&yaml).chain_err(&mkerr)
         } else {
             warn!("No {} file, using default values", path.display());
@@ -54,8 +54,8 @@ impl ProjectConfig {
             cage_version: Option<semver::VersionReq>,
         }
 
-        let config: VersionOnly = try!(serde_yaml::from_str(config_yml)
-            .chain_err(|| ErrorKind::CouldNotReadFile(path.to_owned())));
+        let config: VersionOnly = serde_yaml::from_str(config_yml)
+            .chain_err(|| ErrorKind::CouldNotReadFile(path.to_owned()))?;
         if let Some(ref req) = config.cage_version {
             if !req.matches(&version()) {
                 return Err(ErrorKind::MismatchedVersion(req.to_owned()).into());
