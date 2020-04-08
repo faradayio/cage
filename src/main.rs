@@ -422,9 +422,9 @@ fn main() {
                 record.target()
             );
             if record.level() > log::Level::Info {
-                write!(f, "{}", msg.dimmed())
+                writeln!(f, "{}", msg.dimmed())
             } else {
-                write!(f, "{}", msg)
+                writeln!(f, "{}", msg)
             }
         },
     );
@@ -444,7 +444,7 @@ fn main() {
         // We use `unwrap` here to turn I/O errors into application panics.
         // If we can't print a message to stderr without an I/O error,
         // the situation is hopeless.
-        eprintln!("Error: ");
+        eprint!("Error: ");
         for e in err.iter() {
             eprintln!("{}", e);
         }
