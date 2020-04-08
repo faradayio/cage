@@ -5,10 +5,10 @@ use std::fmt;
 use std::io;
 use std::marker::PhantomData;
 
-use errors::*;
-use pod::Pod;
-use project::Project;
-use template::Template;
+use crate::errors::*;
+use crate::pod::Pod;
+use crate::project::Project;
+use crate::template::Template;
 
 pub mod transform;
 
@@ -101,7 +101,7 @@ pub trait PluginGenerate: Plugin {
     /// Generate source code.  The default implementation generates the
     /// template of the same name as the plugin, using the project as
     /// input.  This is a good default.
-    fn generate(&self, project: &Project, out: &mut io::Write) -> Result<()> {
+    fn generate(&self, project: &Project, out: &mut dyn io::Write) -> Result<()> {
         let mut proj_tmpl = Template::new(self.name())?;
         proj_tmpl.generate(project.root_dir(), project, out)?;
         Ok(())
@@ -111,10 +111,10 @@ pub trait PluginGenerate: Plugin {
 /// A collection of plugins, normally associated with a project.
 pub struct Manager {
     /// Our `dc::File` transforming plugins.
-    transforms: Vec<Box<PluginTransform>>,
+    transforms: Vec<Box<dyn PluginTransform>>,
 
     /// Our code generator plugins.
-    generators: Vec<Box<PluginGenerate>>,
+    generators: Vec<Box<dyn PluginGenerate>>,
 }
 
 impl Manager {
@@ -144,7 +144,7 @@ impl Manager {
     }
 
     /// Get the generators registered with this plugin manager.
-    pub fn generators(&self) -> &[Box<PluginGenerate>] {
+    pub fn generators(&self) -> &[Box<dyn PluginGenerate>] {
         &self.generators
     }
 
@@ -223,7 +223,7 @@ impl Manager {
         &self,
         project: &Project,
         name: &str,
-        out: &mut io::Write,
+        out: &mut dyn io::Write,
     ) -> Result<()> {
         let generator = self
             .generators

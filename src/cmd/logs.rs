@@ -1,12 +1,12 @@
 //! The `logs` command.
 
-use args;
-use cmd::CommandCompose;
-use command_runner::CommandRunner;
+use crate::args;
+use crate::cmd::CommandCompose;
+use crate::command_runner::CommandRunner;
 #[cfg(test)]
-use command_runner::TestCommandRunner;
-use errors::*;
-use project::Project;
+use crate::command_runner::TestCommandRunner;
+use crate::errors::*;
+use crate::project::Project;
 
 /// We implement `logs` with a trait so we put it in its own module.
 pub trait CommandLogs {

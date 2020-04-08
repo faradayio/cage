@@ -12,15 +12,15 @@ use std::path::PathBuf;
 use std::result;
 #[cfg(test)]
 use std::sync::{Arc, RwLock};
-use vault;
-use vault::client::VaultDuration;
+use crate::vault;
+use crate::vault::client::VaultDuration;
 
-use errors::*;
-use plugins;
-use plugins::{Operation, PluginGenerate, PluginNew, PluginTransform};
-use project::Project;
-use serde_helpers::load_yaml;
-use util::err;
+use crate::errors::*;
+use crate::plugins;
+use crate::plugins::{Operation, PluginGenerate, PluginNew, PluginTransform};
+use crate::project::Project;
+use crate::serde_helpers::load_yaml;
+use crate::util::err;
 
 // TODO: This old-style serde `include!` should be inline or a module.
 include!("vault_config.in.rs");
@@ -211,7 +211,7 @@ pub struct Plugin {
     /// have it (but it's guaranteed otherwise).
     config: Option<Config>,
     /// Our source of tokens.
-    generator: Option<Box<GenerateToken>>,
+    generator: Option<Box<dyn GenerateToken>>,
 }
 
 impl Plugin {
@@ -233,7 +233,7 @@ impl Plugin {
         };
         Ok(Plugin {
             config: config,
-            generator: generator.map(|gen: G| -> Box<GenerateToken> { Box::new(gen) }),
+            generator: generator.map(|gen: G| -> Box<dyn GenerateToken> { Box::new(gen) }),
         })
     }
 }

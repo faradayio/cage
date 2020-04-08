@@ -1,11 +1,11 @@
 //! The `run-script` command.
 
-use args;
-use command_runner::CommandRunner;
+use crate::args;
+use crate::command_runner::CommandRunner;
 #[cfg(test)]
-use command_runner::TestCommandRunner;
-use errors::*;
-use project::{PodOrService, Project};
+use crate::command_runner::TestCommandRunner;
+use crate::errors::*;
+use crate::project::{PodOrService, Project};
 
 /// Included into project in order to run named scripts on one ore more services
 pub trait CommandRunScript {

@@ -4,11 +4,11 @@ use compose_yml::v2 as dc;
 use std::env;
 use std::marker::PhantomData;
 
-use errors::*;
-use plugins;
-use plugins::{Operation, PluginNew, PluginTransform};
-use project::Project;
-use util::{err, ConductorPathExt};
+use crate::errors::*;
+use crate::plugins;
+use crate::plugins::{Operation, PluginNew, PluginTransform};
+use crate::project::Project;
+use crate::util::{err, ConductorPathExt};
 
 /// Plugin which converts all paths in a `dc::File` to absolute.
 #[derive(Debug)]

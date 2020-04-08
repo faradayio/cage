@@ -3,7 +3,7 @@
 
 use regex::Regex;
 
-use project::Project;
+use crate::project::Project;
 
 /// An `Target` provides collection of extensions to a project's basic
 /// pods.  Targets are typically used to represent deployment environments:

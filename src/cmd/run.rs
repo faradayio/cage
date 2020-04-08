@@ -1,12 +1,12 @@
 //! The `run` command.
 
-use args::{self, ToArgs};
+use crate::args::{self, ToArgs};
 #[cfg(test)]
-use command_runner::TestCommandRunner;
-use command_runner::{Command, CommandRunner};
-use errors::*;
-use ext::service::ServiceExt;
-use project::Project;
+use crate::command_runner::TestCommandRunner;
+use crate::command_runner::{Command, CommandRunner};
+use crate::errors::*;
+use crate::ext::service::ServiceExt;
+use crate::project::Project;
 
 /// We implement `run` with a trait so we put it in its own module.
 pub trait CommandRun {

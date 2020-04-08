@@ -4,7 +4,7 @@ use std::collections::BTreeMap;
 use std::ffi::{OsStr, OsString};
 use std::ops::{Deref, DerefMut};
 
-use args::ToArgs;
+use crate::args::ToArgs;
 
 /// An empty set of options, used for `docker-compose` subcommands for
 /// which don't need any.

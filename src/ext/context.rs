@@ -4,8 +4,8 @@ use compose_yml::v2 as dc;
 use std::path::Path;
 use url;
 
-use errors::*;
-use util::ToStrOrErr;
+use crate::errors::*;
+use crate::util::ToStrOrErr;
 
 /// These methods will appear as regular methods on `Context` in any module
 /// which includes `ContextExt`.

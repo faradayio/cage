@@ -7,12 +7,12 @@ use std::marker::PhantomData;
 #[cfg(test)]
 use std::path::Path;
 
-use errors::*;
-use ext::service::ServiceExt;
-use plugins;
-use plugins::{Operation, PluginNew, PluginTransform};
-use project::Project;
-use util::ConductorPathExt;
+use crate::errors::*;
+use crate::ext::service::ServiceExt;
+use crate::plugins;
+use crate::plugins::{Operation, PluginNew, PluginTransform};
+use crate::project::Project;
+use crate::util::ConductorPathExt;
 
 /// Transforms `dc::File` to point at local source trees.
 ///

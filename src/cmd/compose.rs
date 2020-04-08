@@ -1,12 +1,12 @@
 //! Pass simple commands directly through to `docker-compose`.
 
-use args;
+use crate::args;
 #[cfg(test)]
-use command_runner::TestCommandRunner;
-use command_runner::{Command, CommandRunner};
-use errors::*;
-use pod::Pod;
-use project::{PodOrService, Project};
+use crate::command_runner::TestCommandRunner;
+use crate::command_runner::{Command, CommandRunner};
+use crate::errors::*;
+use crate::pod::Pod;
+use crate::project::{PodOrService, Project};
 
 /// Pass simple commands directly through to `docker-compose`.
 pub trait CommandCompose {
@@ -16,7 +16,7 @@ pub trait CommandCompose {
         runner: &CR,
         command: &str,
         act_on: &args::ActOn,
-        opts: &args::ToArgs,
+        opts: &dyn args::ToArgs,
     ) -> Result<()>
     where
         CR: CommandRunner;
@@ -28,7 +28,7 @@ pub trait CommandCompose {
         runner: &CR,
         command: &str,
         pod: &Pod,
-        opts: &args::ToArgs,
+        opts: &dyn args::ToArgs,
     ) -> Result<()>
     where
         CR: CommandRunner;
@@ -41,7 +41,7 @@ pub trait CommandCompose {
         command: &str,
         pod: &Pod,
         service_name: &str,
-        opts: &args::ToArgs,
+        opts: &dyn args::ToArgs,
     ) -> Result<()>
     where
         CR: CommandRunner;
@@ -53,7 +53,7 @@ impl CommandCompose for Project {
         runner: &CR,
         command: &str,
         act_on: &args::ActOn,
-        opts: &args::ToArgs,
+        opts: &dyn args::ToArgs,
     ) -> Result<()>
     where
         CR: CommandRunner,
@@ -77,7 +77,7 @@ impl CommandCompose for Project {
         runner: &CR,
         command: &str,
         pod: &Pod,
-        opts: &args::ToArgs,
+        opts: &dyn args::ToArgs,
     ) -> Result<()>
     where
         CR: CommandRunner,
@@ -99,7 +99,7 @@ impl CommandCompose for Project {
         command: &str,
         pod: &Pod,
         service_name: &str,
-        opts: &args::ToArgs,
+        opts: &dyn args::ToArgs,
     ) -> Result<()>
     where
         CR: CommandRunner,

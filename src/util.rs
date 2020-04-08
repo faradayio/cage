@@ -9,7 +9,7 @@ use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
 
-use errors::*;
+use crate::errors::*;
 
 /// Create an error using a format string and arguments.
 ///
@@ -93,7 +93,7 @@ impl ConductorPathExt for Path {
         // Take an error message and elaborate a bit.  We use a trait
         // pointer here so we can use this for multiple error types,
         // because Rust closures don't seem to support type parameters.
-        let wrap_err = |err: &error::Error| -> Error {
+        let wrap_err = |err: &dyn error::Error| -> Error {
             err!(
                 "error creating parent directories for {}: {}",
                 parent.display(),

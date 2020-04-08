@@ -8,7 +8,7 @@ use std::env;
 #[test]
 fn project_from_current_dir() {
     let testdir = TestDir::new("cage", "project_from_current_dir");
-    let saved = env::current_dir().expect("Could not get current_dir");
+    let _saved = env::current_dir().expect("Could not get current_dir");
 
     copy_dir(testdir.src_path("examples/hello"), testdir.path("hello"))
         .expect("could not copy hello example");

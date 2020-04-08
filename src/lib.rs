@@ -95,15 +95,15 @@ extern crate serde_yaml;
 extern crate shlex;
 extern crate url;
 
-pub use default_tags::DefaultTags;
-pub use errors::*;
-pub use pod::{AllFiles, Pod, PodType, TargetFiles};
-pub use project::{PodOrService, Pods, Project, ProjectConfig, Targets};
-pub use runtime_state::RuntimeState;
-pub use sources::Iter as SourceIter;
-pub use sources::{Source, Sources};
-pub use target::Target;
-pub use util::err;
+pub use crate::default_tags::DefaultTags;
+pub use crate::errors::*;
+pub use crate::pod::{AllFiles, Pod, PodType, TargetFiles};
+pub use crate::project::{PodOrService, Pods, Project, ProjectConfig, Targets};
+pub use crate::runtime_state::RuntimeState;
+pub use crate::sources::Iter as SourceIter;
+pub use crate::sources::{Source, Sources};
+pub use crate::target::Target;
+pub use crate::util::err;
 
 #[macro_use]
 mod util;

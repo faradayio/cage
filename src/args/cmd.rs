@@ -2,7 +2,7 @@
 
 use std::ffi::{OsStr, OsString};
 
-use args::ToArgs;
+use crate::args::ToArgs;
 
 /// A command which can be executed.
 #[derive(Debug)]

@@ -2,7 +2,7 @@
 
 use std::path::{Path, PathBuf};
 
-use errors::*;
+use crate::errors::*;
 
 /// Walk up the directory tree until we find a directory that looks like a
 /// project.

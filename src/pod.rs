@@ -8,13 +8,13 @@ use std::ffi::OsString;
 use std::fmt;
 use std::path::{Path, PathBuf};
 
-use args;
-use cmd::CommandRun;
-use command_runner::CommandRunner;
-use errors::*;
-use project::Project;
-use serde_helpers::load_yaml;
-use target::Target;
+use crate::args;
+use crate::cmd::CommandRun;
+use crate::command_runner::CommandRunner;
+use crate::errors::*;
+use crate::project::Project;
+use crate::serde_helpers::load_yaml;
+use crate::target::Target;
 
 // TODO: This old-style serde `include!` should be inline or a module.
 include!("pod_config.in.rs");
@@ -374,7 +374,7 @@ impl<'a> Iterator for AllFiles<'a> {
 #[test]
 fn pods_are_normalized_on_load() {
     use env_logger;
-    use project::Project;
+    use crate::project::Project;
     let _ = env_logger::init();
 
     let proj = Project::from_example("hello").unwrap();

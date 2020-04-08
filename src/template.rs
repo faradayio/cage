@@ -9,9 +9,9 @@ use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
 
-use data;
-use errors::*;
-use util::ConductorPathExt;
+use crate::data;
+use crate::errors::*;
+use crate::util::ConductorPathExt;
 
 /// Escape double quotes and backslashes in a string that we're rendering,
 /// which should work well more-or-less well enough for all the formats
@@ -77,7 +77,7 @@ impl Template {
         &mut self,
         target_dir: &Path,
         data: &T,
-        out: &mut io::Write,
+        out: &mut dyn io::Write,
     ) -> Result<()>
     where
         T: Serialize + fmt::Debug,

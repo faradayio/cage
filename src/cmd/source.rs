@@ -2,9 +2,9 @@
 
 use colored::*;
 
-use command_runner::CommandRunner;
-use errors::*;
-use project::Project;
+use crate::command_runner::CommandRunner;
+use crate::errors::*;
+use crate::project::Project;
 
 /// We implement `source` with a trait so we put it in its own module.
 pub trait CommandSource {

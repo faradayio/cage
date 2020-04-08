@@ -9,16 +9,16 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 #[cfg(test)]
-use command_runner::TestCommandRunner;
-use command_runner::{Command, CommandRunner};
-use errors::*;
-use ext::context::ContextExt;
-use ext::git_url::GitUrlExt;
-use ext::service::ServiceExt;
-use pod::Pod;
-use project::Project;
-use serde_helpers::{dump_yaml, load_yaml};
-use util::ConductorPathExt;
+use crate::command_runner::TestCommandRunner;
+use crate::command_runner::{Command, CommandRunner};
+use crate::errors::*;
+use crate::ext::context::ContextExt;
+use crate::ext::git_url::GitUrlExt;
+use crate::ext::service::ServiceExt;
+use crate::pod::Pod;
+use crate::project::Project;
+use crate::serde_helpers::{dump_yaml, load_yaml};
+use crate::util::ConductorPathExt;
 
 /// The file where we define extra source trees for libraries used by our
 /// services.

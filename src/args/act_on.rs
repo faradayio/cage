@@ -3,9 +3,9 @@
 use std::iter::Filter;
 use std::slice;
 
-use errors::*;
-use pod::{Pod, PodType};
-use project::{PodOrService, Pods, Project};
+use crate::errors::*;
+use crate::pod::{Pod, PodType};
+use crate::project::{PodOrService, Pods, Project};
 
 /// The names of pods, services or both to pass to one of our commands.
 #[derive(Debug)]

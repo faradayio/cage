@@ -7,7 +7,7 @@ use std::path::Path;
 use std::process;
 use std::rc::Rc;
 
-use errors::*;
+use crate::errors::*;
 
 /// A factory that produces objects conforming to our `Command` wrapper
 /// trait.  During tests, we'll use this to mock out the underlying system

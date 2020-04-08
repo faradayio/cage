@@ -18,20 +18,20 @@ use std::result;
 use std::slice;
 use std::str;
 
-use default_tags::DefaultTags;
-use dir;
-use errors::*;
-use hook::HookManager;
-use plugins::{self, Operation};
-use pod::{Pod, PodType};
+use crate::default_tags::DefaultTags;
+use crate::dir;
+use crate::errors::*;
+use crate::hook::HookManager;
+use crate::plugins::{self, Operation};
+use crate::pod::{Pod, PodType};
 use rayon::prelude::*;
-use runtime_state::RuntimeState;
-use serde_helpers::deserialize_parsable_opt;
-use service_locations::ServiceLocations;
-use sources::Sources;
-use target::Target;
-use util::{ConductorPathExt, ToStrOrErr};
-use version;
+use crate::runtime_state::RuntimeState;
+use crate::serde_helpers::deserialize_parsable_opt;
+use crate::service_locations::ServiceLocations;
+use crate::sources::Sources;
+use crate::target::Target;
+use crate::util::{ConductorPathExt, ToStrOrErr};
+use crate::version;
 
 // TODO: This old-style serde `include!` should be inline or a module.
 include!("project_config.in.rs");
@@ -454,16 +454,16 @@ impl Project {
                     _ => Path::new(&file_name).to_owned(),
                 };
                 let out_path =
-                    try!(export_dir.join(&rel_path).with_guaranteed_parent());
+                    r#try!(export_dir.join(&rel_path).with_guaranteed_parent());
                 debug!("Outputting {}", out_path.display());
 
                 // Combine targets, make it standalone, tweak as needed, and
                 // output.
-                let mut file = try!(pod.merged_file(&self.current_target));
-                try!(file.make_standalone(&self.pods_dir()));
+                let mut file = r#try!(pod.merged_file(&self.current_target));
+                r#try!(file.make_standalone(&self.pods_dir()));
                 let ctx = plugins::Context::new(self, pod, subcommand);
-                try!(self.plugins().transform(op, &ctx, &mut file));
-                try!(file.write_to_path(out_path));
+                r#try!(self.plugins().transform(op, &ctx, &mut file));
+                r#try!(file.write_to_path(out_path));
                 Ok(())
             })
             // If more than one parallel branch fails, just return one error.

@@ -8,12 +8,12 @@ use std::path::Path;
 use std::path::PathBuf;
 use std::result;
 
-use errors::*;
-use plugins;
-use plugins::{Operation, PluginGenerate, PluginNew, PluginTransform};
-use project::Project;
+use crate::errors::*;
+use crate::plugins;
+use crate::plugins::{Operation, PluginGenerate, PluginNew, PluginTransform};
+use crate::project::Project;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use serde_helpers::load_yaml;
+use crate::serde_helpers::load_yaml;
 
 // TODO: This old-style serde `include!` should be inline or a module.
 include!("secrets_config.in.rs");

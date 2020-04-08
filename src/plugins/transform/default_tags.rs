@@ -3,10 +3,10 @@
 use compose_yml::v2 as dc;
 use std::marker::PhantomData;
 
-use errors::*;
-use plugins;
-use plugins::{Operation, PluginNew, PluginTransform};
-use project::Project;
+use crate::errors::*;
+use crate::plugins;
+use crate::plugins::{Operation, PluginNew, PluginTransform};
+use crate::project::Project;
 
 /// Applies `DefaultTags` to `dc::File`.
 #[derive(Debug)]

@@ -3,7 +3,7 @@
 use std::collections::btree_map::Entry;
 use std::collections::BTreeMap;
 
-use pod::Pod;
+use crate::pod::Pod;
 
 /// Maps user-visible service names of the forms `pod_name/service_name` to
 /// `(pod_name, service_name)` pairs, and also does the same for bare

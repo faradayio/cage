@@ -5,12 +5,12 @@ use std::fs;
 use std::path::PathBuf;
 
 #[cfg(test)]
-use command_runner::TestCommandRunner;
-use command_runner::{Command, CommandRunner};
-use errors::*;
+use crate::command_runner::TestCommandRunner;
+use crate::command_runner::{Command, CommandRunner};
+use crate::errors::*;
 #[cfg(test)]
-use project::Project;
-use util::ToStrOrErr;
+use crate::project::Project;
+use crate::util::ToStrOrErr;
 
 /// Keeps track of hook scripts and invokes them at appropriate times.
 #[derive(Debug)]

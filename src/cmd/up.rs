@@ -3,15 +3,15 @@
 use std::thread;
 use std::time;
 
-use args;
-use cmd::{CommandCompose, CommandRun};
-use command_runner::CommandRunner;
+use crate::args;
+use crate::cmd::{CommandCompose, CommandRun};
+use crate::command_runner::CommandRunner;
 #[cfg(test)]
-use command_runner::TestCommandRunner;
-use errors::*;
-use pod::{Pod, PodType};
-use project::{PodOrService, Project};
-use runtime_state::RuntimeState;
+use crate::command_runner::TestCommandRunner;
+use crate::errors::*;
+use crate::pod::{Pod, PodType};
+use crate::project::{PodOrService, Project};
+use crate::runtime_state::RuntimeState;
 
 /// We implement `up` with a trait so we put it in its own module.
 pub trait CommandUp {

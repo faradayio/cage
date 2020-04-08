@@ -3,7 +3,7 @@
 use compose_yml::v2 as dc;
 use std::ffi::OsString;
 
-use errors::*;
+use crate::errors::*;
 
 /// These methods will appear as regular methods on `Context` in any module
 /// which includes `ContextExt`.

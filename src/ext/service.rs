@@ -4,12 +4,12 @@ use compose_yml::v2 as dc;
 use shlex;
 use std::vec;
 
-use errors::*;
-use ext::context::ContextExt;
+use crate::errors::*;
+use crate::ext::context::ContextExt;
 #[cfg(test)]
-use project::Project;
-use sources::{self, Source};
-use util::err;
+use crate::project::Project;
+use crate::sources::{self, Source};
+use crate::util::err;
 
 /// These methods will appear as regular methods on `Service` in any module
 /// which includes `ServiceExt`.

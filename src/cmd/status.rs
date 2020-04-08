@@ -3,15 +3,15 @@
 use colored::*;
 use compose_yml::v2 as dc;
 
-use args;
-use command_runner::CommandRunner;
-use errors::*;
-use ext::port_mapping::PortMappingExt;
-use ext::service::ServiceExt;
-use pod::Pod;
-use project::{PodOrService, Project};
-use runtime_state::{ContainerStatus, RuntimeState};
-use sources::Source;
+use crate::args;
+use crate::command_runner::CommandRunner;
+use crate::errors::*;
+use crate::ext::port_mapping::PortMappingExt;
+use crate::ext::service::ServiceExt;
+use crate::pod::Pod;
+use crate::project::{PodOrService, Project};
+use crate::runtime_state::{ContainerStatus, RuntimeState};
+use crate::sources::Source;
 
 /// We implement `status` with a trait so we can put it in its own
 /// module.

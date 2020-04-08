@@ -17,8 +17,8 @@ use std::io;
 use std::path::{PathBuf, StripPrefixError};
 use std::string::FromUtf8Error;
 
-use project::PROJECT_CONFIG_PATH;
-use version;
+use crate::project::PROJECT_CONFIG_PATH;
+use crate::version;
 
 error_chain! {
     // Hook up to other libraries which also use `error_chain`.  These

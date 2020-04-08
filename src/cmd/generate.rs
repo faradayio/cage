@@ -7,10 +7,10 @@ use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
 
-use errors::*;
-use project::Project;
-use template::Template;
-use version;
+use crate::errors::*;
+use crate::project::Project;
+use crate::template::Template;
+use crate::version;
 
 /// A list of standard targets to generate.  We handle `production`
 /// manually.

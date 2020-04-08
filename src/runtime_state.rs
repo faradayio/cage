@@ -5,9 +5,9 @@ use regex::Regex;
 use std::collections::BTreeMap;
 use std::net;
 
-use errors::*;
-use pod::Pod;
-use project::Project;
+use crate::errors::*;
+use crate::pod::Pod;
+use crate::project::Project;
 
 /// Everything we know about the running application, based on querying Docker.
 #[derive(Debug)]
