@@ -131,6 +131,7 @@ impl Manager {
 
         manager.register_transform::<transform::abs_path::Plugin>(proj)?;
         manager.register_transform::<transform::default_tags::Plugin>(proj)?;
+        manager.register_transform::<transform::host_dns::Plugin>(proj)?;
         manager.register_transform::<transform::sources::Plugin>(proj)?;
         manager.register_transform::<transform::secrets::Plugin>(proj)?;
         manager.register_transform::<transform::remove_build::Plugin>(proj)?;
