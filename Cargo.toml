@@ -3,6 +3,7 @@ name = "cage"
 version = "0.2.7"
 authors = ["Eric Kidd <git@randomhacks.net>",
            "Derek Kastner <dkastner@gmail.com>"]
+edition = "2018"
 
 description = "Develop multi-pod docker-compose apps"
 license = "MIT/Apache-2.0"

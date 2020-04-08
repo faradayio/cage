@@ -6,9 +6,8 @@
 //! [error_chain]: https://github.com/brson/error-chain
 
 #![allow(missing_docs)]
-#![cfg_attr(feature="clippy", allow(redundant_closure))]
+#![cfg_attr(feature = "clippy", allow(redundant_closure))]
 
-use boondock::errors as boondock;
 use compose_yml::v2 as dc;
 use glob;
 use semver;
@@ -24,7 +23,7 @@ error_chain! {
     // Hook up to other libraries which also use `error_chain`.  These
     // conversions are implicit.
     links {
-        boondock::Error, boondock::ErrorKind, Docker;
+        boondock::errors::Error, boondock::errors::ErrorKind, Docker;
     }
 
     // TODO HIGH: Most of these will go away as we convert them to more

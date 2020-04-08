@@ -264,8 +264,8 @@ impl Command for TestCommand {
 macro_rules! assert_ran {
     ($runner:expr, { $( [ $($arg:expr),+ $(,)? ] ),* }) => {
         use std::ops::Deref;
-        fn coerce<S: AsRef<$crate::std::ffi::OsStr>>(s: S) ->
-            $crate::std::ffi::OsString
+        fn coerce<S: AsRef<::std::ffi::OsStr>>(s: S) ->
+            ::std::ffi::OsString
         {
             s.as_ref().to_owned()
         }
