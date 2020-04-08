@@ -72,29 +72,29 @@ it's still not yet officially supported.
 Create a new application using `cage`:
 
 ```sh
-$ cage new myapp
-$ cd myapp
+cage new myapp
+cd myapp
 ```
 
 Pull the pre-built Docker images associated with this application and start
 up the database pod:
 
 ```sh
-$ cage pull
-$ cage up db
+cage pull
+cage up db
 ```
 
 Run the `rake` image to initialize your database:
 
 ```sh
-$ cage run rake db:create
-$ cage run rake db:migrate
+cage run rake db:create
+cage run rake db:migrate
 ```
 
 And bring up the rest of the app:
 
 ```sh
-$ cage up
+cage up
 ```
 
 Let's take a look at the pods and services defined by this application:
@@ -115,7 +115,7 @@ at [http://localhost:3000](http://localhost:3000).  But let's make a
 change!  First, list the available source code for the services in this
 app:
 
-```
+```sh
 $ cage source ls
 rails_hello               https://github.com/faradayio/rails_hello.git
 ```
@@ -151,7 +151,7 @@ We can also run container-specific unit tests, which are specified by the
 container, so that you can invoke any unit test framework of your choice:
 
 ```sh
-$ cage test web
+cage test web
 ```
 
 And we can access individual containers using a configurable shell:
@@ -199,7 +199,7 @@ so via a load balancer.
 
 See `examples/hello` for a complete example.
 
-```
+```txt
 hello
 └── pods
     ├── common.env
@@ -287,72 +287,36 @@ When working on this code, we recommend installing the following support
 tools:
 
 ```sh
-cargo install rustfmt
+rustup component add rustfmt
+rustup component add clippy
 cargo install cargo-watch
 ```
 
-We also recommend installing nightly Rust, which produces better error
-messages and supports extra warnings using [Clippy][]:
+Run the following in a terminal as you edit:
 
 ```sh
-rustup update nightly
-rustup override set nightly
-```
-
-If `nightly` produces build errors, you may need to update your compiler
-and libraries to the latest versions:
-
-```sh
-rustup update nightly
-cargo update
-```
-
-If that still doesn't work, try using `stable` Rust instead:
-
-```sh
-rustup override set stable
-```
-
-If you're using `nightly`, run the following in a terminal as you edit:
-
-```sh
-cargo watch "test --features clippy"
-```
-
-If you're using `stable`, leave out `--features clippy`:
-
-```sh
-cargo watch test
+cargo watch -x test
 ```
 
 Before committing your code, run:
 
 ```sh
+cargo clippy
 cargo fmt
 ```
 
-This will automatically reformat your code according to the project's
+This will automatically check for warnings, and reformat your code according to the project's
 conventions.  We use Travis CI to verify that `cargo fmt` has been run and
 that the project builds with no warnings.  If it fails, no worries—just go
 ahead and fix your pull request, or ask us for help.
 
-[Clippy]: https://github.com/Manishearth/rust-clippy
+### On MacOS
 
-### On macOS
+The openssl crate needs a compatible version of the `openssl` libraries. You may be able to install them as follows:
 
-The openssl crate needs a compatible version of the openssl libraries. macOS
-ships with a version using an old API. The best solution is to install latest
-openssl with homebrew and link to it:
-
-```
+```sh
 brew install openssl
-export OPENSSL_INCLUDE_DIR=$(brew --prefix openssl)/include
-export OPENSSL_LIB_DIR=$(brew --prefix openssl)/lib
-cargo clean   # you need to do this if your macOS-versioned openssl build failed
-cargo build
 ```
-
-[More info]: https://stackoverflow.com/questions/34612395/openssl-crate-fails-compilation-on-mac-os-x-10-11
 
 ### Official releases
 
@@ -375,7 +339,7 @@ v<VERSION>: <SUMMARY>
 
 Then run:
 
-```
+```sh
 cargo publish
 git tag v$VERSION
 git push; git push --tags

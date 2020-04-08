@@ -154,7 +154,7 @@ dependencies = [
 
 [[package]]
 name = "cage"
-version = "0.2.7"
+version = "0.3.0-alpha.1"
 dependencies = [
  "clap 2.33.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "cli_test_dir 0.1.7 (registry+https://github.com/rust-lang/crates.io-index)",
