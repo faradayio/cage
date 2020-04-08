@@ -453,17 +453,16 @@ impl Project {
                     }
                     _ => Path::new(&file_name).to_owned(),
                 };
-                let out_path =
-                    r#try!(export_dir.join(&rel_path).with_guaranteed_parent());
+                let out_path = export_dir.join(&rel_path).with_guaranteed_parent()?;
                 debug!("Outputting {}", out_path.display());
 
                 // Combine targets, make it standalone, tweak as needed, and
                 // output.
-                let mut file = r#try!(pod.merged_file(&self.current_target));
-                r#try!(file.make_standalone(&self.pods_dir()));
+                let mut file = pod.merged_file(&self.current_target)?;
+                file.make_standalone(&self.pods_dir())?;
                 let ctx = plugins::Context::new(self, pod, subcommand);
-                r#try!(self.plugins().transform(op, &ctx, &mut file));
-                r#try!(file.write_to_path(out_path));
+                self.plugins().transform(op, &ctx, &mut file)?;
+                file.write_to_path(out_path)?;
                 Ok(())
             })
             // If more than one parallel branch fails, just return one error.

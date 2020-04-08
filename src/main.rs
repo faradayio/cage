@@ -174,7 +174,7 @@ fn warn_if_pods_are_enabled_but_not_running(project: &cage::Project) -> Result<(
 }
 
 /// The function which does the real work.  Unlike `main`, we have a return
-/// type of `Result` and may therefore use `try!` to handle errors.
+/// type of `Result` and may therefore use `?` to handle errors.
 fn run(matches: &clap::ArgMatches<'_>) -> Result<()> {
     // We know that we always have a subcommand because our `cli.yml`
     // requires this and `clap` is supposed to enforce it.
