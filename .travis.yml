@@ -1,46 +1,32 @@
 language: rust
-dist: trusty
 sudo: required
+os:
+- linux
+- osx
+rust:
+- stable
 services:
 - docker
-matrix:
-  fast_finish: true
-  allow_failures:
-  - rust: nightly
-  include:
-  - os: linux
-    rust: stable
-    env: "FEATURE_OPTS=''"
-  - os: linux
-    rust: beta
-    env: "FEATURE_OPTS=''"
-  - os: linux
-    rust: nightly
-    env: "FEATURE_OPTS=''"
-  - os: osx
-    rust: stable
-    # Still no SSL on the Mac, because upgrading would need to deal with
-    # https://github.com/faradayio/boondock/issues/14
-    env: "FEATURE_OPTS='--no-default-features'"
+before_script:
+  - rustup component add rustfmt
+  - rustup component add clippy
 script:
-- cargo test $FEATURE_OPTS
-- cargo build $FEATURE_OPTS
+  # Require `cargo fmt` to have been run.
+  - cargo fmt -- --check
+  # Require clippy to pass without warnings. This also fails for regular Rust
+  # warnings.
+  - cargo clippy -- -D warnings
+  # Build the code.
+  - cargo build --verbose
+  # Run the tests.
+  - cargo test --verbose
 before_deploy: "./build-release cage ${TRAVIS_TAG}-${TRAVIS_OS_NAME}"
 deploy:
   provider: releases
-  api_key:
-    secure: JLDn2TGYLpu/sPB5jQ8pZk1yhsub3hPlvqoR+Z0WI9nxwHDWqPSP2nvO93tGkbjOSU4jOB79fg5m4mi1jKoBfSTb+xqFxwBig3WT++rjvHLkht5Gq7Vz63YglgwYGFL2ElCmdWXp3YKmZGNRpoXBs+mmA2/ZKOOmoJqYKqBdfm68y7iQi+jCAl9whv3/mmVloEP4xPEyCuenGyzxpCHxPHFgXZOHCV2djgFLcMmVM0ykBskYz4+EnOl3l9p+NctKB6PEshdkXmdgS/3FtbTTBouDzOGld6vKIdK3g5YA+7btzXTaAUxLS9Pn2R2uLnkicWu+U5Glf3Ur80pydBm8xLiqT0qM+7EYDmFKvF3vBPEofrW9ZFx2aDRWb5Lze7KrWx1I/3nXqczFF60FU+duKmQ+JoPE9htvEOsQmRHhA4TFpye5A7+/lw/bdI8nnllnuN000+tzM64dAYwzmS5rhhe8Iof+LxLGegfG8DyHzGFB8oXoVGBo3G4wP5TiO5rEJFp+YdZ3mHK4Kdfz4GSwzORB4CT2Z+2jTxzLvRkZ/1xyBd0mVYHAnzMDfCnZFAtV17XezZPSiul9EMlt7Xlnr+5zn8ff1/QA0+x1vyq4oPn4ZzyInLRESNYCY58YB6ThmuDp4YskHCfGF0Pthik5ogweQdJn8sODWdLcLALpMEM=
+  api_key: $GITHUB_TOKEN
   file_glob: true
   file: "cage-${TRAVIS_TAG}-${TRAVIS_OS_NAME}.*"
   skip_cleanup: true
   on:
-    repo: faradayio/cage
     rust: stable
     tags: true
-notifications:
-  webhooks:
-    urls:
-      - "https://webhooks.gitter.im/e/717bec1dd1d6de43c44c"
-    on_success: change  # options: [always|never|change] default: always
-    on_failure: always  # options: [always|never|change] default: always
-    on_start: never     # options: [always|never|change] default: always

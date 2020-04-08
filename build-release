@@ -28,7 +28,7 @@ case `uname -s` in
         ;;
     *)
         echo "Building standard release binaries"
-        cargo build --release --no-default-features
+        cargo build --release
         zip -j "$1"-"$2".zip target/release/"$1"
         ;;
 esac
