@@ -127,7 +127,7 @@ impl Manager {
         // We instantiate some of these plugins twice, could we be more
         // clever about it?
         manager.register_generator::<transform::secrets::Plugin>(proj)?;
-        manager.register_vault_generator(proj)?;
+        manager.register_generator::<transform::vault::Plugin>(proj)?;
 
         manager.register_transform::<transform::abs_path::Plugin>(proj)?;
         manager.register_transform::<transform::default_tags::Plugin>(proj)?;
@@ -135,7 +135,7 @@ impl Manager {
         manager.register_transform::<transform::sources::Plugin>(proj)?;
         manager.register_transform::<transform::secrets::Plugin>(proj)?;
         manager.register_transform::<transform::remove_build::Plugin>(proj)?;
-        manager.register_vault_transform(proj)?;
+        manager.register_transform::<transform::vault::Plugin>(proj)?;
 
         // Run this last, in case it wants to remove any labels used by
         // other plugins.
@@ -168,21 +168,6 @@ impl Manager {
         Ok(())
     }
 
-    /// Register our vault generator.  We put this in a separate function
-    /// so we can use `cfg`.
-    #[cfg(feature = "hashicorp_vault")]
-    fn register_vault_generator(&mut self, proj: &Project) -> Result<()> {
-        self.register_generator::<transform::vault::Plugin>(proj)
-    }
-
-    /// Pretend to register our vault generator, but just leave a note in
-    /// the logs.
-    #[cfg(not(feature = "hashicorp_vault"))]
-    fn register_vault_generator(&mut self, _: &Project) -> Result<()> {
-        debug!("vault generator was disabled at build time");
-        Ok(())
-    }
-
     /// Register a transform with this manager.
     fn register_transform<T>(&mut self, proj: &Project) -> Result<()>
     where
@@ -192,21 +177,6 @@ impl Manager {
             let plugin: T = self.new_plugin(proj)?;
             self.transforms.push(Box::new(plugin));
         }
-        Ok(())
-    }
-
-    /// Register our vault transform.  We put this in a separate function
-    /// so we can use `cfg`.
-    #[cfg(feature = "hashicorp_vault")]
-    fn register_vault_transform(&mut self, proj: &Project) -> Result<()> {
-        self.register_transform::<transform::vault::Plugin>(proj)
-    }
-
-    /// Pretend to register our vault transform, but just leave a note in
-    /// the logs.
-    #[cfg(not(feature = "hashicorp_vault"))]
-    fn register_vault_transform(&mut self, _: &Project) -> Result<()> {
-        debug!("vault transform was disabled at build time");
         Ok(())
     }
 

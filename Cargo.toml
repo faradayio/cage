@@ -16,17 +16,6 @@ homepage = "http://cage.faraday.io/"
 appveyor = { repository = "faradayio/cage", branch = "master", service = "github" }
 travis-ci = { repository = "faradayio/cage", branch = "master" }
 
-[features]
-# This build of `cage` is our standard, official build.
-default = ["openssl"]
-
-# OpenSSL causes build problems on less popular platforms, especially for
-# our binary builds.  And we only need it for certain advanced features.
-# So we allow it to be disabled using:
-#
-#     cargo build --no-default-features --features default-minimal
-openssl = ["hashicorp_vault"]
-
 [[bin]]
 name = "cage"
 doc = false
@@ -47,7 +36,7 @@ error-chain = "0.12.2"
 failure = "0.1.7"
 glob = "0.3"
 handlebars = "3.0.1"
-hashicorp_vault = { version = "1.0.0", optional = true }
+vault =  { version = "1.0.0", package = "hashicorp_vault" }
 include_dir = "0.5.0"
 itertools = "0.9"
 lazy_static = "1.0"

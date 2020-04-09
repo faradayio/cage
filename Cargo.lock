@@ -187,7 +187,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "cage"
-version = "0.3.0-alpha.2"
+version = "0.3.0-alpha.1"
 dependencies = [
  "boondock 0.1.0-alpha.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "clap 2.33.0 (registry+https://github.com/rust-lang/crates.io-index)",

@@ -7,5 +7,4 @@ pub mod labels;
 pub mod remove_build;
 pub mod secrets;
 pub mod sources;
-#[cfg(feature = "hashicorp_vault")]
 pub mod vault;

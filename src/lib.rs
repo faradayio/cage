@@ -47,19 +47,14 @@
 
 #[macro_use]
 extern crate error_chain;
-
-#[cfg(feature = "hashicorp_vault")]
-extern crate hashicorp_vault as vault;
-
 #[macro_use]
 extern crate lazy_static;
 #[macro_use]
 extern crate log;
-
-use semver;
-
 #[macro_use]
 extern crate serde_derive;
+
+use semver;
 
 pub use crate::default_tags::DefaultTags;
 pub use crate::errors::*;

@@ -32,7 +32,7 @@ From the prompt you should be able to use the `rustup` and `cargo`
 commands.  Now you should be able to install cage using:
 
 ```sh
-$ cargo install cage --no-default-features --features default-minimal
+cargo install cage
 ```
 
 ## Building from source
@@ -41,20 +41,20 @@ If you want to make changes to `cage`, you can clone the source code from
 GitHub, `cd` to the `cage` directory, and run:
 
 ```sh
-$ cargo build --no-default-features --features default-minimal
+cargo build
 ```
 
 Assuming nothing goes wrong, you should see a binary under the `target`
 directory.  To install it, run:
 
 ```sh
-$ cargo install --no-default-features --features default-minimal
+cargo install --path .
 ```
 
 To run the unit tests (many of which are still failing), run:
 
 ```sh
-$ cargo  --no-default-features --features default-minimal
+cargo test
 ```
 
 ## Vault support

@@ -17,9 +17,9 @@ script:
   # warnings.
   - cargo clippy -- -D warnings
   # Build the code.
-  - cargo build --verbose
+  - cargo build
   # Run the tests.
-  - cargo test --verbose
+  - cargo test
 before_deploy: "./build-release cage ${TRAVIS_TAG}-${TRAVIS_OS_NAME}"
 deploy:
   provider: releases
