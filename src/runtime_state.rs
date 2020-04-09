@@ -1,9 +1,10 @@
 //! Support for fetching runtime state directly from the Docker daemon.
 
-use dockworker::{self, container::ContainerFilters};
+use boondock;
 use regex::Regex;
 use std::collections::BTreeMap;
 use std::net;
+use tokio::runtime;
 
 use crate::errors::*;
 use crate::pod::Pod;
@@ -31,24 +32,25 @@ impl RuntimeState {
     fn for_project_inner(project: &Project) -> Result<RuntimeState> {
         debug!("Querying Docker for running containers");
 
+        // Start a local `tokio` runtime for async calls.
+        let mut rt = runtime::Builder::new()
+            .basic_scheduler()
+            .enable_all()
+            .build()?;
+
         let name = project.compose_name();
         let target = project.current_target().name().to_owned();
-        let docker = dockworker::Docker::connect_with_defaults()?;
+        let docker = boondock::Docker::connect_with_defaults()?;
 
         let mut services = BTreeMap::new();
-        let containers = docker.list_containers(
-            Some(true),
-            None,
-            None,
-            ContainerFilters::default(),
-        )?;
+        let opts = boondock::ContainerListOptions::default().all();
+        let containers = rt.block_on(docker.containers(opts))?;
         for container in &containers {
-            let info = docker
-                .container_info(&container.Id)
-                .map_err(Error::from)
-                .chain_err(|| {
-                    format!("error looking up container {:?}", container.Id)
-                })?;
+            let info =
+                rt.block_on(docker.container_info(container))
+                    .chain_err(|| {
+                        format!("error looking up container {:?}", container.Id)
+                    })?;
             let labels = &info.Config.Labels;
             if labels.get("com.docker.compose.project") == Some(&name)
                 && labels.get("io.fdy.cage.target") == Some(&target)
@@ -120,7 +122,7 @@ pub struct ContainerInfo {
 
 impl ContainerInfo {
     /// Construct our summary from the raw data returned by Docker.
-    fn new(info: &dockworker::container::ContainerInfo) -> Result<ContainerInfo> {
+    fn new(info: &boondock::container::ContainerInfo) -> Result<ContainerInfo> {
         // Was this a one-off container?
         let one_off_label = info.Config.Labels.get("com.docker.compose.oneoff");
         let is_one_off = Some("True") == one_off_label.map(|s| &s[..]);
@@ -139,16 +141,18 @@ impl ContainerInfo {
 
         // Get the listening network ports.
         let mut ports = vec![];
-        for port_str in info.NetworkSettings.Ports.keys() {
-            lazy_static! {
-                static ref TCP_PORT: Regex = Regex::new(r#"^(\d+)/tcp$"#).unwrap();
-            }
-            if let Some(caps) = TCP_PORT.captures(port_str) {
-                let port =
-                    caps.get(1).unwrap().as_str().parse().chain_err(|| {
-                        ErrorKind::parse("TCP port", port_str.clone())
-                    })?;
-                ports.push(port);
+        if let Some(port_strs) = &info.NetworkSettings.Ports {
+            for port_str in port_strs.keys() {
+                lazy_static! {
+                    static ref TCP_PORT: Regex = Regex::new(r#"^(\d+)/tcp$"#).unwrap();
+                }
+                if let Some(caps) = TCP_PORT.captures(port_str) {
+                    let port =
+                        caps.get(1).unwrap().as_str().parse().chain_err(|| {
+                            ErrorKind::parse("TCP port", port_str.clone())
+                        })?;
+                    ports.push(port);
+                }
             }
         }
 
@@ -230,7 +234,7 @@ pub enum ContainerStatus {
 
 impl ContainerStatus {
     /// Create a new `ContainerStatus` from Docker data.
-    fn new(state: &dockworker::container::State) -> ContainerStatus {
+    fn new(state: &boondock::container::State) -> ContainerStatus {
         match &state.Status[..] {
             "created" => ContainerStatus::Created,
             "restarting" => ContainerStatus::Restarting,
