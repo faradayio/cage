@@ -8,7 +8,9 @@
 #![allow(missing_docs, clippy::redundant_closure)]
 
 use compose_yml::v2 as dc;
+use failure::Fail;
 use glob;
+use log::error;
 use semver;
 use std::ffi::OsString;
 use std::io;
@@ -70,8 +72,8 @@ error_chain! {
 
         /// A Docker-related error.
         Docker(error: dockworker::errors::Error) {
-            description("A Docker error occurred")
-            display("A Docker error occurred: {}", error)
+            description("a Docker error occurred")
+            display("a Docker error occurred: {}", error)
         }
 
         /// A feature was disabled at compile time.
@@ -164,6 +166,22 @@ impl ErrorKind {
 
 impl From<dockworker::errors::Error> for Error {
     fn from(err: dockworker::errors::Error) -> Self {
+        // HACK: The backtraces from `dockworker` don't play nicely with
+        // `error-chain`, so write all the details to the log now.
+        error!("Docker error: {}", err);
+        let mut current: &dyn Fail = &err;
+        let mut backtrace = current.backtrace();
+        while let Some(next) = current.cause() {
+            current = next;
+            error!("  caused by: {}", current);
+            if let Some(bt) = current.backtrace() {
+                // This backtrace is deeper, so use it.
+                backtrace = Some(bt);
+            }
+        }
+        if let Some(backtrace) = backtrace {
+            error!("{}", backtrace);
+        }
         ErrorKind::Docker(err).into()
     }
 }
