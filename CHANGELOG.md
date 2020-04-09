@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.3.0-alpha.2 - 2020-04-09
+
+### Added
+
+- When running on Linux, we now set up `host.docker.internal` in the internal DNS.
+
+### Changed
+
+- The Vault plugin is now enabled on all platforms, including Windows.
+- `boondock` now uses `rustls` on all platforms, which should help make Windows support a bit easier.
+
+### Fixed
+
+- The `cage status` command works again, thanks to an updated version of `boondock`.
+- Logging and error message newlines have been fixed.
+
+### Removed
+
+- There are no longer any special `cargo` features to disable SSL, since it should now work everywhere.
+
 ## 0.3.0-alpha.1 - 2020-04-08
 
 ### Added
