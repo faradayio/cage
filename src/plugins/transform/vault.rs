@@ -34,6 +34,11 @@ enum AuthType {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct ServiceConfig {
+    /// Set this to `true` to prevent default policies from being applied to
+    /// this pod.
+    #[serde(default)]
+    no_default_policies: bool,
+
     /// Policies to apply to this service.
     #[serde(default)]
     policies: Vec<dc::RawOr<String>>,
@@ -359,20 +364,30 @@ impl PluginTransform for Plugin {
                 Ok(val.interpolate_env(&env)?.to_owned())
             };
 
-            // Insert our VAULT_ADDR value into the generated files.
-            service
-                .environment
-                .insert("VAULT_ADDR".to_owned(), dc::escape(generator.addr())?);
+            // The configuration for this pod, if present.
+            let service_config = config
+                .pods
+                .get(ctx.pod.name())
+                .and_then(|pod| pod.get(name));
 
             // Get a list of policy "patterns" that apply to this service.
-            let mut raw_policies = config.default_policies.clone();
-            raw_policies.extend(
-                config
-                    .pods
-                    .get(ctx.pod.name())
-                    .and_then(|pod| pod.get(name))
-                    .map_or_else(|| vec![], |s| s.policies.clone()),
-            );
+            let mut raw_policies =
+                if service_config.map_or_else(|| false, |s| s.no_default_policies) {
+                    vec![]
+                } else {
+                    config.default_policies.clone()
+                };
+            raw_policies
+                .extend(service_config.map_or_else(|| vec![], |s| s.policies.clone()));
+
+            // If we have no raw policies, do nothing for this service.
+            if raw_policies.is_empty() {
+                debug!(
+                    "Skipping token generation for {} because it has no policies",
+                    name
+                );
+                continue;
+            }
 
             // Interpolate the variables found in our policy patterns.
             let mut policies = vec![];
@@ -384,6 +399,11 @@ impl PluginTransform for Plugin {
                 "Generating token for '{}' with policies {:?}",
                 name, &policies
             );
+
+            // Insert our VAULT_ADDR value into the generated files.
+            service
+                .environment
+                .insert("VAULT_ADDR".to_owned(), dc::escape(generator.addr())?);
 
             // Generate a VAULT_TOKEN.
             let display_name = format!(
@@ -421,12 +441,13 @@ fn interpolates_policies() {
     env::set_var("VAULT_MASTER_TOKEN", "fake master token");
 
     let mut proj = Project::from_example("vault_integration").unwrap();
-    proj.set_current_target_name("production").unwrap();
+    proj.set_current_target_name("development").unwrap();
 
     let vault = MockVault::new();
     let calls = vault.calls();
     let plugin = Plugin::new_with_generator(&proj, Some(vault)).unwrap();
 
+    // Check the frontend pod.
     let frontend = proj.pod("frontend").unwrap();
     let ctx = plugins::Context::new(&proj, frontend, "up");
     let mut file = frontend.merged_file(proj.current_target()).unwrap();
@@ -439,18 +460,31 @@ fn interpolates_policies() {
     let vault_token = web.environment.get("VAULT_TOKEN").expect("has VAULT_TOKEN");
     assert_eq!(vault_token.value().unwrap(), "fake_token");
     let vault_env = web.environment.get("VAULT_ENV").expect("has VAULT_ENV");
-    assert_eq!(vault_env.value().unwrap(), "production");
+    assert_eq!(vault_env.value().unwrap(), "development");
 
+    // Check the db pod to make sure no tokens are assigned.
+    let db = proj.pod("db").unwrap();
+    let ctx = plugins::Context::new(&proj, db, "up");
+    let mut file = db.merged_file(proj.current_target()).unwrap();
+    plugin
+        .transform(Operation::Output, &ctx, &mut file)
+        .unwrap();
+    let dbs = file.services.get("db").unwrap();
+    assert!(dbs.environment.get("VAULT_ADDR").is_none());
+    assert!(dbs.environment.get("VAULT_TOKEN").is_none());
+    assert!(dbs.environment.get("VAULT_ENV").is_none());
+
+    // Check the calls made to vault.
     let calls = calls.read().unwrap();
     assert_eq!(calls.len(), 1);
     let (ref display_name, ref policies, ref ttl) = calls[0];
-    assert_eq!(display_name, "vault_integration_production_frontend_web");
+    assert_eq!(display_name, "vault_integration_development_frontend_web");
     assert_eq!(
         policies,
         &[
-            "vault_integration-production".to_owned(),
-            "vault_integration-production-frontend-web".to_owned(),
-            "vault_integration-production-ssl".to_owned()
+            "vault_integration-development".to_owned(),
+            "vault_integration-development-frontend-web".to_owned(),
+            "vault_integration-development-ssl".to_owned()
         ]
     );
     assert_eq!(ttl, &VaultDuration::seconds(2592000));

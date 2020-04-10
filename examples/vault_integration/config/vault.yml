@@ -8,12 +8,19 @@
 #     $POD        The name of the pod
 #     $SERVICE    The name of the service
 
-# By default, we only want to enable this plugin in production mode (and
-# staging if we have it).  For local development, either specify fake
-# secrets somewhere in `pods/targets/development`, or use the `secrets`
-# plugin for real secrets.
+# Normally, we want to enable this plugin in production mode (and
+# staging if we have it).
+#
+# For local development, we have a choice:
+#
+# 1. Specify fake secrets somewhere in `pods/targets/development`,
+# 2. Use the `secrets` plugin to save real secrets locally.
+# 3. Use vault in the development environment, and optionally use
+#    `no_default_policies` to skip applying secrets to local placeholder
+#    services.
 enable_in_targets:
 - "production"
+- "development"
 
 # How should individual services authenticate themselves to vault?  The only
 # supported value for now is "token".
@@ -27,6 +34,8 @@ enable_in_targets:
 auth_type: "token"
 
 # Extra environment variables to add to each service.
+#
+# These will only be applied to services that have at least once policy.
 extra_environment:
   VAULT_ENV: "$TARGET"
 
@@ -39,9 +48,14 @@ default_policies:
   - "$PROJECT-$TARGET"
   - "$PROJECT-$TARGET-$POD-$SERVICE"
 
-# If you want to apply addition policies to particular pods, you may also
+# If you want to apply additional policies to particular pods, you may also
 # target them as follows.
 pods:
+  db:
+    db:
+      # This is a "placeholder" service that we only run in development mode,
+      # and it doesn't need access to vault. 
+      no_default_policies: true
   frontend:
     web:
       policies:
