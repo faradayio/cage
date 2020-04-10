@@ -49,6 +49,7 @@ impl Template {
         let mut files = BTreeMap::new();
         for entry in DATA.find(&glob)? {
             if let DirEntry::File(file) = entry {
+                trace!("checking template path {} in prefix {}", file.path, prefix);
                 assert!(file.path.starts_with(&prefix));
                 let rel: &str = &file.path[prefix.len()..];
                 // Make sure it doesn't belong to a child template.

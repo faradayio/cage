@@ -10,4 +10,4 @@ build: false
 
 test_script:
   - cargo build
-  - cargo test
+  - env RUST_LOG=cage::template=trace cargo test
