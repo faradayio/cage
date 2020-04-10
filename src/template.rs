@@ -8,7 +8,7 @@ use std::collections::BTreeMap;
 use std::fmt;
 use std::fs;
 use std::io;
-use std::path::{Path, PathBuf};
+use std::path::{Path, PathBuf, MAIN_SEPARATOR};
 
 use crate::errors::*;
 use crate::util::ConductorPathExt;
@@ -38,9 +38,12 @@ impl Template {
     /// Create a new template, loading it from a subdirectory of `data/`
     /// specified by `template_name`.
     pub fn new<S: Into<String>>(name: S) -> Result<Template> {
+        // We need to be careful to respect MAIN_SEPARATOR on Windows.
         let name = name.into();
-        let prefix = format!("templates/{}/", &name);
-        let glob = format!("{}**/*", prefix);
+        let s = MAIN_SEPARATOR;
+        let prefix = format!("templates{}{}{}", s, &name, s);
+        let glob = format!("{}**{}*", prefix, s);
+        let sep_underscore = format!("{}_", s);
 
         // Iterate over all matching files built into this library at compile time.
         let mut files = BTreeMap::new();
@@ -49,7 +52,7 @@ impl Template {
                 assert!(file.path.starts_with(&prefix));
                 let rel: &str = &file.path[prefix.len()..];
                 // Make sure it doesn't belong to a child template.
-                if !rel.starts_with('_') && !rel.contains("/_") {
+                if !rel.starts_with('_') && !rel.contains(&sep_underscore) {
                     // Load this file and add it to our list.
                     let raw_data = file.contents().to_owned();
                     let data = String::from_utf8(raw_data)?;
@@ -102,5 +105,6 @@ fn loads_correct_files_for_template() {
     let tmpl = Template::new("test_tmpl").unwrap();
     let keys: Vec<_> = tmpl.files.keys().cloned().collect();
     assert!(keys.contains(&Path::new("test.txt").to_owned()));
-    assert!(!keys.contains(&Path::new("_child_tmpl/child.txt").to_owned()));
+    assert!(keys.contains(&Path::new("nested").join("nested.txt")));
+    assert!(!keys.contains(&Path::new("_child_tmpl").join("child.txt")));
 }
