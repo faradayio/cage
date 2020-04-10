@@ -37,10 +37,10 @@ pub struct Template {
 impl Template {
     /// Create a new template, loading it from a subdirectory of `data/`
     /// specified by `template_name`.
-    pub fn new<S: Into<String>>(name: S) -> Result<Template> {
+    pub fn new(name: &str) -> Result<Template> {
         // We need to be careful to respect MAIN_SEPARATOR on Windows.
-        let name = name.into();
         let s = MAIN_SEPARATOR;
+        let name = name.replace('/', &s.to_string());
         let prefix = format!("templates{}{}{}", s, &name, s);
         let glob = format!("{}**{}*", prefix, s);
         let sep_underscore = format!("{}_", s);
