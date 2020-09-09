@@ -46,7 +46,7 @@ fn runs_docker_compose_pull_on_all_pods() {
              .join("hello.hook")],
         ["docker-compose",
          "-p",
-         "hello",
+         "hello_frontend",
          "-f",
          proj.output_dir().join("pods").join("frontend.yml"),
          "pull"]

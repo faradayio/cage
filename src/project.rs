@@ -362,8 +362,8 @@ impl Project {
     }
 
     /// Get that name that `docker_compose` would use for this project.
-    pub fn compose_name(&self) -> String {
-        self.current_target.compose_project_name(self)
+    pub fn compose_name(&self, pod: Option<&Pod>) -> String {
+        self.current_target.compose_project_name(self, pod)
     }
 
     /// The root directory of this project.

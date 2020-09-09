@@ -38,7 +38,7 @@ impl RuntimeState {
             .enable_all()
             .build()?;
 
-        let name = project.compose_name();
+        let name = project.compose_name(None);
         let target = project.current_target().name().to_owned();
         let docker = boondock::Docker::connect_with_defaults()?;
 
@@ -51,17 +51,27 @@ impl RuntimeState {
                     .chain_err(|| {
                         format!("error looking up container {:?}", container.Id)
                     })?;
+
             let labels = &info.Config.Labels;
-            if labels.get("com.docker.compose.project") == Some(&name)
-                && labels.get("io.fdy.cage.target") == Some(&target)
-            {
-                if let Some(service) = labels.get("com.docker.compose.service") {
-                    let our_info = ContainerInfo::new(&info)?;
-                    services
-                        .entry(service.to_owned())
-                        .or_insert_with(Vec::new)
-                        .push(our_info);
+
+            if let Some(project_name) = labels.get("com.docker.compose.project") {
+                if !project_name.starts_with(&name) {
+                    break;
                 }
+            } else {
+                break;
+            }
+
+            if labels.get("io.fdy.cage.target") != Some(&target) {
+                break;
+            }
+
+            if let Some(service) = labels.get("com.docker.compose.service") {
+                let our_info = ContainerInfo::new(&info)?;
+                services
+                    .entry(service.to_owned())
+                    .or_insert_with(Vec::new)
+                    .push(our_info);
             }
         }
         Ok(RuntimeState { services })

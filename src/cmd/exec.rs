@@ -100,7 +100,7 @@ fn invokes_docker_exec() {
         [
             "docker-compose",
             "-p",
-            "hello",
+            "hello_frontend",
             "-f",
             proj.output_dir().join("pods").join("frontend.yml"),
             "exec",
@@ -127,7 +127,7 @@ fn runs_shells() {
         [
             "docker-compose",
             "-p",
-            "hello",
+            "hello_frontend",
             "-f",
             proj.output_dir().join("pods").join("frontend.yml"),
             "exec",

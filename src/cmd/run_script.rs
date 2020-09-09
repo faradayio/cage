@@ -84,7 +84,7 @@ fn runs_scripts_on_all_services() {
         [
             "docker-compose",
             "-p",
-            "railshello",
+            "railshello_rake",
             "-f",
             proj.output_dir().join("pods").join("rake.yml"),
             "run",

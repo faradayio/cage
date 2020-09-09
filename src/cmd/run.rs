@@ -136,7 +136,7 @@ fn runs_a_single_service_pod() {
         [
             "docker-compose",
             "-p",
-            "railshello",
+            "railshello_rake",
             "-f",
             proj.output_dir().join("pods").join("rake.yml"),
             "run",
@@ -163,7 +163,7 @@ fn runs_tests() {
         [
             "docker-compose",
             "-p",
-            "hellotest",
+            "hellotest_frontend",
             "-f",
             proj.output_pods_dir().join("frontend.yml"),
             "run",
@@ -194,7 +194,7 @@ fn runs_tests_with_custom_command() {
         [
             "docker-compose",
             "-p",
-            "hellotest",
+            "hellotest_frontend",
             "-f",
             proj.output_pods_dir().join("frontend.yml"),
             "run",

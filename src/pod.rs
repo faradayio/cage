@@ -417,7 +417,7 @@ impl Pod {
     pub fn compose_args(&self, proj: &Project) -> Result<Vec<OsString>> {
         Ok(vec![
             "-p".into(),
-            proj.compose_name().into(),
+            proj.compose_name(Some(&self)).into(),
             "-f".into(),
             proj.output_pods_dir().join(self.rel_path()).into(),
         ])

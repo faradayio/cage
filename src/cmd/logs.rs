@@ -59,7 +59,7 @@ fn runs_docker_compose_logs() {
         [
             "docker-compose",
             "-p",
-            "railshello",
+            "railshello_frontend",
             "-f",
             proj.output_dir().join("pods").join("frontend.yml"),
             "logs",

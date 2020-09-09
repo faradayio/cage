@@ -3,6 +3,7 @@
 
 use regex::Regex;
 
+use crate::pod::Pod;
 use crate::project::Project;
 
 /// An `Target` provides collection of extensions to a project's basic
@@ -63,11 +64,20 @@ impl Target {
     }
 
     /// Get a value for `docker-compose`'s `-p` argument for a given project.
-    pub fn compose_project_name(&self, project: &Project) -> String {
+    pub fn compose_project_name(
+        &self,
+        project: &Project,
+        pod: Option<&Pod>,
+    ) -> String {
         let base_name: String = if self.name == "test" {
             format!("{}test", project.name())
         } else {
             project.name().to_owned()
+        };
+
+        let pod_name = match pod {
+            Some(p) => p.name(),
+            None => "",
         };
 
         // We strip out non-alphabetic characters and convert everything to
@@ -75,8 +85,11 @@ impl Target {
         lazy_static! {
             static ref NON_ALNUM: Regex = Regex::new(r#"[^a-z0-9]"#).unwrap();
         }
-        NON_ALNUM
+
+        let base_name = NON_ALNUM
             .replace_all(&base_name.to_lowercase(), "")
-            .into_owned()
+            .into_owned();
+
+        format!("{}_{}", base_name, pod_name).to_owned()
     }
 }
