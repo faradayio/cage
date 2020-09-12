@@ -1,7 +1,6 @@
 //! Extension methods for `compose_yml::v2::Service`.
 
 use compose_yml::v2 as dc;
-use shlex;
 use std::vec;
 
 use crate::errors::*;

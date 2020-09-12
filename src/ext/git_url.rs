@@ -35,6 +35,6 @@ fn clone_args_handles_branch() {
         dc::GitUrl::new("https://github.com/faradayio/rails_hello.git#dev").unwrap();
     assert_eq!(
         branch.clone_args().unwrap(),
-        vec!["-b".into(), "dev".into(), expected_url.clone()]
+        vec!["-b".into(), "dev".into(), expected_url]
     );
 }

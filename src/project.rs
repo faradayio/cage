@@ -2,10 +2,8 @@
 
 #[cfg(test)]
 use compose_yml::v2 as dc;
-use semver;
 use serde::ser::SerializeMap;
 use serde::{Serialize, Serializer};
-use serde_yaml;
 use std::env;
 use std::fs;
 use std::io;
@@ -401,7 +399,7 @@ impl Project {
     pub(crate) fn sources_dirs(&self) -> SourcesDirs {
         SourcesDirs {
             src_dir: self.src_dir().to_owned(),
-            pods_dir: self.pods_dir().to_owned(),
+            pods_dir: self.pods_dir(),
         }
     }
 

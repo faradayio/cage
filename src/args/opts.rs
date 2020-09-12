@@ -21,23 +21,16 @@ impl ToArgs for Empty {
 /// Command-line flags with for `docker-compose up`.
 #[derive(Debug, Default, Clone)]
 #[allow(missing_copy_implementations)]
+#[non_exhaustive]
 pub struct Up {
     /// Should we initialize each pod after we start it up?
     pub init: bool,
-
-    /// PRIVATE: This field is a stand-in for future options.
-    /// See http://stackoverflow.com/q/39277157/12089
-    #[doc(hidden)]
-    _nonexhaustive: (),
 }
 
 impl Up {
     /// Create new `Up` options.
     pub fn new(init: bool) -> Up {
-        Up {
-            init,
-            _nonexhaustive: (),
-        }
+        Up { init }
     }
 }
 

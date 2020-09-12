@@ -8,8 +8,6 @@
 #![allow(missing_docs, clippy::redundant_closure)]
 
 use compose_yml::v2 as dc;
-use glob;
-use semver;
 use std::ffi::OsString;
 use std::io;
 use std::path::{PathBuf, StripPrefixError};

@@ -54,8 +54,6 @@ extern crate log;
 #[macro_use]
 extern crate serde_derive;
 
-use semver;
-
 pub use crate::default_tags::DefaultTags;
 pub use crate::errors::*;
 pub use crate::pod::{AllFiles, Pod, PodType, TargetFiles};

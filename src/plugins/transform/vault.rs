@@ -493,7 +493,7 @@ impl PluginTransform for Plugin {
                     config.default_policies.clone()
                 };
             raw_policies
-                .extend(service_config.map_or_else(|| vec![], |s| s.policies.clone()));
+                .extend(service_config.map_or_else(Vec::new, |s| s.policies.clone()));
 
             // If we have no raw policies, do nothing for this service.
             if raw_policies.is_empty() {

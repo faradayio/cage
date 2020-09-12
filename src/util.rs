@@ -1,6 +1,5 @@
 //! Miscellaneous utility macros and functions.
 
-use glob;
 use retry::{delay, retry};
 use std::env;
 use std::error;

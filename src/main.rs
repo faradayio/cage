@@ -83,7 +83,7 @@ impl<'a> ArgMatchesExt for clap::ArgMatches<'a> {
     fn to_acts_on(&self, arg_name: &str, include_tasks: bool) -> cage::args::ActOn {
         let names: Vec<String> = self
             .values_of(arg_name)
-            .map_or_else(|| vec![], |p| p.collect())
+            .map_or_else(Vec::new, |p| p.collect())
             .iter()
             .map(|&p| p.to_string())
             .collect();

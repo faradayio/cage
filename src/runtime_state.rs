@@ -1,6 +1,5 @@
 //! Support for fetching runtime state directly from the Docker daemon.
 
-use boondock;
 use regex::Regex;
 use std::collections::BTreeMap;
 use std::net;
