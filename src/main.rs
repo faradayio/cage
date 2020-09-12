@@ -1,27 +1,24 @@
 //! Our main CLI tool.
 
-use cage;
 #[macro_use]
 extern crate clap;
-use colored;
-use env_logger;
-
 #[macro_use]
 extern crate log;
-use openssl_probe;
 
+use cage::{
+    cmd::*,
+    command_runner::{Command, CommandRunner, OsCommandRunner},
+    ErrorKind, Project, Result,
+};
 use colored::Colorize;
 use itertools::Itertools;
-use std::env;
-use std::fs;
-use std::io::{self, Write};
-use std::path::Path;
-use std::process;
+use std::{
+    env, fs,
+    io::{self, Write},
+    path::Path,
+    process,
+};
 use yaml_rust::yaml;
-
-use cage::cmd::*;
-use cage::command_runner::{Command, CommandRunner, OsCommandRunner};
-use cage::Result;
 
 /// Load our command-line interface definitions from an external `clap`
 /// YAML file.  We could create these using code, but at the cost of more
@@ -41,6 +38,12 @@ trait ArgMatchesExt {
 
     /// Determine what pods or services we're supposed to act on.
     fn to_acts_on(&self, arg_name: &str, include_tasks: bool) -> cage::args::ActOn;
+
+    /// Determine what sources we're supposed to act on.
+    fn to_acts_on_sources(
+        &self,
+        project: &Project,
+    ) -> Result<cage::args::ActOnSources>;
 
     /// Extract options shared by `exec` and `run` from our command-line
     /// arguments.
@@ -92,6 +95,26 @@ impl<'a> ArgMatchesExt for clap::ArgMatches<'a> {
             }
         } else {
             cage::args::ActOn::Named(names)
+        }
+    }
+
+    /// Determine what pods or services we're supposed to act on.
+    fn to_acts_on_sources(&self, proj: &Project) -> Result<cage::args::ActOnSources> {
+        if self.is_present("ALL") {
+            Ok(cage::args::ActOnSources::All)
+        } else if let Some(aliases) = self.values_of("ALIASES") {
+            let aliases = aliases
+                .map(|a| -> Result<String> {
+                    if proj.sources().find_by_alias(a).is_none() {
+                        Err(ErrorKind::UnknownSource(a.to_owned()).into())
+                    } else {
+                        Ok(a.to_owned())
+                    }
+                })
+                .collect::<Result<Vec<_>>>()?;
+            Ok(cage::args::ActOnSources::Named(aliases))
+        } else {
+            panic!("clap source always require --all or a list of sources");
         }
     }
 
@@ -327,12 +350,12 @@ where
             proj.source_clone(runner, alias)?;
         }
         "mount" => {
-            let alias = sc_matches.value_of("ALIAS").unwrap();
-            proj.source_set_mounted(runner, alias, true)?;
+            let act_on_sources = sc_matches.to_acts_on_sources(proj)?;
+            proj.source_set_mounted(runner, act_on_sources, true)?;
         }
         "unmount" => {
-            let alias = sc_matches.value_of("ALIAS").unwrap();
-            proj.source_set_mounted(runner, alias, false)?;
+            let act_on_sources = sc_matches.to_acts_on_sources(proj)?;
+            proj.source_set_mounted(runner, act_on_sources, false)?;
         }
         unknown => unreachable!("Unexpected subcommand '{}'", unknown),
     }

@@ -1,24 +1,24 @@
 //! Plugin which issues vault tokens to services.
 
 use compose_yml::v2 as dc;
-use std::collections::BTreeMap;
-use std::env;
-use std::fmt::Debug;
-use std::fs;
-use std::io::{self, Read};
-#[cfg(test)]
-use std::path::Path;
-use std::path::PathBuf;
-use std::result;
-#[cfg(test)]
-use std::sync::{Arc, RwLock};
+use std::{
+    collections::{btree_map::Entry, BTreeMap, BTreeSet},
+    env,
+    fmt::Debug,
+    fs,
+    io::{self, Read},
+    path::PathBuf,
+    result,
+    time::{Duration, SystemTime},
+};
 use vault::client::VaultDuration;
 
 use crate::errors::*;
 use crate::plugins;
 use crate::plugins::{Operation, PluginGenerate, PluginNew, PluginTransform};
+use crate::pod::Pod;
 use crate::project::Project;
-use crate::serde_helpers::load_yaml;
+use crate::serde_helpers::{dump_yaml, load_yaml, seconds_since_epoch};
 use crate::util::err;
 
 /// How should our applications authenticate themselves with vault?
@@ -76,6 +76,7 @@ struct Config {
 
 #[test]
 fn can_deserialize_config() {
+    use std::path::Path;
     let path = Path::new("examples/vault_integration/config/vault.yml");
     let config: Config = load_yaml(&path).unwrap();
     assert_eq!(config.auth_type, AuthType::Token);
@@ -134,6 +135,32 @@ impl<'a> dc::Environment for ConfigEnvironment<'a> {
     }
 }
 
+/// Information about a Vault token.
+#[derive(Clone, Debug, Deserialize, Serialize)]
+struct TokenInfo {
+    /// The actual token.
+    token: String,
+
+    /// The policies which were assigned to this token.
+    policies: BTreeSet<String>,
+
+    /// When does this expire?
+    #[serde(with = "seconds_since_epoch")]
+    expires: SystemTime,
+}
+
+impl TokenInfo {
+    /// We want to renew a token if less than half the desired TTL is remaining.
+    fn should_renew(
+        &self,
+        desired_policies: &BTreeSet<String>,
+        desired_ttl: Duration,
+    ) -> bool {
+        &self.policies != desired_policies
+            || SystemTime::now() + desired_ttl / 2 >= self.expires
+    }
+}
+
 /// An abstract interface to Vault's token-generation capabilities.  We use
 /// this to mock vault during tests.
 trait GenerateToken: Debug + Sync {
@@ -143,58 +170,9 @@ trait GenerateToken: Debug + Sync {
     fn generate_token(
         &self,
         display_name: &str,
-        policies: Vec<String>,
-        ttl: VaultDuration,
-    ) -> Result<String>;
-}
-
-/// A list of calls made to a `MockVault` instance.
-#[cfg(test)]
-type MockVaultCalls = Arc<RwLock<Vec<(String, Vec<String>, VaultDuration)>>>;
-
-/// A fake interface to vault for testing purposes.
-#[derive(Debug)]
-#[cfg(test)]
-struct MockVault {
-    /// The tokens we were asked to generate.  We store these in a RwLock
-    /// so that we can have "interior" mutability, because we don't want
-    /// `generate_token` to be `&mut self` in the general case.
-    calls: MockVaultCalls,
-}
-
-#[cfg(test)]
-impl MockVault {
-    /// Create a new MockVault.
-    fn new() -> MockVault {
-        MockVault {
-            calls: Arc::new(RwLock::new(vec![])),
-        }
-    }
-
-    /// Return a reference to record of calls made to our vault.
-    fn calls(&self) -> MockVaultCalls {
-        self.calls.clone()
-    }
-}
-
-#[cfg(test)]
-impl GenerateToken for MockVault {
-    fn addr(&self) -> &str {
-        "http://example.com:8200/"
-    }
-
-    fn generate_token(
-        &self,
-        display_name: &str,
-        policies: Vec<String>,
-        ttl: VaultDuration,
-    ) -> Result<String> {
-        self.calls
-            .write()
-            .unwrap()
-            .push((display_name.to_owned(), policies, ttl));
-        Ok("fake_token".to_owned())
-    }
+        policies: &BTreeSet<String>,
+        ttl: Duration,
+    ) -> Result<TokenInfo>;
 }
 
 /// An interface to an actual vault server.
@@ -235,9 +213,9 @@ impl GenerateToken for Vault {
     fn generate_token(
         &self,
         display_name: &str,
-        policies: Vec<String>,
-        ttl: VaultDuration,
-    ) -> Result<String> {
+        policies: &BTreeSet<String>,
+        ttl: Duration,
+    ) -> Result<TokenInfo> {
         let mkerr = || ErrorKind::VaultError(self.addr.clone());
 
         // We can't store `client` in `self`, because it has some obnoxious
@@ -250,10 +228,143 @@ impl GenerateToken for Vault {
         let opts = vault::client::TokenOptions::default()
             .display_name(display_name)
             .renewable(true)
-            .ttl(ttl)
-            .policies(policies);
+            .ttl(VaultDuration(ttl))
+            .policies(policies.clone());
         let auth = client.create_token(&opts).chain_err(&mkerr)?;
-        Ok(auth.client_token)
+        let lease_duration = auth
+            .lease_duration
+            .map_or_else(|| Duration::from_secs(30 * 24 * 60 * 60), |d| d.0);
+        let expires = SystemTime::now() + lease_duration;
+        Ok(TokenInfo {
+            token: auth.client_token,
+            // We use the passed-in policies, not `auth.policies`, just in case
+            // Vault hands out a different list than we expected.
+            policies: policies.to_owned(),
+            expires,
+        })
+    }
+}
+
+/// Map the services in a pod to their `TokenInfo`.
+type CachedPodTokens = BTreeMap<String, TokenInfo>;
+
+/// Map the pods in an environment to their `TokenCachePod`.
+type CachedTargetTokens = BTreeMap<String, CachedPodTokens>;
+
+/// A cache of Vault tokens. This format is stored on disk between runs.
+#[derive(Default, Deserialize, Serialize)]
+struct CachedTokens {
+    /// Cached token information, keyed by target, pod and service.
+    targets: BTreeMap<String, CachedTargetTokens>,
+}
+
+impl CachedTokens {
+    /// Look up an entry in our cache. An `Entry` is a Rust API that allows to
+    /// check whether an item is present in a hash table, get it, and set it.
+    fn entry(
+        &mut self,
+        target: String,
+        pod: String,
+        service: String,
+    ) -> Entry<String, TokenInfo> {
+        self.targets
+            .entry(target)
+            .or_default()
+            .entry(pod)
+            .or_default()
+            .entry(service)
+    }
+}
+
+/// A token cache which wraps `GenerateToken`, and keeps a cache of generated
+/// tokens.
+struct TokenCache<'gen> {
+    /// The generator we use to create new tokens when needed.
+    generator: &'gen dyn GenerateToken,
+
+    /// The path to our cache.
+    cache_path: PathBuf,
+
+    /// Our cache of known tokens, some of which may have expired.
+    cached: CachedTokens,
+}
+
+impl<'gen> TokenCache<'gen> {
+    /// Create a new `TokenCache` object for `project`, loading any existing
+    /// tokens from disk.
+    fn load_or_create(
+        project: &Project,
+        pod: &Pod,
+        generator: &'gen dyn GenerateToken,
+    ) -> Result<TokenCache<'gen>> {
+        let cache_path = project
+            .output_dir()
+            .join("vault-cache")
+            // We have to cache per-pod because our plugin is called in parallel.
+            .join(format!("{}.yml", pod.name()));
+        let cached = if cache_path.exists() {
+            load_yaml(&cache_path)?
+        } else {
+            CachedTokens::default()
+        };
+        Ok(TokenCache {
+            generator,
+            cache_path,
+            cached,
+        })
+    }
+
+    /// Write our token cache to disk.
+    fn save(&self) -> Result<()> {
+        dump_yaml(&self.cache_path, &self.cached)
+    }
+
+    /// Fetch a token from our cache, or generate a new one.
+    fn get<'cache>(
+        &'cache mut self,
+        project: &str,
+        target: &str,
+        pod: &str,
+        service: &str,
+        policies: &BTreeSet<String>,
+        ttl: Duration,
+    ) -> Result<&'cache TokenInfo> {
+        // Helper functions used in several places below.
+        let display_name = || format!("{}_{}_{}_{}", project, target, pod, service);
+        let mkerr = || format!("could not generate token for '{}'", service);
+
+        // Look up what we have in the cache and decide what to do.
+        let entry =
+            self.cached
+                .entry(target.to_owned(), pod.to_owned(), service.to_owned());
+        match entry {
+            Entry::Vacant(vacancy) => {
+                trace!("token cache does not contain {}", service);
+                // We can't easily factor out any code using `self.generator`
+                // while `entry` holds a mutable reference to `self.cached`,
+                // because those two parts of object are currently "owned" by
+                // different pieces of code, and Rust needs to be able to see
+                // everything that's going on.
+                let info = self
+                    .generator
+                    .generate_token(&display_name(), policies, ttl)
+                    .chain_err(mkerr)?;
+                Ok(vacancy.insert(info))
+            }
+            Entry::Occupied(occupied) => {
+                trace!("token cache hit for {}", service);
+                let cached = occupied.into_mut();
+                if cached.should_renew(&policies, ttl) {
+                    trace!("token cache needs new token for {}", service);
+                    // We'll need a new token.
+                    *cached = self
+                        .generator
+                        .generate_token(&display_name(), policies, ttl)
+                        .chain_err(mkerr)?;
+                }
+                Ok(cached)
+            }
+        }
     }
 }
 
@@ -351,6 +462,10 @@ impl PluginTransform for Plugin {
             return Ok(());
         }
 
+        // Set up our token cache.
+        let mut cache =
+            TokenCache::load_or_create(&ctx.project, &ctx.pod, generator.as_ref())?;
+
         // Apply to each service.
         for (name, service) in &mut file.services {
             // Set up a ConfigEnvironment that we can use to perform
@@ -390,10 +505,10 @@ impl PluginTransform for Plugin {
             }
 
             // Interpolate the variables found in our policy patterns.
-            let mut policies = vec![];
+            let mut policies = BTreeSet::new();
             for result in raw_policies.iter().map(|p| interpolated(p)) {
                 // We'd like to use std::result::fold here but it's unstable.
-                policies.push(result?);
+                policies.insert(result?);
             }
             debug!(
                 "Generating token for '{}' with policies {:?}",
@@ -406,20 +521,18 @@ impl PluginTransform for Plugin {
                 .insert("VAULT_ADDR".to_owned(), dc::escape(generator.addr())?);
 
             // Generate a VAULT_TOKEN.
-            let display_name = format!(
-                "{}_{}_{}_{}",
+            let ttl = Duration::from_secs(config.default_ttl);
+            let token_info = cache.get(
                 ctx.project.name(),
                 ctx.project.current_target().name(),
                 ctx.pod.name(),
-                name
-            );
-            let ttl = VaultDuration::seconds(config.default_ttl);
-            let token = generator
-                .generate_token(&display_name, policies, ttl)
-                .chain_err(|| format!("could not generate token for '{}'", name))?;
+                name,
+                &policies,
+                ttl,
+            )?;
             service
                 .environment
-                .insert("VAULT_TOKEN".to_owned(), dc::escape(token)?);
+                .insert("VAULT_TOKEN".to_owned(), dc::escape(&token_info.token)?);
 
             // Add in any extra environment variables.
             for (var, val) in &config.extra_environment {
@@ -428,86 +541,186 @@ impl PluginTransform for Plugin {
                     .insert(var.to_owned(), dc::escape(interpolated(val)?)?);
             }
         }
+
+        // Persist our tokens.
+        cache.save()?;
+
         Ok(())
     }
 }
 
-#[test]
-fn interpolates_policies() {
-    use env_logger;
-    let _ = env_logger::try_init();
+// Put all of our tests and support code in a submodule because we're going to
+// need a lot of test infrastructure.
+#[cfg(test)]
+mod test {
+    use super::*;
+    use std::{
+        iter::FromIterator,
+        sync::{Arc, RwLock},
+    };
 
-    env::set_var("VAULT_ADDR", "http://example.com:8200/");
-    env::set_var("VAULT_MASTER_TOKEN", "fake master token");
+    /// A list of calls made to a `MockVault` instance.
+    #[cfg(test)]
+    type MockVaultCalls = Arc<RwLock<Vec<(String, BTreeSet<String>, Duration)>>>;
 
-    let mut proj = Project::from_example("vault_integration").unwrap();
-    proj.set_current_target_name("development").unwrap();
+    /// A fake interface to vault for testing purposes.
+    #[derive(Debug)]
+    #[cfg(test)]
+    struct MockVault {
+        /// The tokens we were asked to generate.  We store these in a RwLock
+        /// so that we can have "interior" mutability, because we don't want
+        /// `generate_token` to be `&mut self` in the general case.
+        calls: MockVaultCalls,
+    }
 
-    let vault = MockVault::new();
-    let calls = vault.calls();
-    let plugin = Plugin::new_with_generator(&proj, Some(vault)).unwrap();
+    #[cfg(test)]
+    impl MockVault {
+        /// Create a new MockVault.
+        fn new() -> MockVault {
+            MockVault {
+                calls: Arc::new(RwLock::new(vec![])),
+            }
+        }
 
-    // Check the frontend pod.
-    let frontend = proj.pod("frontend").unwrap();
-    let ctx = plugins::Context::new(&proj, frontend, "up");
-    let mut file = frontend.merged_file(proj.current_target()).unwrap();
-    plugin
-        .transform(Operation::Output, &ctx, &mut file)
-        .unwrap();
-    let web = file.services.get("web").unwrap();
-    let vault_addr = web.environment.get("VAULT_ADDR").expect("has VAULT_ADDR");
-    assert_eq!(vault_addr.value().unwrap(), "http://example.com:8200/");
-    let vault_token = web.environment.get("VAULT_TOKEN").expect("has VAULT_TOKEN");
-    assert_eq!(vault_token.value().unwrap(), "fake_token");
-    let vault_env = web.environment.get("VAULT_ENV").expect("has VAULT_ENV");
-    assert_eq!(vault_env.value().unwrap(), "development");
+        /// Return a reference to record of calls made to our vault.
+        fn calls(&self) -> MockVaultCalls {
+            self.calls.clone()
+        }
+    }
 
-    // Check the db pod to make sure no tokens are assigned.
-    let db = proj.pod("db").unwrap();
-    let ctx = plugins::Context::new(&proj, db, "up");
-    let mut file = db.merged_file(proj.current_target()).unwrap();
-    plugin
-        .transform(Operation::Output, &ctx, &mut file)
-        .unwrap();
-    let dbs = file.services.get("db").unwrap();
-    assert!(dbs.environment.get("VAULT_ADDR").is_none());
-    assert!(dbs.environment.get("VAULT_TOKEN").is_none());
-    assert!(dbs.environment.get("VAULT_ENV").is_none());
+    #[cfg(test)]
+    impl GenerateToken for MockVault {
+        fn addr(&self) -> &str {
+            "http://example.com:8200/"
+        }
 
-    // Check the calls made to vault.
-    let calls = calls.read().unwrap();
-    assert_eq!(calls.len(), 1);
-    let (ref display_name, ref policies, ref ttl) = calls[0];
-    assert_eq!(display_name, "vault_integration_development_frontend_web");
-    assert_eq!(
-        policies,
-        &[
-            "vault_integration-development".to_owned(),
-            "vault_integration-development-frontend-web".to_owned(),
-            "vault_integration-development-ssl".to_owned()
-        ]
-    );
-    assert_eq!(ttl, &VaultDuration::seconds(2592000));
-}
+        fn generate_token(
+            &self,
+            display_name: &str,
+            policies: &BTreeSet<String>,
+            ttl: Duration,
+        ) -> Result<TokenInfo> {
+            self.calls.write().unwrap().push((
+                display_name.to_owned(),
+                policies.to_owned(),
+                ttl,
+            ));
+            Ok(TokenInfo {
+                token: "fake_token".to_owned(),
+                policies: policies.to_owned(),
+                expires: SystemTime::now() + ttl,
+            })
+        }
+    }
 
-#[test]
-fn only_applied_in_specified_targets() {
-    use env_logger;
-    let _ = env_logger::try_init();
+    #[test]
+    fn do_not_renew_token_if_policies_and_ttl_are_fine() {
+        let desired_policies = BTreeSet::from_iter(vec!["a".to_owned()]);
+        let token_info = TokenInfo {
+            token: "placeholder".to_owned(),
+            policies: desired_policies.clone(),
+            expires: SystemTime::now() + Duration::from_secs(60),
+        };
+        assert!(!token_info.should_renew(&desired_policies, Duration::from_secs(60)));
+    }
 
-    let mut proj = Project::from_example("vault_integration").unwrap();
-    proj.set_current_target_name("test").unwrap();
-    let target = proj.current_target();
+    #[test]
+    fn renew_token_if_policies_do_not_match() {
+        let desired_policies = BTreeSet::from_iter(vec!["a".to_owned()]);
+        let token_info = TokenInfo {
+            token: "placeholder".to_owned(),
+            policies: BTreeSet::from_iter(vec!["b".to_owned()]),
+            expires: SystemTime::now() + Duration::from_secs(60),
+        };
+        assert!(token_info.should_renew(&desired_policies, Duration::from_secs(60)));
+    }
 
-    let vault = MockVault::new();
-    let plugin = Plugin::new_with_generator(&proj, Some(vault)).unwrap();
+    #[test]
+    fn renew_token_if_half_of_ttl_expired() {
+        let desired_policies = BTreeSet::from_iter(vec!["a".to_owned()]);
+        let token_info = TokenInfo {
+            token: "placeholder".to_owned(),
+            policies: desired_policies.clone(),
+            expires: SystemTime::now() + Duration::from_secs(29),
+        };
+        assert!(token_info.should_renew(&desired_policies, Duration::from_secs(60)));
+    }
 
-    let frontend = proj.pod("frontend").unwrap();
-    let ctx = plugins::Context::new(&proj, frontend, "test");
-    let mut file = frontend.merged_file(target).unwrap();
-    plugin
-        .transform(Operation::Output, &ctx, &mut file)
-        .unwrap();
-    let web = file.services.get("web").unwrap();
-    assert_eq!(web.environment.get("VAULT_ADDR"), None);
+    #[test]
+    fn interpolates_policies() {
+        let _ = env_logger::try_init();
+
+        env::set_var("VAULT_ADDR", "http://example.com:8200/");
+        env::set_var("VAULT_MASTER_TOKEN", "fake master token");
+
+        let mut proj = Project::from_example("vault_integration").unwrap();
+        proj.set_current_target_name("development").unwrap();
+
+        let vault = MockVault::new();
+        let calls = vault.calls();
+        let plugin = Plugin::new_with_generator(&proj, Some(vault)).unwrap();
+
+        // Check the frontend pod.
+        let frontend = proj.pod("frontend").unwrap();
+        let ctx = plugins::Context::new(&proj, frontend, "up");
+        let mut file = frontend.merged_file(proj.current_target()).unwrap();
+        plugin
+            .transform(Operation::Output, &ctx, &mut file)
+            .unwrap();
+        let web = file.services.get("web").unwrap();
+        let vault_addr = web.environment.get("VAULT_ADDR").expect("has VAULT_ADDR");
+        assert_eq!(vault_addr.value().unwrap(), "http://example.com:8200/");
+        let vault_token = web.environment.get("VAULT_TOKEN").expect("has VAULT_TOKEN");
+        assert_eq!(vault_token.value().unwrap(), "fake_token");
+        let vault_env = web.environment.get("VAULT_ENV").expect("has VAULT_ENV");
+        assert_eq!(vault_env.value().unwrap(), "development");
+
+        // Check the db pod to make sure no tokens are assigned.
+        let db = proj.pod("db").unwrap();
+        let ctx = plugins::Context::new(&proj, db, "up");
+        let mut file = db.merged_file(proj.current_target()).unwrap();
+        plugin
+            .transform(Operation::Output, &ctx, &mut file)
+            .unwrap();
+        let dbs = file.services.get("db").unwrap();
+        assert!(dbs.environment.get("VAULT_ADDR").is_none());
+        assert!(dbs.environment.get("VAULT_TOKEN").is_none());
+        assert!(dbs.environment.get("VAULT_ENV").is_none());
+
+        // Check the calls made to vault.
+        let calls = calls.read().unwrap();
+        assert_eq!(calls.len(), 1);
+        let (ref display_name, ref policies, ref ttl) = calls[0];
+        assert_eq!(display_name, "vault_integration_development_frontend_web");
+        assert_eq!(
+            policies,
+            &BTreeSet::from_iter(vec![
+                "vault_integration-development".to_owned(),
+                "vault_integration-development-frontend-web".to_owned(),
+                "vault_integration-development-ssl".to_owned()
+            ])
+        );
+        assert_eq!(ttl, &Duration::from_secs(2592000));
+    }
+
+    #[test]
+    fn only_applied_in_specified_targets() {
+        let _ = env_logger::try_init();
+
+        let mut proj = Project::from_example("vault_integration").unwrap();
+        proj.set_current_target_name("test").unwrap();
+        let target = proj.current_target();
+
+        let vault = MockVault::new();
+        let plugin = Plugin::new_with_generator(&proj, Some(vault)).unwrap();
+
+        let frontend = proj.pod("frontend").unwrap();
+        let ctx = plugins::Context::new(&proj, frontend, "test");
+        let mut file = frontend.merged_file(target).unwrap();
+        plugin
+            .transform(Operation::Output, &ctx, &mut file)
+            .unwrap();
+        let web = file.services.get("web").unwrap();
+        assert_eq!(web.environment.get("VAULT_ADDR"), None);
+    }
 }

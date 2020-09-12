@@ -16,6 +16,7 @@ use crate::ext::context::ContextExt;
 use crate::ext::git_url::GitUrlExt;
 use crate::ext::service::ServiceExt;
 use crate::pod::Pod;
+#[cfg(test)]
 use crate::project::Project;
 use crate::serde_helpers::{dump_yaml, load_yaml};
 use crate::util::ConductorPathExt;
@@ -36,6 +37,21 @@ struct SourceConfig {
     /// `docker-compose.yml` files, and that's what our `compose_yml`
     /// library supports.
     context: dc::RawOr<dc::Context>,
+}
+
+/// Project-related directories needed by `sources`.
+///
+/// We break these out into their own struct so that `Sources` doesn't need to
+/// depend on `Project`, which makes the borrow-checker much happier.
+#[derive(Debug)]
+#[non_exhaustive]
+pub struct SourcesDirs {
+    /// The `src/` directory associated with the project, for resolving paths to
+    /// sources stored in external repositories.
+    pub src_dir: PathBuf,
+    /// The `pods/` directory associated with the project, for resolving paths
+    /// to sources stored in the base repo.
+    pub pods_dir: PathBuf,
 }
 
 /// All the source trees associated with a project's Docker images.
@@ -60,7 +76,7 @@ impl Sources {
         let alias = context.human_alias()?;
 
         // Look up whether we've mounted this container or not.
-        let mounted = mounted_sources.get(&alias).cloned().unwrap_or(true);
+        let mounted = mounted_sources.get(&alias).cloned().unwrap_or(false);
 
         // Build our Source object. If two services share a git repo but
         // use different subdirectories, we only create a single Source
@@ -150,6 +166,13 @@ impl Sources {
         }
     }
 
+    /// Iterate over all source trees associated with this project.
+    pub fn iter_mut(&mut self) -> IterMut<'_> {
+        IterMut {
+            iter: self.sources.iter_mut(),
+        }
+    }
+
     /// Look up a source tree using the short-form local alias.
     pub fn find_by_alias(&self, alias: &str) -> Option<&Source> {
         self.sources.get(alias)
@@ -169,9 +192,23 @@ impl Sources {
     /// `config/sources.yml` and with service labels of the form
     /// `io.fdy.cage.lib.<KEY>`.
     pub fn find_by_lib_key(&self, lib_key: &str) -> Option<&Source> {
-        self.lib_keys
-            .get(lib_key)
-            .and_then(|alias| self.find_by_alias(alias))
+        match self.lib_keys.get(lib_key) {
+            Some(alias) => self.find_by_alias(&alias),
+            None => None,
+        }
+    }
+
+    /// Look up a source tree using a "lib key", which is key used in
+    /// `config/sources.yml` and with service labels of the form
+    /// `io.fdy.cage.lib.<KEY>`.
+    pub fn find_by_lib_key_mut(&mut self, lib_key: &str) -> Option<&mut Source> {
+        match self.lib_keys.get(lib_key) {
+            Some(alias) => {
+                let alias = alias.to_owned();
+                self.find_by_alias_mut(&alias)
+            }
+            None => None,
+        }
     }
 
     /// Save any state that we want to persist until the next run.
@@ -179,7 +216,7 @@ impl Sources {
         let mut mounted = BTreeMap::new();
         for source in self.iter() {
             // Only record non-default mount values.
-            if !source.mounted() {
+            if source.mounted() {
                 mounted.insert(source.alias(), source.mounted());
             }
         }
@@ -202,6 +239,22 @@ impl<'a> Iterator for Iter<'a> {
     type Item = &'a Source;
 
     fn next(&mut self) -> Option<&'a Source> {
+        self.iter.next().map(|(_alias, source)| source)
+    }
+}
+
+/// A mutable iterator over all source trees associated with this project.
+#[allow(missing_debug_implementations)]
+pub struct IterMut<'a> {
+    /// Our wrapped iterator.  We wrap this in our own struct to make the
+    /// underlying type opaque.
+    iter: btree_map::IterMut<'a, String, Source>,
+}
+
+impl<'a> Iterator for IterMut<'a> {
+    type Item = &'a mut Source;
+
+    fn next(&mut self) -> Option<&'a mut Source> {
         self.iter.next().map(|(_alias, source)| source)
     }
 }
@@ -249,31 +302,33 @@ impl Source {
     ///
     /// The `project` argument is mandatory because we can't store a pointer
     /// to it without creating a circular reference loop.
-    pub fn path(&self, project: &Project) -> PathBuf {
+    pub fn path(&self, dirs: &SourcesDirs) -> PathBuf {
         match self.context {
-            dc::Context::GitUrl(_) => project.src_dir().join(Path::new(self.alias())),
-            dc::Context::Dir(ref path) => project.pods_dir().join(path),
+            dc::Context::GitUrl(_) => dirs.src_dir.join(Path::new(self.alias())),
+            dc::Context::Dir(ref path) => dirs.pods_dir.join(path),
         }
     }
 
     /// Has this project been cloned locally?
-    pub fn is_available_locally(&self, project: &Project) -> bool {
-        self.path(project).exists()
+    pub fn is_available_locally(&self, dirs: &SourcesDirs) -> bool {
+        self.path(dirs).exists()
     }
 
     /// Clone the source code of this repository using git.
-    pub fn clone_source<CR>(&self, runner: &CR, project: &Project) -> Result<()>
+    pub fn clone_source<CR>(&mut self, runner: &CR, dirs: &SourcesDirs) -> Result<()>
     where
         CR: CommandRunner,
     {
         if let dc::Context::GitUrl(ref git_url) = self.context {
-            let dest = self.path(project).with_guaranteed_parent()?;
+            let dest = self.path(dirs).with_guaranteed_parent()?;
             runner
                 .build("git")
                 .arg("clone")
                 .args(&git_url.clone_args()?)
                 .arg(&dest)
-                .exec()
+                .exec()?;
+            self.set_mounted(true);
+            Ok(())
         } else {
             Err(format!("'{}' is not a git repository", &self.context).into())
         }
@@ -282,15 +337,15 @@ impl Source {
     /// (Test mode only.) Pretend to clone the source code for this
     /// repository by creating an empty directory in the right place.
     #[cfg(test)]
-    pub fn fake_clone_source(&self, project: &Project) -> Result<()> {
-        fs::create_dir_all(self.path(project))?;
+    pub fn fake_clone_source(&mut self, dirs: &SourcesDirs) -> Result<()> {
+        fs::create_dir_all(self.path(dirs))?;
+        self.set_mounted(true);
         Ok(())
     }
 }
 
 #[test]
 fn are_loaded_with_projects() {
-    use env_logger;
     let _ = env_logger::try_init();
     let proj = Project::from_example("hello").unwrap();
     let sources = proj.sources();
@@ -302,14 +357,13 @@ fn are_loaded_with_projects() {
     let url = "https://github.com/docker/dockercloud-hello-world.git";
     assert_eq!(hello.context(), &dc::Context::new(url));
     assert_eq!(
-        hello.path(&proj),
+        hello.path(&proj.sources_dirs()),
         proj.src_dir().join("dockercloud-hello-world")
     );
 }
 
 #[test]
 fn are_loaded_from_config_sources_yml() {
-    use env_logger;
     let _ = env_logger::try_init();
     let proj = Project::from_example("rails_hello").unwrap();
     let sources = proj.sources();
@@ -321,60 +375,62 @@ fn are_loaded_from_config_sources_yml() {
         lib.context(),
         &dc::Context::new("https://github.com/rails/coffee-rails.git")
     );
-    assert_eq!(lib.path(&proj), proj.src_dir().join("coffee-rails"));
+    assert_eq!(
+        lib.path(&proj.sources_dirs()),
+        proj.src_dir().join("coffee-rails")
+    );
 }
 
 #[test]
 fn rejects_libs_with_subdirectories() {
-    use env_logger;
     let _ = env_logger::try_init();
     assert!(Project::from_fixture("with_lib_subdir").is_err())
 }
 
 #[test]
 fn can_be_cloned() {
-    use env_logger;
     let _ = env_logger::try_init();
-    let proj = Project::from_example("hello").unwrap();
+    let mut proj = Project::from_example("hello").unwrap();
+    let sources_dirs = proj.sources_dirs();
     let source = proj
-        .sources()
-        .find_by_alias("dockercloud-hello-world")
+        .sources_mut()
+        .find_by_alias_mut("dockercloud-hello-world")
         .unwrap();
     let runner = TestCommandRunner::new();
-    source.clone_source(&runner, &proj).unwrap();
+    source.clone_source(&runner, &sources_dirs).unwrap();
     let url = "https://github.com/docker/dockercloud-hello-world.git";
-    assert_ran!(runner, { ["git", "clone", url, source.path(&proj)] });
+    assert_ran!(runner, {
+        ["git", "clone", url, source.path(&sources_dirs)]
+    });
     proj.remove_test_output().unwrap();
 }
 
 #[test]
 fn can_be_checked_to_see_if_cloned() {
-    use env_logger;
     let _ = env_logger::try_init();
-    let proj = Project::from_example("hello").unwrap();
+    let mut proj = Project::from_example("hello").unwrap();
+    let sources_dirs = proj.sources_dirs();
     let source = proj
-        .sources()
-        .find_by_alias("dockercloud-hello-world")
+        .sources_mut()
+        .find_by_alias_mut("dockercloud-hello-world")
         .unwrap();
-    assert!(!source.is_available_locally(&proj));
-    source.fake_clone_source(&proj).unwrap();
-    assert!(source.is_available_locally(&proj));
+    assert!(!source.is_available_locally(&sources_dirs));
+    source.fake_clone_source(&sources_dirs).unwrap();
+    assert!(source.is_available_locally(&sources_dirs));
     proj.remove_test_output().unwrap();
 }
 
 #[test]
 fn dir_context_is_always_available_locally() {
-    use env_logger;
     let _ = env_logger::try_init();
     let proj = Project::from_example("node_hello").unwrap();
     let source = proj.sources().find_by_alias("node_hello").unwrap();
-    assert!(source.is_available_locally(&proj));
+    assert!(source.is_available_locally(&proj.sources_dirs()));
     proj.remove_test_output().unwrap();
 }
 
 #[test]
 fn mounted_state_is_saved_between_runs() {
-    use env_logger;
     let _ = env_logger::try_init();
     use rand::random;
     let id: u16 = random();
@@ -385,9 +441,9 @@ fn mounted_state_is_saved_between_runs() {
         {
             let sources = proj.sources_mut();
             let source = sources.find_by_alias_mut("node_hello").unwrap();
-            assert_eq!(source.mounted(), true);
-            source.set_mounted(false);
             assert_eq!(source.mounted(), false);
+            source.set_mounted(true);
+            assert_eq!(source.mounted(), true);
         }
         proj.save_settings().unwrap();
     }
@@ -395,6 +451,6 @@ fn mounted_state_is_saved_between_runs() {
     // Reload the project and make sure the value was saved.
     let proj = Project::from_example_and_random_id("node_hello", id).unwrap();
     let source = proj.sources().find_by_alias("node_hello").unwrap();
-    assert_eq!(source.mounted(), false);
+    assert_eq!(source.mounted(), true);
     proj.remove_test_output().unwrap();
 }

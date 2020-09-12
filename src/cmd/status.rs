@@ -123,9 +123,10 @@ impl Project {
             .sources(self.sources())?
             .map(|source_mount| Ok(source_mount.source))
             .collect::<Result<_>>()?;
+        let sources_dirs = self.sources_dirs();
         let source_names: Vec<&str> = sources
             .iter()
-            .filter(|s| s.is_available_locally(self) && s.mounted())
+            .filter(|s| s.is_available_locally(&sources_dirs) && s.mounted())
             .map(|s| s.alias())
             .collect();
         if !source_names.is_empty() {

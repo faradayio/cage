@@ -116,3 +116,35 @@ where
 
     Wrap::deserialize(deserializer).map(|wrap| wrap.0)
 }
+
+/// Tools for (de)serializing `std::time::SystemTime` as whole seconds from the Unix epoch.
+///
+/// This discards any fractional seconds without rounding.
+pub(crate) mod seconds_since_epoch {
+    use serde::{self, ser, Deserialize, Deserializer, Serialize, Serializer};
+    use std::time::{Duration, SystemTime, UNIX_EPOCH};
+
+    /// Deserialize a number of seconds since the Unix epoch as a system time.
+    pub(crate) fn deserialize<'de, D>(deserializer: D) -> Result<SystemTime, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let secs = u64::deserialize(deserializer)?;
+        Ok(UNIX_EPOCH + Duration::from_secs(secs))
+    }
+
+    /// Deserialize a system time as a number of seconds since the Unix epoch.
+    pub(crate) fn serialize<S>(
+        time: &SystemTime,
+        serializer: S,
+    ) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let secs = time
+            .duration_since(UNIX_EPOCH)
+            .map_err(<S::Error as ser::Error>::custom)?
+            .as_secs();
+        secs.serialize(serializer)
+    }
+}

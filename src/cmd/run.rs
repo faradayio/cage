@@ -76,11 +76,12 @@ impl CommandRun for Project {
         // If we don't have any mounted sources, warn.
         let service = pod.service_or_err(target, service_name)?;
         let sources = service.sources(self.sources())?.collect::<Vec<_>>();
+        let sources_dirs = self.sources_dirs();
         let mount_count = sources
             .iter()
             .cloned()
             .filter(|ref source_mount| {
-                source_mount.source.is_available_locally(self)
+                source_mount.source.is_available_locally(&sources_dirs)
                     && source_mount.source.mounted()
             })
             .count();
@@ -112,7 +113,6 @@ impl CommandRun for Project {
 
 #[test]
 fn fails_on_a_multi_service_pod() {
-    use env_logger;
     let _ = env_logger::try_init();
     let proj = Project::from_example("hello").unwrap();
     let runner = TestCommandRunner::new();
@@ -123,7 +123,6 @@ fn fails_on_a_multi_service_pod() {
 
 #[test]
 fn runs_a_single_service_pod() {
-    use env_logger;
     let _ = env_logger::try_init();
     let proj = Project::from_example("rails_hello").unwrap();
     let runner = TestCommandRunner::new();
@@ -150,7 +149,6 @@ fn runs_a_single_service_pod() {
 
 #[test]
 fn runs_tests() {
-    use env_logger;
     let _ = env_logger::try_init();
     let mut proj = Project::from_example("hello").unwrap();
     proj.set_current_target_name("test").unwrap();
@@ -180,7 +178,6 @@ fn runs_tests() {
 
 #[test]
 fn runs_tests_with_custom_command() {
-    use env_logger;
     let _ = env_logger::try_init();
     let mut proj = Project::from_example("hello").unwrap();
     proj.set_current_target_name("test").unwrap();
