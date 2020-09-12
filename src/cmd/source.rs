@@ -14,7 +14,7 @@ pub trait CommandSource {
         CR: CommandRunner;
 
     /// Clone the specified source tree.
-    fn source_clone<CR>(&self, runner: &CR, alias: &str) -> Result<()>
+    fn source_clone<CR>(&mut self, runner: &CR, alias: &str) -> Result<()>
     where
         CR: CommandRunner;
 
@@ -34,10 +34,11 @@ impl CommandSource for Project {
     where
         CR: CommandRunner,
     {
+        let sources_dirs = self.sources_dirs();
         for source in self.sources().iter() {
             println!("{:25} {}", source.alias().green(), source.context());
-            if source.is_available_locally(self) {
-                let canonical = source.path(self).canonicalize()?;
+            if source.is_available_locally(&sources_dirs) {
+                let canonical = source.path(&sources_dirs).canonicalize()?;
                 // Try to strip the prefix, but this may fail on Windows
                 // or if the source is in a weird location.
                 let path = match canonical.strip_prefix(self.root_dir()) {
@@ -55,19 +56,23 @@ impl CommandSource for Project {
         Ok(())
     }
 
-    fn source_clone<CR>(&self, runner: &CR, alias: &str) -> Result<()>
+    fn source_clone<CR>(&mut self, runner: &CR, alias: &str) -> Result<()>
     where
         CR: CommandRunner,
     {
+        let sources_dirs = self.sources_dirs();
         let source = self
-            .sources()
-            .find_by_alias(alias)
+            .sources_mut()
+            .find_by_alias_mut(alias)
             .ok_or_else(|| ErrorKind::UnknownSource(alias.to_owned()))?;
-        if !source.is_available_locally(self) {
-            source.clone_source(runner, self)?;
+        if !source.is_available_locally(&sources_dirs) {
+            source.clone_source(runner, &sources_dirs)?;
         } else {
             println!("'{}' is already available locally", source.alias());
         }
+
+        // Write our persistent project settings back to disk.
+        self.save_settings()?;
         Ok(())
     }
 
@@ -98,11 +103,12 @@ impl CommandSource for Project {
 
         // Clone the source if we're mounting it but don't have a local
         // copy yet.
+        let sources_dirs = self.sources_dirs();
         let source = self
             .sources()
             .find_by_alias(alias)
             .ok_or_else(|| ErrorKind::UnknownSource(alias.to_owned()))?;
-        if source.mounted() && !source.is_available_locally(self) {
+        if source.mounted() && !source.is_available_locally(&sources_dirs) {
             self.source_clone(runner, alias)?;
         }
 

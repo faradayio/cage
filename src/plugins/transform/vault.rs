@@ -705,7 +705,6 @@ mod test {
 
     #[test]
     fn only_applied_in_specified_targets() {
-        use env_logger;
         let _ = env_logger::try_init();
 
         let mut proj = Project::from_example("vault_integration").unwrap();

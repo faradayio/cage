@@ -61,16 +61,17 @@ impl PluginTransform for Plugin {
 
         // Update each service to point to our locally cloned sources.
         let project = ctx.project;
+        let sources_dirs = project.sources_dirs();
         for service in &mut file.services.values_mut() {
             for source_mount in service.sources(project.sources())? {
                 let source = source_mount.source;
-                if source.is_available_locally(project) && source.mounted() {
+                if source.is_available_locally(&sources_dirs) && source.mounted() {
                     // Build an absolute path to our source's local directory.
                     let source_subdirectory = source_mount
                         .source_subdirectory
                         .unwrap_or_else(|| "".to_string());
                     let path = source
-                        .path(project)
+                        .path(&sources_dirs)
                         .join(source_subdirectory)
                         .to_absolute()?;
 
@@ -95,13 +96,15 @@ impl PluginTransform for Plugin {
 
 #[test]
 fn adds_a_volume_with_a_subdirectory() {
-    use env_logger;
     let _ = env_logger::try_init();
-    let proj = Project::from_fixture("with_repo_subdir").unwrap();
+    let mut proj = Project::from_fixture("with_repo_subdir").unwrap();
     let plugin = Plugin::new(&proj).unwrap();
 
-    let source = proj.sources().find_by_alias("rails_hello").unwrap();
-    source.fake_clone_source(&proj).unwrap();
+    let sources_dirs = proj.sources_dirs();
+    {
+        let source = proj.sources_mut().find_by_alias_mut("rails_hello").unwrap();
+        source.fake_clone_source(&sources_dirs).unwrap();
+    }
 
     let target = proj.current_target();
     let frontend = proj.pod("frontend").unwrap();

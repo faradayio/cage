@@ -179,7 +179,6 @@ impl<'a> Iterator for Sources<'a> {
 
 #[test]
 fn src_dir_returns_the_source_directory_for_this_service() {
-    use env_logger;
     let _ = env_logger::try_init();
     let proj: Project = Project::from_example("rails_hello").unwrap();
     let target = proj.target("development").unwrap();
@@ -199,7 +198,6 @@ fn src_dir_returns_the_source_directory_for_this_service() {
 
 #[test]
 fn build_context_can_specify_a_subdirectory() {
-    use env_logger;
     let _ = env_logger::try_init();
     let proj: Project = Project::from_fixture("with_repo_subdir").unwrap();
     let target = proj.target("development").unwrap();
@@ -222,7 +220,6 @@ fn build_context_can_specify_a_subdirectory() {
 
 #[test]
 fn shell_returns_preferred_shell_for_this_service() {
-    use env_logger;
     let _ = env_logger::try_init();
     let proj: Project = Project::from_example("hello").unwrap();
     let target = proj.target("development").unwrap();

@@ -128,7 +128,6 @@ impl CommandUp for Project {
 
 #[test]
 fn runs_docker_compose_up_honors_enable_in_targets() {
-    use env_logger;
     let _ = env_logger::try_init();
     let mut proj = Project::from_example("rails_hello").unwrap();
     proj.set_current_target_name("production").unwrap();

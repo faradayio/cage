@@ -4,7 +4,6 @@ use cage;
 #[macro_use]
 extern crate clap;
 use colored;
-use env_logger;
 
 #[macro_use]
 extern crate log;

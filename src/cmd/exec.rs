@@ -85,7 +85,6 @@ impl CommandExec for Project {
 
 #[test]
 fn invokes_docker_exec() {
-    use env_logger;
     let _ = env_logger::try_init();
     let proj = Project::from_example("hello").unwrap();
     let runner = TestCommandRunner::new();
@@ -115,7 +114,6 @@ fn invokes_docker_exec() {
 
 #[test]
 fn runs_shells() {
-    use env_logger;
     let _ = env_logger::try_init();
     let proj = Project::from_example("hello").unwrap();
     let runner = TestCommandRunner::new();

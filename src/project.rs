@@ -18,7 +18,6 @@ use std::result;
 use std::slice;
 use std::str;
 
-use crate::default_tags::DefaultTags;
 use crate::dir;
 use crate::errors::*;
 use crate::hook::HookManager;
@@ -31,6 +30,7 @@ use crate::sources::Sources;
 use crate::target::Target;
 use crate::util::{ConductorPathExt, ToStrOrErr};
 use crate::version;
+use crate::{default_tags::DefaultTags, sources::SourcesDirs};
 use rayon::prelude::*;
 
 lazy_static! {
@@ -395,6 +395,16 @@ impl Project {
         self.output_dir.join("pods")
     }
 
+    /// Directories needed by `Sources`. We break these out so that `Sources`
+    /// doesn't need to be passed `&Project`, thereby making it easier to
+    /// convince the borrow-checker that nothing weird is going on.
+    pub(crate) fn sources_dirs(&self) -> SourcesDirs {
+        SourcesDirs {
+            src_dir: self.src_dir().to_owned(),
+            pods_dir: self.pods_dir().to_owned(),
+        }
+    }
+
     /// Iterate over all pods in this project.
     pub fn pods(&self) -> Pods<'_> {
         Pods {
@@ -661,7 +671,6 @@ impl<'a> Iterator for Targets<'a> {
 
 #[test]
 fn new_from_example_uses_example_and_target() {
-    use env_logger;
     let _ = env_logger::try_init();
     let proj = Project::from_example("hello").unwrap();
     assert_eq!(proj.root_dir, Path::new("examples/hello"));
@@ -679,7 +688,6 @@ fn new_from_example_uses_example_and_target() {
 
 #[test]
 fn name_defaults_to_project_dir_but_can_be_overridden() {
-    use env_logger;
     let _ = env_logger::try_init();
     let mut proj = Project::from_example("hello").unwrap();
     assert_eq!(proj.name(), "hello");
@@ -689,7 +697,6 @@ fn name_defaults_to_project_dir_but_can_be_overridden() {
 
 #[test]
 fn pod_or_service_finds_either() {
-    use env_logger;
     let _ = env_logger::try_init();
     let proj = Project::from_example("hello").unwrap();
 
@@ -709,7 +716,6 @@ fn pod_or_service_finds_either() {
 
 #[test]
 fn pods_are_loaded() {
-    use env_logger;
     let _ = env_logger::try_init();
     let proj = Project::from_example("rails_hello").unwrap();
     let names: Vec<_> = proj.pods.iter().map(|pod| pod.name()).collect();
@@ -719,7 +725,6 @@ fn pods_are_loaded() {
 
 #[test]
 fn targets_are_loaded() {
-    use env_logger;
     let _ = env_logger::try_init();
     let proj = Project::from_example("hello").unwrap();
     let names: Vec<_> = proj.targets.iter().map(|o| o.name()).collect();
@@ -728,7 +733,6 @@ fn targets_are_loaded() {
 
 #[test]
 fn output_creates_a_directory_of_flat_yml_files() {
-    use env_logger;
     let _ = env_logger::try_init();
     let proj = Project::from_example("rails_hello").unwrap();
     proj.output("up").unwrap();
@@ -740,7 +744,6 @@ fn output_creates_a_directory_of_flat_yml_files() {
 
 #[test]
 fn output_applies_expected_transforms() {
-    use env_logger;
     let _ = env_logger::try_init();
 
     let cursor = io::Cursor::new("dockercloud/hello-world:staging\n");
@@ -748,18 +751,25 @@ fn output_applies_expected_transforms() {
 
     let mut proj = Project::from_example("hello").unwrap();
     proj.set_default_tags(default_tags);
-    let source = proj
-        .sources()
-        .find_by_alias("dockercloud-hello-world")
-        .unwrap();
-    source.fake_clone_source(&proj).unwrap();
+    let sources_dirs = proj.sources_dirs();
+    {
+        let source = proj
+            .sources_mut()
+            .find_by_alias_mut("dockercloud-hello-world")
+            .unwrap();
+        source.fake_clone_source(&sources_dirs).unwrap();
+    }
     proj.output("build").unwrap();
 
     // Load the generated file and look at the `web` service we cloned.
     let frontend_file = proj.output_dir().join("pods").join("frontend.yml");
     let file = dc::File::read_from_path(frontend_file).unwrap();
     let web = file.services.get("web").unwrap();
-    let src_path = source.path(&proj).to_absolute().unwrap();
+    let source = proj
+        .sources()
+        .find_by_alias("dockercloud-hello-world")
+        .unwrap();
+    let src_path = source.path(&sources_dirs).to_absolute().unwrap();
 
     // Make sure our `build` entry has been pointed at the local source
     // directory.
@@ -790,22 +800,28 @@ fn output_applies_expected_transforms() {
 
 #[test]
 fn output_mounts_cloned_libraries() {
-    use env_logger;
     let _ = env_logger::try_init();
 
-    let proj = Project::from_example("rails_hello").unwrap();
-    let source = proj
-        .sources()
-        .find_by_lib_key("coffee_rails")
-        .expect("should define lib coffee_rails");
-    source.fake_clone_source(&proj).unwrap();
+    let mut proj = Project::from_example("rails_hello").unwrap();
+    let sources_dirs = proj.sources_dirs();
+    {
+        let source = proj
+            .sources_mut()
+            .find_by_lib_key_mut("coffee_rails")
+            .expect("should define lib coffee_rails");
+        source.fake_clone_source(&sources_dirs).unwrap();
+    }
     proj.output("up").unwrap();
 
     // Load the generated file and look at the `web` service we cloned.
     let frontend_file = proj.output_dir().join("pods").join("frontend.yml");
     let file = dc::File::read_from_path(frontend_file).unwrap();
     let web = file.services.get("web").unwrap();
-    let src_path = source.path(&proj).to_absolute().unwrap();
+    let source = proj
+        .sources()
+        .find_by_lib_key("coffee_rails")
+        .expect("should define lib coffee_rails");
+    let src_path = source.path(&proj.sources_dirs()).to_absolute().unwrap();
 
     // Make sure the local source directory is being mounted into the
     // container.
@@ -845,7 +861,6 @@ fn output_supports_in_tree_source_code() {
 
 #[test]
 fn export_creates_a_directory_of_flat_yml_files() {
-    use env_logger;
     let _ = env_logger::try_init();
     let mut proj = Project::from_example("rails_hello").unwrap();
     let export_dir = proj.output_dir.join("hello_export");
@@ -859,18 +874,20 @@ fn export_creates_a_directory_of_flat_yml_files() {
 
 #[test]
 fn export_applies_expected_transforms() {
-    use env_logger;
     let _ = env_logger::try_init();
 
     // We only test the ways in which `export`'s transforms differ from
     // `output`.
 
-    let proj = Project::from_example("hello").unwrap();
-    let source = proj
-        .sources()
-        .find_by_alias("dockercloud-hello-world")
-        .unwrap();
-    source.fake_clone_source(&proj).unwrap();
+    let mut proj = Project::from_example("hello").unwrap();
+    let sources_dirs = proj.sources_dirs();
+    {
+        let source = proj
+            .sources_mut()
+            .find_by_alias_mut("dockercloud-hello-world")
+            .unwrap();
+        source.fake_clone_source(&sources_dirs).unwrap();
+    }
     let export_dir = proj.output_dir.join("hello_export");
     proj.export(&export_dir).unwrap();
 

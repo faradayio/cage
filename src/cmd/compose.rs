@@ -119,7 +119,6 @@ impl CommandCompose for Project {
 
 #[test]
 fn runs_docker_compose_on_all_pods() {
-    use env_logger;
     let _ = env_logger::try_init();
     let proj = Project::from_example("rails_hello").unwrap();
     let runner = TestCommandRunner::new();
@@ -154,7 +153,6 @@ fn runs_docker_compose_on_all_pods() {
 
 #[test]
 fn runs_docker_compose_on_named_pods_and_services() {
-    use env_logger;
     let _ = env_logger::try_init();
     let proj = Project::from_example("rails_hello").unwrap();
     let runner = TestCommandRunner::new();
