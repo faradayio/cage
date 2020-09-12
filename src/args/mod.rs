@@ -4,9 +4,11 @@
 use std::ffi::OsString;
 
 pub use self::act_on::ActOn;
+pub use self::act_on_sources::ActOnSources;
 pub use self::cmd::*;
 
 pub mod act_on;
+pub mod act_on_sources;
 mod cmd;
 pub mod opts;
 

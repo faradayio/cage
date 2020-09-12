@@ -208,7 +208,6 @@ subcommands:
             help: "Number of lines from end of output to display"
         - POD_OR_SERVICE: *pod_or_service
 
-
   - source:
       about: "Commands for working with git repositories and local source trees"
       settings:
@@ -219,18 +218,33 @@ subcommands:
         - clone:
             about: "Clone a git repository using its short alias and mount it into the containers that use it"
             args:
-              - ALIAS: &alias
+              - ALIAS:
                   value_name: "ALIAS"
                   required: true
                   help: "The short alias of the repo to clone (see `source list`)"
         - mount:
             about: "Mount a source tree into the containers that use it"
-            args:
-              - ALIAS: *alias
+            args: &mount_args
+              - ALIASES:
+                  value_name: "ALIASES"
+                  multiple: true
+                  min_values: 1
+                  help: "The short aliases of the source trees to operate on (see `source list`)"
+              - ALL:
+                  long: "all"
+                  short: "a"
+                  help: "Operate on all source trees"
+            groups: &mount_groups
+              - sources:
+                  # Make these arguments mutally exclusive.
+                  args:
+                    - ALIASES
+                    - ALL
+                  required: true
         - unmount:
             about: "Unmount a local source tree from all containers"
-            args:
-              - ALIAS: *alias
+            args: *mount_args
+            groups: *mount_groups
   - generate:
       about: "Commands for generating new source files"
       settings:

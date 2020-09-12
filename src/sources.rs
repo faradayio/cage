@@ -166,6 +166,13 @@ impl Sources {
         }
     }
 
+    /// Iterate over all source trees associated with this project.
+    pub fn iter_mut(&mut self) -> IterMut<'_> {
+        IterMut {
+            iter: self.sources.iter_mut(),
+        }
+    }
+
     /// Look up a source tree using the short-form local alias.
     pub fn find_by_alias(&self, alias: &str) -> Option<&Source> {
         self.sources.get(alias)
@@ -232,6 +239,22 @@ impl<'a> Iterator for Iter<'a> {
     type Item = &'a Source;
 
     fn next(&mut self) -> Option<&'a Source> {
+        self.iter.next().map(|(_alias, source)| source)
+    }
+}
+
+/// A mutable iterator over all source trees associated with this project.
+#[allow(missing_debug_implementations)]
+pub struct IterMut<'a> {
+    /// Our wrapped iterator.  We wrap this in our own struct to make the
+    /// underlying type opaque.
+    iter: btree_map::IterMut<'a, String, Source>,
+}
+
+impl<'a> Iterator for IterMut<'a> {
+    type Item = &'a mut Source;
+
+    fn next(&mut self) -> Option<&'a mut Source> {
         self.iter.next().map(|(_alias, source)| source)
     }
 }

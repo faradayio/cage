@@ -49,7 +49,7 @@ fn all_except_tasks(pod: &&Pod) -> bool {
 enum State<'a> {
     /// This corresponds to `ActOn::All`.
     PodIter(Pods<'a>),
-    /// This corresponds to `ActOn::All`.
+    /// This corresponds to `ActOn::AllExceptTasks`.
     FilteredPodIter(Filter<Pods<'a>, fn(&&Pod) -> bool>),
     /// This corresponds to `ActOn::Named`.
     NameIter(slice::Iter<'a, String>),

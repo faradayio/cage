@@ -2,6 +2,7 @@
 
 use colored::*;
 
+use crate::args::act_on_sources::ActOnSources;
 use crate::command_runner::CommandRunner;
 use crate::errors::*;
 use crate::project::Project;
@@ -22,7 +23,7 @@ pub trait CommandSource {
     fn source_set_mounted<CR>(
         &mut self,
         runner: &CR,
-        alias: &str,
+        act_on_sources: ActOnSources,
         mounted: bool,
     ) -> Result<()>
     where
@@ -79,38 +80,34 @@ impl CommandSource for Project {
     fn source_set_mounted<CR>(
         &mut self,
         runner: &CR,
-        alias: &str,
+        acts_on_sources: ActOnSources,
         mounted: bool,
     ) -> Result<()>
     where
         CR: CommandRunner,
     {
-        {
-            // Look up the source mutably.  We do this in a block so we can
-            // drop the mutable borrow before continuing and keep Rust
-            // happy.
-            let source = self
-                .sources_mut()
-                .find_by_alias_mut(alias)
-                .ok_or_else(|| ErrorKind::UnknownSource(alias.to_owned()))?;
-
-            // Set the mounted flag on our source.
+        // Set the mounted flag on our sources.
+        for source in acts_on_sources.sources_mut(self.sources_mut()) {
             source.set_mounted(mounted);
         }
 
-        // Write our persistent project settings back to disk.
+        // Write our persistent project settings back to disk before doing error
+        // prone operations.
         self.save_settings()?;
 
-        // Clone the source if we're mounting it but don't have a local
-        // copy yet.
+        // Clone the sources we're mounting if they don't have local copies
+        // yet.
         let sources_dirs = self.sources_dirs();
-        let source = self
-            .sources()
-            .find_by_alias(alias)
-            .ok_or_else(|| ErrorKind::UnknownSource(alias.to_owned()))?;
-        if source.mounted() && !source.is_available_locally(&sources_dirs) {
-            self.source_clone(runner, alias)?;
+        for source in acts_on_sources.sources_mut(self.sources_mut()) {
+            if !source.is_available_locally(&sources_dirs) {
+                source.clone_source(runner, &sources_dirs)?;
+            }
         }
+
+        // Write our persistent project settings back to disk. This should be
+        // the same as the last write, but it's a good habit to always do it
+        // after calling `Project` methods that take `&mut self`.
+        self.save_settings()?;
 
         // Notify the user that they need to run `up`.
         println!("Now run `cage up` for these changes to take effect.");
