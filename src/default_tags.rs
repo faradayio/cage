@@ -43,7 +43,7 @@ impl DefaultTags {
         for line_result in reader.lines() {
             let line = line_result?;
             let image = dc::Image::from_str(&line)?;
-            if let (key, Some(_)) = (image.without_tag(), image.tag.as_ref()) {
+            if let (key, Some(_)) = (image.without_version(), image.version.as_ref()) {
                 match tags.entry(key.to_owned()) {
                     btree_map::Entry::Vacant(vacant) => {
                         vacant.insert(image.to_owned());
@@ -64,7 +64,7 @@ impl DefaultTags {
     /// Default the `tag` field of `image` if necessary, returning the old
     /// image if possible.
     pub fn default_for(&self, image: &dc::Image) -> dc::Image {
-        if image.tag.is_some() {
+        if image.version.is_some() {
             // Already tagged, so assume the user knows what they're doing.
             image.to_owned()
         } else if let Some(default) = self.tags.get(image) {
@@ -85,6 +85,7 @@ impl DefaultTags {
 fn defaults_tags_using_data_from_file() {
     let file = "example.com/app1:30
 alpine:4.3
+busybox@sha256:cbbf2f9a99b47fc460d422812b6a5adff7dfee951d8fa2e4a98caa0382cfbdbf
 ";
     let cursor = io::Cursor::new(file);
     let default_tags = DefaultTags::read(cursor).unwrap();
@@ -95,6 +96,10 @@ alpine:4.3
     assert_eq!(
         default_tags.default_for(&dc::Image::new("alpine:4.2").unwrap()),
         dc::Image::new("alpine:4.2").unwrap()
+    );
+    assert_eq!(
+        default_tags.default_for(&dc::Image::new("busybox").unwrap()),
+        dc::Image::new("busybox@sha256:cbbf2f9a99b47fc460d422812b6a5adff7dfee951d8fa2e4a98caa0382cfbdbf").unwrap()
     );
     // TODO LOW: I'm not sure how we should actually handle `latest`.
     // Should it default?
