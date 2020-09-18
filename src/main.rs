@@ -246,7 +246,9 @@ fn run(matches: &clap::ArgMatches<'_>) -> Result<()> {
         }
         "pull" => {
             let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE", true);
-            proj.pull(&runner, &acts_on)?;
+            let mut opts = cage::args::opts::Pull::default();
+            opts.quiet = sc_matches.is_present("quiet");
+            proj.pull(&runner, &acts_on, &opts)?;
         }
         "build" => {
             let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE", true);

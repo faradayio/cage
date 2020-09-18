@@ -18,6 +18,25 @@ impl ToArgs for Empty {
     }
 }
 
+/// Options for `docker-compose pull`.
+#[derive(Debug, Default, Clone)]
+#[allow(missing_copy_implementations)]
+#[non_exhaustive]
+pub struct Pull {
+    /// Hide download progress.
+    pub quiet: bool,
+}
+
+impl ToArgs for Pull {
+    fn to_args(&self) -> Vec<OsString> {
+        // For now, this one is hard-coded.  We always pass `-d` because we
+        // need to detach from each pod to launch the next.  To avoid this,
+        // we'd need to use multiple parallel threads and maybe some
+        // intelligent output buffering.
+        vec!["--quiet".into()]
+    }
+}
+
 /// Command-line flags with for `docker-compose up`.
 #[derive(Debug, Default, Clone)]
 #[allow(missing_copy_implementations)]

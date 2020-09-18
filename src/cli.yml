@@ -69,6 +69,10 @@ subcommands:
   - pull:
       about: "Build images for the containers associated with this project"
       args:
+        - quiet:
+            long: "quiet"
+            short: "q"
+            help: "Don't show download progress"
         - POD_OR_SERVICE: *pod_or_service
   - up:
       about: "Run project"
