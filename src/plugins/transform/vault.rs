@@ -53,7 +53,7 @@ struct ServiceConfig {
 type PodConfig = BTreeMap<String, ServiceConfig>;
 
 /// Per-target configuation.
-#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, Eq, Deserialize, PartialEq, Serialize)]
 #[serde(deny_unknown_fields)]
 struct TargetConfig {
     /// Extra environment variables to inject into each service.
@@ -66,19 +66,66 @@ struct TargetConfig {
     /// 3.x and earlier.
     #[serde(default)]
     default_ttl: Option<u64>,
+
+    /// Default policies to apply to every service.
+    #[serde(default)]
+    default_policies: Option<Vec<dc::RawOr<String>>>,
 }
 
 impl TargetConfig {
     /// Combine `self` with `other`, giving preferences to values in `other`.
     /// This is used to implement defaulting.
-    fn extended_with(&self, other: TargetConfig) -> TargetConfig {
+    fn extended_with(&self, other: &TargetConfig) -> TargetConfig {
         let mut extra_environment = self.extra_environment.clone();
-        extra_environment.extend(other.extra_environment);
+        extra_environment.extend(other.extra_environment.clone());
         TargetConfig {
             extra_environment,
-            default_ttl: self.default_ttl.or(other.default_ttl),
+            default_ttl: other.default_ttl.or(self.default_ttl),
+            default_policies: other
+                .default_policies
+                .clone()
+                .or_else(|| self.default_policies.clone()),
         }
     }
+}
+
+#[test]
+fn target_config_extension() {
+    let mut e1 = BTreeMap::new();
+    e1.insert("K1".to_owned(), dc::value("V1".to_owned()));
+    let c1 = TargetConfig {
+        extra_environment: e1,
+        default_ttl: Some(1),
+        default_policies: Some(vec![dc::value("p1".to_owned())]),
+    };
+
+    let mut e2 = BTreeMap::new();
+    e2.insert("K2".to_owned(), dc::value("V2".to_owned()));
+    let c2 = TargetConfig {
+        extra_environment: e2,
+        default_ttl: Some(2),
+        default_policies: Some(vec![dc::value("p2".to_owned())]),
+    };
+
+    let mut e_all = BTreeMap::new();
+    e_all.insert("K1".to_owned(), dc::value("V1".to_owned()));
+    e_all.insert("K2".to_owned(), dc::value("V2".to_owned()));
+    assert_eq!(
+        c1.extended_with(&c2),
+        TargetConfig {
+            extra_environment: e_all.clone(),
+            default_ttl: Some(2),
+            default_policies: Some(vec![dc::value("p2".to_owned())]),
+        }
+    );
+    assert_eq!(
+        c2.extended_with(&c1),
+        TargetConfig {
+            extra_environment: e_all,
+            default_ttl: Some(1),
+            default_policies: Some(vec![dc::value("p1".to_owned())]),
+        }
+    );
 }
 
 /// The configuration for our Vault plugin.
@@ -101,10 +148,6 @@ struct Config {
     #[serde(default)]
     targets: BTreeMap<Target, TargetConfig>,
 
-    /// Default policies to apply to every service.
-    #[serde(default)]
-    default_policies: Vec<dc::RawOr<String>>,
-
     /// More specific policies to apply to individual
     #[serde(default)]
     pods: BTreeMap<String, PodConfig>,
@@ -114,7 +157,7 @@ impl Config {
     /// Get the configuration to use for `target`.
     fn target_config_for(&self, target: &Target) -> TargetConfig {
         let config = self.targets.get(target).cloned().unwrap_or_default();
-        self.default_target_config.extended_with(config)
+        self.default_target_config.extended_with(&config)
     }
 }
 
@@ -530,11 +573,12 @@ impl PluginTransform for Plugin {
                 .and_then(|pod| pod.get(name));
 
             // Get a list of policy "patterns" that apply to this service.
+            let target_config = config.target_config_for(target);
             let mut raw_policies =
                 if service_config.map_or_else(|| false, |s| s.no_default_policies) {
                     vec![]
                 } else {
-                    config.default_policies.clone()
+                    target_config.default_policies.clone().unwrap_or_default()
                 };
             raw_policies
                 .extend(service_config.map_or_else(Vec::new, |s| s.policies.clone()));
@@ -565,7 +609,6 @@ impl PluginTransform for Plugin {
                 .insert("VAULT_ADDR".to_owned(), dc::escape(generator.addr())?);
 
             // Generate a VAULT_TOKEN.
-            let target_config = config.target_config_for(target);
             let ttl =
                 Duration::from_secs(target_config.default_ttl.unwrap_or(DEFAULT_TTL));
             let token_info = cache.get(
