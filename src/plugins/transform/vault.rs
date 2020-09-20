@@ -20,6 +20,11 @@ use crate::pod::Pod;
 use crate::project::Project;
 use crate::serde_helpers::{dump_yaml, load_yaml, seconds_since_epoch};
 use crate::util::err;
+use crate::Target;
+
+/// How many seconds should our vault token TTL be if the user specifies nothing
+/// at all? Defaults to 30 days.
+const DEFAULT_TTL: u64 = 30 * 24 * 60 * 60;
 
 /// How should our applications authenticate themselves with vault?
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -47,6 +52,35 @@ struct ServiceConfig {
 /// Policies to apply to each service in a pod.
 type PodConfig = BTreeMap<String, ServiceConfig>;
 
+/// Per-target configuation.
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct TargetConfig {
+    /// Extra environment variables to inject into each service.
+    #[serde(default)]
+    extra_environment: BTreeMap<String, dc::RawOr<String>>,
+
+    /// How long should tokens be valid for?
+    ///
+    /// We support `default_ttl` as an alias for backwards compatibility with
+    /// 3.x and earlier.
+    #[serde(default)]
+    default_ttl: Option<u64>,
+}
+
+impl TargetConfig {
+    /// Combine `self` with `other`, giving preferences to values in `other`.
+    /// This is used to implement defaulting.
+    fn extended_with(&self, other: TargetConfig) -> TargetConfig {
+        let mut extra_environment = self.extra_environment.clone();
+        extra_environment.extend(other.extra_environment);
+        TargetConfig {
+            extra_environment,
+            default_ttl: self.default_ttl.or(other.default_ttl),
+        }
+    }
+}
+
 /// The configuration for our Vault plugin.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -58,12 +92,14 @@ struct Config {
     /// The kind of authentication to use.
     auth_type: AuthType,
 
-    /// Extra environment variables to inject into each service.
-    #[serde(default)]
-    extra_environment: BTreeMap<String, dc::RawOr<String>>,
+    /// Allow default `TargetConfig` values to be set at the top level using
+    /// `serde(flatten)`.
+    #[serde(flatten)]
+    default_target_config: TargetConfig,
 
-    /// How long should tokens be valid for?
-    default_ttl: u64,
+    /// Per-target configuration.
+    #[serde(default)]
+    targets: BTreeMap<Target, TargetConfig>,
 
     /// Default policies to apply to every service.
     #[serde(default)]
@@ -72,6 +108,14 @@ struct Config {
     /// More specific policies to apply to individual
     #[serde(default)]
     pods: BTreeMap<String, PodConfig>,
+}
+
+impl Config {
+    /// Get the configuration to use for `target`.
+    fn target_config_for(&self, target: &Target) -> TargetConfig {
+        let config = self.targets.get(target).cloned().unwrap_or_default();
+        self.default_target_config.extended_with(config)
+    }
 }
 
 #[test]
@@ -521,7 +565,9 @@ impl PluginTransform for Plugin {
                 .insert("VAULT_ADDR".to_owned(), dc::escape(generator.addr())?);
 
             // Generate a VAULT_TOKEN.
-            let ttl = Duration::from_secs(config.default_ttl);
+            let target_config = config.target_config_for(target);
+            let ttl =
+                Duration::from_secs(target_config.default_ttl.unwrap_or(DEFAULT_TTL));
             let token_info = cache.get(
                 ctx.project.name(),
                 ctx.project.current_target().name(),
@@ -535,7 +581,7 @@ impl PluginTransform for Plugin {
                 .insert("VAULT_TOKEN".to_owned(), dc::escape(&token_info.token)?);
 
             // Add in any extra environment variables.
-            for (var, val) in &config.extra_environment {
+            for (var, val) in &target_config.extra_environment {
                 service
                     .environment
                     .insert(var.to_owned(), dc::escape(interpolated(val)?)?);

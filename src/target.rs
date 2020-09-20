@@ -2,18 +2,19 @@
 //! `development`, `test` or `production`.
 
 use regex::Regex;
+use serde::{Deserialize, Serialize};
 
 use crate::project::Project;
 
-/// An `Target` provides collection of extensions to a project's basic
-/// pods.  Targets are typically used to represent deployment environments:
-/// test, development and production.
+/// A `Target` provides collection of extensions to a project's basic pods.
+/// Targets are typically used to represent deployment environments: test,
+/// development and production.
 ///
 /// (Right now, this is deliberately a very thin wrapper around the `name`
-/// field, suitable for use as key in a `BTreeMap`.  If you add more
-/// fields, you'll probably need to remove `PartialEq`, `Eq`, `PartialOrd`,
-/// `Ord` from the `derive` list, and either implement them manually or
-/// redesign the code that uses targets as hash table keys.)
+/// field, suitable for use as key in a `BTreeMap`.  If you add more fields,
+/// you'll probably need to remove `PartialEq`, `Eq`, `PartialOrd`, `Ord` from
+/// the `derive` list, and either implement them manually or redesign the code
+/// that uses targets as hash table keys.)
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Target {
     /// The name of this environment.
@@ -78,5 +79,24 @@ impl Target {
         NON_ALNUM
             .replace_all(&base_name.to_lowercase(), "")
             .into_owned()
+    }
+}
+
+impl<'de> Deserialize<'de> for Target {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let name = String::deserialize(deserializer)?;
+        Ok(Self { name })
+    }
+}
+
+impl Serialize for Target {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        self.name.serialize(serializer)
     }
 }
