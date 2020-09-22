@@ -29,11 +29,11 @@ pub struct Pull {
 
 impl ToArgs for Pull {
     fn to_args(&self) -> Vec<OsString> {
-        // For now, this one is hard-coded.  We always pass `-d` because we
-        // need to detach from each pod to launch the next.  To avoid this,
-        // we'd need to use multiple parallel threads and maybe some
-        // intelligent output buffering.
-        vec!["--quiet".into()]
+        let mut args = vec![];
+        if self.quiet {
+            args.push(OsString::from("--quiet"));
+        }   
+        args
     }
 }
 
