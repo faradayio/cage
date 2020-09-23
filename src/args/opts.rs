@@ -32,7 +32,7 @@ impl ToArgs for Pull {
         let mut args = vec![];
         if self.quiet {
             args.push(OsString::from("--quiet"));
-        }   
+        }
         args
     }
 }
