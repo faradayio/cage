@@ -82,6 +82,12 @@ error_chain! {
                     PROJECT_CONFIG_PATH.display(), &required, version())
         }
 
+        /// An output directory already exists, and would be overwritten.
+        OutputDirectoryExists(path: PathBuf) {
+            description("output directory already exists")
+            display("output directory {} already exists (please delete)", path.display())
+        }
+
         /// An error occurred applying a plugin.
         PluginFailed(plugin: String) {
             description("plugin failed")

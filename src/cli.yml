@@ -176,11 +176,9 @@ subcommands:
       settings:
         - "TrailingVarArg"
       args:
-        - detached: *detached
-        - user: *user
-        - no-allocate-tty: *notty
-        - entrypoint: *entrypoint
-        - environment: *environment
+        - export-test-output:
+            long: "--export-test-output"
+            help: "Copy container's $WORKDIR/test_output to $PROJECT_DIR/test_output"
         - SERVICE: *service
         - COMMAND: *command
       after_help: |

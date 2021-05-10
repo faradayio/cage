@@ -1,12 +1,17 @@
 //! The `run` command.
 
-use crate::args::{self, ToArgs};
+use rand::random;
+
 #[cfg(test)]
 use crate::command_runner::TestCommandRunner;
 use crate::command_runner::{Command, CommandRunner};
 use crate::errors::*;
 use crate::ext::service::ServiceExt;
 use crate::project::Project;
+use crate::{
+    args::{self, ToArgs},
+    util::ConductorPathExt,
+};
 
 /// We implement `run` with a trait so we put it in its own module.
 pub trait CommandRun {
@@ -22,12 +27,15 @@ pub trait CommandRun {
         CR: CommandRunner;
 
     /// Execute tests inside a fresh container.
+    ///
+    /// Returns the container ID used to run the tests, for convenience.
     fn test<CR>(
         &self,
         runner: &CR,
         service: &str,
         command: Option<&args::Command>,
-    ) -> Result<()>
+        opts: &args::opts::Test,
+    ) -> Result<String>
     where
         CR: CommandRunner;
 }
@@ -66,7 +74,8 @@ impl CommandRun for Project {
         runner: &CR,
         service_name: &str,
         command: Option<&args::Command>,
-    ) -> Result<()>
+        opts: &args::opts::Test,
+    ) -> Result<String>
     where
         CR: CommandRunner,
     {
@@ -93,21 +102,52 @@ impl CommandRun for Project {
             );
         }
 
+        let service = pod.service_or_err(target, service_name)?;
         let command_args = if let Some(c) = command {
             c.to_args()
         } else {
-            let service = pod.service_or_err(target, service_name)?;
             service.test_command()?.iter().map(|s| s.into()).collect()
         };
+        let container_name = format!("{}_{}", service_name, random::<u16>());
         runner
             .build("docker-compose")
             .args(&pod.compose_args(self)?)
             .arg("run")
-            .arg("--rm")
+            .arg("--name")
+            .arg(&container_name)
             .arg("--no-deps")
             .arg(service_name)
             .args(&command_args)
-            .exec()
+            .exec()?;
+
+        // TODO: If exporting output, run `docker cp`.
+        if opts.export_test_output {
+            let test_output_path = self
+                .root_dir()
+                .join("test_output")
+                .with_guaranteed_parent()?;
+
+            // Don't clobber any existing output.
+            if test_output_path.exists() {
+                return Err(ErrorKind::OutputDirectoryExists(test_output_path).into());
+            }
+
+            runner
+                .build("docker")
+                .arg("cp")
+                .arg(format!("{}:{}", container_name, "./test_output"))
+                .arg(test_output_path)
+                .exec()?;
+        }
+
+        // TODO: Run `docker rm`.
+        runner
+            .build("docker")
+            .arg("rm")
+            .arg(&container_name)
+            .exec()?;
+
+        Ok(container_name)
     }
 }
 
@@ -155,7 +195,8 @@ fn runs_tests() {
     let runner = TestCommandRunner::new();
     proj.output("test").unwrap();
 
-    proj.test(&runner, "frontend/proxy", None).unwrap();
+    let opts = args::opts::Test::default();
+    let container_name = proj.test(&runner, "frontend/proxy", None, &opts).unwrap();
 
     assert_ran!(runner, {
         [
@@ -165,11 +206,17 @@ fn runs_tests() {
             "-f",
             proj.output_pods_dir().join("frontend.yml"),
             "run",
-            "--rm",
+            "--name",
+            &container_name,
             "--no-deps",
             "proxy",
             "echo",
             "All tests passed",
+        ],
+        [
+            "docker",
+            "rm",
+            container_name,
         ]
     });
 
@@ -185,7 +232,8 @@ fn runs_tests_with_custom_command() {
     proj.output("test").unwrap();
 
     let cmd = args::Command::new("rspec").with_args(&["-t", "foo"]);
-    proj.test(&runner, "proxy", Some(&cmd)).unwrap();
+    let opts = args::opts::Test::default();
+    let container_name = proj.test(&runner, "proxy", Some(&cmd), &opts).unwrap();
 
     assert_ran!(runner, {
         [
@@ -195,12 +243,62 @@ fn runs_tests_with_custom_command() {
             "-f",
             proj.output_pods_dir().join("frontend.yml"),
             "run",
-            "--rm",
+            "--name",
+            &container_name,
             "--no-deps",
             "proxy",
             "rspec",
             "-t",
             "foo",
+        ],
+        [
+            "docker",
+            "rm",
+            container_name,
+        ]
+    });
+
+    proj.remove_test_output().unwrap();
+}
+
+#[test]
+fn runs_tests_and_extracts_output() {
+    let _ = env_logger::try_init();
+    let mut proj = Project::from_example("hello").unwrap();
+    proj.set_current_target_name("test").unwrap();
+    let runner = TestCommandRunner::new();
+    proj.output("test").unwrap();
+
+    let cmd = args::Command::new("mkdir").with_args(&["./test_output"]);
+    let mut opts = args::opts::Test::default();
+    opts.export_test_output = true;
+    let container_name = proj.test(&runner, "proxy", Some(&cmd), &opts).unwrap();
+
+    assert_ran!(runner, {
+        [
+            "docker-compose",
+            "-p",
+            "hellotest",
+            "-f",
+            proj.output_pods_dir().join("frontend.yml"),
+            "run",
+            "--name",
+            &container_name,
+            "--no-deps",
+            "proxy",
+            "mkdir",
+            "./test_output",
+        ],
+        [
+            "docker",
+            "cp",
+            format!("{}:./test_output", &container_name),
+            "examples/hello/test_output",
+        ],
+        [
+            "docker",
+            "rm",
+            container_name,
         ]
     });
 

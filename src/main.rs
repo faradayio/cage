@@ -57,6 +57,9 @@ trait ArgMatchesExt {
     /// Extract `run` options from our command-line arguments.
     fn to_run_options(&self) -> cage::args::opts::Run;
 
+    /// Extract `test` options from our command-line arguments.
+    fn to_test_options(&self) -> cage::args::opts::Test;
+
     /// Extract `exec::Command` from our command-line arguments.
     fn to_exec_command(&self) -> Option<cage::args::Command>;
 
@@ -151,6 +154,13 @@ impl<'a> ArgMatchesExt for clap::ArgMatches<'a> {
             }
         }
         opts.no_deps = self.is_present("no-deps");
+        opts
+    }
+
+    /// Extract `test` options from our command-line arguments.
+    fn to_test_options(&self) -> cage::args::opts::Test {
+        let mut opts = cage::args::opts::Test::default();
+        opts.export_test_output = self.is_present("export-test-output");
         opts
     }
 
@@ -307,8 +317,9 @@ fn run(matches: &clap::ArgMatches<'_>) -> Result<()> {
         "test" => {
             warn_if_pods_are_enabled_but_not_running(&proj)?;
             let service = sc_matches.value_of("SERVICE").unwrap();
+            let opts = sc_matches.to_test_options();
             let cmd = sc_matches.to_exec_command();
-            proj.test(&runner, service, cmd.as_ref())?;
+            proj.test(&runner, service, cmd.as_ref(), &opts)?;
         }
         "source" => run_source(&runner, &mut proj, sc_matches)?,
         "generate" => run_generate(&runner, &proj, sc_matches)?,

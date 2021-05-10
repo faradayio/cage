@@ -209,6 +209,14 @@ pub struct Run {
     pub _nonexhaustive: (),
 }
 
+/// Options for `docker_compose run` when running as `cage test`.
+#[derive(Debug, Clone, Default)]
+#[allow(missing_copy_implementations)]
+pub struct Test {
+    /// Export `./test_output` in container to project directory after test run.
+    pub export_test_output: bool,
+}
+
 impl Deref for Run {
     type Target = Process;
 
