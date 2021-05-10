@@ -24,13 +24,10 @@ impl Command {
 
     /// Create a new `Command` object from a vec, assuming first item is the command
     pub fn from_ordered_vec(list: Vec<String>) -> Option<Command> {
-        match list.split_first() {
-            Some((executable, args)) => Some(Command {
-                command: OsString::from(executable),
-                args: args.iter().map(|arg| arg.into()).collect(),
-            }),
-            None => None,
-        }
+        list.split_first().map(|(executable, args)| Command {
+            command: OsString::from(executable),
+            args: args.iter().map(|arg| arg.into()).collect(),
+        })
     }
 
     /// Add arguments to a `Command` object.  This is meant to be chained
