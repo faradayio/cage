@@ -47,8 +47,7 @@ impl Command {
 
 impl ToArgs for Command {
     fn to_args(&self) -> Vec<OsString> {
-        let mut result: Vec<OsString> = vec![];
-        result.push(self.command.clone());
+        let mut result: Vec<OsString> = vec![self.command.clone()];
         result.extend(self.args.iter().cloned());
         result
     }

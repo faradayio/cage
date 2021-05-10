@@ -42,6 +42,7 @@
     unused_import_braces,
     clippy::all
 )]
+#![allow(clippy::field_reassign_with_default, clippy::unnecessary_wraps)]
 // The `error_chain` documentation says we need this.
 #![recursion_limit = "1024"]
 

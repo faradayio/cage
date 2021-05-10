@@ -1,6 +1,6 @@
 //! What sources should a command act on?
 
-use std::{collections::BTreeSet, iter::FromIterator};
+use std::collections::BTreeSet;
 
 use crate::sources::{Source, Sources};
 
@@ -24,7 +24,7 @@ impl ActOnSources {
             ActOnSources::All => Box::new(sources.iter_mut())
                 as Box<dyn Iterator<Item = &'a mut Source> + 'a>,
             ActOnSources::Named(aliases) => {
-                let aliases = BTreeSet::from_iter(aliases.iter().cloned());
+                let aliases = aliases.iter().cloned().collect::<BTreeSet<_>>();
                 Box::new(
                     sources
                         .iter_mut()

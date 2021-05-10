@@ -128,7 +128,7 @@ impl ContainerInfo {
 
         // Get an IP address for this running container.
         let raw_ip_addr = &info.NetworkSettings.IPAddress[..];
-        let ip_addr = if raw_ip_addr != "" {
+        let ip_addr = if !raw_ip_addr.is_empty() {
             Some(
                 raw_ip_addr
                     .parse()

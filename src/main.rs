@@ -1,5 +1,7 @@
 //! Our main CLI tool.
 
+#![allow(clippy::field_reassign_with_default)]
+
 #[macro_use]
 extern crate clap;
 #[macro_use]

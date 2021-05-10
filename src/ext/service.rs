@@ -55,10 +55,7 @@ impl ServiceExt for dc::Service {
 
     fn source_mount_dir(&self) -> Result<String> {
         let default = dc::escape("/app")?;
-        let srcdir = self
-            .labels
-            .get("io.fdy.cage.srcdir")
-            .unwrap_or_else(|| &default);
+        let srcdir = self.labels.get("io.fdy.cage.srcdir").unwrap_or(&default);
         Ok(srcdir.value()?.to_owned())
     }
 
@@ -76,10 +73,7 @@ impl ServiceExt for dc::Service {
 
     fn shell(&self) -> Result<String> {
         let default = dc::escape("sh")?;
-        let shell = self
-            .labels
-            .get("io.fdy.cage.shell")
-            .unwrap_or_else(|| &default);
+        let shell = self.labels.get("io.fdy.cage.shell").unwrap_or(&default);
         Ok(shell.value()?.to_owned())
     }
 
@@ -123,11 +117,10 @@ impl ServiceExt for dc::Service {
         let mut libs = vec![];
         for (label, mount_as) in &self.labels {
             let prefix = "io.fdy.cage.lib.";
-            if label.starts_with(prefix) {
-                let lib_name = label[prefix.len()..].to_string();
+            if let Some(lib_name) = label.strip_prefix(prefix) {
                 let source =
-                    sources.find_by_lib_key(&lib_name).ok_or_else(|| -> Error {
-                        ErrorKind::UnknownLibKey(lib_name).into()
+                    sources.find_by_lib_key(lib_name).ok_or_else(|| -> Error {
+                        ErrorKind::UnknownLibKey(lib_name.to_string()).into()
                     })?;
 
                 libs.push(SourceMount {
