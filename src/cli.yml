@@ -89,6 +89,10 @@ subcommands:
       about: "Stop all containers associated with this project"
       args:
         - POD_OR_SERVICE: *pod_or_service
+  - down:
+      about: "Stop all containers associated with this project. Alias for `stop`."
+      args:
+        - POD_OR_SERVICE: *pod_or_service
   - rm:
       about: "Remove the containers associated with a pod or service"
       args:

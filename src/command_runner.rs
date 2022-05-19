@@ -24,7 +24,7 @@ pub trait CommandRunner {
 /// A stripped down interface based on `std::process::Command`.  We use
 /// this so we can mock out shell commands during tests.
 pub trait Command {
-    /// Add an arugment to our command.
+    /// Add an argument to our command.
     fn arg<S: AsRef<OsStr>>(&mut self, arg: S) -> &mut Self;
 
     /// Add several arguments to our command.
