@@ -277,7 +277,7 @@ fn run(matches: &clap::ArgMatches<'_>) -> Result<()> {
             let opts = cage::args::opts::Empty;
             proj.compose(&runner, "restart", &acts_on, &opts)?;
         }
-        "stop" => {
+        "stop" | "down" => {
             let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE", false);
             let opts = cage::args::opts::Empty;
             proj.compose(&runner, "stop", &acts_on, &opts)?;
