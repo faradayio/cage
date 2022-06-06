@@ -55,4 +55,4 @@ shlex = "0.1"
 tokio = "0.2.17"
 url = "2.1.1"
 # Use an older version for compatibility with `clap`.
-yaml-rust = "0.3"
+yaml-rust = "0.4"
