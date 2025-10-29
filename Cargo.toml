@@ -1,8 +1,8 @@
 [package]
 name = "cage"
-version = "0.3.6"
+version = "0.4.0"
 authors = ["Eric Kidd <git@randomhacks.net>",
-           "Derek Kastner <dkastner@gmail.com>"]
+           "Seamus Abshere <seamus@abshere.net>"]
 edition = "2021"
 
 description = "Develop multi-pod docker-compose apps"

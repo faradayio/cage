@@ -211,7 +211,7 @@ checksum = "d71b6127be86fdcfddb610f7182ac57211d4b18a3e9c82eb2d17662f2227ad6a"
 
 [[package]]
 name = "cage"
-version = "0.3.6"
+version = "0.4.0"
 dependencies = [
  "anyhow",
  "bollard",

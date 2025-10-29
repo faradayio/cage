@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## Unreleased
 
+## 0.4.0 - 2025-10-29
+
 ### Changed
 
 - Replaced `boondock` Docker client with `bollard` for better async/await support and active maintenance.
