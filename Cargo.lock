@@ -620,8 +620,8 @@ dependencies = [
 
 [[package]]
 name = "faraday_compose_yml"
-version = "0.0.60"
-source = "git+https://github.com/faradayio/compose_yml#7af1bd9df31c02ab106b777c523f9d1380718ccb"
+version = "0.0.61"
+source = "git+https://github.com/faradayio/compose_yml#e70a76cf35b2580011edc2c29d594d194e909678"
 dependencies = [
  "lazy_static",
  "log",
