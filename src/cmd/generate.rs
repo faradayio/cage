@@ -72,6 +72,19 @@ impl CommandGenerate for Project {
             target_tmpl.generate(&dir, &target_info, &mut io::stdout())?;
         }
 
+        // Generate production target using its specific template.
+        let mut production_tmpl = Template::new("new/pods/targets/production")?;
+        let production_info = TargetInfo {
+            project: &proj_info,
+            name: "production",
+        };
+        let production_dir = targets_dir.join("production");
+        production_tmpl.generate(
+            &production_dir,
+            &production_info,
+            &mut io::stdout(),
+        )?;
+
         Ok(proj_dir)
     }
 

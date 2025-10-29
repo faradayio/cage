@@ -1,7 +1,7 @@
 //! A single pod in a project.
 
-use compose_yml::v2 as dc;
-use compose_yml::v2::MergeOverride;
+use faraday_compose_yml::v2 as dc;
+use faraday_compose_yml::v2::MergeOverride;
 use std::collections::btree_map;
 use std::collections::{BTreeMap, BTreeSet};
 use std::ffi::OsString;
@@ -85,10 +85,10 @@ impl Config {
         if let Some(service_config) = self.services.get(service_name) {
             service_config.run_script(
                 runner,
-                &project,
-                &service_name,
-                &script_name,
-                &opts,
+                project,
+                service_name,
+                script_name,
+                opts,
             )?;
         }
         Ok(())
@@ -118,7 +118,7 @@ impl ServiceConfig {
         CR: CommandRunner,
     {
         if let Some(script) = self.scripts.get(script_name) {
-            script.run(runner, &project, service_name, &opts)?;
+            script.run(runner, project, service_name, opts)?;
         }
         Ok(())
     }
@@ -141,14 +141,16 @@ impl Script {
     {
         for cmd in &self.0 {
             if cmd.is_empty() {
-                return Err("all items in script must have at least one value".into());
+                return Err(anyhow::anyhow!(
+                    "all items in script must have at least one value"
+                ));
             }
             let cmd = if cmd.len() >= 2 {
                 Some(args::Command::new(&cmd[0]).with_args(&cmd[1..]))
             } else {
                 None
             };
-            project.run(runner, service_name, cmd.as_ref(), &opts)?;
+            project.run(runner, service_name, cmd.as_ref(), opts)?;
         }
         Ok(())
     }
@@ -186,10 +188,9 @@ impl FileInfo {
             rel_path: rel_path.to_owned(),
             file: if path.exists() {
                 debug!("Parsing {}", path.display());
-                dc::File::read_from_path(&path).chain_err(|| {
-                    // Make sure we tie parse errors to a specific file, for
-                    // the sake of sanity.
-                    ErrorKind::CouldNotReadFile(path.clone())
+                dc::File::read_from_path(&path).map_err(|e| {
+                    anyhow::Error::new(e)
+                        .context(Error::CouldNotReadFile(path.clone()))
                 })?
             } else {
                 Default::default()
@@ -213,20 +214,17 @@ impl FileInfo {
         let introduced: Vec<String> =
             ours.difference(service_names).cloned().collect();
         if !introduced.is_empty() {
-            return Err(ErrorKind::ServicesAddedInTarget(
-                base_file.to_owned(),
-                self.rel_path.clone(),
-                introduced,
-            )
+            return Err(Error::ServicesAddedInTarget {
+                base: base_file.to_owned(),
+                target: self.rel_path.clone(),
+                names: introduced,
+            }
             .into());
         }
 
         // Add any missing services.
         for name in service_names {
-            self.file
-                .services
-                .entry(name.to_owned())
-                .or_insert_with(Default::default);
+            self.file.services.entry(name.to_owned()).or_default();
         }
         Ok(())
     }
@@ -282,7 +280,7 @@ impl Pod {
         let name = name.into();
 
         // Load our `*.metadata.yml` file, if any.
-        let config_path = base_dir.join(&format!("{}.metadata.yml", &name));
+        let config_path = base_dir.join(format!("{}.metadata.yml", &name));
         let config: Config = if config_path.exists() {
             load_yaml(&config_path)?
         } else {
@@ -409,7 +407,7 @@ impl Pod {
     /// Like `service`, but returns an error if the service can't be found.
     pub fn service_or_err(&self, target: &Target, name: &str) -> Result<dc::Service> {
         self.service(target, name)?
-            .ok_or_else(|| ErrorKind::UnknownService(name.to_owned()).into())
+            .ok_or_else(|| Error::UnknownService(name.to_owned()).into())
     }
 
     /// Command-line `-p` and `-f` arguments that we'll pass to
@@ -441,7 +439,7 @@ impl Pod {
         CR: CommandRunner,
     {
         self.config
-            .run_script(runner, &project, &service_name, &script_name, &opts)
+            .run_script(runner, project, service_name, script_name, opts)
     }
 }
 

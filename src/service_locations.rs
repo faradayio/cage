@@ -66,9 +66,9 @@ impl ServiceLocations {
     }
 
     /// Find a service by name.
-    pub fn find<'a>(&self, service_name: &'a str) -> Option<(&str, &str)> {
+    pub fn find(&self, service_name: &str) -> Option<(&str, &str)> {
         self.locations
             .get(service_name)
-            .map(|&(ref pod, ref service)| (&pod[..], &service[..]))
+            .map(|(pod, service)| (&pod[..], &service[..]))
     }
 }

@@ -1,7 +1,7 @@
 //! Plugin which loads secrets from `config/secrets.yml` and adds them to a
 //! project.
 
-use compose_yml::v2 as dc;
+use faraday_compose_yml::v2 as dc;
 use std::collections::BTreeMap;
 #[cfg(test)]
 use std::path::Path;
@@ -161,17 +161,17 @@ impl PluginTransform for Plugin {
                 }
             };
 
-        for (name, mut service) in &mut file.services {
+        for (name, service) in &mut file.services {
             service
                 .environment
                 .append(&mut config.common.to_compose_env());
-            append_service(&mut service, &config.pods, name);
+            append_service(service, &config.pods, name);
             let target_name = ctx.project.current_target().name();
             if let Some(target) = config.targets.get(target_name) {
                 service
                     .environment
                     .append(&mut target.common.to_compose_env());
-                append_service(&mut service, &target.pods, name);
+                append_service(service, &target.pods, name);
             }
         }
         Ok(())

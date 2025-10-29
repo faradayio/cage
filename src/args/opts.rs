@@ -72,7 +72,7 @@ pub struct Process {
     /// An optional user as whom we should run the command.
     ///
     /// TODO LOW: Is this technically "user[:group]"?  If so, we need
-    /// support for that type in `compose_yml` and use it here.
+    /// support for that type in `faraday_compose_yml` and use it here.
     pub user: Option<String>,
 
     /// Should we allocate a TTY when executing the command?

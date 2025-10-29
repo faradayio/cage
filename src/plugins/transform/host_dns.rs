@@ -3,7 +3,7 @@
 //! This allows containers to talk to the host. It's set up automatically on
 //! MacOS, but not yet on Linux.
 
-use compose_yml::v2 as dc;
+use faraday_compose_yml::v2 as dc;
 use std::{
     marker::PhantomData,
     net::IpAddr,
@@ -70,9 +70,9 @@ impl PluginTransform for Plugin {
                     return Ok(());
                 }
             };
-            let addr = addr
-                .parse::<IpAddr>()
-                .chain_err(|| err!("invalid IP address {:?}", addr))?;
+            let addr = addr.parse::<IpAddr>().map_err(|e| {
+                anyhow::Error::new(e).context(format!("invalid IP address {:?}", addr))
+            })?;
             trace!("mapping host.docker.internal to {}", addr);
 
             // Add an extra host to each service.
@@ -104,14 +104,19 @@ impl InterfaceInfo {
         // TODO: Should we use our `command_runner` for this so that we can mock
         // it during tests?
         let output = Command::new("ip")
-            .args(&["-j", "address", "show", ifname])
+            .args(["-j", "address", "show", ifname])
             .stderr(Stdio::inherit())
             .output()
-            .chain_err(|| "error running `ip address show`")?;
+            .map_err(|e| {
+                anyhow::Error::new(e).context("error running `ip address show`")
+            })?;
         if output.status.success() {
             let data = output.stdout;
             let interfaces = serde_json::from_slice::<Vec<InterfaceInfo>>(&data)
-                .chain_err(|| "error parsing `ip address show` output")?;
+                .map_err(|e| {
+                    anyhow::Error::new(e)
+                        .context("error parsing `ip address show` output")
+                })?;
             for i in &interfaces {
                 if let Some(found_ifname) = &i.ifname {
                     if found_ifname == ifname {

@@ -80,25 +80,20 @@ impl CommandUp for Project {
         );
         loop {
             let state: RuntimeState = RuntimeState::for_project(self)?;
-            let listening = pod
-                .service_names()
-                .iter()
-                .map(|service_name| {
-                    debug!("scanning service '{}'", service_name);
-                    let containers = state.service_containers(service_name);
-                    if containers.is_empty() {
-                        // No containers visible yet; give Docker time.
-                        debug!("no containers for service '{}' yet", service_name);
-                        false
-                    } else {
-                        // If we have at least one container, scan it.
-                        containers
-                            .iter()
-                            .map(|container| container.is_listening_to_ports())
-                            .all(|listening| listening)
-                    }
-                })
-                .all(|listening| listening);
+            let listening = pod.service_names().iter().all(|service_name| {
+                debug!("scanning service '{}'", service_name);
+                let containers = state.service_containers(service_name);
+                if containers.is_empty() {
+                    // No containers visible yet; give Docker time.
+                    debug!("no containers for service '{}' yet", service_name);
+                    false
+                } else {
+                    // If we have at least one container, scan it.
+                    containers
+                        .iter()
+                        .all(|container| container.is_listening_to_ports())
+                }
+            });
             if listening {
                 break;
             }
@@ -109,9 +104,10 @@ impl CommandUp for Project {
         println!("Initializing pod '{}'", pod.name());
         for cmd in pod.run_on_init() {
             if cmd.is_empty() {
-                return Err("all `run_on_init` items for '{}' \
-                     must have at least one value"
-                    .into());
+                return Err(anyhow::anyhow!(
+                    "all `run_on_init` items for '{}' must have at least one value",
+                    pod.name()
+                ));
             }
             let service = &cmd[0];
             let cmd = if cmd.len() >= 2 {

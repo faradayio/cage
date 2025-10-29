@@ -1,7 +1,7 @@
 //! The `status` command.
 
 use colored::*;
-use compose_yml::v2 as dc;
+use faraday_compose_yml::v2 as dc;
 
 use crate::args;
 use crate::command_runner::CommandRunner;

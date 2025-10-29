@@ -273,7 +273,7 @@ If you encounter an issue, it might help to set the following shell
 variables and re-run the command:
 
 ```sh
-export RUST_BACKTRACE=1 RUST_LOG=cage=debug,compose_yml=debug
+export RUST_BACKTRACE=1 RUST_LOG=cage=debug,faraday_compose_yml=debug
 ```
 
 ## Development notes

@@ -1,6 +1,6 @@
 //! Plugin which removes the `build` field in a in a `dc::File`.
 
-use compose_yml::v2 as dc;
+use faraday_compose_yml::v2 as dc;
 use std::marker::PhantomData;
 
 use crate::errors::*;

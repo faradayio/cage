@@ -55,12 +55,12 @@ pub trait Command {
         if status.success() {
             Ok(())
         } else {
-            Err(self.command_failed_error().into())
+            Err(self.command_failed_error())
         }
     }
 
     /// Make an error representing a failure of this command.
-    fn command_failed_error(&self) -> ErrorKind;
+    fn command_failed_error(&self) -> anyhow::Error;
 }
 
 /// Support for running operating system commands.
@@ -135,13 +135,13 @@ impl Command for OsCommand {
 
     fn status(&mut self) -> Result<process::ExitStatus> {
         debug!("Running {:?}", &self.arg_log);
-        self.command
-            .status()
-            .chain_err(|| self.command_failed_error())
+        self.command.status().map_err(|e| {
+            anyhow::Error::new(e).context(Error::CommandFailed(self.arg_log.clone()))
+        })
     }
 
-    fn command_failed_error(&self) -> ErrorKind {
-        ErrorKind::CommandFailed(self.arg_log.clone())
+    fn command_failed_error(&self) -> anyhow::Error {
+        Error::CommandFailed(self.arg_log.clone()).into()
     }
 }
 
@@ -238,13 +238,13 @@ impl Command for TestCommand {
         // There's no portable way to build an `ExitStatus` in portable
         // Rust without actually running a command, so just choose an
         // inoffensive one with the result we want.
-        process::Command::new("true")
-            .status()
-            .chain_err(|| self.command_failed_error())
+        process::Command::new("true").status().map_err(|e| {
+            anyhow::Error::new(e).context(Error::CommandFailed(self.cmd.clone()))
+        })
     }
 
-    fn command_failed_error(&self) -> ErrorKind {
-        ErrorKind::CommandFailed(self.cmd.clone())
+    fn command_failed_error(&self) -> anyhow::Error {
+        Error::CommandFailed(self.cmd.clone()).into()
     }
 }
 
@@ -275,7 +275,7 @@ macro_rules! assert_ran {
 }
 
 #[test]
-pub fn test_command_runner_logs_commands() {
+fn test_command_runner_logs_commands() {
     let runner = TestCommandRunner::new();
 
     let exit_code = runner

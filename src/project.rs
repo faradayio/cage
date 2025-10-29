@@ -1,7 +1,7 @@
 //! A cage project.
 
 #[cfg(test)]
-use compose_yml::v2 as dc;
+use faraday_compose_yml::v2 as dc;
 use serde::ser::SerializeMap;
 use serde::{Serialize, Serializer};
 use std::env;
@@ -58,13 +58,18 @@ impl ProjectConfig {
     /// Load a config file from the specified path.
     pub fn new(path: &Path) -> Result<Self> {
         if path.exists() {
-            let mkerr = || ErrorKind::CouldNotReadFile(path.to_owned());
-            let f = fs::File::open(path).chain_err(&mkerr)?;
+            let f = fs::File::open(path).map_err(|e| {
+                anyhow::Error::new(e).context(Error::CouldNotReadFile(path.to_owned()))
+            })?;
             let mut reader = io::BufReader::new(f);
             let mut yaml = String::new();
-            reader.read_to_string(&mut yaml).chain_err(&mkerr)?;
-            Self::check_config_version(&path, &yaml)?;
-            serde_yaml::from_str(&yaml).chain_err(&mkerr)
+            reader.read_to_string(&mut yaml).map_err(|e| {
+                anyhow::Error::new(e).context(Error::CouldNotReadFile(path.to_owned()))
+            })?;
+            Self::check_config_version(path, &yaml)?;
+            serde_yaml::from_str(&yaml).map_err(|e| {
+                anyhow::Error::new(e).context(Error::CouldNotReadFile(path.to_owned()))
+            })
         } else {
             warn!("No {} file, using default values", path.display());
             Ok(Default::default())
@@ -84,11 +89,12 @@ impl ProjectConfig {
             cage_version: Option<semver::VersionReq>,
         }
 
-        let config: VersionOnly = serde_yaml::from_str(config_yml)
-            .chain_err(|| ErrorKind::CouldNotReadFile(path.to_owned()))?;
+        let config: VersionOnly = serde_yaml::from_str(config_yml).map_err(|e| {
+            anyhow::Error::new(e).context(Error::CouldNotReadFile(path.to_owned()))
+        })?;
         if let Some(ref req) = config.cage_version {
-            if !req.matches(&version()) {
-                return Err(ErrorKind::MismatchedVersion(req.to_owned()).into());
+            if !req.matches(version()) {
+                return Err(Error::MismatchedVersion(req.to_owned()).into());
             }
         } else {
             warn!(
@@ -139,10 +145,8 @@ fn check_config_version() {
     let yaml = "---\ncage_version: \"0.0.1\"\nunknown_field: true";
     let res = ProjectConfig::check_config_version(&p, yaml);
     assert!(res.is_err());
-    match *res.unwrap_err().kind() {
-        ErrorKind::MismatchedVersion(_) => {}
-        ref e => panic!("Unexpected error type {}", e),
-    }
+    let err_msg = format!("{}", res.unwrap_err());
+    assert!(err_msg.contains("cage_version"));
 }
 
 /// Represents either a `Pod` object or a `Service` object.
@@ -204,7 +208,7 @@ pub struct Project {
     hooks: HookManager,
 
     /// The main configuration for this project.
-    config: ProjectConfig,
+    _config: ProjectConfig,
 
     /// Docker image tags to use for images that don't have them.
     /// Typically used to lock down versions supplied by a CI system.
@@ -226,7 +230,7 @@ impl Project {
         let current_target = targets
             .iter()
             .find(|target| target.name() == "development")
-            .ok_or_else(|| ErrorKind::UnknownTarget("development".into()))?
+            .ok_or_else(|| Error::UnknownTarget("development".into()))?
             .to_owned();
         let pods = Project::find_pods(root_dir, &targets)?;
         let service_locations = ServiceLocations::new(&pods);
@@ -251,7 +255,7 @@ impl Project {
             current_target,
             sources,
             hooks: HookManager::new(root_dir)?,
-            config,
+            _config: config,
             default_tags: None,
             plugins: None,
         };
@@ -418,7 +422,7 @@ impl Project {
 
     /// Look up the named service.  Returns the pod containing the service
     /// and the name of the service within that pod.
-    pub fn service<'a>(&self, name: &'a str) -> Option<(&Pod, &str)> {
+    pub fn service(&self, name: &str) -> Option<(&Pod, &str)> {
         if let Some((pod_name, service_name)) = self.service_locations.find(name) {
             let pod = self.pod(pod_name).expect("pod should exist");
             Some((pod, service_name))
@@ -428,17 +432,14 @@ impl Project {
     }
 
     /// Like `service`, but returns an error if the service is unknown.
-    pub fn service_or_err<'a>(&self, name: &'a str) -> Result<(&Pod, &str)> {
+    pub fn service_or_err(&self, name: &str) -> Result<(&Pod, &str)> {
         self.service(name)
-            .ok_or_else(|| ErrorKind::UnknownService(name.to_owned()).into())
+            .ok_or_else(|| Error::UnknownService(name.to_owned()).into())
     }
 
     /// Look for a name as a pod first, and if that fails, look for it as a
     /// service.
-    pub fn pod_or_service<'a, 'b>(
-        &'a self,
-        name: &'b str,
-    ) -> Option<PodOrService<'a>> {
+    pub fn pod_or_service<'a>(&'a self, name: &str) -> Option<PodOrService<'a>> {
         if let Some(pod) = self.pod(name) {
             Some(PodOrService::Pod(pod))
         } else if let Some((pod, service_name)) = self.service(name) {
@@ -450,12 +451,12 @@ impl Project {
 
     /// Like `pod_or_service`, but returns an error if no pod or service of
     /// that name can be found.
-    pub fn pod_or_service_or_err<'a, 'b>(
+    pub fn pod_or_service_or_err<'a>(
         &'a self,
-        name: &'b str,
+        name: &str,
     ) -> Result<PodOrService<'a>> {
         self.pod_or_service(name)
-            .ok_or_else(|| ErrorKind::UnknownPodOrService(name.to_owned()).into())
+            .ok_or_else(|| Error::UnknownPodOrService(name.to_owned()).into())
     }
 
     /// Iterate over all targets in this project.
@@ -474,7 +475,7 @@ impl Project {
     /// Like `target`, but returns an error if no each target is found.
     pub fn target_or_err(&self, name: &str) -> Result<&Target> {
         self.target(name)
-            .ok_or_else(|| ErrorKind::UnknownTarget(name.into()).into())
+            .ok_or_else(|| Error::UnknownTarget(name.into()).into())
     }
 
     /// Get the current target that we're using with this project.

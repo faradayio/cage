@@ -2,7 +2,7 @@
 //! repositories, and which handles mounting local source trees into
 //! containers.
 
-use compose_yml::v2 as dc;
+use faraday_compose_yml::v2 as dc;
 use std::marker::PhantomData;
 #[cfg(test)]
 use std::path::Path;

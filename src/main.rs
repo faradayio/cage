@@ -2,190 +2,587 @@
 
 #![allow(clippy::field_reassign_with_default)]
 
-#[macro_use]
-extern crate clap;
-#[macro_use]
-extern crate log;
-
 use cage::{
     cmd::*,
     command_runner::{Command, CommandRunner, OsCommandRunner},
-    ErrorKind, Project, Result,
+    Error, Project, Result,
 };
+use clap::{Parser, Subcommand, ValueEnum};
 use colored::Colorize;
 use itertools::Itertools;
 use std::{
+    collections::BTreeMap,
     env, fs,
     io::{self, Write},
     path::Path,
     process,
 };
-use yaml_rust::yaml;
 
-/// Load our command-line interface definitions from an external `clap`
-/// YAML file.  We could create these using code, but at the cost of more
-/// verbosity.
-fn cli(yaml: &yaml::Yaml) -> clap::App<'_, '_> {
-    clap::App::from_yaml(yaml).version(crate_version!())
+#[macro_use]
+extern crate log;
+
+const AFTER_HELP: &str = r#"To create a new project:
+
+    cage new myproj
+
+From inside a project directory:
+
+    cage pull                      # Download images for the a project
+    cage up --init                 # Start the app, initializing the database
+    cage status                    # Get an overview of the project
+
+Access your application at http://localhost:3000/.  To download and edit
+the source code for your application, run:
+
+    cage source ls                 # List available service source code
+    cage source mount rails_hello  # Clone source and configure mounts
+    cage up                        # Restart any affected services
+    cage status                    # See how things have changed
+
+Now create `src/rails_hello/public/index.html` and reload in your browser.
+
+Cage is copyright 2016 by Faraday, Inc., and distributed under either the
+Apache 2.0 or MIT license. For more information, see
+https://github.com/faradayio/cage."#;
+
+#[derive(Parser, Debug)]
+#[command(name = "cage", version, about = "Develop complex projects with lots of Docker services", after_help = AFTER_HELP)]
+struct Cli {
+    #[arg(
+        short = 'p',
+        long = "project-name",
+        value_name = "PROJECT_NAME",
+        help = "The name of this project.  Defaults to the current directory name."
+    )]
+    project_name: Option<String>,
+
+    #[arg(
+        long = "target",
+        value_name = "TARGET",
+        help = "Override settings with values from the specified subdirectory of `pods/targets`.  Defaults to `development` unless running tests."
+    )]
+    target: Option<String>,
+
+    #[arg(
+        long = "default-tags",
+        value_name = "TAG_FILE",
+        help = "A list of tagged image names, one per line, to be used as defaults for images."
+    )]
+    default_tags: Option<String>,
+
+    #[command(subcommand)]
+    command: Commands,
 }
 
-/// Custom methods we want to add to `clap::App`.
-trait ArgMatchesExt {
-    /// Do we need to generate `.cage/pods`?  This will probably be
-    /// refactored in the future.
-    fn should_output_project(&self) -> bool;
+#[derive(Subcommand, Debug)]
+enum Commands {
+    #[command(about = "Print information about the system", hide = true)]
+    Sysinfo,
 
-    /// Get either the specified target name, or a reasonable default.
-    fn target_name(&self) -> &str;
+    #[command(about = "Create a directory containing a new project")]
+    New {
+        #[arg(value_name = "NAME", help = "The name of the new project")]
+        name: String,
+    },
 
-    /// Determine what pods or services we're supposed to act on.
-    fn to_acts_on(&self, arg_name: &str, include_tasks: bool) -> cage::args::ActOn;
+    #[command(about = "Print out the status of the current project")]
+    Status {
+        #[arg(
+            value_name = "POD_OR_SERVICE",
+            help = "Pod or service names.  Defaults to all."
+        )]
+        pod_or_service: Vec<String>,
+    },
 
-    /// Determine what sources we're supposed to act on.
-    fn to_acts_on_sources(
-        &self,
-        project: &Project,
-    ) -> Result<cage::args::ActOnSources>;
+    #[command(about = "Build images for the containers associated with this project")]
+    Build {
+        #[arg(
+            value_name = "POD_OR_SERVICE",
+            help = "Pod or service names.  Defaults to all."
+        )]
+        pod_or_service: Vec<String>,
+    },
 
-    /// Extract options shared by `exec` and `run` from our command-line
-    /// arguments.
-    fn to_process_options(&self) -> cage::args::opts::Process;
+    #[command(about = "Build images for the containers associated with this project")]
+    Pull {
+        #[arg(short = 'q', long = "quiet", help = "Don't show download progress")]
+        quiet: bool,
 
-    /// Extract `exec` options from our command-line arguments.
-    fn to_exec_options(&self) -> cage::args::opts::Exec;
+        #[arg(
+            value_name = "POD_OR_SERVICE",
+            help = "Pod or service names.  Defaults to all."
+        )]
+        pod_or_service: Vec<String>,
+    },
 
-    /// Extract `run` options from our command-line arguments.
-    fn to_run_options(&self) -> cage::args::opts::Run;
+    #[command(about = "Run project")]
+    Up {
+        #[arg(
+            long = "init",
+            help = "Run any pod initialization commands (for first startup)"
+        )]
+        init: bool,
 
-    /// Extract `test` options from our command-line arguments.
-    fn to_test_options(&self) -> cage::args::opts::Test;
+        #[arg(
+            value_name = "POD_OR_SERVICE",
+            help = "Pod or service names.  Defaults to all."
+        )]
+        pod_or_service: Vec<String>,
+    },
 
-    /// Extract `exec::Command` from our command-line arguments.
-    fn to_exec_command(&self) -> Option<cage::args::Command>;
+    #[command(about = "Restart all services associated with this project")]
+    Restart {
+        #[arg(
+            value_name = "POD_OR_SERVICE",
+            help = "Pod or service names.  Defaults to all."
+        )]
+        pod_or_service: Vec<String>,
+    },
 
-    /// Extract 'logs' options from our command-line arguments.
-    fn to_logs_options(&self) -> cage::args::opts::Logs;
+    #[command(about = "Stop all containers associated with this project")]
+    Stop {
+        #[arg(
+            value_name = "POD_OR_SERVICE",
+            help = "Pod or service names.  Defaults to all."
+        )]
+        pod_or_service: Vec<String>,
+    },
 
-    /// Extract 'rm' options from our command-line arguments.
-    fn to_rm_options(&self) -> cage::args::opts::Rm;
+    #[command(about = "Remove the containers associated with a pod or service")]
+    Rm {
+        #[arg(short = 'f', long = "force", help = "Remove without confirming first")]
+        force: bool,
+
+        #[arg(
+            short = 'v',
+            help = "Remove anonymous volumes associated with containers"
+        )]
+        remove_volumes: bool,
+
+        #[arg(
+            value_name = "POD_OR_SERVICE",
+            help = "Pod or service names.  Defaults to all."
+        )]
+        pod_or_service: Vec<String>,
+    },
+
+    #[command(
+        about = "Run a specific pod as a one-shot task",
+        trailing_var_arg = true
+    )]
+    Run {
+        #[arg(short = 'd', help = "Run command detached in background")]
+        detached: bool,
+
+        #[arg(
+            long = "user",
+            value_name = "USER",
+            help = "User as which to run a command"
+        )]
+        user: Option<String>,
+
+        #[arg(short = 'T', help = "Do not allocate a TTY when running a command")]
+        no_allocate_tty: bool,
+
+        #[arg(
+            long = "entrypoint",
+            value_name = "ENTRYPOINT",
+            help = "Override the entrypoint of the service"
+        )]
+        entrypoint: Option<String>,
+
+        #[arg(short = 'e', value_names = &["KEY", "VAL"], num_args = 2, value_delimiter = '=', help = "Set an environment variable in the container")]
+        environment: Vec<String>,
+
+        #[arg(
+            value_name = "SERVICE",
+            help = "The name of the service, either as `pod/service`, or as just `service` if unique"
+        )]
+        service: String,
+
+        #[arg(
+            value_name = "COMMAND",
+            help = "The command to run, with any arguments"
+        )]
+        command: Vec<String>,
+    },
+
+    #[command(
+        about = "Run a named script defined in metadata for specified pods or services"
+    )]
+    RunScript {
+        #[arg(
+            long = "no-deps",
+            help = "Do not start linked services when running scripts"
+        )]
+        no_deps: bool,
+
+        #[arg(value_name = "SCRIPT_NAME", help = "The named script to run")]
+        script_name: String,
+
+        #[arg(
+            value_name = "POD_OR_SERVICE",
+            help = "Pod or service names.  Defaults to all."
+        )]
+        pod_or_service: Vec<String>,
+    },
+
+    #[command(
+        about = "Run a command inside an existing container",
+        trailing_var_arg = true
+    )]
+    Exec {
+        #[arg(short = 'd', help = "Run command detached in background")]
+        detached: bool,
+
+        #[arg(
+            long = "user",
+            value_name = "USER",
+            help = "User as which to run a command"
+        )]
+        user: Option<String>,
+
+        #[arg(short = 'T', help = "Do not allocate a TTY when running a command")]
+        no_allocate_tty: bool,
+
+        #[arg(long = "privileged", help = "Run a command with elevated privileges")]
+        privileged: bool,
+
+        #[arg(
+            value_name = "SERVICE",
+            help = "The name of the service, either as `pod/service`, or as just `service` if unique"
+        )]
+        service: String,
+
+        #[arg(
+            value_name = "COMMAND",
+            help = "The command to run, with any arguments"
+        )]
+        command: Vec<String>,
+    },
+
+    #[command(about = "Run an interactive shell inside a running container")]
+    Shell {
+        #[arg(short = 'd', help = "Run command detached in background")]
+        detached: bool,
+
+        #[arg(
+            long = "user",
+            value_name = "USER",
+            help = "User as which to run a command"
+        )]
+        user: Option<String>,
+
+        #[arg(short = 'T', help = "Do not allocate a TTY when running a command")]
+        no_allocate_tty: bool,
+
+        #[arg(long = "privileged", help = "Run a command with elevated privileges")]
+        privileged: bool,
+
+        #[arg(
+            value_name = "SERVICE",
+            help = "The name of the service, either as `pod/service`, or as just `service` if unique"
+        )]
+        service: String,
+    },
+
+    #[command(
+        about = "Run the tests associated with a service, if any",
+        trailing_var_arg = true,
+        after_help = r#"To enable tests for a service, add a label with the test command.
+Assuming your service uses rspec, this might look like:
+
+    myservice:
+      labels:
+        io.fdy.cage.test: "rspec"
+
+Run this test command using:
+
+    cage test myservice
+
+To run only a subset of your tests, you can also pass a custom test
+command:
+
+    cage test myservice rspec spec/my_new_feature_spec.rb
+"#
+    )]
+    Test {
+        #[arg(
+            long = "export-test-output",
+            help = "Copy container's $WORKDIR/test_output to $PROJECT_DIR/test_output"
+        )]
+        export_test_output: bool,
+
+        #[arg(
+            value_name = "SERVICE",
+            help = "The name of the service, either as `pod/service`, or as just `service` if unique"
+        )]
+        service: String,
+
+        #[arg(
+            value_name = "COMMAND",
+            help = "The command to run, with any arguments"
+        )]
+        command: Vec<String>,
+    },
+
+    #[command(about = "Display logs for a service")]
+    Logs {
+        #[arg(short = 'f', help = "Follow log output")]
+        follow: bool,
+
+        #[arg(
+            long = "tail",
+            value_name = "NUMBER",
+            help = "Number of lines from end of output to display"
+        )]
+        number: Option<String>,
+
+        #[arg(
+            value_name = "POD_OR_SERVICE",
+            help = "Pod or service names.  Defaults to all."
+        )]
+        pod_or_service: Vec<String>,
+    },
+
+    #[command(
+        about = "Commands for working with git repositories and local source trees"
+    )]
+    Source {
+        #[command(subcommand)]
+        command: SourceCommands,
+    },
+
+    #[command(about = "Commands for generating new source files")]
+    Generate {
+        #[command(subcommand)]
+        command: GenerateCommands,
+    },
+
+    #[command(about = "Export project as flattened *.yml files")]
+    Export {
+        #[arg(value_name = "DIR", help = "The name of the directory to create")]
+        dir: String,
+    },
 }
 
-impl<'a> ArgMatchesExt for clap::ArgMatches<'a> {
+#[derive(Subcommand, Debug)]
+enum SourceCommands {
+    #[command(about = "List all known source tree aliases and URLs")]
+    Ls,
+
+    #[command(
+        about = "Clone a git repository using its short alias and mount it into the containers that use it"
+    )]
+    Clone {
+        #[arg(
+            value_name = "ALIAS",
+            help = "The short alias of the repo to clone (see `source list`)"
+        )]
+        alias: String,
+    },
+
+    #[command(about = "Mount a source tree into the containers that use it")]
+    Mount {
+        #[arg(
+            value_name = "ALIASES",
+            help = "The short aliases of the source trees to operate on (see `source list`)"
+        )]
+        aliases: Vec<String>,
+
+        #[arg(
+            short = 'a',
+            long = "all",
+            help = "Operate on all source trees",
+            conflicts_with = "aliases"
+        )]
+        all: bool,
+    },
+
+    #[command(about = "Unmount a local source tree from all containers")]
+    Unmount {
+        #[arg(
+            value_name = "ALIASES",
+            help = "The short aliases of the source trees to operate on (see `source list`)"
+        )]
+        aliases: Vec<String>,
+
+        #[arg(
+            short = 'a',
+            long = "all",
+            help = "Operate on all source trees",
+            conflicts_with = "aliases"
+        )]
+        all: bool,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+enum GenerateCommands {
+    #[command(
+        about = "Generate shell autocompletion support",
+        after_help = r#"To set up shell auto-completion for bash:
+
+    cage generate completion bash
+    source cage.bash-completion
+
+And set up your ~/.profile or ~/.bash_profile to source this file on
+each login.
+
+To set up shell auto-completion for fish:
+
+    cage generate completion fish
+    source cage.fish
+    mkdir -p ~/.config/fish/completions
+    mv cage.fish ~/.config/fish/completions
+"#
+    )]
+    Completion {
+        #[arg(
+            value_enum,
+            value_name = "SHELL",
+            help = "The name of shell for which to generate an autocompletion script"
+        )]
+        shell: Shell,
+    },
+
+    #[command(about = "Generate config/secrets.yml for local secret storage")]
+    Secrets,
+
+    #[command(about = "Generate config/vault.yml for fetching secrets from vault")]
+    Vault,
+}
+
+#[derive(Debug, Clone, ValueEnum)]
+enum Shell {
+    Bash,
+    Fish,
+}
+
+impl Cli {
     fn should_output_project(&self) -> bool {
-        self.subcommand_name() != Some("export")
+        !matches!(self.command, Commands::Export { .. })
     }
 
     fn target_name(&self) -> &str {
-        self.value_of("target").unwrap_or_else(|| {
-            if self.subcommand_name() == Some("test") {
+        self.target.as_deref().unwrap_or({
+            if matches!(self.command, Commands::Test { .. }) {
                 "test"
             } else {
                 "development"
             }
         })
     }
+}
 
-    fn to_acts_on(&self, arg_name: &str, include_tasks: bool) -> cage::args::ActOn {
-        let names: Vec<String> = self
-            .values_of(arg_name)
-            .map_or_else(Vec::new, |p| p.collect())
+fn to_acts_on(pod_or_service: &[String], include_tasks: bool) -> cage::args::ActOn {
+    if pod_or_service.is_empty() {
+        if include_tasks {
+            cage::args::ActOn::All
+        } else {
+            cage::args::ActOn::AllExceptTasks
+        }
+    } else {
+        cage::args::ActOn::Named(pod_or_service.to_vec())
+    }
+}
+
+fn to_acts_on_sources(
+    aliases: &[String],
+    all: bool,
+    proj: &Project,
+) -> Result<cage::args::ActOnSources> {
+    if all {
+        Ok(cage::args::ActOnSources::All)
+    } else if !aliases.is_empty() {
+        let validated_aliases = aliases
             .iter()
-            .map(|&p| p.to_string())
-            .collect();
-        if names.is_empty() {
-            if include_tasks {
-                cage::args::ActOn::All
-            } else {
-                cage::args::ActOn::AllExceptTasks
-            }
-        } else {
-            cage::args::ActOn::Named(names)
-        }
-    }
-
-    /// Determine what pods or services we're supposed to act on.
-    fn to_acts_on_sources(&self, proj: &Project) -> Result<cage::args::ActOnSources> {
-        if self.is_present("ALL") {
-            Ok(cage::args::ActOnSources::All)
-        } else if let Some(aliases) = self.values_of("ALIASES") {
-            let aliases = aliases
-                .map(|a| -> Result<String> {
-                    if proj.sources().find_by_alias(a).is_none() {
-                        Err(ErrorKind::UnknownSource(a.to_owned()).into())
-                    } else {
-                        Ok(a.to_owned())
-                    }
-                })
-                .collect::<Result<Vec<_>>>()?;
-            Ok(cage::args::ActOnSources::Named(aliases))
-        } else {
-            panic!("clap source always require --all or a list of sources");
-        }
-    }
-
-    fn to_process_options(&self) -> cage::args::opts::Process {
-        let mut opts = cage::args::opts::Process::default();
-        opts.detached = self.is_present("detached");
-        opts.user = self.value_of("user").map(|v| v.to_owned());
-        opts.allocate_tty = !self.is_present("no-allocate-tty");
-        opts
-    }
-
-    fn to_exec_options(&self) -> cage::args::opts::Exec {
-        let mut opts = cage::args::opts::Exec::default();
-        opts.process = self.to_process_options();
-        opts.privileged = self.is_present("privileged");
-        opts
-    }
-
-    fn to_run_options(&self) -> cage::args::opts::Run {
-        let mut opts = cage::args::opts::Run::default();
-        opts.process = self.to_process_options();
-        opts.entrypoint = self.value_of("entrypoint").map(|v| v.to_owned());
-        if let Some(environment) = self.values_of("environment") {
-            let environment: Vec<&str> = environment.collect();
-            for env_val in environment.chunks(2) {
-                if env_val.len() != 2 {
-                    // Clap should prevent this.
-                    panic!("Environment binding '{}' has no value", env_val[0]);
+            .map(|a| -> Result<String> {
+                if proj.sources().find_by_alias(a).is_none() {
+                    Err(Error::UnknownSource(a.to_owned()).into())
+                } else {
+                    Ok(a.to_owned())
                 }
-                opts.environment
-                    .insert(env_val[0].to_owned(), env_val[1].to_owned());
-            }
+            })
+            .collect::<Result<Vec<_>>>()?;
+        Ok(cage::args::ActOnSources::Named(validated_aliases))
+    } else {
+        panic!("clap source always require --all or a list of sources");
+    }
+}
+
+fn to_process_options(
+    detached: bool,
+    user: &Option<String>,
+    no_allocate_tty: bool,
+) -> cage::args::opts::Process {
+    let mut opts = cage::args::opts::Process::default();
+    opts.detached = detached;
+    opts.user = user.clone();
+    opts.allocate_tty = !no_allocate_tty;
+    opts
+}
+
+fn to_exec_options(
+    detached: bool,
+    user: &Option<String>,
+    no_allocate_tty: bool,
+    privileged: bool,
+) -> cage::args::opts::Exec {
+    let mut opts = cage::args::opts::Exec::default();
+    opts.process = to_process_options(detached, user, no_allocate_tty);
+    opts.privileged = privileged;
+    opts
+}
+
+fn to_run_options(
+    detached: bool,
+    user: &Option<String>,
+    no_allocate_tty: bool,
+    entrypoint: &Option<String>,
+    environment: &[String],
+    no_deps: bool,
+) -> cage::args::opts::Run {
+    let mut opts = cage::args::opts::Run::default();
+    opts.process = to_process_options(detached, user, no_allocate_tty);
+    opts.entrypoint = entrypoint.clone();
+
+    let mut env_map = BTreeMap::new();
+    for chunk in environment.chunks(2) {
+        if chunk.len() == 2 {
+            env_map.insert(chunk[0].to_owned(), chunk[1].to_owned());
         }
-        opts.no_deps = self.is_present("no-deps");
-        opts
     }
+    opts.environment = env_map;
+    opts.no_deps = no_deps;
+    opts
+}
 
-    /// Extract `test` options from our command-line arguments.
-    fn to_test_options(&self) -> cage::args::opts::Test {
-        let mut opts = cage::args::opts::Test::default();
-        opts.export_test_output = self.is_present("export-test-output");
-        opts
-    }
+fn to_test_options(export_test_output: bool) -> cage::args::opts::Test {
+    let mut opts = cage::args::opts::Test::default();
+    opts.export_test_output = export_test_output;
+    opts
+}
 
-    fn to_logs_options(&self) -> cage::args::opts::Logs {
-        let mut opts = cage::args::opts::Logs::default();
-        opts.follow = self.is_present("follow");
-        opts.number = self.value_of("number").map(|v| v.to_owned());
-        opts
-    }
+fn to_logs_options(follow: bool, number: &Option<String>) -> cage::args::opts::Logs {
+    let mut opts = cage::args::opts::Logs::default();
+    opts.follow = follow;
+    opts.number = number.clone();
+    opts
+}
 
-    fn to_rm_options(&self) -> cage::args::opts::Rm {
-        let mut opts = cage::args::opts::Rm::default();
-        opts.force = self.is_present("force");
-        opts.remove_volumes = self.is_present("remove-volumes");
-        opts
-    }
+fn to_rm_options(force: bool, remove_volumes: bool) -> cage::args::opts::Rm {
+    let mut opts = cage::args::opts::Rm::default();
+    opts.force = force;
+    opts.remove_volumes = remove_volumes;
+    opts
+}
 
-    fn to_exec_command(&self) -> Option<cage::args::Command> {
-        if self.is_present("COMMAND") {
-            let values: Vec<&str> = self.values_of("COMMAND").unwrap().collect();
-            assert!(!values.is_empty(), "too few values from CLI parser");
-            Some(cage::args::Command::new(values[0]).with_args(&values[1..]))
-        } else {
-            None
-        }
+fn to_exec_command(command: &[String]) -> Option<cage::args::Command> {
+    if command.is_empty() {
+        None
+    } else {
+        Some(cage::args::Command::new(&command[0]).with_args(&command[1..]))
     }
 }
 
@@ -207,25 +604,15 @@ fn warn_if_pods_are_enabled_but_not_running(project: &cage::Project) -> Result<(
 
 /// The function which does the real work.  Unlike `main`, we have a return
 /// type of `Result` and may therefore use `?` to handle errors.
-fn run(matches: &clap::ArgMatches<'_>) -> Result<()> {
-    // We know that we always have a subcommand because our `cli.yml`
-    // requires this and `clap` is supposed to enforce it.
-    let sc_name = matches.subcommand_name().unwrap();
-    let sc_matches: &clap::ArgMatches<'_> =
-        matches.subcommand_matches(sc_name).unwrap();
-
-    // Handle any subcommands that we can handle without a project
-    // directory.
-    match sc_name {
-        "sysinfo" => {
+fn run(cli: &Cli) -> Result<()> {
+    // Handle any subcommands that we can handle without a project directory.
+    match &cli.command {
+        Commands::Sysinfo => {
             all_versions()?;
             return Ok(());
         }
-        "new" => {
-            cage::Project::generate_new(
-                &env::current_dir()?,
-                sc_matches.value_of("NAME").unwrap(),
-            )?;
+        Commands::New { name } => {
+            cage::Project::generate_new(&env::current_dir()?, name)?;
             return Ok(());
         }
         _ => {}
@@ -233,106 +620,170 @@ fn run(matches: &clap::ArgMatches<'_>) -> Result<()> {
 
     // Handle our standard arguments that apply to all subcommands.
     let mut proj = cage::Project::from_current_dir()?;
-    if let Some(project_name) = matches.value_of("project-name") {
+    if let Some(project_name) = &cli.project_name {
         proj.set_name(project_name);
     }
-    if let Some(default_tags_path) = matches.value_of("default-tags") {
+    if let Some(default_tags_path) = &cli.default_tags {
         let f = fs::File::open(default_tags_path)?;
         let reader = io::BufReader::new(f);
         proj.set_default_tags(cage::DefaultTags::read(reader)?);
     }
-    proj.set_current_target_name(matches.target_name())?;
+    proj.set_current_target_name(cli.target_name())?;
 
-    // Output our project's `*.yml` files for `docker-compose` if we'll
-    // need it.
-    if matches.should_output_project() {
-        proj.output(sc_name)?;
+    // Output our project's `*.yml` files for `docker-compose` if we'll need it.
+    let subcommand_name = match &cli.command {
+        Commands::Sysinfo => "sysinfo",
+        Commands::New { .. } => "new",
+        Commands::Status { .. } => "status",
+        Commands::Build { .. } => "build",
+        Commands::Pull { .. } => "pull",
+        Commands::Up { .. } => "up",
+        Commands::Restart { .. } => "restart",
+        Commands::Stop { .. } => "stop",
+        Commands::Rm { .. } => "rm",
+        Commands::Run { .. } => "run",
+        Commands::RunScript { .. } => "run-script",
+        Commands::Exec { .. } => "exec",
+        Commands::Shell { .. } => "shell",
+        Commands::Test { .. } => "test",
+        Commands::Source { .. } => "source",
+        Commands::Generate { .. } => "generate",
+        Commands::Logs { .. } => "logs",
+        Commands::Export { .. } => "export",
+    };
+
+    if cli.should_output_project() {
+        proj.output(subcommand_name)?;
     }
 
     // Handle our subcommands that require a `Project`.
     let runner = OsCommandRunner::new();
-    match sc_name {
-        "status" => {
-            let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE", true);
+    match &cli.command {
+        Commands::Status { pod_or_service } => {
+            let acts_on = to_acts_on(pod_or_service, true);
             proj.status(&runner, &acts_on)?;
         }
-        "pull" => {
-            let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE", true);
+        Commands::Pull {
+            quiet,
+            pod_or_service,
+        } => {
+            let acts_on = to_acts_on(pod_or_service, true);
             let mut opts = cage::args::opts::Pull::default();
-            opts.quiet = sc_matches.is_present("quiet");
+            opts.quiet = *quiet;
             proj.pull(&runner, &acts_on, &opts)?;
         }
-        "build" => {
-            let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE", true);
+        Commands::Build { pod_or_service } => {
+            let acts_on = to_acts_on(pod_or_service, true);
             let opts = cage::args::opts::Empty;
             proj.compose(&runner, "build", &acts_on, &opts)?;
         }
-        "up" => {
-            let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE", false);
-            let opts = cage::args::opts::Up::new(sc_matches.is_present("init"));
+        Commands::Up {
+            init,
+            pod_or_service,
+        } => {
+            let acts_on = to_acts_on(pod_or_service, false);
+            let opts = cage::args::opts::Up::new(*init);
             proj.up(&runner, &acts_on, &opts)?;
         }
-        "restart" => {
-            let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE", false);
+        Commands::Restart { pod_or_service } => {
+            let acts_on = to_acts_on(pod_or_service, false);
             let opts = cage::args::opts::Empty;
             proj.compose(&runner, "restart", &acts_on, &opts)?;
         }
-        "stop" => {
-            let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE", false);
+        Commands::Stop { pod_or_service } => {
+            let acts_on = to_acts_on(pod_or_service, false);
             let opts = cage::args::opts::Empty;
             proj.compose(&runner, "stop", &acts_on, &opts)?;
         }
-        "rm" => {
-            let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE", true);
-            let opts = sc_matches.to_rm_options();
+        Commands::Rm {
+            force,
+            remove_volumes,
+            pod_or_service,
+        } => {
+            let acts_on = to_acts_on(pod_or_service, true);
+            let opts = to_rm_options(*force, *remove_volumes);
             proj.compose(&runner, "rm", &acts_on, &opts)?;
         }
-        "run" => {
+        Commands::Run {
+            detached,
+            user,
+            no_allocate_tty,
+            entrypoint,
+            environment,
+            service,
+            command,
+        } => {
             warn_if_pods_are_enabled_but_not_running(&proj)?;
-            let opts = sc_matches.to_run_options();
-            let cmd = sc_matches.to_exec_command();
-            let service = sc_matches.value_of("SERVICE").unwrap();
+            let opts = to_run_options(
+                *detached,
+                user,
+                *no_allocate_tty,
+                entrypoint,
+                environment,
+                false,
+            );
+            let cmd = to_exec_command(command);
             proj.run(&runner, service, cmd.as_ref(), &opts)?;
         }
-        "run-script" => {
+        Commands::RunScript {
+            no_deps,
+            script_name,
+            pod_or_service,
+        } => {
             warn_if_pods_are_enabled_but_not_running(&proj)?;
-            let opts = sc_matches.to_run_options();
-            let script_name = sc_matches.value_of("SCRIPT_NAME").unwrap();
-            let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE", true);
+            let opts = to_run_options(false, &None, false, &None, &[], *no_deps);
+            let acts_on = to_acts_on(pod_or_service, true);
             proj.run_script(&runner, &acts_on, script_name.as_ref(), &opts)?;
         }
-        "exec" => {
+        Commands::Exec {
+            detached,
+            user,
+            no_allocate_tty,
+            privileged,
+            service,
+            command,
+        } => {
             warn_if_pods_are_enabled_but_not_running(&proj)?;
-            let service = sc_matches.value_of("SERVICE").unwrap();
-            let opts = sc_matches.to_exec_options();
-            let cmd = sc_matches.to_exec_command().unwrap();
+            let opts = to_exec_options(*detached, user, *no_allocate_tty, *privileged);
+            let cmd = to_exec_command(command).unwrap();
             proj.exec(&runner, service, &cmd, &opts)?;
         }
-        "shell" => {
+        Commands::Shell {
+            detached,
+            user,
+            no_allocate_tty,
+            privileged,
+            service,
+        } => {
             warn_if_pods_are_enabled_but_not_running(&proj)?;
-            let service = sc_matches.value_of("SERVICE").unwrap();
-            let opts = sc_matches.to_exec_options();
+            let opts = to_exec_options(*detached, user, *no_allocate_tty, *privileged);
             proj.shell(&runner, service, &opts)?;
         }
-        "test" => {
+        Commands::Test {
+            export_test_output,
+            service,
+            command,
+        } => {
             warn_if_pods_are_enabled_but_not_running(&proj)?;
-            let service = sc_matches.value_of("SERVICE").unwrap();
-            let opts = sc_matches.to_test_options();
-            let cmd = sc_matches.to_exec_command();
+            let opts = to_test_options(*export_test_output);
+            let cmd = to_exec_command(command);
             proj.test(&runner, service, cmd.as_ref(), &opts)?;
         }
-        "source" => run_source(&runner, &mut proj, sc_matches)?,
-        "generate" => run_generate(&runner, &proj, sc_matches)?,
-        "logs" => {
-            let acts_on = sc_matches.to_acts_on("POD_OR_SERVICE", true);
-            let opts = sc_matches.to_logs_options();
+        Commands::Source { command } => run_source(&runner, &mut proj, command)?,
+        Commands::Generate { command } => run_generate(&runner, &proj, command)?,
+        Commands::Logs {
+            follow,
+            number,
+            pod_or_service,
+        } => {
+            let acts_on = to_acts_on(pod_or_service, true);
+            let opts = to_logs_options(*follow, number);
             proj.logs(&runner, &acts_on, &opts)?;
         }
-        "export" => {
-            let dir = sc_matches.value_of("DIR").unwrap();
+        Commands::Export { dir } => {
             proj.export(Path::new(dir))?;
         }
-        unknown => unreachable!("Unexpected subcommand '{}'", unknown),
+        _ => unreachable!(),
     }
 
     Ok(())
@@ -342,42 +793,41 @@ fn run(matches: &clap::ArgMatches<'_>) -> Result<()> {
 fn run_source<R>(
     runner: &R,
     proj: &mut cage::Project,
-    matches: &clap::ArgMatches<'_>,
+    command: &SourceCommands,
 ) -> Result<()>
 where
     R: CommandRunner,
 {
-    // We know that we always have a subcommand because our `cli.yml`
-    // requires this and `clap` is supposed to enforce it.
-    let sc_name = matches.subcommand_name().unwrap();
-    let sc_matches: &clap::ArgMatches<'_> =
-        matches.subcommand_matches(sc_name).unwrap();
+    let subcommand_name = match command {
+        SourceCommands::Ls => "ls",
+        SourceCommands::Clone { .. } => "clone",
+        SourceCommands::Mount { .. } => "mount",
+        SourceCommands::Unmount { .. } => "unmount",
+    };
 
     // Dispatch our subcommand.
     let mut re_output = true;
-    match sc_name {
-        "ls" => {
+    match command {
+        SourceCommands::Ls => {
             re_output = false;
             proj.source_list(runner)?;
         }
-        "clone" => {
-            let alias = sc_matches.value_of("ALIAS").unwrap();
+        SourceCommands::Clone { alias } => {
             proj.source_clone(runner, alias)?;
         }
-        "mount" => {
-            let act_on_sources = sc_matches.to_acts_on_sources(proj)?;
+        SourceCommands::Mount { aliases, all } => {
+            let act_on_sources = to_acts_on_sources(aliases, *all, proj)?;
             proj.source_set_mounted(runner, act_on_sources, true)?;
         }
-        "unmount" => {
-            let act_on_sources = sc_matches.to_acts_on_sources(proj)?;
+        SourceCommands::Unmount { aliases, all } => {
+            let act_on_sources = to_acts_on_sources(aliases, *all, proj)?;
             proj.source_set_mounted(runner, act_on_sources, false)?;
         }
-        unknown => unreachable!("Unexpected subcommand '{}'", unknown),
     }
 
     // Regenerate our output if it might have changed.
     if re_output {
-        proj.output(sc_name)?;
+        proj.output(subcommand_name)?;
     }
 
     Ok(())
@@ -387,29 +837,28 @@ where
 fn run_generate<R>(
     _runner: &R,
     proj: &cage::Project,
-    matches: &clap::ArgMatches<'_>,
+    command: &GenerateCommands,
 ) -> Result<()>
 where
     R: CommandRunner,
 {
-    // We know that we always have a subcommand because our `cli.yml`
-    // requires this and `clap` is supposed to enforce it.
-    let sc_name = matches.subcommand_name().unwrap();
-    let sc_matches: &clap::ArgMatches<'_> =
-        matches.subcommand_matches(sc_name).unwrap();
+    match command {
+        GenerateCommands::Completion { shell } => {
+            use clap::CommandFactory;
+            use clap_complete::{generate, shells};
 
-    match sc_name {
-        // TODO LOW: Allow running this without a project?
-        "completion" => {
-            let shell = match sc_matches.value_of("SHELL").unwrap() {
-                "bash" => clap::Shell::Bash,
-                "fish" => clap::Shell::Fish,
-                unknown => unreachable!("Unknown shell '{}'", unknown),
-            };
-            let cli_yaml = load_yaml!("cli.yml");
-            cli(cli_yaml).gen_completions("cage", shell, proj.root_dir());
+            let mut cmd = Cli::command();
+            match shell {
+                Shell::Bash => {
+                    generate(shells::Bash, &mut cmd, "cage", &mut io::stdout())
+                }
+                Shell::Fish => {
+                    generate(shells::Fish, &mut cmd, "cage", &mut io::stdout())
+                }
+            }
         }
-        other => proj.generate(other)?,
+        GenerateCommands::Secrets => proj.generate("secrets")?,
+        GenerateCommands::Vault => proj.generate("vault")?,
     }
     Ok(())
 }
@@ -443,13 +892,18 @@ fn log_level_label(level: log::Level) -> colored::ColoredString {
 
 /// Our main entry point.
 fn main() {
-    openssl_probe::init_ssl_cert_env_vars();
+    unsafe {
+        openssl_probe::init_openssl_env_vars();
+    }
 
     // Initialize logging with some custom options, mostly so we can see
     // our own warnings.
     let mut builder = env_logger::Builder::new();
-    builder.filter(Some("compose_yml"), log::LevelFilter::Warn);
-    builder.filter(Some("compose_yml::v2::validate"), log::LevelFilter::Error);
+    builder.filter(Some("faraday_compose_yml"), log::LevelFilter::Warn);
+    builder.filter(
+        Some("faraday_compose_yml::v2::validate"),
+        log::LevelFilter::Error,
+    );
     builder.filter(Some("cage"), log::LevelFilter::Warn);
     builder.format(
         |f: &mut env_logger::fmt::Formatter, record: &log::Record<'_>| {
@@ -472,23 +926,16 @@ fn main() {
     builder.init();
 
     // Parse our command-line arguments.
-    let cli_yaml = load_yaml!("cli.yml");
-    let matches: clap::ArgMatches<'_> = cli(cli_yaml).get_matches();
-    debug!("Arguments: {:?}", &matches);
+    let cli = Cli::parse();
+    debug!("Arguments: {:?}", &cli);
 
     // Defer all our real work to `run`, and handle any errors.  This is a
     // standard Rust pattern to make error-handling in `main` nicer.
-    if let Err(ref err) = run(&matches) {
+    if let Err(ref err) = run(&cli) {
         // We use `unwrap` here to turn I/O errors into application panics.
         // If we can't print a message to stderr without an I/O error,
         // the situation is hopeless.
-        eprint!("Error: ");
-        for e in err.iter() {
-            eprintln!("{}", e);
-        }
-        if let Some(backtrace) = err.backtrace() {
-            eprintln!("{:?}", backtrace);
-        }
+        eprintln!("Error: {:#}", err);
         process::exit(1);
     }
 }

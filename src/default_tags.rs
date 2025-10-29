@@ -1,7 +1,7 @@
 //! Tools for working with lists of image tags (versions) provided by an
 //! external source.
 
-use compose_yml::v2 as dc;
+use faraday_compose_yml::v2 as dc;
 use std::collections::btree_map;
 use std::collections::BTreeMap;
 use std::io::{self, BufRead};

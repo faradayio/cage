@@ -58,17 +58,20 @@ impl HookManager {
             return Ok(());
         }
 
-        let mkerr = || ErrorKind::CouldNotReadDirectory(d_dir.clone());
-
         // Find all our hook scripts and alphabetize them.
         let mut scripts = vec![];
-        for entry in fs::read_dir(&d_dir).chain_err(&mkerr)? {
-            let entry = entry.chain_err(&mkerr)?;
+        for entry in fs::read_dir(&d_dir).map_err(|e| {
+            anyhow::Error::new(e).context(Error::CouldNotReadDirectory(d_dir.clone()))
+        })? {
+            let entry = entry.map_err(|e| {
+                anyhow::Error::new(e)
+                    .context(Error::CouldNotReadDirectory(d_dir.clone()))
+            })?;
             let path = entry.path();
             trace!("Checking {} to see if it's a hook", path.display());
-            let ty = entry
-                .file_type()
-                .chain_err(|| ErrorKind::CouldNotReadFile(path.clone()))?;
+            let ty = entry.file_type().map_err(|e| {
+                anyhow::Error::new(e).context(Error::CouldNotReadFile(path.clone()))
+            })?;
             let os_name = entry.file_name();
             let name = os_name.to_str_or_err()?;
             if ty.is_file() && !name.starts_with('.') && name.ends_with(".hook") {
