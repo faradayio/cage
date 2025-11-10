@@ -1,0 +1,140 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    name: Validate version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Extract version from tag
+        id: tag_version
+        run: |
+          TAG="${GITHUB_REF#refs/tags/v}"
+          echo "version=$TAG" >> $GITHUB_OUTPUT
+          echo "Tag version: $TAG"
+      
+      - name: Extract version from Cargo.toml
+        id: cargo_version
+        run: |
+          CARGO_VERSION=$(grep '^version = ' Cargo.toml | head -1 | cut -d'"' -f2)
+          echo "version=$CARGO_VERSION" >> $GITHUB_OUTPUT
+          echo "Cargo.toml version: $CARGO_VERSION"
+      
+      - name: Validate versions match
+        run: |
+          if [ "${{ steps.tag_version.outputs.version }}" != "${{ steps.cargo_version.outputs.version }}" ]; then
+            echo "Error: Tag version (${{ steps.tag_version.outputs.version }}) does not match Cargo.toml version (${{ steps.cargo_version.outputs.version }})"
+            exit 1
+          fi
+          echo "Version validation passed: ${{ steps.tag_version.outputs.version }}"
+
+  build:
+    name: Build ${{ matrix.target }}
+    needs: validate
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            archive_name: cage-${{ github.ref_name }}-linux-x86_64.zip
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            archive_name: cage-${{ github.ref_name }}-macos-x86_64.zip
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            archive_name: cage-${{ github.ref_name }}-macos-aarch64.zip
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            archive_name: cage-${{ github.ref_name }}-windows-x86_64.zip
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      
+      - name: Install musl tools (Linux)
+        if: matrix.target == 'x86_64-unknown-linux-musl'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y musl-tools
+      
+      - name: Build
+        run: cargo build --release --target ${{ matrix.target }}
+      
+      - name: Create archive (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          cd target/${{ matrix.target }}/release
+          zip ../../../${{ matrix.archive_name }} cage
+      
+      - name: Create archive (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          cd target/${{ matrix.target }}/release
+          Compress-Archive -Path cage.exe -DestinationPath ../../../${{ matrix.archive_name }}
+      
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.target }}
+          path: ${{ matrix.archive_name }}
+
+  release:
+    name: Create GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      
+      - name: Prepare release files
+        run: |
+          mkdir release-files
+          find artifacts -name "*.zip" -exec cp {} release-files/ \;
+          ls -lh release-files/
+      
+      - name: Extract changelog for this version
+        id: changelog
+        run: |
+          VERSION="${GITHUB_REF#refs/tags/v}"
+          echo "Extracting changelog for version $VERSION"
+          
+          # Extract the section between this version and the next one
+          CHANGELOG=$(awk "/## $VERSION/,/## [0-9]/" CHANGELOG.md | sed '1d;$d')
+          
+          # If empty, use a default message
+          if [ -z "$CHANGELOG" ]; then
+            CHANGELOG="Release $VERSION"
+          fi
+          
+          # Save to file for multi-line handling
+          echo "$CHANGELOG" > changelog.txt
+      
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release-files/*
+          body_path: changelog.txt
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
