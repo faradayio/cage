@@ -17,11 +17,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install OpenSSL
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libssl-dev pkg-config
-
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
@@ -36,11 +31,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Install OpenSSL
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libssl-dev pkg-config
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -71,11 +61,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install OpenSSL
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libssl-dev pkg-config
-
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
@@ -92,11 +77,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Install OpenSSL
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libssl-dev pkg-config
 
       - name: Install cargo-deny
         run: cargo install --locked cargo-deny
@@ -131,17 +111,7 @@ jobs:
         if: matrix.target == 'x86_64-unknown-linux-musl'
         run: |
           sudo apt-get update
-          sudo apt-get install -y musl-tools libssl-dev pkg-config
-
-      - name: Install dependencies (macOS)
-        if: runner.os == 'macOS'
-        run: brew install openssl@3
-
-      - name: Install dependencies (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          choco install openssl -y
-          echo "OPENSSL_DIR=C:\Program Files\OpenSSL-Win64" >> $env:GITHUB_ENV
+          sudo apt-get install -y musl-tools
 
       - name: Cache dependencies
         uses: Swatinem/rust-cache@v2
@@ -150,7 +120,3 @@ jobs:
 
       - name: Build
         run: cargo build --release --target ${{ matrix.target }}
-        env:
-          OPENSSL_STATIC: ${{ matrix.target == 'x86_64-unknown-linux-musl' && '1' || '' }}
-          OPENSSL_LIB_DIR: ${{ matrix.target == 'x86_64-unknown-linux-musl' && '/usr/lib/x86_64-linux-gnu' || '' }}
-          OPENSSL_INCLUDE_DIR: ${{ matrix.target == 'x86_64-unknown-linux-musl' && '/usr/include/openssl' || '' }}

@@ -892,10 +892,6 @@ fn log_level_label(level: log::Level) -> colored::ColoredString {
 
 /// Our main entry point.
 fn main() {
-    unsafe {
-        openssl_probe::init_openssl_env_vars();
-    }
-
     // Initialize logging with some custom options, mostly so we can see
     // our own warnings.
     let mut builder = env_logger::Builder::new();
