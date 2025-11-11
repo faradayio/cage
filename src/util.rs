@@ -11,20 +11,14 @@ use std::path::{Path, PathBuf};
 use crate::errors::*;
 
 /// Create an error using a format string and arguments.
-///
-/// TODO HIGH: Remove `err!` in favor of better error types.
 #[macro_export]
 macro_rules! err {
-    ($( $e:expr ),+) => ($crate::err(&format!($( $e ),+)))
+    ($( $e:expr ),+) => (anyhow::anyhow!($( $e ),+))
 }
 
-/// Create an error using a string literal.  (This exists mostly so that
-/// clippy doesn't complain about `err!` expanding to `format!` with no
-/// arguments.)
-///
-/// TODO HIGH: Remove `err` in favor of better error types.
-pub fn err(msg: &str) -> Error {
-    msg.into()
+/// Create an error using a string literal.
+pub fn err(msg: &str) -> anyhow::Error {
+    anyhow::anyhow!("{}", msg)
 }
 
 /// Trait for things which we really hope are actually UTF-8 strings, and not
@@ -92,7 +86,7 @@ impl ConductorPathExt for Path {
         // Take an error message and elaborate a bit.  We use a trait
         // pointer here so we can use this for multiple error types,
         // because Rust closures don't seem to support type parameters.
-        let wrap_err = |err: &dyn error::Error| -> Error {
+        let wrap_err = |err: &dyn error::Error| -> anyhow::Error {
             err!(
                 "error creating parent directories for {}: {}",
                 parent.display(),
@@ -108,7 +102,7 @@ impl ConductorPathExt for Path {
         // retry this function if it fails, because it will fail to
         // create directories below the one that already existed.
         let delay = delay::Fixed::from_millis(50).take(10);
-        retry(delay, || match fs::create_dir_all(&parent) {
+        retry(delay, || match fs::create_dir_all(parent) {
             Ok(()) => Ok(()),
             Err(ref err) if err.kind() == io::ErrorKind::AlreadyExists => Ok(()),
             Err(err) => Err(err),

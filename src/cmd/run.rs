@@ -88,8 +88,7 @@ impl CommandRun for Project {
         let sources_dirs = self.sources_dirs();
         let mount_count = sources
             .iter()
-            .cloned()
-            .filter(|ref source_mount| {
+            .filter(|&source_mount| {
                 source_mount.source.is_available_locally(&sources_dirs)
                     && source_mount.source.mounted()
             })
@@ -129,7 +128,7 @@ impl CommandRun for Project {
 
             // Don't clobber any existing output.
             if test_output_path.exists() {
-                return Err(ErrorKind::OutputDirectoryExists(test_output_path).into());
+                return Err(Error::OutputDirectoryExists(test_output_path).into());
             }
 
             runner

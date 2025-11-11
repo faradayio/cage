@@ -38,31 +38,63 @@ impl Template {
     /// Create a new template, loading it from a subdirectory of `data/`
     /// specified by `template_name`.
     pub fn new(name: &str) -> Result<Template> {
-        // We need to be careful to respect MAIN_SEPARATOR on Windows.
-        let s = MAIN_SEPARATOR;
-        let name = name.replace('/', &s.to_string());
-        let prefix = format!("templates{}{}{}", s, &name, s);
-        let glob = format!("{}**{}*", prefix, s);
-        let sep_underscore = format!("{}_", s);
+        // include_dir! always uses forward slashes regardless of platform.
+        let prefix = format!("templates/{}/", name);
+        let sep_underscore = "/_";
 
         // Iterate over all matching files built into this library at compile time.
         let mut files = BTreeMap::new();
-        for entry in DATA.find(&glob)? {
-            if let DirEntry::File(file) = entry {
-                trace!("checking template path {} in prefix {}", file.path, prefix);
-                assert!(file.path.starts_with(&prefix));
-                let rel: &str = &file.path[prefix.len()..];
-                // Make sure it doesn't belong to a child template.
-                if !rel.starts_with('_') && !rel.contains(&sep_underscore) {
-                    // Load this file and add it to our list.
-                    let raw_data = file.contents().to_owned();
-                    let data = String::from_utf8(raw_data)?;
-                    files.insert(Path::new(rel).to_owned(), data);
+
+        // Use entries() and recursively check directories
+        fn visit_dir(
+            dir: &Dir,
+            prefix: &str,
+            sep_underscore: &str,
+            files: &mut BTreeMap<PathBuf, String>,
+        ) -> Result<()> {
+            for entry in dir.entries() {
+                match entry {
+                    DirEntry::Dir(subdir) => {
+                        visit_dir(subdir, prefix, sep_underscore, files)?;
+                    }
+                    DirEntry::File(file) => {
+                        let path_str = file.path().to_string_lossy();
+                        trace!(
+                            "checking template path {} in prefix {}",
+                            path_str,
+                            prefix
+                        );
+                        if let Some(rel) = path_str.strip_prefix(prefix) {
+                            // Make sure it doesn't belong to a child template.
+                            if !rel.starts_with('_') && !rel.contains(sep_underscore) {
+                                // Load this file and add it to our list.
+                                let raw_data = file.contents().to_owned();
+                                let data = String::from_utf8(raw_data)?;
+                                // Convert the path to use the platform's separator when storing.
+                                let platform_path =
+                                    if MAIN_SEPARATOR != '/' {
+                                        PathBuf::from(rel.replace(
+                                            '/',
+                                            std::path::MAIN_SEPARATOR_STR,
+                                        ))
+                                    } else {
+                                        Path::new(rel).to_owned()
+                                    };
+                                files.insert(platform_path, data);
+                            }
+                        }
+                    }
                 }
             }
+            Ok(())
         }
 
-        Ok(Template { name, files })
+        visit_dir(&DATA, &prefix, sep_underscore, &mut files)?;
+
+        Ok(Template {
+            name: name.to_string(),
+            files,
+        })
     }
 
     /// Generate this template into `target_dir`, passing `data` to the
@@ -81,13 +113,14 @@ impl Template {
             let path = target_dir.join(rel_path);
             debug!("Output {}", path.display());
             writeln!(out, "Generating: {}", rel_path.display())?;
-            let mkerr = || ErrorKind::CouldNotWriteFile(path.clone());
 
             // Make sure our parent directory exists.
             path.with_guaranteed_parent()?;
 
             // Create our output file.
-            let out = fs::File::create(&path).chain_err(&mkerr)?;
+            let out = fs::File::create(&path).map_err(|e| {
+                anyhow::Error::new(e).context(Error::CouldNotWriteFile(path.clone()))
+            })?;
             let mut writer = io::BufWriter::new(out);
 
             // Render our template to the file.
@@ -95,7 +128,10 @@ impl Template {
             let mut hb = hb::Handlebars::new();
             hb.register_escape_fn(escape_double_quotes);
             hb.render_template_to_write(tmpl, &data, &mut writer)
-                .chain_err(&mkerr)?;
+                .map_err(|e| {
+                    anyhow::Error::new(e)
+                        .context(Error::CouldNotWriteFile(path.clone()))
+                })?;
         }
         Ok(())
     }

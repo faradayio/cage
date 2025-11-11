@@ -1,6 +1,6 @@
 //! Plugin which issues vault tokens to services.
 
-use compose_yml::v2 as dc;
+use faraday_compose_yml::v2 as dc;
 use std::{
     collections::{btree_map::Entry, BTreeMap, BTreeSet},
     env,
@@ -175,11 +175,14 @@ fn load_vault_token_from_file() -> Result<String> {
     let path = dirs::home_dir()
         .ok_or_else(|| err("You do not appear to have a home directory"))?
         .join(".vault-token");
-    let mkerr = || ErrorKind::CouldNotReadFile(path.clone());
-    let f = fs::File::open(&path).chain_err(&mkerr)?;
+    let f = fs::File::open(&path).map_err(|e| {
+        anyhow::Error::new(e).context(Error::CouldNotReadFile(path.clone()))
+    })?;
     let mut reader = io::BufReader::new(f);
     let mut result = String::new();
-    reader.read_to_string(&mut result).chain_err(&mkerr)?;
+    reader.read_to_string(&mut result).map_err(|e| {
+        anyhow::Error::new(e).context(Error::CouldNotReadFile(path.clone()))
+    })?;
     Ok(result.trim().to_owned())
 }
 
@@ -303,21 +306,22 @@ impl GenerateToken for Vault {
         policies: &BTreeSet<String>,
         ttl: Duration,
     ) -> Result<TokenInfo> {
-        let mkerr = || ErrorKind::VaultError(self.addr.clone());
-
         // We can't store `client` in `self`, because it has some obnoxious
         // lifetime parameters.  So we'll just recreate it.  This is
         // probably not the worst idea, because it uses `hyper` for HTTP,
         // and `hyper` HTTP connections used to have expiration issues that
         // were tricky for clients to deal with correctly.
-        let client =
-            vault::Client::new(&self.addr[..], &self.token).chain_err(&mkerr)?;
+        let client = vault::Client::new(&self.addr[..], &self.token).map_err(|e| {
+            anyhow::anyhow!("{}: {}", Error::VaultError(self.addr.clone()), e)
+        })?;
         let opts = vault::client::TokenOptions::default()
             .display_name(display_name)
             .renewable(true)
             .ttl(VaultDuration(ttl))
             .policies(policies.clone());
-        let auth = client.create_token(&opts).chain_err(&mkerr)?;
+        let auth = client.create_token(&opts).map_err(|e| {
+            anyhow::anyhow!("{}: {}", Error::VaultError(self.addr.clone()), e)
+        })?;
         let lease_duration = auth
             .lease_duration
             .map_or_else(|| Duration::from_secs(30 * 24 * 60 * 60), |d| d.0);
@@ -353,7 +357,7 @@ impl CachedTokens {
         target: String,
         pod: String,
         service: String,
-    ) -> Entry<String, TokenInfo> {
+    ) -> Entry<'_, String, TokenInfo> {
         self.targets
             .entry(target)
             .or_default()
@@ -418,7 +422,9 @@ impl<'gen> TokenCache<'gen> {
     ) -> Result<&'cache TokenInfo> {
         // Helper functions used in several places below.
         let display_name = || format!("{}_{}_{}_{}", project, target, pod, service);
-        let mkerr = || format!("could not generate token for '{}'", service);
+        let mkerr = |e: anyhow::Error| {
+            e.context(format!("could not generate token for '{}'", service))
+        };
 
         // Look up what we have in the cache and decide what to do.
         let entry =
@@ -435,19 +441,19 @@ impl<'gen> TokenCache<'gen> {
                 let info = self
                     .generator
                     .generate_token(&display_name(), policies, ttl)
-                    .chain_err(mkerr)?;
+                    .map_err(mkerr)?;
                 Ok(vacancy.insert(info))
             }
             Entry::Occupied(occupied) => {
                 trace!("token cache hit for {}", service);
                 let cached = occupied.into_mut();
-                if cached.should_renew(&policies, ttl) {
+                if cached.should_renew(policies, ttl) {
                     trace!("token cache needs new token for {}", service);
                     // We'll need a new token.
                     *cached = self
                         .generator
                         .generate_token(&display_name(), policies, ttl)
-                        .chain_err(mkerr)?;
+                        .map_err(mkerr)?;
                 }
                 Ok(cached)
             }
@@ -551,7 +557,7 @@ impl PluginTransform for Plugin {
 
         // Set up our token cache.
         let mut cache =
-            TokenCache::load_or_create(&ctx.project, &ctx.pod, generator.as_ref())?;
+            TokenCache::load_or_create(ctx.project, ctx.pod, generator.as_ref())?;
 
         // Apply to each service.
         for (name, service) in &mut file.services {
@@ -594,7 +600,7 @@ impl PluginTransform for Plugin {
 
             // Interpolate the variables found in our policy patterns.
             let mut policies = BTreeSet::new();
-            for result in raw_policies.iter().map(|p| interpolated(p)) {
+            for result in raw_policies.iter().map(&interpolated) {
                 // We'd like to use std::result::fold here but it's unstable.
                 policies.insert(result?);
             }

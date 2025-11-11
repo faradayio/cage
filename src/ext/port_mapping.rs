@@ -1,6 +1,6 @@
-//! Extension methods for `compose_yml::v2::PortMapping`.
+//! Extension methods for `faraday_compose_yml::v2::PortMapping`.
 
-use compose_yml::v2 as dc;
+use faraday_compose_yml::v2 as dc;
 
 /// These methods will appear as regular methods on `PortMapping` in any
 /// module which includes `PortMappingExt`.

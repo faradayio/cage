@@ -14,7 +14,7 @@
 //!
 //! ## Where to start
 //!
-//! Cage relies heavily on the [`compose_yml`][compose_yml] crate, which
+//! Cage relies heavily on the [`faraday_compose_yml`][compose_yml] crate, which
 //! represents a `docker-compose.yml` file.
 //!
 //! A good place to start reading through this API is the `Project` struct,
@@ -24,7 +24,7 @@
 //! You may also want to look the `plugins` module, which handles much of
 //! our code generation and YAML transformation.  Essentially, cage works
 //! like a multi-pass "compiler", where the intermediate representation is
-//! a `compose_yml::v2::File` object, and each transformation plugin is a
+//! a `faraday_compose_yml::v2::File` object, and each transformation plugin is a
 //! analogous to a "pass" in a compiler.
 //!
 //! [cage]: http://cage.faraday.io/
@@ -43,11 +43,7 @@
     clippy::all
 )]
 #![allow(clippy::field_reassign_with_default, clippy::unnecessary_wraps)]
-// The `error_chain` documentation says we need this.
-#![recursion_limit = "1024"]
 
-#[macro_use]
-extern crate error_chain;
 #[macro_use]
 extern crate lazy_static;
 #[macro_use]

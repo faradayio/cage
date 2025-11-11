@@ -35,7 +35,9 @@ impl CommandLogs for Project {
             args::ActOn::Named(ref names) if names.len() == 1 => {
                 self.compose(runner, "logs", act_on, opts)
             }
-            _ => Err("You may only specify a single service or pod".into()),
+            _ => Err(anyhow::anyhow!(
+                "You may only specify a single service or pod"
+            )),
         }
     }
 }

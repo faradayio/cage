@@ -24,7 +24,7 @@ impl RuntimeState {
         // until we debug all the Docker wire formats and undocumented
         // special cases.
         Self::for_project_inner(project)
-            .chain_err(|| ErrorKind::CouldNotGetRuntimeState)
+            .map_err(|e| e.context(Error::CouldNotGetRuntimeState))
     }
 
     /// The actual implementation of `for_project`.
@@ -32,27 +32,49 @@ impl RuntimeState {
         debug!("Querying Docker for running containers");
 
         // Start a local `tokio` runtime for async calls.
-        let mut rt = runtime::Builder::new()
-            .basic_scheduler()
+        let rt = runtime::Builder::new_current_thread()
             .enable_all()
             .build()?;
 
         let name = project.compose_name();
         let target = project.current_target().name().to_owned();
-        let docker = boondock::Docker::connect_with_defaults()?;
+        let docker = bollard::Docker::connect_with_local_defaults()
+            .map_err(|e| anyhow::anyhow!("failed to connect to Docker: {}", e))?;
 
         let mut services = BTreeMap::new();
-        let opts = boondock::ContainerListOptions::default().all();
-        let containers = rt.block_on(docker.containers(opts))?;
+        use bollard::query_parameters::ListContainersOptionsBuilder;
+        let opts = ListContainersOptionsBuilder::default().all(true).build();
+        let containers = rt
+            .block_on(docker.list_containers(Some(opts)))
+            .map_err(|e| anyhow::anyhow!("failed to list Docker containers: {}", e))?;
         for container in &containers {
-            let info =
-                rt.block_on(docker.container_info(container))
-                    .chain_err(|| {
-                        format!("error looking up container {:?}", container.Id)
-                    })?;
-            let labels = &info.Config.Labels;
-            if labels.get("com.docker.compose.project") == Some(&name)
-                && labels.get("io.fdy.cage.target") == Some(&target)
+            let container_id = container
+                .id
+                .as_ref()
+                .ok_or_else(|| anyhow::anyhow!("container missing id"))?;
+            let info = rt
+                .block_on(docker.inspect_container(
+                    container_id,
+                    None::<bollard::query_parameters::InspectContainerOptions>,
+                ))
+                .map_err(|e| {
+                    anyhow::anyhow!(
+                        "error looking up container {:?}: {}",
+                        container_id,
+                        e
+                    )
+                })?;
+            let labels = &info
+                .config
+                .as_ref()
+                .and_then(|c| c.labels.as_ref())
+                .ok_or_else(|| {
+                    anyhow::anyhow!("container missing config or labels")
+                })?;
+            if labels.get("com.docker.compose.project").map(|s| s.as_str())
+                == Some(&name)
+                && labels.get("io.fdy.cage.target").map(|s| s.as_str())
+                    == Some(&target)
             {
                 if let Some(service) = labels.get("com.docker.compose.service") {
                     let our_info = ContainerInfo::new(&info)?;
@@ -121,44 +143,68 @@ pub struct ContainerInfo {
 
 impl ContainerInfo {
     /// Construct our summary from the raw data returned by Docker.
-    fn new(info: &boondock::container::ContainerInfo) -> Result<ContainerInfo> {
+    fn new(info: &bollard::models::ContainerInspectResponse) -> Result<ContainerInfo> {
         // Was this a one-off container?
-        let one_off_label = info.Config.Labels.get("com.docker.compose.oneoff");
-        let is_one_off = Some("True") == one_off_label.map(|s| &s[..]);
+        let one_off_label = info
+            .config
+            .as_ref()
+            .and_then(|c| c.labels.as_ref())
+            .and_then(|labels| labels.get("com.docker.compose.oneoff"));
+        let is_one_off = one_off_label.map(|s| s.as_str()) == Some("True");
 
         // Get an IP address for this running container.
-        let raw_ip_addr = &info.NetworkSettings.IPAddress[..];
+        let raw_ip_addr = info
+            .network_settings
+            .as_ref()
+            .and_then(|ns| ns.ip_address.as_ref())
+            .map(|s| s.as_str())
+            .unwrap_or("");
         let ip_addr = if !raw_ip_addr.is_empty() {
-            Some(
-                raw_ip_addr
-                    .parse()
-                    .chain_err(|| ErrorKind::parse("IP address", raw_ip_addr))?,
-            )
+            Some(raw_ip_addr.parse().map_err(|e| {
+                anyhow::Error::new(e).context(Error::parse("IP address", raw_ip_addr))
+            })?)
         } else {
             None
         };
 
         // Get the listening network ports.
         let mut ports = vec![];
-        if let Some(port_strs) = &info.NetworkSettings.Ports {
-            for port_str in port_strs.keys() {
-                lazy_static! {
-                    static ref TCP_PORT: Regex = Regex::new(r#"^(\d+)/tcp$"#).unwrap();
-                }
-                if let Some(caps) = TCP_PORT.captures(port_str) {
-                    let port =
-                        caps.get(1).unwrap().as_str().parse().chain_err(|| {
-                            ErrorKind::parse("TCP port", port_str.clone())
-                        })?;
-                    ports.push(port);
+        if let Some(network_settings) = &info.network_settings {
+            if let Some(port_map) = &network_settings.ports {
+                for port_str in port_map.keys() {
+                    lazy_static! {
+                        static ref TCP_PORT: Regex =
+                            Regex::new(r#"^(\d+)/tcp$"#).unwrap();
+                    }
+                    if let Some(caps) = TCP_PORT.captures(port_str) {
+                        let port =
+                            caps.get(1).unwrap().as_str().parse().map_err(|e| {
+                                anyhow::Error::new(e).context(Error::parse(
+                                    "TCP port",
+                                    port_str.clone(),
+                                ))
+                            })?;
+                        ports.push(port);
+                    }
                 }
             }
         }
 
+        let name = info
+            .name
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("container missing name"))?
+            .to_owned();
+
+        let state = info
+            .state
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("container missing state"))?;
+
         Ok(ContainerInfo {
-            name: info.Name.to_owned(),
+            name,
             is_one_off,
-            state: ContainerStatus::new(&info.State),
+            state: ContainerStatus::new(state),
             ip_addr,
             container_tcp_ports: ports,
         })
@@ -194,7 +240,7 @@ impl ContainerInfo {
                     .map(|port| net::SocketAddr::new(addr, *port))
                     .collect()
             })
-            .unwrap_or_else(Vec::new)
+            .unwrap_or_default()
     }
 
     /// Is this container listening to its ports?
@@ -233,14 +279,23 @@ pub enum ContainerStatus {
 
 impl ContainerStatus {
     /// Create a new `ContainerStatus` from Docker data.
-    fn new(state: &boondock::container::State) -> ContainerStatus {
-        match &state.Status[..] {
-            "created" => ContainerStatus::Created,
-            "restarting" => ContainerStatus::Restarting,
-            "running" => ContainerStatus::Running,
-            "paused" => ContainerStatus::Paused,
-            "exited" if state.ExitCode == 0 => ContainerStatus::Done,
-            "exited" => ContainerStatus::Exited(state.ExitCode),
+    fn new(state: &bollard::models::ContainerState) -> ContainerStatus {
+        use bollard::models::ContainerStateStatusEnum;
+
+        let status = state.status.as_ref();
+        let exit_code = state.exit_code.unwrap_or(0);
+
+        match status {
+            Some(ContainerStateStatusEnum::CREATED) => ContainerStatus::Created,
+            Some(ContainerStateStatusEnum::RESTARTING) => ContainerStatus::Restarting,
+            Some(ContainerStateStatusEnum::RUNNING) => ContainerStatus::Running,
+            Some(ContainerStateStatusEnum::PAUSED) => ContainerStatus::Paused,
+            Some(ContainerStateStatusEnum::EXITED) if exit_code == 0 => {
+                ContainerStatus::Done
+            }
+            Some(ContainerStateStatusEnum::EXITED) => {
+                ContainerStatus::Exited(exit_code)
+            }
             _ => ContainerStatus::Other,
         }
     }

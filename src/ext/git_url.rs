@@ -1,6 +1,6 @@
-//! Extension methods for `compose_yml::v2::GitUrl`.
+//! Extension methods for `faraday_compose_yml::v2::GitUrl`.
 
-use compose_yml::v2 as dc;
+use faraday_compose_yml::v2 as dc;
 use std::ffi::OsString;
 
 use crate::errors::*;

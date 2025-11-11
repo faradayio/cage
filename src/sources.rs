@@ -1,7 +1,7 @@
 //! APIs for working with the source code associated with a `Project`'s
 //! Docker images.
 
-use compose_yml::v2 as dc;
+use faraday_compose_yml::v2 as dc;
 use std::collections::btree_map;
 use std::collections::BTreeMap;
 #[cfg(test)]
@@ -34,7 +34,7 @@ struct SourceConfig {
     /// The local or remote `context` for this source tree.  We don't
     /// really want to use `dc::RawOr` here, but it's the easiest way to
     /// get this to work with serde, because that's how it works in
-    /// `docker-compose.yml` files, and that's what our `compose_yml`
+    /// `docker-compose.yml` files, and that's what our `faraday_compose_yml`
     /// library supports.
     context: dc::RawOr<dc::Context>,
 }
@@ -145,9 +145,7 @@ impl Sources {
                 if *context != context.without_repository_subdirectory() {
                     // We might actually be able to handle this case, but lib sources
                     // are already awkward enough without adding more features.
-                    return Err(
-                        ErrorKind::LibHasRepoSubdirectory(lib_key.clone()).into()
-                    );
+                    return Err(Error::LibHasRepoSubdirectory(lib_key.clone()).into());
                 }
                 let alias = Self::add_source(&mut sources, &mounted, context)?;
                 lib_keys.insert(lib_key.clone(), alias);
@@ -193,7 +191,7 @@ impl Sources {
     /// `io.fdy.cage.lib.<KEY>`.
     pub fn find_by_lib_key(&self, lib_key: &str) -> Option<&Source> {
         match self.lib_keys.get(lib_key) {
-            Some(alias) => self.find_by_alias(&alias),
+            Some(alias) => self.find_by_alias(alias),
             None => None,
         }
     }
@@ -330,7 +328,10 @@ impl Source {
             self.set_mounted(true);
             Ok(())
         } else {
-            Err(format!("'{}' is not a git repository", &self.context).into())
+            Err(anyhow::anyhow!(
+                "'{}' is not a git repository",
+                &self.context
+            ))
         }
     }
 

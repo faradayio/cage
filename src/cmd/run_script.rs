@@ -38,14 +38,14 @@ impl CommandRunScript for Project {
             match pod_or_service? {
                 PodOrService::Pod(pod) => {
                     // Ignore any pods that aren't enabled in the current target
-                    if pod.enabled_in(&target) {
+                    if pod.enabled_in(target) {
                         for service_name in pod.service_names() {
                             pod.run_script(
                                 runner,
-                                &self,
-                                &service_name,
-                                &script_name,
-                                &opts,
+                                self,
+                                service_name,
+                                script_name,
+                                opts,
                             )?;
                         }
                     }
@@ -53,14 +53,8 @@ impl CommandRunScript for Project {
                 PodOrService::Service(pod, service_name) => {
                     // Don't run this on any service whose pod isn't enabled in
                     // the current target
-                    if pod.enabled_in(&target) {
-                        pod.run_script(
-                            runner,
-                            &self,
-                            &service_name,
-                            &script_name,
-                            &opts,
-                        )?;
+                    if pod.enabled_in(target) {
+                        pod.run_script(runner, self, service_name, script_name, opts)?;
                     }
                 }
             }

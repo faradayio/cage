@@ -1,6 +1,6 @@
-//! Extension methods for `compose_yml::v2::Service`.
+//! Extension methods for `faraday_compose_yml::v2::Service`.
 
-use compose_yml::v2 as dc;
+use faraday_compose_yml::v2 as dc;
 use std::path::Path;
 
 use crate::errors::*;

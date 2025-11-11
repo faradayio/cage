@@ -1,6 +1,6 @@
-//! Extension methods for `compose_yml::v2::Service`.
+//! Extension methods for `faraday_compose_yml::v2::Service`.
 
-use compose_yml::v2 as dc;
+use faraday_compose_yml::v2 as dc;
 use std::vec;
 
 use crate::errors::*;
@@ -40,8 +40,7 @@ pub trait ServiceExt {
     /// `Service` object, so you can use it to decide how you want to
     /// update other fields of this object without running afoul of the
     /// borrow checker.
-    fn sources<'a, 'b>(&'a self, sources: &'b sources::Sources)
-        -> Result<Sources<'b>>;
+    fn sources<'b>(&self, sources: &'b sources::Sources) -> Result<Sources<'b>>;
 }
 
 impl ServiceExt for dc::Service {
@@ -90,10 +89,7 @@ impl ServiceExt for dc::Service {
         }
     }
 
-    fn sources<'a, 'b>(
-        &'a self,
-        sources: &'b sources::Sources,
-    ) -> Result<Sources<'b>> {
+    fn sources<'b>(&self, sources: &'b sources::Sources) -> Result<Sources<'b>> {
         // Get our `context`, if any.
         let container_path = self.source_mount_dir()?;
         let source_subdirectory = self.repository_subdirectory()?;
@@ -118,10 +114,11 @@ impl ServiceExt for dc::Service {
         for (label, mount_as) in &self.labels {
             let prefix = "io.fdy.cage.lib.";
             if let Some(lib_name) = label.strip_prefix(prefix) {
-                let source =
-                    sources.find_by_lib_key(lib_name).ok_or_else(|| -> Error {
-                        ErrorKind::UnknownLibKey(lib_name.to_string()).into()
-                    })?;
+                let source = sources.find_by_lib_key(lib_name).ok_or_else(
+                    || -> anyhow::Error {
+                        Error::UnknownLibKey(lib_name.to_string()).into()
+                    },
+                )?;
 
                 libs.push(SourceMount {
                     container_path: mount_as.value()?.to_owned(),

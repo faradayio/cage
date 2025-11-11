@@ -65,7 +65,7 @@ impl CommandSource for Project {
         let source = self
             .sources_mut()
             .find_by_alias_mut(alias)
-            .ok_or_else(|| ErrorKind::UnknownSource(alias.to_owned()))?;
+            .ok_or_else(|| Error::UnknownSource(alias.to_owned()))?;
         if !source.is_available_locally(&sources_dirs) {
             source.clone_source(runner, &sources_dirs)?;
         } else {

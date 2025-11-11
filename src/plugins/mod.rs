@@ -1,6 +1,6 @@
 //! Plugin support.
 
-use compose_yml::v2 as dc;
+use faraday_compose_yml::v2 as dc;
 use std::fmt;
 use std::io;
 use std::marker::PhantomData;
@@ -155,7 +155,8 @@ impl Manager {
     where
         T: PluginNew + 'static,
     {
-        T::new(proj).chain_err(|| ErrorKind::PluginFailed(T::plugin_name().to_owned()))
+        T::new(proj)
+            .map_err(|e| e.context(Error::PluginFailed(T::plugin_name().to_owned())))
     }
 
     /// Register a generator with this manager.
@@ -181,9 +182,9 @@ impl Manager {
     }
 
     /// A plugin was missing, so build an appropriate error message.
-    fn missing_plugin(&self, name: &str) -> ErrorKind {
+    fn missing_plugin(&self, name: &str) -> anyhow::Error {
         if name == "vault" {
-            ErrorKind::FeatureDisabled
+            Error::FeatureDisabled.into()
         } else {
             unreachable!("Cannot find a generator named {}", name)
         }
@@ -214,9 +215,9 @@ impl Manager {
     ) -> Result<()> {
         for plugin in &self.transforms {
             trace!("transforming '{}' with {}", ctx.pod.name(), plugin.name());
-            plugin
-                .transform(op, ctx, file)
-                .chain_err(|| ErrorKind::PluginFailed(plugin.name().to_owned()))?;
+            plugin.transform(op, ctx, file).map_err(|e| {
+                e.context(Error::PluginFailed(plugin.name().to_owned()))
+            })?;
         }
         Ok(())
     }

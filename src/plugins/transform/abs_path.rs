@@ -1,6 +1,6 @@
 //! Plugin which converts all paths in a `dc::File` to absolute.
 
-use compose_yml::v2 as dc;
+use faraday_compose_yml::v2 as dc;
 use std::marker::PhantomData;
 
 use crate::errors::*;

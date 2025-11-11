@@ -9,33 +9,42 @@ use std::marker::PhantomData;
 use std::path::Path;
 use std::str::FromStr;
 
-use crate::errors::{self, ErrorKind, ResultExt};
+use crate::errors::{Error, Result};
 use crate::util::ConductorPathExt;
 
 /// Load a YAML file using `serde`, and generate the best error we can if
 /// it fails.
-pub fn load_yaml<T>(path: &Path) -> Result<T, errors::Error>
+pub fn load_yaml<T>(path: &Path) -> Result<T>
 where
     T: DeserializeOwned,
 {
-    let mkerr = || ErrorKind::CouldNotReadFile(path.to_owned());
-    let f = fs::File::open(&path).chain_err(&mkerr)?;
-    serde_yaml::from_reader(io::BufReader::new(f)).chain_err(&mkerr)
+    let f = fs::File::open(path).map_err(|e| {
+        anyhow::Error::new(e).context(Error::CouldNotReadFile(path.to_owned()))
+    })?;
+    serde_yaml::from_reader(io::BufReader::new(f)).map_err(|e| {
+        anyhow::Error::new(e).context(Error::CouldNotReadFile(path.to_owned()))
+    })
 }
 
 /// Write `data` to `path` in YAML format.
-pub fn dump_yaml<T>(path: &Path, data: &T) -> Result<(), errors::Error>
+pub fn dump_yaml<T>(path: &Path, data: &T) -> Result<()>
 where
     T: Serialize,
 {
-    let mkerr = || ErrorKind::CouldNotWriteFile(path.to_owned());
-    path.with_guaranteed_parent().chain_err(&mkerr)?;
-    let f = fs::File::create(&path).chain_err(&mkerr)?;
-    serde_yaml::to_writer(&mut io::BufWriter::new(f), data).chain_err(&mkerr)
+    path.with_guaranteed_parent()
+        .map_err(|e| e.context(Error::CouldNotWriteFile(path.to_owned())))?;
+    let f = fs::File::create(path).map_err(|e| {
+        anyhow::Error::new(e).context(Error::CouldNotWriteFile(path.to_owned()))
+    })?;
+    serde_yaml::to_writer(&mut io::BufWriter::new(f), data).map_err(|e| {
+        anyhow::Error::new(e).context(Error::CouldNotWriteFile(path.to_owned()))
+    })
 }
 
 /// Deserialize a type that we can parse using `FromStr`.
-pub fn deserialize_parsable<'de, D, T>(deserializer: D) -> Result<T, D::Error>
+pub fn deserialize_parsable<'de, D, T>(
+    deserializer: D,
+) -> std::result::Result<T, D::Error>
 where
     D: Deserializer<'de>,
     T: FromStr,
@@ -54,7 +63,7 @@ where
 /// [issue]: https://github.com/serde-rs/serde/issues/576
 pub fn deserialize_parsable_opt<'de, D, T>(
     deserializer: D,
-) -> Result<Option<T>, D::Error>
+) -> std::result::Result<Option<T>, D::Error>
 where
     D: Deserializer<'de>,
     T: FromStr,
@@ -70,7 +79,7 @@ where
         T: FromStr,
         <T as FromStr>::Err: Display,
     {
-        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
         where
             D: Deserializer<'de>,
         {
@@ -84,7 +93,7 @@ where
             {
                 type Value = Wrap<T>;
 
-                fn visit_none<E>(self) -> Result<Self::Value, E>
+                fn visit_none<E>(self) -> std::result::Result<Self::Value, E>
                 where
                     E: serde::de::Error,
                 {
@@ -94,7 +103,7 @@ where
                 fn visit_some<D>(
                     self,
                     deserializer: D,
-                ) -> Result<Self::Value, D::Error>
+                ) -> std::result::Result<Self::Value, D::Error>
                 where
                     D: Deserializer<'de>,
                 {
