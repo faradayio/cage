@@ -82,4 +82,4 @@ jobs:
         run: cargo install --locked cargo-deny
 
       - name: Run cargo deny
-        run: cargo deny check
+        run: cargo deny check advisories licenses sources
