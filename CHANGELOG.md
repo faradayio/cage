@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 - Replaced `boondock` Docker client with `bollard` for better async/await support and active maintenance.
 - Updated `tokio` runtime from 0.2 to 1.x for better async compatibility.
+- Switched from openssl to rustls
 
 ## 0.3.6 - 2021-05-10
 
