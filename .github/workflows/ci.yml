@@ -150,3 +150,7 @@ jobs:
 
       - name: Build
         run: cargo build --release --target ${{ matrix.target }}
+        env:
+          OPENSSL_STATIC: ${{ matrix.target == 'x86_64-unknown-linux-musl' && '1' || '' }}
+          OPENSSL_LIB_DIR: ${{ matrix.target == 'x86_64-unknown-linux-musl' && '/usr/lib/x86_64-linux-gnu' || '' }}
+          OPENSSL_INCLUDE_DIR: ${{ matrix.target == 'x86_64-unknown-linux-musl' && '/usr/include/openssl' || '' }}
