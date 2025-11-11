@@ -3,7 +3,7 @@ name: Release
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
 
 permissions:
   contents: write
@@ -14,21 +14,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Extract version from tag
         id: tag_version
         run: |
           TAG="${GITHUB_REF#refs/tags/v}"
           echo "version=$TAG" >> $GITHUB_OUTPUT
           echo "Tag version: $TAG"
-      
+
       - name: Extract version from Cargo.toml
         id: cargo_version
         run: |
           CARGO_VERSION=$(grep '^version = ' Cargo.toml | head -1 | cut -d'"' -f2)
           echo "version=$CARGO_VERSION" >> $GITHUB_OUTPUT
           echo "Cargo.toml version: $CARGO_VERSION"
-      
+
       - name: Validate versions match
         run: |
           if [ "${{ steps.tag_version.outputs.version }}" != "${{ steps.cargo_version.outputs.version }}" ]; then
@@ -37,9 +37,27 @@ jobs:
           fi
           echo "Version validation passed: ${{ steps.tag_version.outputs.version }}"
 
+  test:
+    name: Run tests before release
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Run tests
+        run: cargo test --all-features
+
+      - name: Run clippy
+        run: |
+          rustup component add clippy
+          cargo clippy --all-features -- -D warnings
+
   build:
     name: Build ${{ matrix.target }}
-    needs: validate
+    needs: test
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -56,37 +74,37 @@ jobs:
           - os: windows-latest
             target: x86_64-pc-windows-msvc
             archive_name: cage-${{ github.ref_name }}-windows-x86_64.zip
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
-      
-      - name: Install musl tools (Linux)
+
+      - name: Install dependencies (Linux)
         if: matrix.target == 'x86_64-unknown-linux-musl'
         run: |
           sudo apt-get update
           sudo apt-get install -y musl-tools
-      
+
       - name: Build
         run: cargo build --release --target ${{ matrix.target }}
-      
+
       - name: Create archive (Unix)
         if: runner.os != 'Windows'
         run: |
           cd target/${{ matrix.target }}/release
           zip ../../../${{ matrix.archive_name }} cage
-      
+
       - name: Create archive (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
           cd target/${{ matrix.target }}/release
           Compress-Archive -Path cage.exe -DestinationPath ../../../${{ matrix.archive_name }}
-      
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
@@ -99,35 +117,35 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts
-      
+
       - name: Prepare release files
         run: |
           mkdir release-files
           find artifacts -name "*.zip" -exec cp {} release-files/ \;
           ls -lh release-files/
-      
+
       - name: Extract changelog for this version
         id: changelog
         run: |
           VERSION="${GITHUB_REF#refs/tags/v}"
           echo "Extracting changelog for version $VERSION"
-          
+
           # Extract the section between this version and the next one
           CHANGELOG=$(awk "/## $VERSION/,/## [0-9]/" CHANGELOG.md | sed '1d;$d')
-          
+
           # If empty, use a default message
           if [ -z "$CHANGELOG" ]; then
             CHANGELOG="Release $VERSION"
           fi
-          
+
           # Save to file for multi-line handling
           echo "$CHANGELOG" > changelog.txt
-      
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
@@ -137,4 +155,3 @@ jobs:
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
