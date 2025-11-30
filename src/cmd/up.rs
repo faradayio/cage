@@ -159,15 +159,17 @@ fn runs_docker_compose_up_with_quiet_mode() {
     let opts = args::opts::Up::default();
     proj.up(&runner, &args::ActOn::All, &opts).unwrap();
     assert_ran!(runner, {
-        ["docker-compose",
-         "-p",
-         "railshello",
-         "-f",
-         proj.output_dir().join("pods").join("frontend.yml"),
-         "--progress",
-         "quiet",
-         "up",
-         "-d"]
+        [
+            "docker-compose",
+            "-p",
+            "railshello",
+            "-f",
+            proj.output_dir().join("pods").join("frontend.yml"),
+            "--progress",
+            "quiet",
+            "up",
+            "-d",
+        ]
     });
 
     proj.remove_test_output().unwrap();

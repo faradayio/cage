@@ -117,9 +117,7 @@ impl CommandRun for Project {
         if self.quiet() {
             cmd.arg("--quiet-pull");
         }
-        cmd.arg(service_name)
-            .args(&command_args)
-            .exec()?;
+        cmd.arg(service_name).args(&command_args).exec()?;
 
         // TODO: If exporting output, run `docker cp`.
         if opts.export_test_output {
@@ -238,18 +236,20 @@ fn runs_docker_compose_run_with_quiet_pull() {
     opts.quiet_pull = true;
     proj.run(&runner, "rake", Some(&cmd), &opts).unwrap();
     assert_ran!(runner, {
-        ["docker-compose",
-         "-p",
-         "railshello",
-         "-f",
-         proj.output_dir().join("pods").join("rake.yml"),
-         "--progress",
-         "quiet",
-         "run",
-         "-T",
-         "--quiet-pull",
-         "rake",
-         "db:migrate"]
+        [
+            "docker-compose",
+            "-p",
+            "railshello",
+            "-f",
+            proj.output_dir().join("pods").join("rake.yml"),
+            "--progress",
+            "quiet",
+            "run",
+            "-T",
+            "--quiet-pull",
+            "rake",
+            "db:migrate",
+        ]
     });
 
     proj.remove_test_output().unwrap();

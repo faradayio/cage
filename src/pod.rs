@@ -419,13 +419,13 @@ impl Pod {
             "-f".into(),
             proj.output_pods_dir().join(self.rel_path()).into(),
         ];
-        
+
         // Add global progress suppression when quiet mode is enabled
         if proj.quiet() {
             args.push("--progress".into());
             args.push("quiet".into());
         }
-        
+
         Ok(args)
     }
 
