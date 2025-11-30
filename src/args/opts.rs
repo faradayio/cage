@@ -37,6 +37,25 @@ impl ToArgs for Pull {
     }
 }
 
+/// Options for `docker-compose build`.
+#[derive(Debug, Default, Clone)]
+#[allow(missing_copy_implementations)]
+#[non_exhaustive]
+pub struct Build {
+    /// Suppress the build output.
+    pub quiet: bool,
+}
+
+impl ToArgs for Build {
+    fn to_args(&self) -> Vec<OsString> {
+        let mut args = vec![];
+        if self.quiet {
+            args.push(OsString::from("-q"));
+        }
+        args
+    }
+}
+
 /// Command-line flags with for `docker-compose up`.
 #[derive(Debug, Default, Clone)]
 #[allow(missing_copy_implementations)]
@@ -44,12 +63,20 @@ impl ToArgs for Pull {
 pub struct Up {
     /// Should we initialize each pod after we start it up?
     pub init: bool,
+    /// For build operations during up
+    pub quiet: bool,
 }
 
 impl Up {
     /// Create new `Up` options.
     pub fn new(init: bool) -> Up {
-        Up { init }
+        Up { init, quiet: false }
+    }
+
+    /// Set quiet mode.
+    pub fn with_quiet(mut self, quiet: bool) -> Self {
+        self.quiet = quiet;
+        self
     }
 }
 
@@ -203,6 +230,9 @@ pub struct Run {
     /// default: false
     pub no_deps: bool,
 
+    /// Pull without printing progress information
+    pub quiet_pull: bool,
+
     /// PRIVATE: This field is a stand-in for future options.
     /// See http://stackoverflow.com/q/39277157/12089
     #[doc(hidden)]
@@ -244,6 +274,9 @@ impl ToArgs for Run {
         }
         if self.no_deps {
             args.push(OsStr::new("--no-deps").to_owned());
+        }
+        if self.quiet_pull {
+            args.push(OsStr::new("--quiet-pull").to_owned());
         }
         args
     }

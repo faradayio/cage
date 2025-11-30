@@ -108,14 +108,16 @@ impl CommandRun for Project {
             service.test_command()?.iter().map(|s| s.into()).collect()
         };
         let container_name = format!("{}_{}", service_name, random::<u16>());
-        runner
-            .build("docker-compose")
-            .args(&pod.compose_args(self)?)
+        let mut cmd = runner.build("docker-compose");
+        cmd.args(&pod.compose_args(self)?)
             .arg("run")
             .arg("--name")
             .arg(&container_name)
-            .arg("--no-deps")
-            .arg(service_name)
+            .arg("--no-deps");
+        if self.quiet() {
+            cmd.arg("--quiet-pull");
+        }
+        cmd.arg(service_name)
             .args(&command_args)
             .exec()?;
 
@@ -217,6 +219,37 @@ fn runs_tests() {
             "rm",
             container_name,
         ]
+    });
+
+    proj.remove_test_output().unwrap();
+}
+
+#[test]
+fn runs_docker_compose_run_with_quiet_pull() {
+    let _ = env_logger::try_init();
+    let mut proj = Project::from_example("rails_hello").unwrap();
+    proj.set_quiet(true);
+    let runner = TestCommandRunner::new();
+    proj.output("run").unwrap();
+
+    let cmd = args::Command::new("db:migrate");
+    let mut opts = args::opts::Run::default();
+    opts.allocate_tty = false;
+    opts.quiet_pull = true;
+    proj.run(&runner, "rake", Some(&cmd), &opts).unwrap();
+    assert_ran!(runner, {
+        ["docker-compose",
+         "-p",
+         "railshello",
+         "-f",
+         proj.output_dir().join("pods").join("rake.yml"),
+         "--progress",
+         "quiet",
+         "run",
+         "-T",
+         "--quiet-pull",
+         "rake",
+         "db:migrate"]
     });
 
     proj.remove_test_output().unwrap();

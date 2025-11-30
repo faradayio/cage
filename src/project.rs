@@ -214,6 +214,9 @@ pub struct Project {
     /// Typically used to lock down versions supplied by a CI system.
     default_tags: Option<DefaultTags>,
 
+    /// Whether to suppress docker-compose progress output
+    quiet: bool,
+
     /// The plugins associated with this project.  Guaranteed to never be
     /// `None` after returning from `from_dirs`.
     plugins: Option<plugins::Manager>,
@@ -257,6 +260,7 @@ impl Project {
             hooks: HookManager::new(root_dir)?,
             _config: config,
             default_tags: None,
+            quiet: false,
             plugins: None,
         };
         let plugins = plugins::Manager::new(&proj)?;
@@ -516,6 +520,16 @@ impl Project {
     pub fn set_default_tags(&mut self, tags: DefaultTags) -> &mut Project {
         self.default_tags = Some(tags);
         self
+    }
+
+    /// Set whether to suppress docker-compose progress output.
+    pub fn set_quiet(&mut self, quiet: bool) {
+        self.quiet = quiet;
+    }
+
+    /// Get whether to suppress docker-compose progress output.
+    pub fn quiet(&self) -> bool {
+        self.quiet
     }
 
     /// Our plugin manager.

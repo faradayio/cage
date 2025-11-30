@@ -413,12 +413,20 @@ impl Pod {
     /// Command-line `-p` and `-f` arguments that we'll pass to
     /// `docker-compose` to describe this file.
     pub fn compose_args(&self, proj: &Project) -> Result<Vec<OsString>> {
-        Ok(vec![
+        let mut args = vec![
             "-p".into(),
             proj.compose_name().into(),
             "-f".into(),
             proj.output_pods_dir().join(self.rel_path()).into(),
-        ])
+        ];
+        
+        // Add global progress suppression when quiet mode is enabled
+        if proj.quiet() {
+            args.push("--progress".into());
+            args.push("quiet".into());
+        }
+        
+        Ok(args)
     }
 
     /// The commands we should run to initialize this pod.
