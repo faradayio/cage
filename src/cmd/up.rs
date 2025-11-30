@@ -146,3 +146,31 @@ fn runs_docker_compose_up_honors_enable_in_targets() {
 
     proj.remove_test_output().unwrap();
 }
+
+#[test]
+fn runs_docker_compose_up_with_quiet_mode() {
+    let _ = env_logger::try_init();
+    let mut proj = Project::from_example("rails_hello").unwrap();
+    proj.set_quiet(true);
+    proj.set_current_target_name("production").unwrap();
+    let runner = TestCommandRunner::new();
+    proj.output("up").unwrap();
+
+    let opts = args::opts::Up::default();
+    proj.up(&runner, &args::ActOn::All, &opts).unwrap();
+    assert_ran!(runner, {
+        [
+            "docker-compose",
+            "-p",
+            "railshello",
+            "-f",
+            proj.output_dir().join("pods").join("frontend.yml"),
+            "--progress",
+            "quiet",
+            "up",
+            "-d",
+        ]
+    });
+
+    proj.remove_test_output().unwrap();
+}

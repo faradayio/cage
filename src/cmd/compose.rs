@@ -179,3 +179,88 @@ fn runs_docker_compose_on_named_pods_and_services() {
 
     proj.remove_test_output().unwrap();
 }
+
+#[test]
+fn runs_docker_compose_with_quiet_mode() {
+    let _ = env_logger::try_init();
+    let mut proj = Project::from_example("rails_hello").unwrap();
+    proj.set_quiet(true);
+    let runner = TestCommandRunner::new();
+    proj.output("stop").unwrap();
+
+    let opts = args::opts::Empty;
+    proj.compose(&runner, "stop", &args::ActOn::All, &opts)
+        .unwrap();
+    assert_ran!(runner, {
+        ["docker-compose",
+         "-p",
+         "railshello",
+         "-f",
+         proj.output_dir().join("pods").join("db.yml"),
+         "--progress",
+         "quiet",
+         "stop"],
+        ["docker-compose",
+         "-p",
+         "railshello",
+         "-f",
+         proj.output_dir().join("pods").join("frontend.yml"),
+         "--progress",
+         "quiet",
+         "stop"],
+        ["docker-compose",
+         "-p",
+         "railshello",
+         "-f",
+         proj.output_dir().join("pods").join("rake.yml"),
+         "--progress",
+         "quiet",
+         "stop"]
+    });
+
+    proj.remove_test_output().unwrap();
+}
+
+#[test]
+fn runs_docker_compose_build_with_quiet_flag() {
+    let _ = env_logger::try_init();
+    let mut proj = Project::from_example("rails_hello").unwrap();
+    proj.set_quiet(true);
+    let runner = TestCommandRunner::new();
+    proj.output("build").unwrap();
+
+    let opts = args::opts::Build { quiet: true };
+    proj.compose(&runner, "build", &args::ActOn::All, &opts)
+        .unwrap();
+    assert_ran!(runner, {
+        ["docker-compose",
+         "-p",
+         "railshello",
+         "-f",
+         proj.output_dir().join("pods").join("db.yml"),
+         "--progress",
+         "quiet",
+         "build",
+         "-q"],
+        ["docker-compose",
+         "-p",
+         "railshello",
+         "-f",
+         proj.output_dir().join("pods").join("frontend.yml"),
+         "--progress",
+         "quiet",
+         "build",
+         "-q"],
+        ["docker-compose",
+         "-p",
+         "railshello",
+         "-f",
+         proj.output_dir().join("pods").join("rake.yml"),
+         "--progress",
+         "quiet",
+         "build",
+         "-q"]
+    });
+
+    proj.remove_test_output().unwrap();
+}

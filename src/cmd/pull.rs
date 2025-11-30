@@ -64,3 +64,56 @@ fn runs_docker_compose_pull_on_all_pods() {
 
     proj.remove_test_output().unwrap();
 }
+
+#[test]
+fn runs_docker_compose_pull_with_global_quiet() {
+    let _ = env_logger::try_init();
+    let mut proj = Project::from_example("hello").unwrap();
+    proj.set_quiet(true);
+    let runner = TestCommandRunner::new();
+    proj.output("pull").unwrap();
+
+    let opts = args::opts::Pull::default();
+    proj.pull(&runner, &args::ActOn::All, &opts).unwrap();
+    assert_ran!(runner, {
+        [proj.root_dir().join("config").join("hooks").join("pull.d")
+             .join("hello.hook")],
+        ["docker-compose",
+         "-p",
+         "hello",
+         "-f",
+         proj.output_dir().join("pods").join("frontend.yml"),
+         "--progress",
+         "quiet",
+         "pull"]
+    });
+
+    proj.remove_test_output().unwrap();
+}
+
+#[test]
+fn runs_docker_compose_pull_with_both_quiet_flags() {
+    let _ = env_logger::try_init();
+    let mut proj = Project::from_example("hello").unwrap();
+    proj.set_quiet(true);
+    let runner = TestCommandRunner::new();
+    proj.output("pull").unwrap();
+
+    let opts = args::opts::Pull { quiet: true };
+    proj.pull(&runner, &args::ActOn::All, &opts).unwrap();
+    assert_ran!(runner, {
+        [proj.root_dir().join("config").join("hooks").join("pull.d")
+             .join("hello.hook")],
+        ["docker-compose",
+         "-p",
+         "hello",
+         "-f",
+         proj.output_dir().join("pods").join("frontend.yml"),
+         "--progress",
+         "quiet",
+         "pull",
+         "--quiet"]
+    });
+
+    proj.remove_test_output().unwrap();
+}

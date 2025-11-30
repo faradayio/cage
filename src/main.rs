@@ -70,6 +70,14 @@ struct Cli {
     )]
     default_tags: Option<String>,
 
+    #[arg(
+        short = 'q',
+        long = "quiet",
+        global = true,
+        help = "Suppress docker-compose progress output (pulls, builds, etc.)"
+    )]
+    quiet: bool,
+
     #[command(subcommand)]
     command: Commands,
 }
@@ -629,6 +637,7 @@ fn run(cli: &Cli) -> Result<()> {
         proj.set_default_tags(cage::DefaultTags::read(reader)?);
     }
     proj.set_current_target_name(cli.target_name())?;
+    proj.set_quiet(cli.quiet);
 
     // Output our project's `*.yml` files for `docker-compose` if we'll need it.
     let subcommand_name = match &cli.command {
@@ -669,12 +678,13 @@ fn run(cli: &Cli) -> Result<()> {
         } => {
             let acts_on = to_acts_on(pod_or_service, true);
             let mut opts = cage::args::opts::Pull::default();
-            opts.quiet = *quiet;
+            opts.quiet = *quiet || cli.quiet;
             proj.pull(&runner, &acts_on, &opts)?;
         }
         Commands::Build { pod_or_service } => {
             let acts_on = to_acts_on(pod_or_service, true);
-            let opts = cage::args::opts::Empty;
+            let mut opts = cage::args::opts::Build::default();
+            opts.quiet = cli.quiet;
             proj.compose(&runner, "build", &acts_on, &opts)?;
         }
         Commands::Up {
@@ -682,7 +692,7 @@ fn run(cli: &Cli) -> Result<()> {
             pod_or_service,
         } => {
             let acts_on = to_acts_on(pod_or_service, false);
-            let opts = cage::args::opts::Up::new(*init);
+            let opts = cage::args::opts::Up::new(*init).with_quiet(cli.quiet);
             proj.up(&runner, &acts_on, &opts)?;
         }
         Commands::Restart { pod_or_service } => {
@@ -714,7 +724,7 @@ fn run(cli: &Cli) -> Result<()> {
             command,
         } => {
             warn_if_pods_are_enabled_but_not_running(&proj)?;
-            let opts = to_run_options(
+            let mut opts = to_run_options(
                 *detached,
                 user,
                 *no_allocate_tty,
@@ -722,6 +732,7 @@ fn run(cli: &Cli) -> Result<()> {
                 environment,
                 false,
             );
+            opts.quiet_pull = cli.quiet;
             let cmd = to_exec_command(command);
             proj.run(&runner, service, cmd.as_ref(), &opts)?;
         }
