@@ -1,8 +1,6 @@
 //! Support for fetching runtime state directly from the Docker daemon.
 
-use regex::Regex;
 use std::collections::BTreeMap;
-use std::net;
 use tokio::runtime;
 
 use crate::errors::*;
@@ -122,29 +120,18 @@ impl RuntimeState {
 }
 
 /// Information about a specific container associated with a service.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct ContainerInfo {
-    /// The name of this container.
-    name: String,
-
     /// Was this a one-off container?
     is_one_off: bool,
 
     /// The current state of this container.
     state: ContainerStatus,
-
-    /// An IP address at which we can access this container.
-    ip_addr: Option<net::IpAddr>,
-
-    /// The TCP ports this container is listening on (not the corresponding
-    /// host ports!).
-    container_tcp_ports: Vec<u16>,
 }
 
 impl ContainerInfo {
     /// Construct our summary from the raw data returned by Docker.
     fn new(info: &bollard::models::ContainerInspectResponse) -> Result<ContainerInfo> {
-        // Was this a one-off container?
         let one_off_label = info
             .config
             .as_ref()
@@ -152,70 +139,14 @@ impl ContainerInfo {
             .and_then(|labels| labels.get("com.docker.compose.oneoff"));
         let is_one_off = one_off_label.map(|s| s.as_str()) == Some("True");
 
-        // Get an IP address for this running container. Bollard 0.21 removed
-        // the top-level `IPAddress` field from `NetworkSettings`, so we now
-        // pick the first non-empty `IPAddress` from one of the attached
-        // networks.
-        let raw_ip_addr = info
-            .network_settings
-            .as_ref()
-            .and_then(|ns| ns.networks.as_ref())
-            .and_then(|networks| {
-                networks
-                    .values()
-                    .filter_map(|endpoint| endpoint.ip_address.as_ref())
-                    .find(|addr| !addr.is_empty())
-            })
-            .map(|s| s.as_str())
-            .unwrap_or("");
-        let ip_addr = if !raw_ip_addr.is_empty() {
-            Some(raw_ip_addr.parse().map_err(|e| {
-                anyhow::Error::new(e).context(Error::parse("IP address", raw_ip_addr))
-            })?)
-        } else {
-            None
-        };
-
-        // Get the listening network ports.
-        let mut ports = vec![];
-        if let Some(network_settings) = &info.network_settings {
-            if let Some(port_map) = &network_settings.ports {
-                for port_str in port_map.keys() {
-                    lazy_static! {
-                        static ref TCP_PORT: Regex =
-                            Regex::new(r#"^(\d+)/tcp$"#).unwrap();
-                    }
-                    if let Some(caps) = TCP_PORT.captures(port_str) {
-                        let port =
-                            caps.get(1).unwrap().as_str().parse().map_err(|e| {
-                                anyhow::Error::new(e).context(Error::parse(
-                                    "TCP port",
-                                    port_str.clone(),
-                                ))
-                            })?;
-                        ports.push(port);
-                    }
-                }
-            }
-        }
-
-        let name = info
-            .name
-            .as_ref()
-            .ok_or_else(|| anyhow::anyhow!("container missing name"))?
-            .to_owned();
-
         let state = info
             .state
             .as_ref()
             .ok_or_else(|| anyhow::anyhow!("container missing state"))?;
 
         Ok(ContainerInfo {
-            name,
             is_one_off,
             state: ContainerStatus::new(state),
-            ip_addr,
-            container_tcp_ports: ports,
         })
     }
 
@@ -227,43 +158,6 @@ impl ContainerInfo {
     /// The current state of this container.
     pub fn state(&self) -> ContainerStatus {
         self.state
-    }
-
-    /// An IP address at which we can access this container.
-    pub fn ip_addr(&self) -> Option<net::IpAddr> {
-        self.ip_addr
-    }
-
-    /// The TCP ports this container is listening on (not the corresponding
-    /// host ports!).
-    pub fn container_tcp_ports(&self) -> &[u16] {
-        &self.container_tcp_ports
-    }
-
-    /// The socket addresses this container is listening on.
-    pub fn socket_addrs(&self) -> Vec<net::SocketAddr> {
-        self.ip_addr()
-            .map(|addr| {
-                self.container_tcp_ports
-                    .iter()
-                    .map(|port| net::SocketAddr::new(addr, *port))
-                    .collect()
-            })
-            .unwrap_or_default()
-    }
-
-    /// Is this container listening to its ports?
-    pub fn is_listening_to_ports(&self) -> bool {
-        debug!("scanning container '{}'", &self.name);
-        for addr in self.socket_addrs() {
-            trace!("scanning container '{}' at {}", &self.name, addr);
-            if net::TcpListener::bind(addr).is_err() {
-                debug!("container '{}': {} is CLOSED", &self.name, addr);
-                return false;
-            }
-        }
-        debug!("container '{}' is listening on all ports", &self.name);
-        true
     }
 }
 

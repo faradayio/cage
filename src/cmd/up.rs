@@ -73,28 +73,10 @@ impl CommandUp for Project {
             return Ok(());
         }
 
-        // Wait for the pod's ports to be open.
-        println!(
-            "Waiting for pod '{}' to be listening on all ports",
-            pod.name()
-        );
+        println!("Waiting for pod '{}' to be running", pod.name());
         loop {
             let state: RuntimeState = RuntimeState::for_project(self)?;
-            let listening = pod.service_names().iter().all(|service_name| {
-                debug!("scanning service '{}'", service_name);
-                let containers = state.service_containers(service_name);
-                if containers.is_empty() {
-                    // No containers visible yet; give Docker time.
-                    debug!("no containers for service '{}' yet", service_name);
-                    false
-                } else {
-                    // If we have at least one container, scan it.
-                    containers
-                        .iter()
-                        .all(|container| container.is_listening_to_ports())
-                }
-            });
-            if listening {
+            if state.all_services_in_pod_are_running(pod) {
                 break;
             }
             thread::sleep(time::Duration::from_millis(250));

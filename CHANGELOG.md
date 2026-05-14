@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## Unreleased
 
+## 0.4.1-pre3 - 2026-05-14
+
+### Fixed
+
+- `cage up --init` no longer hangs at "Waiting for pod ... to be listening on all ports". The `bollard 0.19 → 0.21` upgrade in pre2 started populating container IPs from `NetworkSettings.Networks` (the compose-managed custom network), and the existing `TcpListener::bind`-based port probe always errored with `EADDRNOTAVAIL` against those non-local addresses, causing the wait loop to spin forever.
+
+### Removed
+
+- Deleted the long-broken `ContainerInfo::is_listening_to_ports` port probe and its supporting fields/methods (`ip_addr`, `container_tcp_ports`, `socket_addrs`). The probe was a no-op for docker-compose-managed containers in every Docker version since user-defined networks became the compose default (~early 2016). `init_pod` now waits on `RuntimeState::all_services_in_pod_are_running`, which actually verifies that every service's containers reached the `Running` state.
+
 ## 0.4.1-pre2 - 2026-05-13
 
 ### Changed
