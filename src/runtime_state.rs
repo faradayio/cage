@@ -152,11 +152,20 @@ impl ContainerInfo {
             .and_then(|labels| labels.get("com.docker.compose.oneoff"));
         let is_one_off = one_off_label.map(|s| s.as_str()) == Some("True");
 
-        // Get an IP address for this running container.
+        // Get an IP address for this running container. Bollard 0.21 removed
+        // the top-level `IPAddress` field from `NetworkSettings`, so we now
+        // pick the first non-empty `IPAddress` from one of the attached
+        // networks.
         let raw_ip_addr = info
             .network_settings
             .as_ref()
-            .and_then(|ns| ns.ip_address.as_ref())
+            .and_then(|ns| ns.networks.as_ref())
+            .and_then(|networks| {
+                networks
+                    .values()
+                    .filter_map(|endpoint| endpoint.ip_address.as_ref())
+                    .find(|addr| !addr.is_empty())
+            })
             .map(|s| s.as_str())
             .unwrap_or("");
         let ip_addr = if !raw_ip_addr.is_empty() {

@@ -1,11 +1,13 @@
 //! Utilities for running and testing shell commands.
 
-use std::cell::{Ref, RefCell};
 use std::ffi::{OsStr, OsString};
+use std::io::{self, Write};
 use std::marker::PhantomData;
 use std::path::Path;
-use std::process;
-use std::rc::Rc;
+use std::process::{self, Stdio};
+use std::sync::{Arc, Mutex, MutexGuard};
+
+use colored::Colorize;
 
 use crate::errors::*;
 
@@ -57,6 +59,17 @@ pub trait Command {
         } else {
             Err(self.command_failed_error())
         }
+    }
+
+    /// Like `exec`, but captures stdout and stderr instead of inheriting
+    /// the parent's. On success, the captured output is discarded. On
+    /// failure, it is printed to the parent's stderr (tagged with `label`)
+    /// before returning the error.
+    ///
+    /// Intended for use when running multiple commands in parallel, where
+    /// inherited stdio would interleave unreadably.
+    fn exec_capturing(&mut self, _label: &str) -> Result<()> {
+        self.exec()
     }
 
     /// Make an error representing a failure of this command.
@@ -140,6 +153,27 @@ impl Command for OsCommand {
         })
     }
 
+    fn exec_capturing(&mut self, label: &str) -> Result<()> {
+        debug!("Running (capturing) {:?}", &self.arg_log);
+        self.command.stdout(Stdio::piped()).stderr(Stdio::piped());
+        let output = self.command.output().map_err(|e| {
+            anyhow::Error::new(e).context(Error::CommandFailed(self.arg_log.clone()))
+        })?;
+        if output.status.success() {
+            return Ok(());
+        }
+        let mut stderr = io::stderr().lock();
+        let _ = writeln!(stderr, "{} {}", "[fail]".red().bold(), label.bold(),);
+        let _ = stderr.write_all(&output.stdout);
+        let _ = stderr.write_all(&output.stderr);
+        if output.stdout.last().is_some_and(|b| *b != b'\n')
+            || output.stderr.last().is_some_and(|b| *b != b'\n')
+        {
+            let _ = stderr.write_all(b"\n");
+        }
+        Err(self.command_failed_error())
+    }
+
     fn command_failed_error(&self) -> anyhow::Error {
         Error::CommandFailed(self.arg_log.clone()).into()
     }
@@ -155,23 +189,25 @@ fn os_command_runner_runs_commands() {
 /// Support for running commands in test mode.
 #[derive(Debug)]
 pub struct TestCommandRunner {
-    /// The commands that have been executed.  Because we want to avoid
-    /// borrow checker hell, we use `Rc<RefCell<_>>` to implement a shared,
-    /// mutable value.
-    cmds: Rc<RefCell<Vec<Vec<OsString>>>>,
+    /// The commands that have been executed.  We use `Arc<Mutex<_>>`
+    /// rather than `Rc<RefCell<_>>` so that this runner is `Send + Sync`
+    /// and can be used from parallel code paths (e.g. parallel `pull`).
+    cmds: Arc<Mutex<Vec<Vec<OsString>>>>,
 }
 
 impl TestCommandRunner {
     /// Create a new `TestCommandRunner`.
     pub fn new() -> TestCommandRunner {
         TestCommandRunner {
-            cmds: Rc::new(RefCell::new(vec![])),
+            cmds: Arc::new(Mutex::new(vec![])),
         }
     }
 
     /// Access the list of commands run.
-    pub fn cmds(&self) -> Ref<'_, Vec<Vec<OsString>>> {
-        self.cmds.borrow()
+    pub fn cmds(&self) -> MutexGuard<'_, Vec<Vec<OsString>>> {
+        self.cmds
+            .lock()
+            .expect("test command runner mutex poisoned")
     }
 }
 
@@ -202,13 +238,16 @@ pub struct TestCommand {
     cmd: Vec<OsString>,
     /// The list of commands we share with our `TestCommandRunner`, into which
     /// we'll insert `self.cmd` just before running.
-    cmds: Rc<RefCell<Vec<Vec<OsString>>>>,
+    cmds: Arc<Mutex<Vec<Vec<OsString>>>>,
 }
 
 impl TestCommand {
     /// Record the execution of this command.
     fn record_execution(&self) {
-        self.cmds.borrow_mut().push(self.cmd.clone());
+        self.cmds
+            .lock()
+            .expect("test command runner mutex poisoned")
+            .push(self.cmd.clone());
     }
 }
 
@@ -252,7 +291,7 @@ impl Command for TestCommand {
 /// hoped were run.  This is a bit trickier than you'd expect, because we
 /// need to handle two complications:
 ///
-/// 1. `TestCommandRunner::cmds` returns a `Ref<_>` type, which we
+/// 1. `TestCommandRunner::cmds` returns a `MutexGuard<_>` type, which we
 ///    need to explicitly `deref()` before trying to compare, so that
 ///    we get a real `&`-style reference.
 /// 2. We want to allow this macro to be passed a mix of `&'static str`
