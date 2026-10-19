@@ -31,7 +31,7 @@ clap = { version = "4.6", features = ["derive", "string"] }
 clap_complete = "4.6"
 colored = "3.1"
 faraday_compose_yml = { git = "https://github.com/faradayio/compose_yml" }
-dirs = "6.0"
+dirs = "7.0"
 env_logger = "0.11"
 anyhow = "1.0"
 thiserror = "2.0"
@@ -50,7 +50,7 @@ semver = "1.0"
 serde = "1.0"
 serde_derive = "1.0"
 serde_json = "1.0"
-serde_yaml = "0.9"
+serde-saphyr = "2.0"
 shlex = "2.0"
 tokio = { version = "1", features = ["rt", "macros", "net", "time"] }
 url = "2.5.8"

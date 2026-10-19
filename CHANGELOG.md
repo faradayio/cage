@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## Unreleased
 
+### Changed
+
+- Updated Rust dependencies, including `dirs` 6 → 7.
+- Replaced `serde_yaml` with `serde-saphyr`. `serde_yaml` depends on `unsafe-libyaml`, which is unmaintained.
+
 ## 0.4.1-pre6 - 2026-08-19
 
 ### Fixed

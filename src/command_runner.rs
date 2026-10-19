@@ -312,7 +312,7 @@ macro_rules! assert_ran {
         {
             s.as_ref().to_owned()
         }
-        let expected = vec!( $( vec!( $( coerce($arg) ),+ ) ),* );
+        let expected = vec![ $( vec![ $( coerce($arg) ),+ ] ),* ];
         assert_eq!($runner.cmds().deref(), &expected);
     };
 }

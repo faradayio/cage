@@ -21,7 +21,7 @@ where
     let f = fs::File::open(path).map_err(|e| {
         anyhow::Error::new(e).context(Error::CouldNotReadFile(path.to_owned()))
     })?;
-    serde_yaml::from_reader(io::BufReader::new(f)).map_err(|e| {
+    serde_saphyr::from_reader(io::BufReader::new(f)).map_err(|e| {
         anyhow::Error::new(e).context(Error::CouldNotReadFile(path.to_owned()))
     })
 }
@@ -36,7 +36,7 @@ where
     let f = fs::File::create(path).map_err(|e| {
         anyhow::Error::new(e).context(Error::CouldNotWriteFile(path.to_owned()))
     })?;
-    serde_yaml::to_writer(&mut io::BufWriter::new(f), data).map_err(|e| {
+    serde_saphyr::to_io_writer(&mut io::BufWriter::new(f), data).map_err(|e| {
         anyhow::Error::new(e).context(Error::CouldNotWriteFile(path.to_owned()))
     })
 }

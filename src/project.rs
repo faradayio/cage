@@ -67,7 +67,7 @@ impl ProjectConfig {
                 anyhow::Error::new(e).context(Error::CouldNotReadFile(path.to_owned()))
             })?;
             Self::check_config_version(path, &yaml)?;
-            serde_yaml::from_str(&yaml).map_err(|e| {
+            serde_saphyr::from_str(&yaml).map_err(|e| {
                 anyhow::Error::new(e).context(Error::CouldNotReadFile(path.to_owned()))
             })
         } else {
@@ -89,7 +89,7 @@ impl ProjectConfig {
             cage_version: Option<semver::VersionReq>,
         }
 
-        let config: VersionOnly = serde_yaml::from_str(config_yml).map_err(|e| {
+        let config: VersionOnly = serde_saphyr::from_str(config_yml).map_err(|e| {
             anyhow::Error::new(e).context(Error::CouldNotReadFile(path.to_owned()))
         })?;
         if let Some(ref req) = config.cage_version {
