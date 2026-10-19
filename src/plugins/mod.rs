@@ -136,6 +136,7 @@ impl Manager {
         manager.register_transform::<transform::secrets::Plugin>(proj)?;
         manager.register_transform::<transform::remove_build::Plugin>(proj)?;
         manager.register_transform::<transform::vault::Plugin>(proj)?;
+        manager.register_transform::<transform::host_ports::Plugin>(proj)?;
 
         // Run this last, in case it wants to remove any labels used by
         // other plugins.

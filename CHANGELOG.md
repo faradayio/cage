@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## Unreleased
 
+## 0.4.1-pre7 - 2026-10-19
+
+### Changed (breaking)
+
+- Host ports now move by a per-checkout offset derived from the project name, so two checkouts of one repo can run on the same machine. Hard-coded `localhost:<port>` URLs need to read `CAGE_HOST_PORT_<POD>_<SERVICE>_<CONTAINER_PORT>` (see `cage status`, or the list `cage up` prints). Set `CAGE_HOST_PORT_OFFSET` when two checkouts clash.
+
 ### Changed
 
 - Updated Rust dependencies, including `dirs` 6 → 7.

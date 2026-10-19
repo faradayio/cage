@@ -19,6 +19,7 @@ use std::str;
 use crate::dir;
 use crate::errors::*;
 use crate::hook::HookManager;
+use crate::host_port_shift::HostPortShift;
 use crate::plugins::{self, Operation};
 use crate::pod::{Pod, PodType};
 use crate::runtime_state::RuntimeState;
@@ -177,6 +178,13 @@ pub struct Project {
     /// like with `docker-compose`.
     name: String,
 
+    /// How this checkout's host ports are shifted.
+    host_port_shift: HostPortShift,
+
+    /// Set when `set_host_port_offset` has chosen the offset, so `set_name`
+    /// leaves it alone.
+    host_port_offset_overridden: bool,
+
     /// The directory which contains our `project`.  Must have a
     /// subdirectory named `pods`.
     root_dir: PathBuf,
@@ -246,6 +254,8 @@ impl Project {
             })?;
         let mut proj = Project {
             name: name.to_owned(),
+            host_port_shift: HostPortShift::for_name(name),
+            host_port_offset_overridden: false,
             root_dir: root_dir.to_owned(),
             src_dir: src_dir.to_owned(),
             output_dir: output_dir.to_owned(),
@@ -358,8 +368,29 @@ impl Project {
 
     /// Set the name of this project.  This should be done before calling
     /// `output` or any methods in `cmd`.
+    ///
+    /// Recomputes the host port offset from the new name, unless
+    /// `set_host_port_offset` has already set one.
     pub fn set_name(&mut self, name: &str) -> &mut Project {
         self.name = name.to_owned();
+        if !self.host_port_offset_overridden {
+            self.host_port_shift = HostPortShift::for_name(name);
+        }
+        self
+    }
+
+    /// The host-port offset for this checkout.
+    pub fn host_port_shift(&self) -> &HostPortShift {
+        &self.host_port_shift
+    }
+
+    /// Use `offset` for every host port, instead of hashing the project name.
+    ///
+    /// Later calls to `set_name` leave this offset in place. This is what
+    /// `CAGE_HOST_PORT_OFFSET` does.
+    pub fn set_host_port_offset(&mut self, offset: u16) -> &mut Project {
+        self.host_port_shift = HostPortShift::from_offset(offset);
+        self.host_port_offset_overridden = true;
         self
     }
 

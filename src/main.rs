@@ -31,7 +31,7 @@ From inside a project directory:
     cage up --init                 # Start the app, initializing the database
     cage status                    # Get an overview of the project
 
-Access your application at http://localhost:3000/.  To download and edit
+Access your application at the host port shown by `cage status`.  To download and edit
 the source code for your application, run:
 
     cage source ls                 # List available service source code
@@ -602,6 +602,23 @@ fn warn_if_pods_are_enabled_but_not_running(project: &cage::Project) -> Result<(
     Ok(())
 }
 
+/// `CAGE_HOST_PORT_OFFSET`, when the checkout sets one.
+fn host_port_offset_override() -> Result<Option<u16>> {
+    match env::var("CAGE_HOST_PORT_OFFSET") {
+        Err(env::VarError::NotPresent) => Ok(None),
+        Err(env::VarError::NotUnicode(_)) => {
+            Err(cage::err("CAGE_HOST_PORT_OFFSET is not valid text"))
+        }
+        Ok(value) => match value.parse::<u16>() {
+            Ok(offset) => Ok(Some(offset)),
+            Err(_) => Err(cage::err(&format!(
+                "CAGE_HOST_PORT_OFFSET must be a whole number from 0 to 65535, got '{}'",
+                value
+            ))),
+        },
+    }
+}
+
 /// The function which does the real work.  Unlike `main`, we have a return
 /// type of `Result` and may therefore use `?` to handle errors.
 fn run(cli: &Cli) -> Result<()> {
@@ -622,6 +639,9 @@ fn run(cli: &Cli) -> Result<()> {
     let mut proj = cage::Project::from_current_dir()?;
     if let Some(project_name) = &cli.project_name {
         proj.set_name(project_name);
+    }
+    if let Some(offset) = host_port_offset_override()? {
+        proj.set_host_port_offset(offset);
     }
     if let Some(default_tags_path) = &cli.default_tags {
         let f = fs::File::open(default_tags_path)?;

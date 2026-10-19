@@ -53,6 +53,7 @@ extern crate serde_derive;
 
 pub use crate::default_tags::DefaultTags;
 pub use crate::errors::*;
+pub use crate::host_port_shift::HostPortShift;
 pub use crate::pod::{AllFiles, Pod, PodType, TargetFiles};
 pub use crate::project::{PodOrService, Pods, Project, ProjectConfig, Targets};
 pub use crate::runtime_state::RuntimeState;
@@ -72,6 +73,7 @@ pub mod dir;
 mod errors;
 mod ext;
 pub mod hook;
+mod host_port_shift;
 pub mod plugins;
 mod pod;
 mod project;

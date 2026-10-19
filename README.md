@@ -104,15 +104,19 @@ $ cage status
 db enabled type:placeholder
 └─ db
 frontend enabled type:service
-└─ web ports:3000
+└─ web ports:6000
 rake enabled type:task
 └─ rake
 ```
 
-This shows us that the `web` service is listening on port 3000, so you
-should be able to access the application
-at [http://localhost:3000](http://localhost:3000).  But let's make a
-change!  First, list the available source code for the services in this
+This shows us that the `web` service is published on host port 6000.
+The pod file says `3000:3000`. Cage adds an offset taken from the
+project directory name, and `myapp` adds 3000, so the app is at
+[http://localhost:6000](http://localhost:6000). A second checkout in
+another directory gets a different host port. See [Host ports](#host-ports)
+below.
+
+Let's make a change!  First, list the available source code for the services in this
 app:
 
 ```sh
@@ -170,6 +174,43 @@ For more information, check out `cage`'s help:
 ```sh
 cage --help
 ```
+
+## Host ports
+
+Cage assigns host ports. In a pod file, `"3000:3000"` means host port
+3000 and container port 3000. Cage keeps the container port and adds an
+offset to the host port. The offset comes from the project name (the
+directory name, or `-p`). It is a multiple of 100, from 100 to 9900, and
+it is the same for every port in the checkout, so `3000` and `3001` stay
+neighbors. Every checkout shifts, including the first one. `cage export`
+leaves the ports as written, so a production export stays the same.
+
+`cage status` prints the host ports. `cage up` prints them again when it
+finishes, one line per service:
+
+```text
+frontend/web  localhost:6000 -> 3000
+```
+
+Each service also gets environment variables:
+
+- `CAGE_HOST_PORT_OFFSET` is the offset for this checkout.
+- `CAGE_HOST_PORT_<POD>_<SERVICE>_<CONTAINER_PORT>` is the host port for
+  that container port. The pod name is included because two pods can each
+  have a service of the same name. Names are uppercased, and any character
+  that is not an ASCII letter or digit becomes `_`. For the example above the
+  variable is `CAGE_HOST_PORT_FRONTEND_WEB_3000=6000`.
+
+The same variables are set on every service, so a frontend can build a
+browser URL or an OAuth callback for another service. Read them from the
+environment when you build a `localhost:<port>` URL.
+
+Two checkouts can still clash. Offsets are multiples of 100, so one
+checkout's shifted port can land on a port another checkout uses, and two
+directory names can hash to the same offset. Docker then says that the
+port is already allocated. Set `CAGE_HOST_PORT_OFFSET` in one checkout
+(for example in `.envrc`) to pick a different offset. You can set it to
+`0` to keep the ports written in the pod files.
 
 ## What's a pod?
 

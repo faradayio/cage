@@ -81,7 +81,7 @@ impl Project {
     fn service_status(
         &self,
         state: &RuntimeState,
-        _pod: &Pod,
+        pod: &Pod,
         service_name: &str,
         service: &dc::Service,
         last: bool,
@@ -103,11 +103,18 @@ impl Project {
             print!(" {}", text);
         }
 
-        // Print out ports with known host bindings.
+        // `merged_file` still has the ports as written. Shift them so this
+        // shows the host port cage will bind.
         let ports: Vec<String> = service
             .ports
             .iter()
-            .map(|port| Ok(port.value()?.host_string()))
+            .map(|port| {
+                let mut mapping = port.value()?.clone();
+                self.host_port_shift().shift(&mut mapping).map_err(|err| {
+                    err.context(format!("service '{}/{}'", pod.name(), service_name))
+                })?;
+                Ok(mapping.host_string())
+            })
             .filter_map(|result| match result {
                 Ok(Some(val)) => Some(Ok(val)),
                 Ok(None) => None,
